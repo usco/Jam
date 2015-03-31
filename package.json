@@ -1,0 +1,11 @@
+{
+  "name": "exp",
+  "version": "1.0.0",
+  "description": "jam react experiment",
+  "main": "index.js",
+  "scripts": {
+    "test": ""
+  },
+  "author": "Mark 'kaosat-dev' Moissette",
+  "license": "GPL"
+}
