@@ -14,7 +14,8 @@
     "babel-loader": "^4.1.0",
     "react-hot-loader": "^1.2.2",
     "webpack": "^1.7.2",
-    "webpack-dev-server": "^1.7.0"
+    "webpack-dev-server": "^1.7.0",
+    "worker-loader": "^0.5.7"
   },
   "dependencies": {
     "classnames": "^1.2.0",
@@ -22,8 +23,15 @@
     "fynx": "^1.6.0",
     "immutable": "^3.7.0",
     "json-loader": "^0.5.1",
+    "loglevel": "^1.2.0",
+    "q": "^1.2.0",
     "react": "^0.13.0",
     "react-style": "^0.5.1",
-    "three": "^0.70.0"
+    "three": "^0.70.0",
+    "usco-assetmanager": "git://github.com/usco/usco-asset-manager",
+    "usco-desktop-store": "git://github.com/usco/usco-desktop-store",
+    "usco-kernel2": "git://github.com/usco/usco-kernel2",
+    "usco-stl-parser": "git://github.com/usco/usco-stl-parser",
+    "usco-xhr-store": "git://github.com/usco/usco-xhr-store"
   }
 }

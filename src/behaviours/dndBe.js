@@ -28,7 +28,7 @@ var DndBehaviour = {
     {
       console.log("url-dropped")
       //this.asyncFire('url-dropped', {data:data} );
-      if(this.dropHandler) this.dropHandler({data:data, type:"url"})
+      if(this.dropHandler) this.dropHandler({data:[data], type:"url"})
       return;
     }
     
@@ -36,7 +36,7 @@ var DndBehaviour = {
     if( data!= "" ){
         console.log("text-dropped")
         //this.asyncFire('text-dropped', {data:data} );
-        if(this.dropHandler) this.dropHandler({data:data, type:"text"})
+        if(this.dropHandler) this.dropHandler({data:[data], type:"text"})
         return;
     }
 
