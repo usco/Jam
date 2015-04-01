@@ -1,15 +1,14 @@
 import React from 'react';
 import THREE from 'three';
-import CanvasRenderer from './deps/CanvasRenderer';
 import Detector from './deps/Detector.js';
 
+import CanvasRenderer from './deps/CanvasRenderer';
 import OrbitControls from './deps/OrbitControls';
-import registerReact from 'reactive-elements';
+//import registerReact from 'reactive-elements';
 
-import DndBehaviour           from './dndBe'
-import PreventScrollBehaviour from './preventScrollBe'
+import DndBehaviour           from '../behaviours/dndBe'
+import PreventScrollBehaviour from '../behaviours/preventScrollBe'
 
-import url from 'url'
 
 class ThreeJs extends React.Component{
   constructor(props){
@@ -21,10 +20,6 @@ class ThreeJs extends React.Component{
     this.scene = new THREE.Scene();
     console.log( this );
 
-
-    let foo = url.parse("http://jam.youmagine.com/jam?designUrl=foobar&designUrl=baara",true);
-    console.log( "foo", foo)
-    
     //shoud be props ?
     this.config = {
       viewports:[
@@ -222,5 +217,5 @@ class ThreeJs extends React.Component{
   
 }
 
-document.registerReact('three-js', ThreeJs);
+//document.registerReact('three-js', ThreeJs);
 export default ThreeJs

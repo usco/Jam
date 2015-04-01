@@ -4,8 +4,26 @@
   "description": "jam react experiment",
   "main": "index.js",
   "scripts": {
-    "test": ""
+    "test": "",
+    "start": "node server.js"
   },
   "author": "Mark 'kaosat-dev' Moissette",
-  "license": "GPL"
+  "license": "GPL",
+  "devDependencies": {
+    "babel-core": "^4.7.4",
+    "babel-loader": "^4.1.0",
+    "react-hot-loader": "^1.2.2",
+    "webpack": "^1.7.2",
+    "webpack-dev-server": "^1.7.0"
+  },
+  "dependencies": {
+    "classnames": "^1.2.0",
+    "co": "^4.5.1",
+    "fynx": "^1.6.0",
+    "immutable": "^3.7.0",
+    "json-loader": "^0.5.1",
+    "react": "^0.13.0",
+    "react-style": "^0.5.1",
+    "three": "^0.70.0"
+  }
 }
