@@ -9,7 +9,13 @@ import DesktopStore from 'usco-desktop-store'
 import XhrStore     from 'usco-xhr-store'
 import StlParser    from 'usco-stl-parser'
 
+import Kernel       from 'usco-kernel2'//during dev only
 import DndBehaviour           from './behaviours/dndBe'
+
+import logger from './utils/log'
+let log = logger("Jam-Root");
+log.setLevel("info");
+
 
 
 export default class App extends React.Component {
@@ -18,8 +24,7 @@ export default class App extends React.Component {
     this.state = {
       pkg:undefined,
     };
-    
-    console.log("assetManager",AssetManager)
+
     this.assetManager = new AssetManager();
     this.assetManager.addParser("stl", new StlParser());
 
@@ -27,40 +32,9 @@ export default class App extends React.Component {
     this.assetManager.addStore( "xhr"    , new XhrStore() );
   }
   
-  _changerTest(){
-          this.state = {
-      test: 42,
-      cube:{ 
-        rot:{
-          x:0,
-          y:0,
-          z:0}
-      } 
-    };
-
-      this.setState( 
-      {
-        test: this.state.test +1,
-        cube:{ 
-          rot:{
-            x:0,
-            y:0,
-            z:this.state.cube.rot.z +0.01
-          }
-        } 
-       }
-      );
-    //requestAnimationFrame( this._changerTest.bind(this) );
-  }
-  
   componentDidMount(){
-     this.setState( {test: 42} );
-     this._changerTest();  
-
-    var pjson = require('json!../package.json');
-    console.log(pjson.version);
+    var pjson = require('../package.json');
     this.setState({pkg:pjson});
-
 
     //add drag & drop behaviour 
     let container = this.refs.wrapper.getDOMNode();
@@ -73,11 +47,12 @@ export default class App extends React.Component {
   }
 
   handleDrop(data){
-    console.log("something dropped on me", data)
+    log.info("data was dropped into jam!", data)
     for (var i = 0, f; f = data.data[i]; i++) {
         this.loadMesh( f, {display: true} );
     }
   }
+
 
   loadMesh( uriOrData, options ){
     const DEFAULTS={
@@ -87,9 +62,10 @@ export default class App extends React.Component {
     var addToAssembly= options.addToAssembly === undefined ? true: options.addToAssembly;
     var keepRawData = options.keepRawData === undefined ? true: options.keepRawData;
     
-    if(!uriOrData){ console.warn("no uri or data to load"); return};
+    if(!uriOrData) throw new Error("no uri or data to load!");
+
     var self = this;
-    var resource = this.assetManager.load( uriOrData, {keepRawData:true, parsing:{useWorker:false,useBuffers:true} } );
+    var resource = this.assetManager.load( uriOrData, {keepRawData:true, parsing:{useWorker:true,useBuffers:true} } );
     
     co(function* (){
 
