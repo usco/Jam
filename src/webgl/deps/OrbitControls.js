@@ -1,4 +1,4 @@
-import THREE from 'three';//'./Three.min.js';
+import THREE from 'three';
 
 /**
  * @author qiao / https://github.com/qiao

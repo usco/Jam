@@ -18,6 +18,7 @@
     "worker-loader": "^0.5.7"
   },
   "dependencies": {
+    "babel-runtime": "^4.7.16",
     "classnames": "^1.2.0",
     "co": "^4.5.1",
     "fynx": "^1.6.0",
