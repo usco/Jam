@@ -2,12 +2,15 @@ import React from 'react';
 import THREE from 'three';
 import Detector from './deps/Detector.js';
 
-import CanvasRenderer from './deps/CanvasRenderer';
+//import CanvasRenderer from './deps/CanvasRenderer';
 import OrbitControls from './deps/OrbitControls';
 import CombinedCamera from './deps/CombinedCamera';
 //import registerReact from 'reactive-elements';
 
 import PreventScrollBehaviour from '../behaviours/preventScrollBe'
+
+
+console.log("THREE in gl view",THREE)
 
 class ThreeJs extends React.Component{
   constructor(props){
@@ -77,7 +80,7 @@ class ThreeJs extends React.Component{
     
     if(!Detector.webgl){
       //Detector.addGetWebGLMessage();
-      renderer = new CanvasRenderer(); 
+      //renderer = new CanvasRenderer(); 
     } else {
       renderer = new THREE.WebGLRenderer( {antialias:true} );
     }

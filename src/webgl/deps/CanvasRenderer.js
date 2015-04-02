@@ -1104,4 +1104,5 @@ THREE.CanvasRenderer = function ( parameters ) {
 
 };
 
-module.exports = THREE.CanvasRenderer;
+//module.exports = THREE.CanvasRenderer;
+export default THREE.CanvasRenderer;

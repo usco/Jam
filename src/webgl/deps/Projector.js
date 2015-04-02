@@ -4,13 +4,15 @@
  * @author julianwa / https://github.com/julianwa
  */
 import THREE from 'three';
+//var THREE = require("three"); //until it is done via the import syntax everywhere we have to use this
+
+
 THREE.RenderableObject = function () {
 
 	this.id = 0;
 
 	this.object = null;
 	this.z = 0;
-
 };
 
 //
@@ -933,4 +935,5 @@ THREE.Projector = function () {
 
 };
 
-module.exports = THREE.Projector;
+//module.exports = THREE.Projector;
+export default THREE.Projector;

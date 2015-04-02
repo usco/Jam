@@ -663,4 +663,4 @@ var OrbitControls = function ( object, domElement, upVector ) {
 
 OrbitControls.prototype = Object.create( THREE.EventDispatcher.prototype );
 
-module.exports = OrbitControls;
+export default OrbitControls

@@ -1,4 +1,5 @@
 import THREE from "three"
+
 //TODO: UNIFY api for parsers, this is redundant
 let postProcess = function( resource ){
 
