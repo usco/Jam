@@ -9,17 +9,17 @@ import DesktopStore from 'usco-desktop-store'
 import XhrStore     from 'usco-xhr-store'
 import StlParser    from 'usco-stl-parser'
 import CtmParser    from 'usco-ctm-parser'
-/*import AMfParser    from 'usco-amf-parser'
 import PlyParser    from 'usco-ply-parser'
+/*import AMfParser    from 'usco-amf-parser'
+
 import ObjParser    from 'usco-obj-parser'*/
 
-import Kernel       from 'usco-kernel2'//during dev only
+//import Kernel       from 'usco-kernel2'//during dev only
 import DndBehaviour           from './behaviours/dndBe'
 
 import logger from './utils/log'
 let log = logger("Jam-Root");
 log.setLevel("info");
-
 
 
 export default class App extends React.Component {
@@ -32,6 +32,7 @@ export default class App extends React.Component {
     this.assetManager = new AssetManager();
     this.assetManager.addParser("stl", new StlParser());
     this.assetManager.addParser("ctm", new CtmParser());
+    this.assetManager.addParser("ply", new PlyParser());
 
     this.assetManager.addStore( "desktop", new DesktopStore() );
     this.assetManager.addStore( "xhr"    , new XhrStore() );

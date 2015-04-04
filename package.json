@@ -5,13 +5,15 @@
   "main": "index.js",
   "scripts": {
     "test": "",
-    "start": "node server.js"
+    "start": "NODE_ENV=dev node server.js",
+    "build": "NODE_ENV=production webpack -p"
   },
   "author": "Mark 'kaosat-dev' Moissette",
   "license": "GPL",
   "devDependencies": {
     "babel-core": "^4.7.4",
     "babel-loader": "^4.1.0",
+    "compression-webpack-plugin": "^0.1.2",
     "react-hot-loader": "^1.2.2",
     "webpack": "^1.7.2",
     "webpack-dev-server": "^1.7.0",
@@ -29,10 +31,12 @@
     "react": "^0.13.0",
     "react-style": "^0.5.1",
     "three": "^0.70.0",
+    "usco-kernel2": "git://github.com/usco/usco-kernel2",
     "usco-assetmanager": "git://github.com/usco/usco-asset-manager",
     "usco-desktop-store": "git://github.com/usco/usco-desktop-store",
-    "usco-kernel2": "git://github.com/usco/usco-kernel2",
+    "usco-xhr-store": "git://github.com/usco/usco-xhr-store",
     "usco-stl-parser": "git://github.com/usco/usco-stl-parser",
-    "usco-xhr-store": "git://github.com/usco/usco-xhr-store"
+    "usco-ctm-parser": "git://github.com/usco/usco-ctm-parser",
+    "usco-ply-parser": "git://github.com/usco/usco-ply-parser"
   }
 }

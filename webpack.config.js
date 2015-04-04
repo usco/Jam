@@ -15,6 +15,35 @@ var dev        = process.env.NODE_ENV == 'dev';
 
 var CompressionPlugin = require("compression-webpack-plugin");
 
+
+
+var getSymlinkedModules = function(){
+
+  var rootPath = path.join(__dirname, "node_modules");
+  var contents = fs.readdirSync(rootPath);
+  var results = contents
+  .map(function(entry){
+    var fPath  = path.join(rootPath,entry);
+    //console.log("path",fPath,"realPath",fs.realpathSync( fPath)); 
+    return fPath;
+  })
+  .filter(function(fPath){
+    function check( entry ){
+      var stats=fs.lstatSync(fPath);
+      return stats.isSymbolicLink();
+    }
+    return check(fPath);
+  })
+  .map(function(fPath){
+      return fs.realpathSync( fPath );
+  });
+  return results;
+}
+
+var pathsToInclude = getSymlinkedModules().concat( path.join(__dirname, srcPath) )
+console.log("pathsToInclude",pathsToInclude)
+
+
 var config= {
   host:host,
   port:port,
@@ -34,14 +63,15 @@ var config= {
   module: {
     loaders: [
       { test: /\.json$/,   loader: "json-loader" },
-      { test: /-worker*\.js$/, loader: "worker-loader"},//if any module does "require(XXX-worker)" it converts to a web worker
-      { test: /\.js$/, loader:'react-hot', include: path.join(__dirname, srcPath) },
+      { test: /-worker*\.js$/, loader: "worker-loader",include : pathsToInclude},//if any module does "require(XXX-worker)" it converts to a web worker
+      /*{ test: /\.js$/, loader:'react-hot', include: path.join(__dirname, srcPath) },
       { test: /\.js$/, loader: 'babel?experimental&optional=runtime', exclude: "", include: 
         [
           path.join(__dirname, srcPath),
           fs.realpathSync( path.join(__dirname, "node_modules","usco-kernel2/src/") ) //needed only FOR DEV ??
         ]
-      },
+      },*/
+      {test: /\.js?$/,loaders: ['react-hot', 'babel?experimental&optional=runtime'],include : pathsToInclude},
     ],
     noParse: /\.min\.js/
   },
@@ -50,9 +80,9 @@ var config= {
     root: [
       path.join(__dirname, "node_modules"),
     ],
-    alias: {                                                                                    
+    /*alias: {                                                                                    
         "usco-kernel2$":path.join(__dirname, "node_modules","usco-kernel2/src/kernel.js"),//needed only FOR DEV
-    }
+    }*/
   },
   resolveLoader:{
     root : path.join(__dirname, "node_modules")
