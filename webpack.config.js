@@ -2,19 +2,19 @@
 react hot boilerplate
 https://github.com/shanewilson/react-webpack-example/blob/master/webpack.config.js
 */
-var path = require('path');
+var fs      = require('fs');
+var path    = require('path');
 var webpack = require('webpack');
-var fs = require('fs')
+var CompressionPlugin = require("compression-webpack-plugin");
 
-var host   = "localhost";
-var port = 3000;
+
+var host    = "localhost";
+var port    = 3000;
 var srcPath = "src"
+var xtraModulesWLoaders = ["js-csp/src"]//add any module names that you want loaders to apply to
 
 var production = process.env.NODE_ENV == 'production';
 var dev        = process.env.NODE_ENV == 'dev';
-
-var CompressionPlugin = require("compression-webpack-plugin");
-
 
 
 var getSymlinkedModules = function(){
@@ -24,7 +24,6 @@ var getSymlinkedModules = function(){
   var results = contents
   .map(function(entry){
     var fPath  = path.join(rootPath,entry);
-    //console.log("path",fPath,"realPath",fs.realpathSync( fPath)); 
     return fPath;
   })
   .filter(function(fPath){
@@ -40,9 +39,9 @@ var getSymlinkedModules = function(){
   return results;
 }
 
-var pathsToInclude = getSymlinkedModules().concat( path.join(__dirname, srcPath) )
-console.log("pathsToInclude",pathsToInclude)
-
+//add any extra folders we want to apply loaders to 
+var extraModulePaths = xtraModulesWLoaders.map(function(entry){ return path.join(__dirname, "node_modules",entry); });
+var pathsToInclude = getSymlinkedModules().concat( path.join(__dirname, srcPath) ).concat( extraModulePaths );
 
 var config= {
   host:host,
@@ -64,13 +63,6 @@ var config= {
     loaders: [
       { test: /\.json$/,   loader: "json-loader" },
       { test: /-worker*\.js$/, loader: "worker-loader",include : pathsToInclude},//if any module does "require(XXX-worker)" it converts to a web worker
-      /*{ test: /\.js$/, loader:'react-hot', include: path.join(__dirname, srcPath) },
-      { test: /\.js$/, loader: 'babel?experimental&optional=runtime', exclude: "", include: 
-        [
-          path.join(__dirname, srcPath),
-          fs.realpathSync( path.join(__dirname, "node_modules","usco-kernel2/src/") ) //needed only FOR DEV ??
-        ]
-      },*/
       {test: /\.js?$/,loaders: ['react-hot', 'babel?experimental&optional=runtime'],include : pathsToInclude},
     ],
     noParse: /\.min\.js/
@@ -81,7 +73,7 @@ var config= {
       path.join(__dirname, "node_modules"),
     ],
     /*alias: {                                                                                    
-        "usco-kernel2$":path.join(__dirname, "node_modules","usco-kernel2/src/kernel.js"),//needed only FOR DEV
+        "q$":path.join(__dirname, "node_modules","usco-kernel2/src/kernel.js"),//needed only FOR DEV
     }*/
   },
   resolveLoader:{

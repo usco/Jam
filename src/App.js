@@ -11,10 +11,15 @@ import StlParser    from 'usco-stl-parser'
 import CtmParser    from 'usco-ctm-parser'
 import PlyParser    from 'usco-ply-parser'
 /*import AMfParser    from 'usco-amf-parser'
-
 import ObjParser    from 'usco-obj-parser'*/
 
-//import Kernel       from 'usco-kernel2'//during dev only
+import Kernel       from 'usco-kernel2'
+
+import cstpTest from './coms/csp-test'
+
+var csp = require("js-csp");
+let {chan, go, take, put, alts, timeout} = require("js-csp");
+
 import DndBehaviour           from './behaviours/dndBe'
 
 import logger from './utils/log'
@@ -46,6 +51,8 @@ export default class App extends React.Component {
     let container = this.refs.wrapper.getDOMNode();
     DndBehaviour.attach( container );
     DndBehaviour.dropHandler = this.handleDrop.bind(this);
+
+    this.cspMouseTrack()
   }
 
   componentWillUnmount(){
@@ -59,6 +66,41 @@ export default class App extends React.Component {
     }
   }
 
+  cspMouseTrack(trackerEl, outputEl){
+    let trackerEl = this.refs.wrapper.getDOMNode();
+    let outputEl  = this.refs.infoLayer.getDOMNode();
+
+    function listen(el, type) {
+      var ch = chan();
+      el.addEventListener(type, function(e) {
+        csp.putAsync(ch, e);
+      });
+      return ch;
+    }
+
+    go(function*() {
+      var mousech = listen(trackerEl, 'mousemove');
+      var clickch = listen(trackerEl, 'click');
+      var mousePos = [0, 0];
+      var clickPos = [0, 0];
+      //var r = yield alts([cancel, timeout(500)]);
+      while(true) {
+        var v = yield alts([mousech, clickch,timeout(500)]);
+        var e = v.value;
+        if(v.channel === mousech) {
+          mousePos = [e.layerX || e.clientX, e.layerY || e.clientY];
+        }
+        else if(v.channel === clickch) {
+          clickPos = [e.layerX || e.clientX, e.layerY || e.clientY];
+        }else{
+          console.log("duh, waitin'")
+        }
+        outputEl.innerHTML = (mousePos[0] + ', ' + mousePos[1] + ' — ' +
+                        clickPos[0] + ', ' + clickPos[1]);
+      }
+    });
+
+  }
 
   loadMesh( uriOrData, options ){
     const DEFAULTS={
@@ -106,9 +148,21 @@ export default class App extends React.Component {
   }
   
   render() {
+    var infoLayerStyle = {
+      color: 'red',
+      width:'300px',
+      height:'300px',
+      zIndex:15,
+      position: 'absolute',
+      left: 0,
+      top: 0,
+    };
+
+
     return (
         <div ref="wrapper">
           <ThreeJs testProp={this.state.test} cubeRot={this.state.cube} ref="glview"/>
+          <div ref="infoLayer" style={infoLayerStyle} />
         </div>
     );
   }

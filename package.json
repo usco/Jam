@@ -25,18 +25,19 @@
     "co": "^4.5.1",
     "fynx": "^1.6.0",
     "immutable": "^3.7.0",
+    "js-csp": "^0.4.0",
     "json-loader": "^0.5.1",
     "loglevel": "^1.2.0",
     "q": "^1.2.0",
     "react": "^0.13.0",
     "react-style": "^0.5.1",
     "three": "^0.70.0",
-    "usco-kernel2": "git://github.com/usco/usco-kernel2",
     "usco-assetmanager": "git://github.com/usco/usco-asset-manager",
-    "usco-desktop-store": "git://github.com/usco/usco-desktop-store",
-    "usco-xhr-store": "git://github.com/usco/usco-xhr-store",
-    "usco-stl-parser": "git://github.com/usco/usco-stl-parser",
     "usco-ctm-parser": "git://github.com/usco/usco-ctm-parser",
-    "usco-ply-parser": "git://github.com/usco/usco-ply-parser"
+    "usco-desktop-store": "git://github.com/usco/usco-desktop-store",
+    "usco-kernel2": "git://github.com/usco/usco-kernel2",
+    "usco-ply-parser": "git://github.com/usco/usco-ply-parser",
+    "usco-stl-parser": "git://github.com/usco/usco-stl-parser",
+    "usco-xhr-store": "git://github.com/usco/usco-xhr-store"
   }
 }
