@@ -5,19 +5,37 @@ import Detector from './deps/Detector.js';
 //import CanvasRenderer from './deps/CanvasRenderer';
 import OrbitControls from './deps/OrbitControls';
 import CombinedCamera from './deps/CombinedCamera';
-//import registerReact from 'reactive-elements';
 
 import PreventScrollBehaviour from '../behaviours/preventScrollBe'
 
+//TODO: import this at another level, should not be part of the base gl view
+import TransformControls from './transforms/TransformControls'
+import Selector from './deps/Selector'
 
-console.log("THREE in gl view",THREE)
+
+/* this is the wrapper that actually gets the render calls*/
+/*class GlCanvas extends React.Component{
+
+
+  render(){
+    return (
+      <div className="container" ref="container" />
+    );
+  }
+}*/
+
 
 class ThreeJs extends React.Component{
   constructor(props){
     super(props);
     console.log("props", this.props);
 
-    this.props= {width:0,height:0};
+    this.state = {
+      width:0,
+      height:0,
+      selectedMeshes:[]
+    }
+
     this.scenes = {};
 
     //shoud be props ?
@@ -66,6 +84,9 @@ class ThreeJs extends React.Component{
           //{ type:"hemisphereLight", color:"#FFFF33", gndColor:"#FF9480", pos:[0, 0, 500], intensity:0.6 },
           { type:"ambientLight", color:"#0x252525", intensity:0.03 },
           { type:"directionalLight", color:"#262525", intensity:0.2 , pos:[150,150,1500], castShadow:true, onlyShadow:true}
+        ],
+        "helpers":[
+          {type:"LabeledGrid"}
         ]
       }
     };
@@ -99,25 +120,26 @@ class ThreeJs extends React.Component{
     this.container = container;
     
     this._makeControls(this.config.controls[0]);
+    this.transformControls = new TransformControls();
+
 
     for( let light of this.config.scenes["main"])
     {
       this._makeLight( light );
     }
-    //his._makeLight(this.config.scenes["main"][0]);
-    //this._makeLight(this.config.scenes["main"][1]);
-
     //TODO: for testing, remove
     //this._makeTestStuff();
     
     this.renderer = renderer;
     this._animate();
     this.resizeHandler();
+
+
+    this.selector = new Selector();
+    this.selector.camera = this.camera;
     
     window.addEventListener("resize", this.resizeHandler.bind(this) );
-    
-    container.addEventListener( "click", this.projectClick.bind(this), false );
-
+    container.addEventListener( "click", this.tapHandler.bind(this), false );
     //this.domElement.addEventListener( "mousedown", onPointerDown, false );
 
     PreventScrollBehaviour.attach( container );
@@ -146,6 +168,10 @@ class ThreeJs extends React.Component{
     let height = window.innerHeight;	
     let aspect = width/height;
     
+    this.width  = width;
+    this.height = height;
+//this.props.width = width;
+ //   this.props.height = height;
     this.renderer.setSize(width, height);
     this.camera.aspect = aspect;
   }
@@ -164,13 +190,6 @@ class ThreeJs extends React.Component{
     //scene.add(cube);
     mesh.position.set(0,0,100);
     
-    /*var light = new THREE.PointLight(0xffffff);
-    light.position.set(0,0,100);
-
-    scene.add(light);
-    var ambientLight = new THREE.AmbientLight(0x111111);
-    scene.add(ambientLight);*/
-
     console.log("scene",this.scene)
 	  this.cube = cube;
 
@@ -324,8 +343,21 @@ class ThreeJs extends React.Component{
     return light
   }
 
-  projectClick(event) {
-      
+  tapHandler(event){
+    //console.log("tapped in view")
+    let rect = this.container.getBoundingClientRect();
+    let intersects = this.selector.pick(event, rect, this.width, this.height, this.scene);
+
+    let selectedMeshes = intersects.map( intersect => intersect.object );
+    selectedMeshes.sort().filter( ( mesh, pos ) => { return (!pos || mesh != intersects[pos - 1]) } );
+
+    this.setState({
+      selectedMeshes: selectedMeshes
+    })
+
+    this.props.onSelectedMeshesChange(selectedMeshes);
+
+    //console.log(intersects, this.state);
   }
   
   _animate() 
@@ -348,6 +380,12 @@ class ThreeJs extends React.Component{
   _render() 
   {	
 	  this.renderer.render( this.scene, this.camera );
+  }
+
+  //this would actually be close to react's standard "render"
+  forceUpdate( data , map){
+    this.scene.clear();
+
   }
 
   render(){
