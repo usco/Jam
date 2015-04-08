@@ -18,7 +18,7 @@ import Kernel       from 'usco-kernel2'
 
 
 import cstpTest from './coms/csp-test'
-import {bufferWithTimeOrCount} from './coms/interactions'
+import {bufferWithTimeOrCount, fromDomEvent} from './coms/interactions'
 
 var csp = require("js-csp");
 let {chan, go, take, put, alts, timeout} = require("js-csp");
@@ -178,43 +178,16 @@ export default class App extends React.Component {
     let trackerEl = this.refs.wrapper.getDOMNode();
     let outputEl  = this.refs.infoLayer.getDOMNode();
 
-    function listen(el, type, bufSize, xform) {
-      var ch = chan(bufSize, xform);
-      el.addEventListener(type, function(e) {
-        csp.putAsync(ch, e);
-      });
-      return ch;
-    }
-
     let isTwoValues  = function( x ) { return (x.length == 2); }
     let isOneValue = function( x ) { return (x.length == 1); }
 
 
-    //
 
-    /*go(function*() {
-      var clickch = listen(trackerEl, 'click');
-      var bufferedClicksCh  = bufferWithTimeOrCount(clickch, 250, 2)
-
-      var testCh = csp.chan();
-      var xform = xducers.filter(isOneValue);
-
-      // Notice that we're keeping `toCh` open after `fromCh` is closed
-      csp.operations.pipeline(testCh, xform, bufferedClicksCh, true);
-
-      while(true) {
-        var result = yield testCh;
-        console.log("AAAAAAAA",result)//if(result.value) 
-      }
-    });*/
     let pipeline = csp.operations.pipeline;
     let merge    = csp.operations.merge;
 
-
-    var tform = xducers.map( x => true );
-
-    let mouseUpCh    = listen(trackerEl, 'mouseup');
-    let mouseDownCh  = listen(trackerEl, 'mousedown');//, 1, tform);
+    let mouseUpCh    = fromDomEvent(trackerEl, 'mouseup');
+    let mouseDownCh  = fromDomEvent(trackerEl, 'mousedown');//, 1, tform);
 
     //mouseDownCh = csp.operations.map( inc, mouseDownCh, 1);
     pipeline(mouseUpCh,   xducers.map( x => false ), mouseUpCh);
@@ -222,10 +195,9 @@ export default class App extends React.Component {
 
     let mouseStateCh = merge([mouseDownCh,mouseUpCh]);
 
-
     let pointerHold = bufferWithTimeOrCount(mouseStateCh,600,2)
     pipeline( pointerHold, xducers.filter( x => (x===true) ), pointerHold );
-    
+
 
     go(function*() {
       while(true) {
@@ -233,6 +205,25 @@ export default class App extends React.Component {
         console.log("holdPointer",result)
       }
     });
+
+    //window resize channel
+    let windowSizeCh = fromDomEvent(window, 'resize');
+    //only get the fields we need
+    let extractSize = function(x){ 
+      let x = x.target;
+      let res = {width:x.innerWidth, height:x.innerHeight, aspect:x.innerWidth/x.innerHeight} 
+      return res;
+    }
+    pipeline(windowSizeCh, xducers.map( extractSize ), windowSizeCh);
+
+    go(function*() {
+      while(true) {
+        var result = yield windowSizeCh;
+        console.log("windowSize",result)
+      }
+    });
+    // let width  = window.innerWidth
+    //let height = window.innerHeight;  
 
 
     /*go(function*() {

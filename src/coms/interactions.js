@@ -4,6 +4,16 @@ var csp = require("js-csp");
 let {chan, go, take, put, alts, timeout} = require("js-csp");
 var xducers = require("transducers.js");
 
+
+export let fromDomEvent=function(el, type, bufSize, xform) {
+  var ch = chan(bufSize, xform);
+  el.addEventListener(type, function(e) {
+    csp.putAsync(ch, e);
+  });
+  return ch;
+}
+
+
 export let bufferWithTimeOrCount=function(inChan, time, count){
   let inBuf = [];
   let ch = chan();
@@ -35,6 +45,21 @@ export let bufferWithTimeOrCount=function(inChan, time, count){
   return ch;
 }
 
+/*go(function*() {
+    var clickch = listen(trackerEl, 'click');
+    var bufferedClicksCh  = bufferWithTimeOrCount(clickch, 250, 2)
+
+    var testCh = csp.chan();
+    var xform = xducers.filter(isOneValue);
+
+    // Notice that we're keeping `toCh` open after `fromCh` is closed
+    csp.operations.pipeline(testCh, xform, bufferedClicksCh, true);
+
+    while(true) {
+      var result = yield testCh;
+      console.log("AAAAAAAA",result)//if(result.value) 
+    }
+  });*/
 
 //let isOneValue  = function( x ) { return (x.length == 2); }
 //let isTwoValues = function( x ) { return (x.length == 1); }
