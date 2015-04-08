@@ -1,4 +1,4 @@
-var DndBehaviour = {
+let DndBehaviour = {
   attach:function( domNode ){
     domNode.addEventListener("dragover", this.handleDragOver.bind(this), false);
     domNode.addEventListener("drop", this.handleDrop.bind(this), false);
