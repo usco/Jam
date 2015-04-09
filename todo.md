@@ -14,6 +14,8 @@ App level "state" basics
 
 - iframe/embed
 
+- 3d view:
+  - add back picking
 
 TODO:
 =====
@@ -21,10 +23,8 @@ TODO:
   - ability to execute action by name (key bindings)
 
 - 3d view:
-  - add back picking
   - add back transformcontrols
   - add back helpers (grid etc)
-
 
 - backend integration (save & load)
 
