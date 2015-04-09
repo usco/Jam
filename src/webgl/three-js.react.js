@@ -51,6 +51,9 @@ class ThreeJs extends React.Component{
         shadowMapType : THREE.PCFSoftShadowMap,//THREE.PCFShadowMap; 
         autoUpdateScene : true,
         physicallyBasedShading : false,
+        autoClear:true,
+        gammaInput:true,
+        gammaOutput:true
       },
       viewports:[
         {
@@ -101,6 +104,9 @@ class ThreeJs extends React.Component{
   
   componentDidMount(){
     this.scene = new THREE.Scene();
+    this.dynamicInjector = new THREE.Object3D();//all dynamic mapped objects reside here
+    this.scene.add( this.dynamicInjector );
+
     let renderer = null;
     
     if(!Detector.webgl){
@@ -116,6 +122,9 @@ class ThreeJs extends React.Component{
     renderer.shadowMapType = this.config.renderer.PCFSoftShadowMap;//THREE.PCFShadowMap; 
     renderer.autoUpdateScene = this.config.renderer.autoUpdateScene;
     renderer.physicallyBasedShading = this.config.renderer.physicallyBasedShading;
+    renderer.autoClear = this.config.renderer.autoClear;
+    renderer.gammaInput = this.config.renderer.gammaInput;
+    renderer.gammaOutput = this.config.renderer.gammaOutput;
 
     this._makeCamera(this.config.cameras[0]);
     
@@ -138,9 +147,38 @@ class ThreeJs extends React.Component{
     this._animate();
     this.resizeHandler();
 
-
     this.selector = new Selector();
     this.selector.camera = this.camera;
+
+    /*let renderTargetParameters = {
+        minFilter: THREE.LinearFilter,
+        magFilter: THREE.LinearFilter,
+        format: THREE.RGBAFormat,
+        stencilBuffer: true
+    };
+    let renderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, renderTargetParameters);
+
+
+    let composer    = new THREE.EffectComposer(renderer);
+    composer.renderTarget1.stencilBuffer = true;
+    composer.renderTarget2.stencilBuffer = true;
+
+    let normal      = new THREE.RenderPass(scene, camera);
+    let outline     = new THREE.RenderPass(outScene, camera);
+    outline.clear = false;
+    
+    let mask        = new THREE.MaskPass(maskScene, camera);
+    mask.inverse = true;
+    let clearMask   = new THREE.ClearMaskPass();
+    let copyPass    = new THREE.ShaderPass(THREE.CopyShader);
+    copyPass.renderToScreen = true;
+
+    composer.addPass(normal);
+    composer.addPass(mask);
+    composer.addPass(outline);
+    composer.addPass(clearMask);
+    composer.addPass(copyPass);*/
+
     
     window.addEventListener("resize", this.resizeHandler.bind(this) );
     container.addEventListener( "click", this.tapHandler.bind(this), false );
@@ -291,7 +329,6 @@ class ThreeJs extends React.Component{
   }
 
   _makeLight( lightData ){
-    console.log("color")
     let light = undefined;
     const DEFAULTS ={
       color:"#FFF",
@@ -361,9 +398,9 @@ class ThreeJs extends React.Component{
       selectedMeshes: selectedMeshes
     })
 
-    this.props.onSelectedMeshesChange(selectedMeshes);
+    //this.props.onSelectedMeshesChange(selectedMeshes);
 
-    this.selectedMeshesCh.putAsync( selectedMeshes );
+    csp.putAsync(this.selectedMeshesCh, selectedMeshes);
     //console.log(intersects, this.state);
   }
   
@@ -390,9 +427,40 @@ class ThreeJs extends React.Component{
   }
 
   //this would actually be close to react's standard "render"
-  forceUpdate( data , map){
-    this.scene.clear();
+  forceUpdate( data , mapper){
+    this.scene.remove( this.dynamicInjector );
+    let dynamicInjector = new THREE.Object3D();//all dynamic mapped objects reside here
+    this.scene.add( dynamicInjector );
 
+    this.dynamicInjector = dynamicInjector
+
+    let fx = {
+      oldValue: undefined,
+      appl:function(mesh){
+
+      }
+    }
+
+    let xform = function( entity, mesh ){
+      if(entity._selected){
+        mesh.material.oldColor = mesh.material.color;
+        mesh.material.color.set("#FF0000")
+      }else
+      {
+        if(mesh.material.oldColor){
+          mesh.material.color = mesh.material.oldColor
+        }
+      }
+    }
+
+    function foo (entry) {
+      //let mesh = mapper(entry);
+      //console.log("mesh",mesh)
+      //dynamicInjector.add( mapper(entry) );
+      mapper(entry, dynamicInjector, xform)
+    }
+
+    data.map( foo );//entry => { this.scene.add( mapper(entry) );} )
   }
 
   render(){
