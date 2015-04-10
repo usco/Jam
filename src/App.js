@@ -30,7 +30,7 @@ var reduce    = xducers.reduce
 let pipeline = csp.operations.pipeline;
 let merge    = csp.operations.merge;
 
-import Firebase from 'firebase'
+import Rx from 'rx'
 
 import {partitionMin} from './coms/utils'
 
@@ -43,6 +43,9 @@ import keymaster from 'keymaster'
 import logger from './utils/log'
 let log = logger("Jam-Root");
 log.setLevel("info");
+
+
+
 
 
 export default class App extends React.Component {
@@ -280,10 +283,6 @@ export default class App extends React.Component {
     //
 
 
-    let trackerEl = this.refs.drawCanvas.getDOMNode();
-    let canvas = trackerEl;
-    let _ref = new Firebase("https://boiling-heat-275.firebaseio.com/");
-
     /*
     let mouseUps    = fromDomEvent(trackerEl, 'mouseup');
     let mouseDowns  = fromDomEvent(trackerEl, 'mousedown');
@@ -322,6 +321,12 @@ export default class App extends React.Component {
 
   }
 
+  //FIXME: move this into assetManager
+  dismissResource(resource){
+    resource.deferred.reject("cancelling");
+    this.assetManager.unLoad( resource.uri )
+  },
+
   loadMesh( uriOrData, options ){
     const DEFAULTS={
     }
@@ -334,36 +339,61 @@ export default class App extends React.Component {
 
     let self = this;
     let resource = this.assetManager.load( uriOrData, {keepRawData:true, parsing:{useWorker:true,useBuffers:true} } );
-    
-    co(function* (){
 
-      try{
-        let meshData = yield resource.deferred.promise;
-        let shape = postProcessMesh( resource )
+    var source = Rx.Observable.fromPromise(resource.deferred.promise);
 
-        //part type registration etc
-        //we are registering a yet-uknown Part's type, getting back an instance of that type
-        let partKlass = self.kernel.registerPartType( null, null, shape, {name:resource.name, resource:resource} );
-        if( addToAssembly ) {
-          let part = self.kernel.makePartTypeInstance( partKlass );
-          self.kernel.registerPartInstance( part );
-        }
-        
-        if( display || addToAssembly ){
-          //self.refs.glview.scene.add( shape );
-          self._meshInjectPostProcess( shape );
-          //self.selectedEntities = [ shape.userData.entity ];
-          self._tempForceDataUpdate();
-        }
-      }catch( error ){
-        console.log("failed to load resource", error, resource.error);
-        //do not keep error message on screen for too long, remove it after a while
-        /*self.async(function() {
-          self.dismissResource(resource);
-        }, null, self.dismissalTimeOnError);*/
+    let logNext  = function( next ){
+      log.info( next )
+    }
+    let logError = function( err){
+      log.error(err)
+    }
+    let handleLoadError = function( err ){
+       log.error("failed to load resource", err, resource.error);
+       //do not keep error message on screen for too long, remove it after a while
+       setTimeout(cleanupResource, self.dismissalTimeOnError);
+       return resource;
+    }
+    let cleanupResource = function( resource ){
+      log.info("lkjlk")
+      self.dismissResource(resource);
+    }
+
+    let register = function( shape ){
+      //part type registration etc
+      //we are registering a yet-uknown Part's type, getting back an instance of that type
+      let partKlass = self.kernel.registerPartType( null, null, shape, {name:resource.name, resource:resource} );
+      if( addToAssembly ) {
+        let part = self.kernel.makePartTypeInstance( partKlass );
+        self.kernel.registerPartInstance( part );
       }
-      
-    })
+
+      return shape;
+    }
+
+    let showIt = function( shape ){
+      if( display || addToAssembly ){
+        //self.refs.glview.scene.add( shape );
+        self._meshInjectPostProcess( shape );
+        //self.selectedEntities = [ shape.userData.entity ];
+        self._tempForceDataUpdate();
+      }
+    }
+
+    let mainProc = source
+      .map( postProcessMesh )
+      .share();
+
+    /*mainProc.map( register ).subscribe(logNext,logError);
+    mainProc.map( showIt ).subscribe(logNext,logError);*/
+    mainProc
+      .map( register )
+      .map( showIt )
+        .catch(handleLoadError)
+        //.timeout(100,cleanupResource)
+        .subscribe(logNext,logError);
+
+    mainProc.subscribe(logNext,logError);
   }
 
   //mesh insertion post process
@@ -379,7 +409,6 @@ export default class App extends React.Component {
     //FIXME: not sure where this should be best: used to dispatch "scene insertion"/creation operation
     //var operation = new MeshAddition( mesh );
     //self.historyManager.addCommand( operation );
-
   }
 
   handleClick(){
@@ -450,19 +479,8 @@ export default class App extends React.Component {
       left: 0,
       bottom: 0,
     };
-    let canvasStyle= {
-      position: 'absolute',
-      right: 0,
-      bottom: 0,
-      background: 'red',
-      width:'300px',
-      height:'300px',
-      zIndex:25
-    };
-    //console.log(this.state);
 
     let fullTitle = `${this.state.design.title} ---- ${this.state.appInfos.name} v  ${this.state.appInfos.version}`;
-
 
     return (
         <div ref="wrapper">
@@ -473,10 +491,6 @@ export default class App extends React.Component {
           <div ref="testArea" style={testAreaStyle}>
             <button onClick={this.handleClick.bind(this)}> Test </button>
           </div>
-          <div style={canvasStyle}>
-            <canvas ref="drawCanvas"> </canvas>
-          </div>
-     
         </div>
     );
   }
