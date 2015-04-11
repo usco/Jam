@@ -168,3 +168,40 @@ while(true) {
       }
     });
     */
+
+
+    /*
+    let mouseUps    = fromDomEvent(trackerEl, 'mouseup');
+    let mouseDowns  = fromDomEvent(trackerEl, 'mousedown');
+    let mouseMoves  = fromDomEvent(trackerEl, 'mousemove');
+
+    function coordinate(event, canvas) {
+        let rect = canvas.getBoundingClientRect();
+
+        let coords={
+          x: event.clientX - rect.left,
+          y: event.clientY - rect.top
+        }
+        console.log(coords)
+        return coords
+      }
+
+   let mouseDrags = MouseDrags(mouseDowns, mouseUps, mouseMoves);
+      // Saving to firebase 
+      go(function*() {
+        for (;;) {
+          let drag = yield mouseDrags;
+          //console.log("drag",drag)
+          go(function*() {
+            let color = "blue";//document.getElementById("color").value || "blue";
+            //let _dragref = _ref.push({color: color});
+            let event;
+            while (csp.CLOSED !== (event = yield drag)) {
+              console.log("drag indeed")
+              //_dragref.ref().child("points").push(coordinate(event, canvas));
+            }
+          });
+        }
+      });
+
+      */

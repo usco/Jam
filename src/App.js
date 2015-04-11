@@ -31,6 +31,8 @@ let pipeline = csp.operations.pipeline;
 let merge    = csp.operations.merge;
 
 import Rx from 'rx'
+let fromEvent = Rx.Observable.fromEvent;
+
 
 import {partitionMin} from './coms/utils'
 
@@ -111,28 +113,9 @@ export default class App extends React.Component {
     DndBehaviour.attach( container );
     DndBehaviour.dropHandler = this.dropHandler.bind(this);
 
-    /*let glview   = this.refs.glview;
-    DoubleClickBehaviour.attach( glview);
-    DoubleClickBehaviour.dClickHandler = this.doubleTapHandler.bind(this);*/
     let glview   = this.refs.glview;
     let meshesCh = glview.selectedMeshesCh;
     
-    /*let xform = xducers.compose(
-        xducers.keep(),
-        xducers.dedupe()
-    );
-
-    pipeline( meshesCh, xform, meshesCh );
-
-    go(function*() {
-      let prevMeshes;
-      while(true) {
-        var result = yield meshesCh;
-        console.log("I got meshes",result);
-        //console.log(prevMeshes)
-        prevMeshes = result;
-      }
-    });*/
 
     //get entities 
     let checkCount = function(x){
@@ -192,7 +175,7 @@ export default class App extends React.Component {
 
     //setup key bindings
     this.setupKeyboard()
-    this.cspMouseTrack()
+    this.setupMouseTrack()
   }
 
   componentWillUnmount(){
@@ -254,7 +237,68 @@ export default class App extends React.Component {
     this._zoomInOnObject.execute( object, {position:pickingInfos[0].point} );
   }
 
-  cspMouseTrack(trackerEl, outputEl){
+  setupMouseTrack(trackerEl, outputEl){
+    let trackerEl = this.refs.wrapper.getDOMNode();
+
+    let clickStream = fromEvent(trackerEl, 'click');
+    let mouseDowns  = fromEvent(trackerEl, 'mousedown');
+    let mouseUps    = fromEvent(document, 'mouseup');
+    let mouseMoves  = fromEvent(trackerEl, 'mousemove');
+
+
+    let clickStreamBase = clickStream
+      .buffer(function() { return clickStream.throttle(250); })
+      .map( list => list.length )
+      .share();
+
+    let singleClickStream = clickStreamBase.filter( x => x == 1 );
+    let multiClickStream  = clickStreamBase.filter( x => x >= 2 );
+    let mouseDrags = mouseDowns.select(function (downEvent) {
+        return mouseMoves.takeUntil(mouseUps)
+        //.select(function (drag) {
+        //    return getOffset(drag);
+        //});
+
+    //SelectMany
+    });
+    mouseDrags.subscribe(function (drags) {
+      log.info("drags")
+    })
+    // Listen to both streams and render the text label accordingly
+    singleClickStream.subscribe(function (event) {
+        log.info( 'click' );
+    });
+    multiClickStream.subscribe(function (numclicks) {
+        log.info( numclicks+'x click');
+    });
+    Rx.Observable.merge(singleClickStream, multiClickStream)
+        .throttle(1000)
+        .subscribe(function (suggestion) {
+    });
+
+    /*var multiClickStream = clickStream
+        .buffer(function() { return clickStream.throttle(250); })
+        .map(function(list) { return list.length; })
+        .filter(function(x) { return x >= 2; });
+
+    // Same as above, but detects single clicks
+    var singleClickStream = clickStream
+        .buffer(function() { return clickStream.throttle(250); })
+        .map(function(list) { return list.length; })
+        .filter(function(x) { return x === 1; });
+
+    // Listen to both streams and render the text label accordingly
+    singleClickStream.subscribe(function (event) {
+        document.querySelector('h2').textContent = 'click';
+    });
+    multiClickStream.subscribe(function (numclicks) {
+        document.querySelector('h2').textContent = ''+numclicks+'x click';
+    });
+    Rx.Observable.merge(singleClickStream, multiClickStream)
+        .throttle(1000)
+        .subscribe(function (suggestion) {
+            document.querySelector('h2').textContent = '';
+    });*/
 
     /*let trackerEl = this.refs.wrapper.getDOMNode();
     let outputEl  = this.refs.infoLayer.getDOMNode();
@@ -274,58 +318,13 @@ export default class App extends React.Component {
     let pointerHold = bufferWithTimeOrCount(mouseStates,600,2)
     pipeline( pointerHold, xducers.filter( x => (x===true) ), pointerHold );*/
 
-    /*go(function*() {
-      while(true) {
-        var result = yield pointerHold;
-        console.log("holdPointer",result)
-      }
-    });*/
-    //
-
-
-    /*
-    let mouseUps    = fromDomEvent(trackerEl, 'mouseup');
-    let mouseDowns  = fromDomEvent(trackerEl, 'mousedown');
-    let mouseMoves  = fromDomEvent(trackerEl, 'mousemove');
-
-    function coordinate(event, canvas) {
-        let rect = canvas.getBoundingClientRect();
-
-        let coords={
-          x: event.clientX - rect.left,
-          y: event.clientY - rect.top
-        }
-        console.log(coords)
-        return coords
-      }
-
-   let mouseDrags = MouseDrags(mouseDowns, mouseUps, mouseMoves);
-      // Saving to firebase 
-      go(function*() {
-        for (;;) {
-          let drag = yield mouseDrags;
-          //console.log("drag",drag)
-          go(function*() {
-            let color = "blue";//document.getElementById("color").value || "blue";
-            //let _dragref = _ref.push({color: color});
-            let event;
-            while (csp.CLOSED !== (event = yield drag)) {
-              console.log("drag indeed")
-              //_dragref.ref().child("points").push(coordinate(event, canvas));
-            }
-          });
-        }
-      });
-
-      */
-
   }
 
   //FIXME: move this into assetManager
   dismissResource(resource){
     resource.deferred.reject("cancelling");
     this.assetManager.unLoad( resource.uri )
-  },
+  }
 
   loadMesh( uriOrData, options ){
     const DEFAULTS={
@@ -373,9 +372,8 @@ export default class App extends React.Component {
 
     let showIt = function( shape ){
       if( display || addToAssembly ){
-        //self.refs.glview.scene.add( shape );
         self._meshInjectPostProcess( shape );
-        //self.selectedEntities = [ shape.userData.entity ];
+        shape.userData.entity._selected = true;
         self._tempForceDataUpdate();
       }
     }
