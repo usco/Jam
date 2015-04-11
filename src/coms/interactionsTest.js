@@ -1,5 +1,7 @@
 import Rx from 'rx'
-let fromEvent = Rx.Observable.fromEvent;
+let Observable= Rx.Observable;
+let fromEvent = Observable.fromEvent;
+
 import React from 'react';
 
 import logger from '../utils/log'
@@ -67,6 +69,9 @@ export default class App extends React.Component {
     let mouseDowns  = fromEvent(trackerEl, 'mousedown');
     let mouseUps    = fromEvent(trackerEl, 'mouseup');
     let mouseMoves  = fromEvent(trackerEl, 'mousemove');
+    let rightclick  = fromEvent(trackerEl, 'contextmenu').do(
+      function(e){ e.preventDefault();
+    }); // disable the context menu / right click
 
 
     let getOffset=function(event) {
@@ -99,14 +104,13 @@ export default class App extends React.Component {
 
     //DEFINE ALL INTERACTIONS
 
-
     let mouseState = 
       mouseDowns.map(true)
       .merge(
         mouseUps.map(false));
 
 
-    var _moves = mouseDowns.selectMany(function (md) {
+    var _moves = mouseDowns.flatMap(function (md) {
       var start = { x: md.clientX, y: md.clientY };
       return mouseMoves.combineLatest(mouseUps, function (mm, mu) {
         //log.info("mm",mm,"mu",mu)
@@ -115,7 +119,9 @@ export default class App extends React.Component {
           start: start,
           end: stop
         };
-      }).takeUntil(mouseUps);
+      })
+        //.delay(400)
+        .takeUntil(mouseUps);
     });
 
 
@@ -125,14 +131,15 @@ export default class App extends React.Component {
       .filter( x => x[0] ===true );
     
     var moves   = _moves.filter(isMoving);
-    var holds   = _holds.selectMany( function(h){
-
-      return _holds.takeUntil( moves ).last()
-    });//.takeUntil( isStatic );
+    var holds   = _holds;
 
 
 
-    let fakeClicks = mouseDowns.selectMany( function(md,mm ){
+    /*
+    "pseudo click" that does not trigger when there was
+    a mouse movement 
+    */
+    let fakeClicks = mouseDowns.flatMap( function( md ){
       let start   = { x: md.clientX, y: md.clientY };
 
       //get only valid moves 
@@ -142,52 +149,99 @@ export default class App extends React.Component {
         .filter( x => x.length == 1 )
         .map( x => x[0]);
 
-      let __moves = mMoves.merge(Rx.Observable.return(true));//default to true
+      let __moves = mMoves.merge(Observable.return(true));//default to true
 
-      let result = __moves.combineLatest(mouseUps, function(m, mu){
+      return __moves.combineLatest(mouseUps, function(m, mu){
         //log.info(m, mu)
         var end = {x: mu.clientX, y: mu.clientY };
         return isStatic({start:start,end:end});//allow for small movement (shaky hands!)
 
-      }).takeUntil(mouseUps);
-
-      return result.filter( x => x===true )
+      })
+        .takeUntil(mouseUps)
+        .filter( x => x===true )
     });
 
+    /*
+    let mouseHold = mousedown.flatMap(function( md ){
+      let start   = { x: md.clientX, y: md.clientY };
 
-    fakeClicks.subscribe(
-      function (item) {
-        log.info("blaTest",item)
-      },
-      function (err) {
-        log.error(err)
-      }
-    )
+      //get only valid moves 
+      let mMoves  = mouseMoves
+        .map( false )
+        .bufferWithTimeOrCount(200,1)
+        .filter( x => x.length == 1 )
+        .map( x => x[0]);
 
+      let __moves = mMoves.merge(Observable.return(true));//default to true
 
-    /*let mouseDrags = mouseDowns.selectMany(function (md) {
-      // calculate offsets when mouse down
-      var startX = md.offsetX, startY = md.offsetY;
-      // Calculate delta with mousemove until mouseup
-      return mouseMoves.map(function (mm) {
-          //(mm.preventDefault) ? mm.preventDefault() : event.returnValue = false; 
-          return {
-              left: mm.clientX - startX,
-              top: mm.clientY - startY
-          };
-      }).takeUntil(mouseUps);
+      return __moves;
+      return Observable.return(md)
+        .delay(400)
+        .takeUntil(mouseup);
     });*/
+    ///////
+
+    let mouseMovesZip = mouseMoves
+      .skip(1)
+      .zip( mouseMoves, function(a, b){
+        return  {
+            client:{x: a.clientX,y: a.clientY },
+            delta:{x: a.clientX - b.clientX,y: a.clientY - b.clientY}};
+      });
+
+    let mouseMovesAlt = mouseMoves
+      .bufferWithCount(2)
+      .flatMap( function(data){
+        let [a,b] = data;
+        return  Observable.return({
+            client:{x: a.clientX,y: a.clientY },
+            delta:{x: a.clientX - b.clientX,y: a.clientY - b.clientY}});
+      });
+ 
+
+
+
+    let clickStreamBase = fakeClicks
+      .buffer(function() { return fakeClicks.debounce(multiClickDelay); })
+      .map( list => list.length )
+      .share();
+
+    let singleClicks = clickStreamBase.filter( x => x == 1 );
+    let multiClicks  = clickStreamBase.filter( x => x >= 2 );
+
+    // right click and left long click are the same
+    //TODO need a better name
+    //var interactions = Observable.merge(rightclick, clickhold);
+   
+
+    //DEBUG
+    singleClicks.subscribe(function (event) {
+        log.info( 'click' );
+    });
+    multiClicks.subscribe(function (numclicks) {
+        log.info( numclicks+'x click');
+    });
+    Observable.merge(singleClicks, multiClicks, rightclick)
+        .debounce(1000)
+        .subscribe(function (suggestion) {
+    });
+
+    mouseMovesAlt.subscribe(function (move) {//bufferWithTime(500)//.bufferWithCount(2)
+      log.info("moves",move)
+    })
+    
+    holds.subscribe(function (press) {
+      log.info("longPress",press)
+    });
 
     //debug
     /*mouseMoves.subscribe(function (drags) {
       log.info("moves")
     })
-*/
-
-
-    /*mouseDowns.subscribe(function (down) {
-      log.info("down")
+    mouseDowns.subscribe(function (down) {
+      log.info("down",down)
     })
+
 
     mouseUps.subscribe(function (up) {
       log.info("ups")
@@ -197,46 +251,7 @@ export default class App extends React.Component {
       log.info("drags",drags)
     })
 
-    holds.subscribe(function (press) {
-      log.info("longPress",press)
-    })*/
-
-    /*mouse_state.bufferWithTimeOrCount(600,2)
-        .filter(isOneValue)
-        .filter(function(x) { return (x[0] == true); })
-        .onValue(log("hold"));
-        
-
-    holds.subscribe(function(hold){
-      log.info("holds",hold)
-    })*/
-
-    /*moves.subscribe(function (move) {
-      log.info("moves",move)
-    })
-
-
-    let clickStreamBase = clickStream
-      .buffer(function() { return clickStream.throttle(multiClickDelay); })
-      .map( list => list.length )
-      .share();
-
-    let singleClicks = clickStreamBase.filter( x => x == 1 );
-    let multiClicks  = clickStreamBase.filter( x => x >= 2 );
-
-    
-    //let clicksNoUp = clickStreamBase.takeUntil(mouseUps);
-   
-    singleClicks.subscribe(function (event) {
-        log.info( 'click' );
-    });
-    multiClicks.subscribe(function (numclicks) {
-        log.info( numclicks+'x click');
-    });
-    Rx.Observable.merge(singleClicks, multiClicks)
-        .debounce(1000)
-        .subscribe(function (suggestion) {
-    });*/
+    */
 
   }
 
