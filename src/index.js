@@ -1,7 +1,8 @@
 import React from 'react';
-import App from './App';
+//import App from './App';
 //import App from './_old/interactionsExpRX'
 //import App from './_old/interactionsExpCSP'
+import App from './coms/interactionsTest'
 
 
 React.render(<App />, document.getElementById('root'));

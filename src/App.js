@@ -238,6 +238,14 @@ export default class App extends React.Component {
   }
 
   setupMouseTrack(trackerEl, outputEl){
+    /*all the cases we need : 
+      - single & multiple clicks/taps
+      - drags with "ending mouseup" NOT triggering a click event
+      - "static hold" long press without much movement delta
+    */
+    //params, to extract
+    let multiClickDelay = 250;
+    let maxDelta        = 50;
     let trackerEl = this.refs.wrapper.getDOMNode();
 
     let clickStream = fromEvent(trackerEl, 'click');
@@ -246,25 +254,70 @@ export default class App extends React.Component {
     let mouseMoves  = fromEvent(trackerEl, 'mousemove');
 
 
-    let clickStreamBase = clickStream
-      .buffer(function() { return clickStream.throttle(250); })
+    let getOffset=function(event) {
+      return {
+        x: event.offsetX === undefined ? event.layerX : event.offsetX,
+        y: event.offsetY === undefined ? event.layerY : event.offsetY
+      };
+    }
+
+    let hasMoved=function(offset){
+      return (offset.x*offset.x + offset.y * offset.y)>(maxDelta*maxDelta);
+    }
+
+
+    /*let mouseDrags = mouseDowns.select(function (downEvent) {
+      return mouseMoves.takeUntil(mouseUps)
+    //SelectMany
+    });*/
+
+    let mouseDrags = mouseDowns.selectMany(function (md) {
+      // calculate offsets when mouse down
+      var startX = md.offsetX, startY = md.offsetY;
+      console.log(startX)
+      // Calculate delta with mousemove until mouseup
+      return mouseMoves.map(function (mm) {
+        console.log("lkj")
+          //(mm.preventDefault) ? mm.preventDefault() : event.returnValue = false; 
+
+          return {
+              left: mm.clientX - startX,
+              top: mm.clientY - startY
+          };
+      }).takeUntil(mouseUps);
+    });
+
+    //debug
+    /*mouseMoves.subscribe(function (drags) {
+      log.info("moves")
+    })
+
+    mouseUps.subscribe(function (drags) {
+      log.info("ups")
+    })
+
+    mouseDowns.subscribe(function (drags) {
+      log.info("down")
+    })*/
+
+
+    mouseDrags.subscribe(function (drags) {
+      log.info("drags")
+    })
+
+
+
+    /*let clickStreamBase = clickStream
+      .buffer(function() { return clickStream.throttle(multiClickDelay); })
       .map( list => list.length )
       .share();
 
     let singleClickStream = clickStreamBase.filter( x => x == 1 );
     let multiClickStream  = clickStreamBase.filter( x => x >= 2 );
-    let mouseDrags = mouseDowns.select(function (downEvent) {
-        return mouseMoves.takeUntil(mouseUps)
-        //.select(function (drag) {
-        //    return getOffset(drag);
-        //});
 
-    //SelectMany
-    });
-    mouseDrags.subscribe(function (drags) {
-      log.info("drags")
-    })
-    // Listen to both streams and render the text label accordingly
+    
+    //let clicksNoUp = clickStreamBase.takeUntil(mouseUps);
+   
     singleClickStream.subscribe(function (event) {
         log.info( 'click' );
     });
@@ -274,31 +327,8 @@ export default class App extends React.Component {
     Rx.Observable.merge(singleClickStream, multiClickStream)
         .throttle(1000)
         .subscribe(function (suggestion) {
-    });
-
-    /*var multiClickStream = clickStream
-        .buffer(function() { return clickStream.throttle(250); })
-        .map(function(list) { return list.length; })
-        .filter(function(x) { return x >= 2; });
-
-    // Same as above, but detects single clicks
-    var singleClickStream = clickStream
-        .buffer(function() { return clickStream.throttle(250); })
-        .map(function(list) { return list.length; })
-        .filter(function(x) { return x === 1; });
-
-    // Listen to both streams and render the text label accordingly
-    singleClickStream.subscribe(function (event) {
-        document.querySelector('h2').textContent = 'click';
-    });
-    multiClickStream.subscribe(function (numclicks) {
-        document.querySelector('h2').textContent = ''+numclicks+'x click';
-    });
-    Rx.Observable.merge(singleClickStream, multiClickStream)
-        .throttle(1000)
-        .subscribe(function (suggestion) {
-            document.querySelector('h2').textContent = '';
     });*/
+
 
     /*let trackerEl = this.refs.wrapper.getDOMNode();
     let outputEl  = this.refs.infoLayer.getDOMNode();
