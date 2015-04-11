@@ -58,7 +58,7 @@ export default class App extends React.Component {
     let longPressDelay  = 600;
     let maxTime         = 600;
 
-    let minDelta        = 100;//max 100 pixels delta
+    let minDelta        = 50;//max 100 pixels delta
     let deltaSqr        = (minDelta*minDelta);
 
     let trackerEl = this.refs.wrapper.getDOMNode();
@@ -85,7 +85,7 @@ export default class App extends React.Component {
     }
 
     let isStatic=function(startEnd){
-      return !isMoving;
+      return !isMoving(startEnd);
     }
 
     //TODO ,: regroup / refactor all "delta" operation ?
@@ -123,41 +123,46 @@ export default class App extends React.Component {
       .bufferWithTimeOrCount(600,2)
       .filter( x => x.length == 1 )
       .filter( x => x[0] ===true );
-
     
-    var moves = _moves.filter(isMoving);
-    var holds = _holds.selectMany( function(h){
+    var moves   = _moves.filter(isMoving);
+    var holds   = _holds.selectMany( function(h){
 
       return _holds.takeUntil( moves ).last()
     });//.takeUntil( isStatic );
 
 
-    var blaTest = mouseDowns.selectMany( function( md ){
-      //log.info("blaz",md)
-      //mouseDowns.skipUntil(mouseUps).repeat()
-      return ""
-    });
 
     let fakeClicks = mouseDowns.selectMany( function(md,mm ){
-      log.info("here")
-      return mouseMoves.map(true).filter( x => x!==true ).bufferWithTimeOrCount(20,1).takeUntil( mouseUps );//.filter( x => x.length == 0 )
-      /*.select( function(bla){
-        log.info("mlk",bla)
-        return ""
-      });*/
+      let start   = { x: md.clientX, y: md.clientY };
 
-      /*return mouseMoves.bufferWithTimeOrCount(20,1).takeUntil( mouseUps ).filter( x => x.length == 0 )//.lastOrDefault(null, 0);
-      .select( function(bla){
-        return bla
-      });*/
+      //get only valid moves 
+      let mMoves  = mouseMoves
+        .map( false )
+        .bufferWithTimeOrCount(200,1)
+        .filter( x => x.length == 1 )
+        .map( x => x[0]);
 
+      let __moves = mMoves.merge(Rx.Observable.return(true));//default to true
 
+      let result = __moves.combineLatest(mouseUps, function(m, mu){
+        //log.info(m, mu)
+        var end = {x: mu.clientX, y: mu.clientY };
+        return isStatic({start:start,end:end});//allow for small movement (shaky hands!)
 
+      }).takeUntil(mouseUps);
+
+      return result.filter( x => x===true )
     });
 
-    fakeClicks.subscribe(function (item) {
-      log.info("blaTest",item)
-    })
+
+    fakeClicks.subscribe(
+      function (item) {
+        log.info("blaTest",item)
+      },
+      function (err) {
+        log.error(err)
+      }
+    )
 
 
     /*let mouseDrags = mouseDowns.selectMany(function (md) {
