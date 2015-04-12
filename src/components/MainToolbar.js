@@ -7,7 +7,7 @@ let Observable= Rx.Observable;
 let fromEvent = Observable.fromEvent;
 
 import logger from '../utils/log'
-let log = logger("Jam-Root");
+let log = logger("Jam-ToolBar");
 log.setLevel("info");
 
 
@@ -30,7 +30,8 @@ class MainToolBar extends RxReact.Component {
   }
   
   render() {
-    let fullTitle = `${this.state.design.title} ---- ${this.state.appInfos.name} v  ${this.state.appInfos.version}`;
+    log.info("bla",this.props)
+    let fullTitle = `${this.props.design.title} ---- ${this.state.appInfos.name} v  ${this.state.appInfos.version}`;
 
     return (
       <div>

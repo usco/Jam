@@ -22,8 +22,9 @@ var csp = require("js-csp");
 let {chan, go, take, put, alts, timeout} = require("js-csp");
 var xducers = require("transducers.js");
 
-
-
+import Rx from 'rx'
+let Observable= Rx.Observable;
+let Subject   = Rx.Subject;
 
 /* this is the wrapper that actually gets the render calls*/
 /*class GlCanvas extends React.Component{
@@ -202,8 +203,10 @@ class ThreeJs extends React.Component{
     //this.domElement.addEventListener( "mousedown", onPointerDown, false );
 
     PreventScrollBehaviour.attach( container );
-
+    //TODO: , create an abstraction above channels/rx
     this.selectedMeshesCh = chan();
+    this.selectedMeshesSub = new Rx.Subject();
+
   }
   
   componentWillUnmount() {
@@ -360,7 +363,7 @@ class ThreeJs extends React.Component{
          light.intensity = lightData.intensity;
       break;
       case "hemisphereLight":
-        light =new THREE.HemisphereLight(lightData.color, lightData.gndColor, lightData.intensity);
+        light = new THREE.HemisphereLight(lightData.color, lightData.gndColor, lightData.intensity);
       break;
       case "ambientLight":
         // ambient light does not have intensity, only color
@@ -390,21 +393,11 @@ class ThreeJs extends React.Component{
         };
         lightData = Object.assign({}, dirLightDefaults, lightData);
         light = new THREE.DirectionalLight( lightData.color, lightData.intensity );
-        /*light.castShadow = lightData.castShadow;
-        light.onlyShadow = lightData.onlyShadow;
-
-        light.shadowMapWidth = 2048;
-        light.shadowMapHeight = 2048;
-        light.shadowMapWidth = 2048;
-        light.shadowMapHeight = 2048;*/
-
         for(var key in lightData) {
           if(light.hasOwnProperty(key)) {
             light[key] = lightData[key]
           }
         }
-        console.log(light)
-
       break;
       default:
         throw new Error("could not create light")
@@ -421,7 +414,7 @@ class ThreeJs extends React.Component{
   tapHandler(event){
     //console.log("tapped in view")
     let rect = this.container.getBoundingClientRect();
-    let intersects = this.selector.pick(event, rect, this.width, this.height, this.scene);
+    let intersects = this.selector.pick(event, rect, this.width, this.height, this.dynamicInjector);
 
     let selectedMeshes = intersects.map( intersect => intersect.object );
     selectedMeshes.sort().filter( ( mesh, pos ) => { return (!pos || mesh != intersects[pos - 1]) } );
@@ -430,10 +423,12 @@ class ThreeJs extends React.Component{
       selectedMeshes: selectedMeshes
     })
 
-    //this.props.onSelectedMeshesChange(selectedMeshes);
-
     csp.putAsync(this.selectedMeshesCh, selectedMeshes);
-    //console.log(intersects, this.state);
+    this.selectedMeshesSub.onNext(selectedMeshes);
+
+    if(selectedMeshes.length>0){
+      console.log(selectedMeshes[0] === selectedMeshes[1]);
+    }
   }
   
   _animate() 

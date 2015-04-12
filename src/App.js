@@ -2,8 +2,10 @@ import React from 'react';
 import co from "co";
 
 
-import ThreeJs     from './components/webgl/three-js.react';
+import ThreeJs     from './components/webgl/three-js.react'
 import MainToolbar from './components/MainToolbar'
+import EntityInfos from './components/EntityInfos'
+
 
 import postProcessMesh from './meshpp/postProcessMesh'
 
@@ -76,11 +78,15 @@ export default class App extends React.Component {
         'toRotateMode':'r',
         'toScaleMode':'s'
       },
+
+      //real state 
       camActive : false,//is a camera movement taking place ?
       activeTool: null,
       design:{
-        title:"untitled design"
-      }
+        title:"untitled design",
+        description:"",
+      },
+      selectedEntities:[]
     };
 
     this.assetManager = new AssetManager();
@@ -113,7 +119,7 @@ export default class App extends React.Component {
 
     let glview   = this.refs.glview;
     let meshesCh = glview.selectedMeshesCh;
-    
+    let self     = this;
 
     //get entities 
     let checkCount = function(x){
@@ -121,15 +127,40 @@ export default class App extends React.Component {
     }
 
     let filterEntities = function( x ){
+      log.info("x",x)
       return (x.userData && x.userData.entity)
     }
 
     let fetchEntities = function( x ){
+      log.info("x",x)
       return x.userData.entity;
     }
 
+    let selectedMeshesChAlt = glview.selectedMeshesSub;
+    let yeah = selectedMeshesChAlt
+      .flatMap( x => x )
+      //.distinct()
+      //.distinctUntilChanged()
+      .filter(filterEntities)
+      .map(fetchEntities)
+      .map(function(selectedEntities){
+        self.setSeletedEntites(selectedEntities)
+      })
 
-    let meshesCh2 = glview.selectedMeshesCh;
+    var subscription = yeah.subscribe(
+      function (x) {
+          console.log( x);
+
+      },
+      function (err) {
+          console.log('Error: ' + err);
+      },
+      function () {
+          console.log('Completed');
+      });
+
+
+    /*let meshesCh2 = glview.selectedMeshesCh;
     let xform = xducers.compose(
       xducers.filter( checkCount )//x => x.length>0)
       //xducers.partition(2)
@@ -169,7 +200,7 @@ export default class App extends React.Component {
 
         prevSelections = res || [];
       }
-    });
+    });*/
 
     //setup key bindings
     this.setupKeyboard()
@@ -245,6 +276,14 @@ export default class App extends React.Component {
     this.assetManager.unLoad( resource.uri )
   }
 
+  //FIXME; this should be a command or something
+  setSeletedEntites(selectedEntities){
+    this.setState({
+      selectedEntities:selectedEntities
+    });
+    log.info("selectedEntities",selectedEntities)
+  }
+
   loadMesh( uriOrData, options ){
     const DEFAULTS={
     }
@@ -273,7 +312,7 @@ export default class App extends React.Component {
        return resource;
     }
     let cleanupResource = function( resource ){
-      log.info("lkjlk")
+      log.info("cleaning up resources")
       self.dismissResource(resource);
     }
 
@@ -292,13 +331,12 @@ export default class App extends React.Component {
       return {klass:partKlass,instance:partInstance};
     }
 
-    let showIt = function( klassInstance ){
+    let showIt = function( klassAndInstance ){
       if( display || addToAssembly ){
-        //self._meshInjectPostProcess( shape );
-        //shape.userData.entity._selected = true;
+        //klassAndInstance.instance._selected = true;//SETTIN STATE !! not good like this
         self._tempForceDataUpdate();
       }
-      return klassInstance
+      return klassAndInstance
     }
 
     let mainProc = source
@@ -310,9 +348,9 @@ export default class App extends React.Component {
     mainProc
       .map( register )
       .map( showIt )
-      .map( function(klassInstance){
-        klassInstance.instance.pos[2]+=30;
-        return klassInstance;
+      .map( function(klassAndInstance){
+        klassAndInstance.instance.pos[2]+=30;
+        return klassAndInstance;
       })
         .catch(handleLoadError)
         //.timeout(100,cleanupResource)
@@ -336,9 +374,6 @@ export default class App extends React.Component {
     //self.historyManager.addCommand( operation );
   }
 
-  handleClick(){
-    //console.log( this.state )
-  }
 
   /*temporary method to force 3d view updates*/
   _tempForceDataUpdate(){
@@ -348,6 +383,26 @@ export default class App extends React.Component {
 
     let mapper = function( entity, addTo, xform ){
       let self = this;
+
+      /*let getInstance  = self.kernel.getPartMeshInstance( entity );
+      return Rx.Observable.from( getInstance )
+        .map(function(meshInstance){
+          meshInstance.userData.entity = entity;//FIXME : should we have this sort of backlink ?
+          //FIXME/ make a list of all operations needed to be applied on part meshes
+          //computeObject3DBoundingSphere( meshInstance, true );
+          //centerMesh( meshInstance ); //FIXME do not use the "global" centerMesh
+          
+          log.info("instance",meshInstance)
+
+          meshInstance.position.fromArray( entity.pos )
+          meshInstance.rotation.fromArray( entity.rot );
+          meshInstance.scale.fromArray(  entity.sca );
+          if (addTo)addTo.add( meshInstance);
+          if (xform) xform(entity,meshInstance);
+          return meshInstance
+        })
+        .map(self._meshInjectPostProcess)*/
+
       co(function* (){
         let meshInstance = yield self.kernel.getPartMeshInstance( entity ) ;
         console.log("meshInstance",meshInstance)
@@ -362,13 +417,13 @@ export default class App extends React.Component {
           meshInstance.position.fromArray( entity.pos )
           meshInstance.rotation.fromArray( entity.rot );
           meshInstance.scale.fromArray(  entity.sca );
+
+          self._meshInjectPostProcess( meshInstance );
           
           if (addTo)addTo.add( meshInstance);
           if (xform) xform(entity,meshInstance);
-          self._meshInjectPostProcess( meshInstance );
-
+          
           return meshInstance;
-          //self._meshInjectPostProcess( meshInstance );
         }
       });
     };
@@ -424,14 +479,15 @@ export default class App extends React.Component {
           <ThreeJs testProp={this.state.test} cubeRot={this.state.cube} ref="glview"
           
           <div ref="infoLayer" style={infoLayerStyle} />*/
+                      //<button onClick={this.handleClick.bind(this)}> Test </button>
 
     return (
         <div ref="wrapper" style={wrapperStyle}>
-          <MainToolbar> </MainToolbar>
-          <ThreeJs testProp={this.state.test} cubeRot={this.state.cube} ref="glview"/>
+          <MainToolbar design={this.state.design} > </MainToolbar>
+          <ThreeJs ref="glview"/>
 
           <div ref="testArea" style={testAreaStyle}>
-            <button onClick={this.handleClick.bind(this)}> Test </button>
+            <EntityInfos entities={this.state.selectedEntities}/>
           </div>
         </div>
     );
