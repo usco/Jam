@@ -2,11 +2,16 @@ import React from 'react';
 import THREE from 'three';
 import Detector from './deps/Detector.js';
 
+import helpers from 'glView-helpers'
+let LabeledGrid = helpers.grids.LabeledGrid;
+let ShadowPlane = helpers.planes.ShadowPlane;
+
+
 //import CanvasRenderer from './deps/CanvasRenderer';
 import OrbitControls from './deps/OrbitControls';
 import CombinedCamera from './deps/CombinedCamera';
 
-import PreventScrollBehaviour from '../behaviours/preventScrollBe'
+import PreventScrollBehaviour from '../../behaviours/preventScrollBe'
 
 //TODO: import this at another level, should not be part of the base gl view
 import TransformControls from './transforms/TransformControls'
@@ -16,6 +21,9 @@ import Selector from './deps/Selector'
 var csp = require("js-csp");
 let {chan, go, take, put, alts, timeout} = require("js-csp");
 var xducers = require("transducers.js");
+
+
+
 
 /* this is the wrapper that actually gets the render calls*/
 /*class GlCanvas extends React.Component{
@@ -34,11 +42,7 @@ class ThreeJs extends React.Component{
     super(props);
     console.log("props", this.props);
 
-    this.state = {
-      width:0,
-      height:0,
-      selectedMeshes:[]
-    }
+    console.log("helpers",helpers)
 
     this.scenes = {};
 
@@ -48,12 +52,12 @@ class ThreeJs extends React.Component{
         shadowMapEnabled:true,
         shadowMapAutoUpdate:true,
         shadowMapSoft:true,
-        shadowMapType : THREE.PCFSoftShadowMap,//THREE.PCFShadowMap; 
+        shadowMapType : THREE.PCFShadowMap,//THREE.PCFSoftShadowMap,//; 
         autoUpdateScene : true,
         physicallyBasedShading : false,
         autoClear:true,
-        gammaInput:true,
-        gammaOutput:true
+        gammaInput:false,
+        gammaOutput:false
       },
       viewports:[
         {
@@ -99,7 +103,6 @@ class ThreeJs extends React.Component{
     };
 
     this.state={cameras : this.config.cameras };
-    //var div = this.refs.episode.getDOMNode();
   }
   
   componentDidMount(){
@@ -118,7 +121,7 @@ class ThreeJs extends React.Component{
     renderer.setClearColor( 0xffffff );
     renderer.shadowMapEnabled = this.config.renderer.shadowMapEnabled;
     renderer.shadowMapAutoUpdate = this.config.renderer.shadowMapAutoUpdate;
-    //renderer.shadowMapSoft = this.config.renderer.shadowMapSoft;
+    renderer.shadowMapSoft = this.config.renderer.shadowMapSoft;
     renderer.shadowMapType = this.config.renderer.PCFSoftShadowMap;//THREE.PCFShadowMap; 
     renderer.autoUpdateScene = this.config.renderer.autoUpdateScene;
     renderer.physicallyBasedShading = this.config.renderer.physicallyBasedShading;
@@ -142,13 +145,27 @@ class ThreeJs extends React.Component{
     }
     //TODO: for testing, remove
     //this._makeTestStuff();
-    
+    let grid = new LabeledGrid(200,200,10,this.config.cameras[0].up);
+    this.scene.add(grid);
+
+    let shadowPlane = new ShadowPlane(200,200,null,this.config.cameras[0].up);
+    this.scene.add(shadowPlane);
+
     this.renderer = renderer;
     this._animate();
     this.resizeHandler();
 
     this.selector = new Selector();
     this.selector.camera = this.camera;
+
+
+    /* idea of mappings , from react-pixi
+     spritemapping : {
+    'vanilla' : assetpath('creamVanilla.png'),
+    'chocolate' : assetpath('creamChoco.png'),
+    'mocha' : assetpath('creamMocha.png'),
+    'pink' : assetpath('creamPink.png'),
+    },*/
 
     /*let renderTargetParameters = {
         minFilter: THREE.LinearFilter,
@@ -358,8 +375,8 @@ class ThreeJs extends React.Component{
           castShadow:false,
           onlyShadow:false,
 
-          shadowMapWidth:512,
-          shadowMapHeight:256,
+          shadowMapWidth:2048,
+          shadowMapHeight:2048,
           shadowCameraLeft:-500,
           shadowCameraRight:500,
           shadowCameraTop:500,
@@ -373,6 +390,21 @@ class ThreeJs extends React.Component{
         };
         lightData = Object.assign({}, dirLightDefaults, lightData);
         light = new THREE.DirectionalLight( lightData.color, lightData.intensity );
+        /*light.castShadow = lightData.castShadow;
+        light.onlyShadow = lightData.onlyShadow;
+
+        light.shadowMapWidth = 2048;
+        light.shadowMapHeight = 2048;
+        light.shadowMapWidth = 2048;
+        light.shadowMapHeight = 2048;*/
+
+        for(var key in lightData) {
+          if(light.hasOwnProperty(key)) {
+            light[key] = lightData[key]
+          }
+        }
+        console.log(light)
+
       break;
       default:
         throw new Error("could not create light")

@@ -42,6 +42,7 @@ var getSymlinkedModules = function(){
 //add any extra folders we want to apply loaders to 
 var extraModulePaths = xtraModulesWLoaders.map(function(entry){ return path.join(__dirname, "node_modules",entry); });
 var pathsToInclude = getSymlinkedModules().concat( path.join(__dirname, srcPath) ).concat( extraModulePaths );
+console.log("will user loaders on",pathsToInclude)
 
 var config= {
   host:host,

@@ -11,6 +11,7 @@ class Selector{
   
   pick(event, rect, width, height, scene){
     event.preventDefault();
+    //console.log("rect, width, height",rect, width, height)
     var x =   ( (event.clientX - rect.left) / width) * 2 - 1;
     var y = - ( (event.clientY - rect.top) / height) * 2 + 1;
 

@@ -1,7 +1,10 @@
 import React from 'react';
-import co from 'co';
+import co from "co";
 
-import ThreeJs from './webgl/three-js.react.js';
+
+import ThreeJs     from './components/webgl/three-js.react';
+import MainToolbar from './components/MainToolbar'
+
 import postProcessMesh from './meshpp/postProcessMesh'
 
 import AssetManager from 'usco-assetmanager'
@@ -17,16 +20,12 @@ import ObjParser    from 'usco-obj-parser'*/
 import Kernel       from 'usco-kernel2'
 
 
-import cstpTest from './coms/csp-test'
-import {bufferWithTimeOrCount, fromDomEvent, MouseDrags} from './coms/interactions'
-
 var csp = require("js-csp");
 let {chan, go, take, put,putAsync, alts, timeout} = require("js-csp");
 var xducers = require("transducers.js");
 var seq = xducers.seq
 var transduce = xducers.transduce
 var reduce    = xducers.reduce
-
 let pipeline = csp.operations.pipeline;
 let merge    = csp.operations.merge;
 
@@ -45,7 +44,6 @@ import keymaster from 'keymaster'
 import logger from './utils/log'
 let log = logger("Jam-Root");
 log.setLevel("info");
-
 
 
 
@@ -238,116 +236,7 @@ export default class App extends React.Component {
   }
 
   setupMouseTrack(trackerEl, outputEl){
-    /*all the cases we need : 
-      - single & multiple clicks/taps
-      - drags with "ending mouseup" NOT triggering a click event
-      - "static hold" long press without much movement delta
-    */
-    //params, to extract
-    let multiClickDelay = 250;
-    let maxDelta        = 50;
-    let trackerEl = this.refs.wrapper.getDOMNode();
-
-    let clickStream = fromEvent(trackerEl, 'click');
-    let mouseDowns  = fromEvent(trackerEl, 'mousedown');
-    let mouseUps    = fromEvent(document, 'mouseup');
-    let mouseMoves  = fromEvent(trackerEl, 'mousemove');
-
-
-    let getOffset=function(event) {
-      return {
-        x: event.offsetX === undefined ? event.layerX : event.offsetX,
-        y: event.offsetY === undefined ? event.layerY : event.offsetY
-      };
-    }
-
-    let hasMoved=function(offset){
-      return (offset.x*offset.x + offset.y * offset.y)>(maxDelta*maxDelta);
-    }
-
-
-    /*let mouseDrags = mouseDowns.select(function (downEvent) {
-      return mouseMoves.takeUntil(mouseUps)
-    //SelectMany
-    });*/
-
-    let mouseDrags = mouseDowns.selectMany(function (md) {
-      // calculate offsets when mouse down
-      var startX = md.offsetX, startY = md.offsetY;
-      console.log(startX)
-      // Calculate delta with mousemove until mouseup
-      return mouseMoves.map(function (mm) {
-        console.log("lkj")
-          //(mm.preventDefault) ? mm.preventDefault() : event.returnValue = false; 
-
-          return {
-              left: mm.clientX - startX,
-              top: mm.clientY - startY
-          };
-      }).takeUntil(mouseUps);
-    });
-
-    //debug
-    /*mouseMoves.subscribe(function (drags) {
-      log.info("moves")
-    })
-
-    mouseUps.subscribe(function (drags) {
-      log.info("ups")
-    })
-
-    mouseDowns.subscribe(function (drags) {
-      log.info("down")
-    })*/
-
-
-    mouseDrags.subscribe(function (drags) {
-      log.info("drags")
-    })
-
-
-
-    /*let clickStreamBase = clickStream
-      .buffer(function() { return clickStream.throttle(multiClickDelay); })
-      .map( list => list.length )
-      .share();
-
-    let singleClickStream = clickStreamBase.filter( x => x == 1 );
-    let multiClickStream  = clickStreamBase.filter( x => x >= 2 );
-
-    
-    //let clicksNoUp = clickStreamBase.takeUntil(mouseUps);
-   
-    singleClickStream.subscribe(function (event) {
-        log.info( 'click' );
-    });
-    multiClickStream.subscribe(function (numclicks) {
-        log.info( numclicks+'x click');
-    });
-    Rx.Observable.merge(singleClickStream, multiClickStream)
-        .throttle(1000)
-        .subscribe(function (suggestion) {
-    });*/
-
-
-    /*let trackerEl = this.refs.wrapper.getDOMNode();
-    let outputEl  = this.refs.infoLayer.getDOMNode();
-
-    let isTwoValues  = function( x ) { return (x.length == 2); }
-    let isOneValue = function( x ) { return (x.length == 1); }
-
-    let mouseUps    = fromDomEvent(trackerEl, 'mouseup');
-    let mouseDowns  = fromDomEvent(trackerEl, 'mousedown');
-    let mouseMoves  = fromDomEvent(trackerEl, 'mousemove');*/
-
-    //mouseDowns = csp.operations.map( inc, mouseDowns, 1);
-    /*pipeline(mouseUps,   xducers.map( x => false ), mouseUps);
-    pipeline(mouseDowns, xducers.map( x => true ) , mouseDowns);
-
-    let mouseStates = merge([mouseDowns,mouseUps]);
-    let pointerHold = bufferWithTimeOrCount(mouseStates,600,2)
-    pipeline( pointerHold, xducers.filter( x => (x===true) ), pointerHold );*/
-
+    log.info("")
   }
 
   //FIXME: move this into assetManager
@@ -391,21 +280,25 @@ export default class App extends React.Component {
     let register = function( shape ){
       //part type registration etc
       //we are registering a yet-uknown Part's type, getting back an instance of that type
-      let partKlass = self.kernel.registerPartType( null, null, shape, {name:resource.name, resource:resource} );
+      let partKlass    = self.kernel.registerPartType( null, null, shape, {name:resource.name, resource:resource} );
+      let partInstance = undefined;
       if( addToAssembly ) {
-        let part = self.kernel.makePartTypeInstance( partKlass );
-        self.kernel.registerPartInstance( part );
+        partInstance = self.kernel.makePartTypeInstance( partKlass );
+        self.kernel.registerPartInstance( partInstance );
       }
 
-      return shape;
+      //we do not return the shape since that becomes the "reference shape", not the
+      //one that will be shown
+      return {klass:partKlass,instance:partInstance};
     }
 
-    let showIt = function( shape ){
+    let showIt = function( klassInstance ){
       if( display || addToAssembly ){
-        self._meshInjectPostProcess( shape );
-        shape.userData.entity._selected = true;
+        //self._meshInjectPostProcess( shape );
+        //shape.userData.entity._selected = true;
         self._tempForceDataUpdate();
       }
+      return klassInstance
     }
 
     let mainProc = source
@@ -417,6 +310,10 @@ export default class App extends React.Component {
     mainProc
       .map( register )
       .map( showIt )
+      .map( function(klassInstance){
+        klassInstance.instance.pos[2]+=30;
+        return klassInstance;
+      })
         .catch(handleLoadError)
         //.timeout(100,cleanupResource)
         .subscribe(logNext,logError);
@@ -443,6 +340,7 @@ export default class App extends React.Component {
     //console.log( this.state )
   }
 
+  /*temporary method to force 3d view updates*/
   _tempForceDataUpdate(){
     let glview   = this.refs.glview;
     let assembly = this.kernel.activeAssembly;
@@ -459,6 +357,8 @@ export default class App extends React.Component {
           //computeObject3DBoundingSphere( meshInstance, true );
           //centerMesh( meshInstance ); //FIXME do not use the "global" centerMesh
           
+          log.info("instance",meshInstance)
+
           meshInstance.position.fromArray( entity.pos )
           meshInstance.rotation.fromArray( entity.rot );
           meshInstance.scale.fromArray(  entity.sca );
@@ -487,6 +387,16 @@ export default class App extends React.Component {
   }
   
   render() {
+
+    let wrapperStyle = {
+      position: 'absolute',
+      left: 0,
+      top: 0,
+      bottom:0,
+      right:0,
+      width:'100%',
+      height:'100%'
+    }
     let infoLayerStyle = {
       color: 'red',
       width:'300px',
@@ -508,14 +418,18 @@ export default class App extends React.Component {
       bottom: 0,
     };
 
-    let fullTitle = `${this.state.design.title} ---- ${this.state.appInfos.name} v  ${this.state.appInfos.version}`;
+    //let fullTitle = `${this.state.design.title} ---- ${this.state.appInfos.name} v  ${this.state.appInfos.version}`;
+    /*
+       <div ref="title" style={titleStyle} > {fullTitle} </div>
+          <ThreeJs testProp={this.state.test} cubeRot={this.state.cube} ref="glview"
+          
+          <div ref="infoLayer" style={infoLayerStyle} />*/
 
     return (
-        <div ref="wrapper">
-          <div ref="title" style={titleStyle} > {fullTitle} </div>
-          <ThreeJs testProp={this.state.test} cubeRot={this.state.cube} ref="glview"
-          />
-          <div ref="infoLayer" style={infoLayerStyle} />
+        <div ref="wrapper" style={wrapperStyle}>
+          <MainToolbar> </MainToolbar>
+          <ThreeJs testProp={this.state.test} cubeRot={this.state.cube} ref="glview"/>
+
           <div ref="testArea" style={testAreaStyle}>
             <button onClick={this.handleClick.bind(this)}> Test </button>
           </div>

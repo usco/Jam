@@ -4,13 +4,18 @@ var React = require('react');
 var Rx    = require('rx-dom');
 var StateStreamMixin = require('rx-react').StateStreamMixin;
 
+console.log("rx-react",RxReact)
+
 
 function searchWikipedia(term) {
+    console.log("searchin for ",term)
     var cleanTerm = global.encodeURIComponent(term);
     var url = 'http://en.wikipedia.org/w/api.php?action=opensearch&format=json&search='+ 
         cleanTerm + '&callback=JSONPCallback';
     return Rx.DOM.jsonpRequest(url);
 }
+
+
 
 
 class SearchWikipedia extends RxReact.Component {
@@ -24,9 +29,10 @@ class SearchWikipedia extends RxReact.Component {
       this.keyup
       .map((e) => e.target.value)
       .filter(text => text.length > 2)
-      .throttle(750)
+      .throttle(250)
       .distinctUntilChanged()
       .flatMapLatest(text => searchWikipedia(text))
+      .map(data => data.response)
       .filter(data => data.length >= 2)
       .map(results => ({results: results[1]}))
     );
@@ -49,8 +55,9 @@ class SearchWikipedia extends RxReact.Component {
 }
 
 
+export default SearchWikipedia
 
-var Timer = React.createClass({
+/*var Timer = React.createClass({
   mixins: [StateStreamMixin],
   getStateStream: function() {
     return Rx.Observable.interval(1000).map(function (interval) {
@@ -67,7 +74,6 @@ var Timer = React.createClass({
   }
 });
 
-React.render(<Timer />, document.getElementById('timer-holder'));
+React.render(<Timer />, document.getElementById('timer-holder'));*/
 
-
-React.render(<SearchWikipedia />, document.getElementById('container'));
+//React.render(<SearchWikipedia />, document.getElementById('container'));
