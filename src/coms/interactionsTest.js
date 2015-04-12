@@ -197,6 +197,48 @@ export default class App extends React.Component {
             client:{x: a.clientX,y: a.clientY },
             delta:{x: a.clientX - b.clientX,y: a.clientY - b.clientY}});
       });
+
+
+    let mouseClicksAlt = mouseDowns
+      .flatMap( function(downEvent){
+        let target = downEvent.currentTarget;
+        return Observable.amb(
+          [
+            // Skip if we get a movement before a mouse up
+            mouseMoves.take(1).flatMap( x => Rx.Observable.empty() ),
+            mouseUps.take(1)
+          ]);
+      });
+
+
+    let mouseDragsAlt = mouseDowns
+      .flatMap( function(downEvent){
+        let target = downEvent.currentTarget;
+        //let origin = target.position();
+        log.info("kldf")
+        return Observable.amb(
+          [
+            // Skip if we get a mouse up before we move
+            mouseUps.take(1).flatMap( x => Rx.Observable.empty() ),
+            mouseMoves.take(1).map(function(x){
+              return{
+                target: target,
+                //origin: target.position(),
+                drags: mouseMovesZip.takeUntil(mouseUps).map(function(x){
+                  return {
+                    delta: x.delta,
+                    offset: { 
+                      x: x.client.x - downEvent.clientX,
+                      y: x.client.y - downEvent.clientY
+                    }
+                  }
+                })
+              }
+            })
+
+          ]);
+      });
+                   
  
 
 
@@ -226,13 +268,20 @@ export default class App extends React.Component {
         .subscribe(function (suggestion) {
     });
 
-    mouseMovesAlt.subscribe(function (move) {//bufferWithTime(500)//.bufferWithCount(2)
-      log.info("moves",move)
-    })
+    // mouseMovesAlt.subscribe(function (move) {//bufferWithTime(500)//.bufferWithCount(2)
+    //  log.info("moves",move)
+    // })
     
     holds.subscribe(function (press) {
       log.info("longPress",press)
     });
+
+    mouseClicksAlt.subscribe(function(clicks){
+      log.info("mouseClicksAlt",clicks)
+    })
+    mouseDragsAlt.subscribe(function(drags){
+      log.info("mouseDragsAlt",mouseDragsAlt)
+    })
 
     //debug
     /*mouseMoves.subscribe(function (drags) {
