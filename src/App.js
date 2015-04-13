@@ -8,6 +8,8 @@ import EntityInfos from './components/EntityInfos'
 
 
 import postProcessMesh from './meshpp/postProcessMesh'
+import helpers         from 'glView-helpers'
+let centerMesh         = helpers.mesthTools.centerMesh;
 
 import AssetManager from 'usco-assetmanager'
 import DesktopStore from 'usco-desktop-store'
@@ -22,17 +24,9 @@ import ObjParser    from 'usco-obj-parser'*/
 import Kernel       from 'usco-kernel2'
 
 
-var csp = require("js-csp");
-let {chan, go, take, put,putAsync, alts, timeout} = require("js-csp");
-var xducers = require("transducers.js");
-var seq = xducers.seq
-var transduce = xducers.transduce
-var reduce    = xducers.reduce
-let pipeline = csp.operations.pipeline;
-let merge    = csp.operations.merge;
-
 import Rx from 'rx'
 let fromEvent = Rx.Observable.fromEvent;
+let Observable = Rx.Observable;
 
 
 import {partitionMin} from './coms/utils'
@@ -136,20 +130,60 @@ export default class App extends React.Component {
       return x.userData.entity;
     }
 
+    let foo = function(x){
+       console.log("here",x)
+       return x;
+    }
+    let finalLog=function(x){
+       console.log("FINAL",x)
+       return x;
+    }
+
     let selectedMeshesChAlt = glview.selectedMeshesSub;
-    let yeah = selectedMeshesChAlt
-      .flatMap( x => x )
-      //.distinct()
+    //selectedMeshesChAlt.subscribe(foo);
+
+    let truc = selectedMeshesChAlt
+      .defaultIfEmpty([])
+      .map(
+        function(selections){
+          let res= selections.filter(filterEntities).map(fetchEntities);
+          self.setSeletedEntites(res)
+        }
+      );
+
+      //.filter(filterEntities)
+      //.map(fetchEntities);
+      //.flatMap( x => x )
+      
+      /*.distinct()
+      */
+
+    //truc.subscribe(foo)
+
+    //let trac = Observable.return([])
+
+    //let yeah = trac.merge(truc);//.skipUntil(selectedMeshesChAlt)
+
+    truc.subscribe(finalLog);
+
+    //truc.merge(trac).skipUntil(bla).map(foo)
+
+    //selectedMeshesChAlt
       //.distinctUntilChanged()
-      .filter(filterEntities)
+      //.flatMap( x => x )
+      //.map(foo)
+      /*
+      //
       .map(fetchEntities)
       .map(function(selectedEntities){
-        self.setSeletedEntites(selectedEntities)
-      })
+      //always return array
+      console.log("here",selectedEntities)
+      self.setSeletedEntites(selectedEntities)
+    })*/
 
-    var subscription = yeah.subscribe(
+    /*var subscription = yeah.subscribe(
       function (x) {
-          console.log( x);
+          console.log("selectedEntities", x);
 
       },
       function (err) {
@@ -157,50 +191,9 @@ export default class App extends React.Component {
       },
       function () {
           console.log('Completed');
-      });
+      });*/
 
 
-    /*let meshesCh2 = glview.selectedMeshesCh;
-    let xform = xducers.compose(
-      xducers.filter( checkCount )//x => x.length>0)
-      //xducers.partition(2)
-    );
-
-    let xTractEntities = xducers.compose(
-        xducers.keep(),
-        xducers.dedupe(),
-        xducers.filter( filterEntities), //(x => x.userData && x.userData.entity ),
-        xducers.map( fetchEntities )//x => x.userData.entity )
-    );
-    //pipeline( meshesCh2, xform, meshesCh2 );
-
-    this.selectedEntities = [];
-    let self = this;
-
-    go(function*() {
-      let prevSelections = []
-      while(true) {
-        var result = yield meshesCh2;
-        let res  = seq(result,xTractEntities )
-        
-
-        prevSelections.map(function(entity){
-          entity._selected = false;
-        })
-
-        res.map(function(entity){
-          entity._selected = true;
-        })
-        self.selectedEntities = res;
-
-        if( res.length >0 || prevSelections.length>0){
-          console.log("I got entities",res)
-          self._tempForceDataUpdate();
-        }  
-
-        prevSelections = res || [];
-      }
-    });*/
 
     //setup key bindings
     this.setupKeyboard()
@@ -278,6 +271,8 @@ export default class App extends React.Component {
 
   //FIXME; this should be a command or something
   setSeletedEntites(selectedEntities){
+    let selectedEntities = selectedEntities || [];
+    if(selectedEntities.constructor !== Array) selectedEntities = [selectedEntities]
     this.setState({
       selectedEntities:selectedEntities
     });
@@ -341,6 +336,7 @@ export default class App extends React.Component {
 
     let mainProc = source
       .map( postProcessMesh )
+      .map( centerMesh )
       .share();
 
     /*mainProc.map( register ).subscribe(logNext,logError);
@@ -483,7 +479,7 @@ export default class App extends React.Component {
 
     return (
         <div ref="wrapper" style={wrapperStyle}>
-          <MainToolbar design={this.state.design} > </MainToolbar>
+          <MainToolbar design={this.state.design} appInfos={this.state.appInfos}> </MainToolbar>
           <ThreeJs ref="glview"/>
 
           <div ref="testArea" style={testAreaStyle}>
