@@ -19,6 +19,16 @@ class Selector{
 
     return this._pickInner( x, y, null, this.camera);
   }
+
+  pickAlt(pos, rect, width, height, scene){
+    //console.log("rect, width, height",rect, width, height)
+    var x =   ( (pos.x - rect.left) / width) * 2 - 1;
+    var y = - ( (pos.y - rect.top) / height) * 2 + 1;
+
+    this.hiearchyRoot = scene.children;
+
+    return this._pickInner( x, y, null, this.camera);
+  } 
   
   _pickInner( x, y, isOrtho, camera ){
     let isOrtho = isOrtho || this.isOrtho;

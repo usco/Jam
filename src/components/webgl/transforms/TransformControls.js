@@ -748,7 +748,7 @@ var TransformControls = function ( camera, domElement ) {
 		if ( scope.object === undefined || _dragging === true ) return;
 
 		event.preventDefault();
-		event.stopPropagation();
+		//event.stopPropagation();
 
 		var pointer = event.changedTouches ? event.changedTouches[ 0 ] : event;
 
@@ -794,7 +794,7 @@ var TransformControls = function ( camera, domElement ) {
 		if ( scope.object === undefined || scope.axis === null || _dragging === false ) return;
 
 		event.preventDefault();
-		event.stopPropagation();
+		//event.stopPropagation();
 
 		var pointer = event.changedTouches? event.changedTouches[0] : event;
 
@@ -963,9 +963,9 @@ var TransformControls = function ( camera, domElement ) {
 		if ( _dragging && ( scope.axis !== null ) ) {
 			mouseUpEvent.mode = _mode;
 			scope.dispatchEvent( mouseUpEvent )
-			event.preventDefault();
+			/*event.preventDefault();
 		  event.stopPropagation();
-		  event.stopImmediatePropagation();
+		  event.stopImmediatePropagation();*/
 		}
 		_dragging = false;
 		onPointerHover( event );

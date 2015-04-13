@@ -5,6 +5,7 @@ import Detector from './deps/Detector.js';
 import helpers from 'glView-helpers'
 let LabeledGrid = helpers.grids.LabeledGrid;
 let ShadowPlane = helpers.planes.ShadowPlane;
+let CamViewControls= helpers.CamViewControls;
 
 
 //import CanvasRenderer from './deps/CanvasRenderer';
@@ -18,24 +19,12 @@ import TransformControls from './transforms/TransformControls'
 import Selector from './deps/Selector'
 
 
-var csp = require("js-csp");
-let {chan, go, take, put, alts, timeout} = require("js-csp");
-var xducers = require("transducers.js");
-
 import Rx from 'rx'
 let Observable= Rx.Observable;
 let Subject   = Rx.Subject;
 
-/* this is the wrapper that actually gets the render calls*/
-/*class GlCanvas extends React.Component{
 
-
-  render(){
-    return (
-      <div className="container" ref="container" />
-    );
-  }
-}*/
+import {windowResizes,pointerInteractions} from '../../coms/interactions2'
 
 
 class ThreeJs extends React.Component{
@@ -107,6 +96,14 @@ class ThreeJs extends React.Component{
   }
   
   componentDidMount(){
+    let listen=function(value){
+      console.log("listen",value);
+      return value;
+    }
+    let errors = function(error){
+      console.log("error",error)
+    }
+
     this.scene = new THREE.Scene();
     this.dynamicInjector = new THREE.Object3D();//all dynamic mapped objects reside here
     this.scene.add( this.dynamicInjector );
@@ -137,7 +134,8 @@ class ThreeJs extends React.Component{
     this.container = container;
     
     this._makeControls(this.config.controls[0]);
-    this.transformControls = new TransformControls();
+    this.transformControls = new TransformControls(this.camera,renderer.domElement);
+    this.scene.add( this.transformControls );
 
 
     for( let light of this.config.scenes["main"])
@@ -152,12 +150,50 @@ class ThreeJs extends React.Component{
     let shadowPlane = new ShadowPlane(200,200,null,this.config.cameras[0].up);
     this.scene.add(shadowPlane);
 
+    let camViewControls = new CamViewControls({size:9, cornerWidth:1.5,highlightColor:"#ffd200",opacity:0.95},[this.camera])
+    camViewControls.init( this.camera, container );
+    this.scene.add(camViewControls)
+
+    this.camViewControls = camViewControls;
+    //planesColor:"#17a9f5",edgesColor:"#17a9f5",cornersColor:"#17a9f5",
+
+
     this.renderer = renderer;
     this._animate();
-    this.resizeHandler();
 
     this.selector = new Selector();
     this.selector.camera = this.camera;
+
+    ///////////:setup ui interactions
+    this.resizer = windowResizes(1);
+
+    let handleResize = function(sizeInfos){
+      //console.log("setting size",sizeInfos);
+      let {width,height,aspect} = sizeInfos;
+    
+      this.width  = width;
+      this.height = height;
+      let camera = this.camera;
+      let renderer = this.renderer;
+
+      camera.aspect = 1;
+      //camera.aspect = aspect;
+      camera.updateProjectionMatrix();
+      renderer.setSize( width, height );
+    }
+
+    handleResize = handleResize.bind(this);
+
+
+    this.resizer.subscribe( handleResize.bind(this) );
+    //set the inital size correctly
+    handleResize({width:window.innerWidth,height:window.innerHeight,aspect:0})
+    //subscribe(listen)
+
+
+    this.pointerInteractions = pointerInteractions(container);
+    this.pointerInteractions.taps.subscribe(listen);
+    this.pointerInteractions.singleTaps.map( this.handleTap.bind(this) ).subscribe( listen, listen,errors );
 
 
     /* idea of mappings , from react-pixi
@@ -198,14 +234,14 @@ class ThreeJs extends React.Component{
     composer.addPass(copyPass);*/
 
     
-    window.addEventListener("resize", this.resizeHandler.bind(this) );
-    container.addEventListener( "click", this.tapHandler.bind(this), false );
+    //window.addEventListener("resize", this.resizeHandler.bind(this) );
+    //container.addEventListener( "click", this.handleTap.bind(this), false );
     //this.domElement.addEventListener( "mousedown", onPointerDown, false );
 
     PreventScrollBehaviour.attach( container );
     //TODO: , create an abstraction above channels/rx
-    this.selectedMeshesCh = chan();
     this.selectedMeshesSub = new Rx.Subject();
+    //this.selectedMeshesSub.subscribe(listen)
 
   }
   
@@ -220,25 +256,12 @@ class ThreeJs extends React.Component{
     //this.cube.rotation.z = this.props.cubeRot.rot.z;
     return false;
   }
-  
-  
+
+
   //internal stuff
   mapDataToVisual( data, visual ){
   }
   
-  resizeHandler(){
-    console.log("setting size");
-    let width  = window.innerWidth
-    let height = window.innerHeight;	
-    let aspect = width/height;
-    
-    this.width  = width;
-    this.height = height;
-//this.props.width = width;
- //   this.props.height = height;
-    this.renderer.setSize(width, height);
-    this.camera.aspect = aspect;
-  }
   
   _makeTestStuff( ){
     let scene = this.scene;
@@ -256,49 +279,6 @@ class ThreeJs extends React.Component{
     
     console.log("scene",this.scene)
 	  this.cube = cube;
-
-
-    var hemiLight = new THREE.HemisphereLight( 0xffffff, 0xffffff, 0.6 );
-        hemiLight.color.setHSL( 0.6, 1, 0.6 );
-        hemiLight.groundColor.setHSL( 0.095, 1, 0.75 );
-        hemiLight.position.set( 0, 0, 500 );
-        //scene.add( hemiLight );
-
-        //
-        var dirLight = new THREE.DirectionalLight( 0xffffff, 1 );
-        dirLight.color.setHSL( 0.1, 1, 0.95 );
-        dirLight.position.set( -1, 1, 1.75 );
-        dirLight.position.multiplyScalar( 50 );
-        //scene.add( dirLight );
-
-        dirLight.castShadow = true;
-
-        dirLight.shadowMapWidth = 2048;
-        dirLight.shadowMapHeight = 2048;
-
-        var d = 50;
-
-        dirLight.shadowCameraLeft = -d;
-        dirLight.shadowCameraRight = d;
-        dirLight.shadowCameraTop = d;
-        dirLight.shadowCameraBottom = -d;
-
-        dirLight.shadowCameraFar = 3500;
-        dirLight.shadowBias = -0.0001;
-        dirLight.shadowDarkness = 0.35;
-        //dirLight.shadowCameraVisible = true;
-
-        var groundGeo = new THREE.PlaneBufferGeometry( 10000, 10000 );
-        var groundMat = new THREE.MeshPhongMaterial( { color: 0xffffff, specular: 0x050505 } );
-        groundMat.color.setHSL( 0.095, 1, 0.75 );
-
-        var ground = new THREE.Mesh( groundGeo, groundMat );
-        //ground.rotation.x = -Math.PI/2;
-        ground.position.z = -33;
-        scene.add( ground );
-
-        ground.receiveShadow = true;
-
   }
   
   /*setup a camera instance from the provided data*/
@@ -411,24 +391,37 @@ class ThreeJs extends React.Component{
     return light
   }
 
-  tapHandler(event){
-    //console.log("tapped in view")
+  handleTap(event){
+    console.log("tapped in view")
     let rect = this.container.getBoundingClientRect();
-    let intersects = this.selector.pick(event, rect, this.width, this.height, this.dynamicInjector);
+    let intersects = this.selector.pickAlt({x:event.clientX,y:event.clientY}, rect, this.width, this.height, this.dynamicInjector);
 
     let selectedMeshes = intersects.map( intersect => intersect.object );
     selectedMeshes.sort().filter( ( mesh, pos ) => { return (!pos || mesh != intersects[pos - 1]) } );
 
+    //console.log("selectedMeshes",selectedMeshes);
+
+    this._prevSelectedMeshes = this.selectedMeshes;
+    this.selectedMeshes      = selectedMeshes;
     this.setState({
       selectedMeshes: selectedMeshes
     })
 
-    csp.putAsync(this.selectedMeshesCh, selectedMeshes);
+    if(selectedMeshes.length>0){
+      //console.log(selectedMeshes[0] === selectedMeshes[1]);
+      this.transformControls.attach(selectedMeshes[0])
+    }
+
+    if(this._prevSelectedMeshes && this._prevSelectedMeshes.length>0){
+      console.log(this._prevSelectedMeshes)
+      this.transformControls.detach(this._prevSelectedMeshes[0])
+    }
+    /* function show(selectedMesh){
+      console.log("selectedMesh",selectedMesh);
+    }*/
+
     this.selectedMeshesSub.onNext(selectedMeshes);
 
-    if(selectedMeshes.length>0){
-      console.log(selectedMeshes[0] === selectedMeshes[1]);
-    }
   }
   
   _animate() 
@@ -446,6 +439,8 @@ class ThreeJs extends React.Component{
 	  //controls.update();
 	  //stats.update();
 	  if(this.controls) this.controls.update();
+    if(this.camViewControls) this.camViewControls.update();
+    if(this.transformControls) this.transformControls.update();
   }
   
   _render() 
@@ -481,9 +476,6 @@ class ThreeJs extends React.Component{
     }
 
     function foo (entry) {
-      //let mesh = mapper(entry);
-      //console.log("mesh",mesh)
-      //dynamicInjector.add( mapper(entry) );
       mapper(entry, dynamicInjector, xform)
     }
 
