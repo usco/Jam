@@ -1,3 +1,5 @@
+ //csp.putAsync(this.selectedMeshesCh, selectedMeshes);
+
  let glview   = this.refs.glview;
     let meshesCh = glview.selectedMeshesCh;
     
