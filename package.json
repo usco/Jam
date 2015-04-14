@@ -45,6 +45,7 @@
     "rx-react": "^0.2.0",
     "three": "^0.70.0",
     "transducers.js": "^0.3.1",
+    "tween.js": "^0.14.0",
     "usco-assetmanager": "git://github.com/usco/usco-asset-manager",
     "usco-ctm-parser": "git://github.com/usco/usco-ctm-parser",
     "usco-desktop-store": "git://github.com/usco/usco-desktop-store",

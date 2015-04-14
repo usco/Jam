@@ -1,5 +1,7 @@
 import React from 'react';
 import THREE from 'three';
+import TWEEN from 'tween.js'
+
 import Detector from './deps/Detector.js';
 
 import helpers from 'glView-helpers'
@@ -17,6 +19,9 @@ import PreventScrollBehaviour from '../../behaviours/preventScrollBe'
 //TODO: import this at another level, should not be part of the base gl view
 import TransformControls from './transforms/TransformControls'
 import Selector from './deps/Selector'
+let OutlineObject = helpers.objectEffects.OutlineObject;
+let ZoomInOnObject= helpers.objectEffects.ZoomInOnObject;
+
 
 
 import Rx from 'rx'
@@ -25,6 +30,11 @@ let Subject   = Rx.Subject;
 
 
 import {windowResizes,pointerInteractions} from '../../coms/interactions2'
+
+import logger from '../../utils/log'
+let log = logger("glView");
+log.setLevel("info");
+
 
 
 class ThreeJs extends React.Component{
@@ -137,6 +147,17 @@ class ThreeJs extends React.Component{
     this.transformControls = new TransformControls(this.camera,renderer.domElement);
     this.scene.add( this.transformControls );
 
+    //this.transformControls.addEventListener( 'change', function(event){ console.log(event)} );
+
+    //var source = Rx.Observable.fromEvent(this.transformControls, 'change');
+    let extractObject = function(event){ return event.target.object}
+    var source2 = Rx.Observable.fromEvent(this.transformControls, 'objectChange')
+      .map(extractObject);
+
+    var subscription = source2.subscribe(function (event) {
+      console.log("change",event)
+    });
+
 
     for( let light of this.config.scenes["main"])
     {
@@ -190,11 +211,11 @@ class ThreeJs extends React.Component{
     handleResize({width:window.innerWidth,height:window.innerHeight,aspect:0})
     //subscribe(listen)
 
+    let sAt = this._getSelectionsAt.bind(this)
 
     this.pointerInteractions = pointerInteractions(container);
-    this.pointerInteractions.taps.subscribe(listen);
-    this.pointerInteractions.singleTaps.map( this.handleTap.bind(this) ).subscribe( listen, listen,errors );
-
+    this.pointerInteractions.singleTaps.map( sAt ).map( this.handleTap.bind(this) ).subscribe( listen, listen,errors );
+    this.pointerInteractions.doubleTaps.map( sAt ).map( this.handleDoubleTap.bind(this) ).subscribe( listen, listen,errors );
 
     /* idea of mappings , from react-pixi
      spritemapping : {
@@ -243,6 +264,8 @@ class ThreeJs extends React.Component{
     this.selectedMeshesSub = new Rx.Subject();
     //this.selectedMeshesSub.subscribe(listen)
 
+    this._setupExtras();
+
   }
   
   componentWillUnmount() {
@@ -258,11 +281,35 @@ class ThreeJs extends React.Component{
   }
 
 
-  //internal stuff
-  mapDataToVisual( data, visual ){
+  //----------------------internal stuff
+
+  //helpers
+  _getSelectionsAt(event){
+    log.debug("selection at",event)
+    let rect = this.container.getBoundingClientRect();
+    let intersects = this.selector.pickAlt({x:event.clientX,y:event.clientY}, rect, this.width, this.height, this.dynamicInjector);
+
+    //let selectedMeshes = intersects.map( intersect => intersect.object );
+    //selectedMeshes.sort().filter( ( mesh, pos ) => { return (!pos || mesh != intersects[pos - 1]) } );
+
+    //TODO: we are mutating details, is that ok ?
+    let event = Object.assign({}, event);
+    event.detail = {}
+    event.detail.pickingInfos = intersects;
+    return event
   }
-  
-  
+
+  mapDataToVisual( data, visualMapper ){
+  }
+
+  _setupExtras(){
+    //helpers: these should be in a layer above the base 3d view
+    this._zoomInOnObject = new ZoomInOnObject();
+    this._outlineObject  = new OutlineObject();
+
+    this._zoomInOnObject.camera = this.camera;
+  }
+
   _makeTestStuff( ){
     let scene = this.scene;
     var geometry = new THREE.SphereGeometry( 30, 32, 16 );
@@ -391,10 +438,13 @@ class ThreeJs extends React.Component{
     return light
   }
 
+
+
+  //interactions : should these be in a "wrapper above the base 3d view ?"
   handleTap(event){
     console.log("tapped in view")
+    let intersects = event.detail.pickingInfos;
     let rect = this.container.getBoundingClientRect();
-    let intersects = this.selector.pickAlt({x:event.clientX,y:event.clientY}, rect, this.width, this.height, this.dynamicInjector);
 
     let selectedMeshes = intersects.map( intersect => intersect.object );
     selectedMeshes.sort().filter( ( mesh, pos ) => { return (!pos || mesh != intersects[pos - 1]) } );
@@ -421,13 +471,26 @@ class ThreeJs extends React.Component{
     }*/
 
     this.selectedMeshesSub.onNext(selectedMeshes);
-
   }
-  
-  _animate() 
+
+  handleDoubleTap( event ){
+    log.info("double tapped",event);
+    var pickingInfos = event.detail.pickingInfos;
+    if(!pickingInfos) return;
+    if(pickingInfos.length == 0) return;
+    var object = pickingInfos[0].object; 
+    //console.log("object double tapped", object);
+    this._zoomInOnObject.execute( object, {position:pickingInfos[0].point} );
+  }
+
+  //"core" methods
+  _animate(time) 
   {
-    //console.log("this", this._render)
     requestAnimationFrame( this._animate.bind(this) );
+
+
+    TWEEN.update(time);
+
 	  this._render();		
 	  this._update();
   }
@@ -441,6 +504,7 @@ class ThreeJs extends React.Component{
 	  if(this.controls) this.controls.update();
     if(this.camViewControls) this.camViewControls.update();
     if(this.transformControls) this.transformControls.update();
+
   }
   
   _render() 

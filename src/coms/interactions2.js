@@ -2,7 +2,7 @@ import Rx from 'rx'
 let Observable= Rx.Observable;
 let fromEvent = Observable.fromEvent;
 
-import logger from './utils/log'
+import logger from '../utils/log'
 let log = logger("interactions");
 log.setLevel("info");
 
@@ -124,7 +124,6 @@ let isLong = function(elapsed){
       function(e){ e.preventDefault();
     }); // disable the context menu / right click
 
-    console.log("here")
     let _clicks = clicks(mouseDowns, mouseUps, mouseMoves);
 
     let clickStreamBase = _clicks
@@ -132,26 +131,39 @@ let isLong = function(elapsed){
       .map( list => ({list:list,nb:list.length}) )
       .share();
 
+    let logSome=function(entry){
+      console.log(entry)
+      return entry;
+    }
+
+    //new CustomEvent('printerstatechanged', { detail: state });
+
     let unpack = function(list){ return list.list};
+    let extractData = function(event){ return {clientX:event.clientX,clientY:event.clientY}};
+
     let singleClicks = clickStreamBase.filter( x => x.nb == 1 ).flatMap(unpack);
-    let multiClicks  = clickStreamBase.filter( x => x.nb >= 2 ).flatMap(unpack);
+    let doubleClicks = clickStreamBase.filter( x => x.nb == 2 ).flatMap(unpack).take(1).map(extractData).repeat();
+    //let multiClicks  = clickStreamBase.filter( x => x.nb >= 2 ).flatMap(unpack);
 
     // right click and left long click are the same
     //TODO need a better name
     //var interactions = Observable.merge(rightclick, clickhold);
 
     //DEBUG
-    singleClicks.subscribe(function (event) {
-        log.info( 'click' );
+    /*singleClicks.subscribe(function (event) {
+        log.info( 'click', event );
     });
-    multiClicks.subscribe(function (numclicks) {
+    doubleClicks.subscribe(function (event) {
+        log.info( 'double click',event);
+    });*/
+    /*multiClicks.subscribe(function (numclicks) {
         log.info( numclicks+'x click');
-    });
-    Observable.merge(singleClicks, multiClicks, rightclick)
+    });*/
+    Observable.merge(singleClicks, doubleClicks, rightclick)
         .debounce(1000)
         .subscribe(function (suggestion) {
     });
 
-    return {taps:clickStreamBase, singleTaps:singleClicks} 
+    return {taps:clickStreamBase, singleTaps:singleClicks, doubleTaps:doubleClicks} 
  }
 
