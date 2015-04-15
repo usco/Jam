@@ -136,7 +136,6 @@ let isLong = function(elapsed){
       return entry;
     }
 
-    //new CustomEvent('printerstatechanged', { detail: state });
 
     let unpack = function(list){ return list.list};
     let extractData = function(event){ return {clientX:event.clientX,clientY:event.clientY}};
@@ -145,9 +144,6 @@ let isLong = function(elapsed){
     let doubleClicks = clickStreamBase.filter( x => x.nb == 2 ).flatMap(unpack).take(1).map(extractData).repeat();
     //let multiClicks  = clickStreamBase.filter( x => x.nb >= 2 ).flatMap(unpack);
 
-    // right click and left long click are the same
-    //TODO need a better name
-    //var interactions = Observable.merge(rightclick, clickhold);
 
     //DEBUG
     /*singleClicks.subscribe(function (event) {
@@ -158,7 +154,11 @@ let isLong = function(elapsed){
     });*/
     /*multiClicks.subscribe(function (numclicks) {
         log.info( numclicks+'x click');
-    });*/
+    });
+        // right click and left long click are the same
+    //TODO need a better name
+    //var interactions = Observable.merge(rightclick, clickhold);
+    */
     Observable.merge(singleClicks, doubleClicks, rightclick)
         .debounce(1000)
         .subscribe(function (suggestion) {

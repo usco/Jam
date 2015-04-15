@@ -147,18 +147,6 @@ class ThreeJs extends React.Component{
     this.transformControls = new TransformControls(this.camera,renderer.domElement);
     this.scene.add( this.transformControls );
 
-    //this.transformControls.addEventListener( 'change', function(event){ console.log(event)} );
-
-    //var source = Rx.Observable.fromEvent(this.transformControls, 'change');
-    let extractObject = function(event){ return event.target.object}
-    var source2 = Rx.Observable.fromEvent(this.transformControls, 'objectChange')
-      .map(extractObject);
-
-    var subscription = source2.subscribe(function (event) {
-      console.log("change",event)
-    });
-
-
     for( let light of this.config.scenes["main"])
     {
       this._makeLight( light );
@@ -216,6 +204,15 @@ class ThreeJs extends React.Component{
     this.pointerInteractions = pointerInteractions(container);
     this.pointerInteractions.singleTaps.map( sAt ).map( this.handleTap.bind(this) ).subscribe( listen, listen,errors );
     this.pointerInteractions.doubleTaps.map( sAt ).map( this.handleDoubleTap.bind(this) ).subscribe( listen, listen,errors );
+
+    let extractObject = function(event){ return event.target.object}
+    let objectsTransforms = Observable.fromEvent(this.transformControls, 'objectChange')
+      .map(extractObject);
+
+    this.objectsTransformSub = objectsTransforms;
+    //this.objectsTransformSub = new Rx.Subject();
+    //objectsTransforms.subscribe(this.objectsTransformSub).bind(this));
+
 
     /* idea of mappings , from react-pixi
      spritemapping : {
@@ -284,6 +281,8 @@ class ThreeJs extends React.Component{
   //----------------------internal stuff
 
   //helpers
+  /*picking function to be use for mapping over evenstreams
+for tap/toubleTaps etc*/
   _getSelectionsAt(event){
     log.debug("selection at",event)
     let rect = this.container.getBoundingClientRect();
