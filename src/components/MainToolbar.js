@@ -11,6 +11,63 @@ let log = logger("Jam-ToolBar");
 log.setLevel("info");
 
 
+
+/*validator for design title: why is this here*/
+let validateTitle = function( inputTile ){
+  return inputTile;
+}
+
+
+let checkForDesignNameAvailability = function( inputTile){
+
+}
+
+
+var EditableItem = React.createClass({
+    getInitialState: function () {
+        return {
+            isEditMode: false,
+            data: ""
+        };
+    },
+    componentWillMount: function () {
+        this.setState({
+            isEditMode: this.props.isEditMode,
+            data: this.props.data
+        });
+    },
+    handleEditCell: function (evt) {
+        this.setState({isEditMode: true});
+
+    },
+    handleKeyDown: function (evt) {
+        switch (evt.keyCode) {
+            case 13: // Enter
+            case 9: // Tab
+                this.setState({isEditMode: false});
+                break;
+        }
+    },
+    handleBlur :function (evt) {
+      this.setState({isEditMode: false});
+    },
+    handleChange: function (evt) {
+        this.setState({data: evt.target.value});
+    },
+    render: function () {
+        var cellHtml;
+        if (this.state.isEditMode) {
+            cellHtml = <input type='text' autoFocus value={this.state.data}
+                onKeyDown={this.handleKeyDown} onChange={this.handleChange} onBlur={this.handleBlur} /> 
+        }
+        else {
+            cellHtml = <span onClick={this.handleEditCell} onBlur={this.handleBlur} >{this.state.data}</span>
+        }
+        return cellHtml;
+    }
+});
+
+
 class MainToolBar extends RxReact.Component {
   constructor(props) {
     super(props);
@@ -28,16 +85,20 @@ class MainToolBar extends RxReact.Component {
   getStateStream() {
     return Observable.empty()
   }
+
+  handleClick(event){
+    console.log("state & props", this.state, this.props)
+  }
   
   render() {
-    log.info("bla",this.props)
-    let fullTitle = `${this.props.design.title} ---- ${this.state.appInfos.name} v  ${this.state.appInfos.version}`;
-
+    //log.info("bla",this.props)
+    let fullTitle = `${this.props.appInfos.name} v  ${this.props.appInfos.version}`;
     return (
       <div>
-        <div ref="title"> {fullTitle} </div>
+        <EditableItem data={this.props.design.title} ref="title"/> 
+        <span ref="title"> {fullTitle} </span>
         <div>
-          <button> Test </button>
+          <button onClick={this.handleClick.bind(this)} > Test </button>
         </div>
       </div>
     );
