@@ -44,6 +44,16 @@ log.setLevel("warn");
 import state from './state'
 
 
+
+
+////TESTING
+
+//import {createTodo} from './actions/entityActions'
+import FooComponent from './components/fooCompo'
+
+////TESTING-OVER
+
+
 export default class App extends React.Component {
   constructor(props){
     super(props);
@@ -102,56 +112,19 @@ export default class App extends React.Component {
        return x;
     }
 
-    let selectedMeshesChAlt = glview.selectedMeshesSub;
-    //selectedMeshesChAlt.subscribe(foo);
-
-    let truc = selectedMeshesChAlt
+    let selectedMeshesChAlt = glview.selectedMeshesSub
       .defaultIfEmpty([])
       .map(
         function(selections){
           let res= selections.filter(filterEntities).map(fetchEntities);
-          self.setSeletedEntites(res)
+          self.selectEntities(res)
         }
       );
-
       //.filter(filterEntities)
       //.map(fetchEntities);
       //.flatMap( x => x )
-      
-    truc.subscribe(foo)
+    selectedMeshesChAlt.subscribe(foo)
 
-    //let trac = Observable.return([])
-
-    //let yeah = trac.merge(truc);//.skipUntil(selectedMeshesChAlt)
-
-    //truc.subscribe(finalLog);
-
-    //truc.merge(trac).skipUntil(bla).map(foo)
-
-    //selectedMeshesChAlt
-      //.distinctUntilChanged()
-      //.flatMap( x => x )
-      //.map(foo)
-      /*
-      //
-      .map(fetchEntities)
-      .map(function(selectedEntities){
-      //always return array
-      console.log("here",selectedEntities)
-      self.setSeletedEntites(selectedEntities)
-    })*/
-
-    /*var subscription = yeah.subscribe(
-      function (x) {
-          console.log("selectedEntities", x);
-
-      },
-      function (err) {
-          console.log('Error: ' + err);
-      },
-      function () {
-          console.log('Completed');
-      });*/
 
     let extractAttributes = function(mesh){
       let attrs = {
@@ -194,14 +167,8 @@ export default class App extends React.Component {
     .repeat()
     .subscribe( setEntityT )
     
-    //.subscribe(function (data) {
-    //  console.log("objectChange",data)
-    //});
 
-    //var subscription = rawTranforms.subscribe(function (event) {
-    //  console.log("objectChange",event)
-    //});
-
+    ///////////
     //setup key bindings
     this.setupKeyboard()
     this.setupMouseTrack()
@@ -245,6 +212,26 @@ export default class App extends React.Component {
       //self.toRotateMode();
       //self.toScaleMode();
     */
+
+
+    //TAKEN FROM ESTE
+    // For Om-like app state persistence. Press shift+ctrl+s to save app state
+    // and shift+ctrl+l to load.
+    keymaster('shift+ctrl+s',function(){
+      window._appState = state.save()
+      window._appStateString = JSON.stringify(window._appState)
+      console.log('app state saved')
+      console.log('copy the state to your clipboard by calling copy(_appStateString)')
+      console.log('for dev type _appState and press enter')
+    });
+
+     keymaster('shift+ctrl+l',function(){
+      const stateStr = window.prompt('Copy/Paste the serialized state into the input')
+      const newState = JSON.parse(stateStr)
+      if (!newState) return
+      state.load(newState)
+    });
+
   }
 
   unsetKeyboard(){
@@ -273,7 +260,7 @@ export default class App extends React.Component {
 
   //-------COMMANDS OR SOMETHING LIKE THEM -----
   //FIXME; this should be a command or something
-  setSeletedEntites(selectedEntities){
+  selectEntities(selectedEntities){
     let selectedEntities = selectedEntities || [];
     if(selectedEntities.constructor !== Array) selectedEntities = [selectedEntities]
     this.setState({
@@ -283,14 +270,18 @@ export default class App extends React.Component {
   }
 
   //FIXME; this should be a command or something
-  setEntityTransforms(entity,transforms){
+  setEntityTransforms(entity, transforms){
     log.info("setting transforms of",entity, "to", transforms)
 
     let _entitiesById = this.state._entitiesById;
 
-    _entitiesById[entity.iuid].pos = transforms.pos;
-    _entitiesById[entity.iuid].rot = transforms.rot;
-    _entitiesById[entity.iuid].sca = transforms.sca;
+    for(key in transforms){
+      _entitiesById[entity.iuid][key] = transforms[key];
+    }
+
+    // _entitiesById[entity.iuid].rot = transforms.rot;
+    //  _entitiesById[entity.iuid].sca = transforms.sca;
+    
 
     this.setState({_entitiesById:_entitiesById})
   }
@@ -409,6 +400,7 @@ export default class App extends React.Component {
     //FIXME: not sure, these are very specific for visuals
     mesh.castShadow      = true;
     //mesh.receiveShadow = true;
+    return mesh;
     //FIXME: not sure where this should be best: used to dispatch "scene insertion"/creation operation
     //var operation = new MeshAddition( mesh );
     //self.historyManager.addCommand( operation );
@@ -535,7 +527,8 @@ export default class App extends React.Component {
             <EntityInfos entities={this.state.selectedEntities}/>
           </div>
           <div ref="infoLayer" style={infoLayerStyle} >
-            <button onClick={this.handleClick.bind(this)}> Test </button>
+            <FooComponent/>
+            <button onClick={this.handleClick.bind(this)}> ShowState (in console) </button>
           </div>
         </div>
     );
