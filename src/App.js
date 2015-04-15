@@ -49,7 +49,7 @@ import state from './state'
 ////TESTING
 
 //import {createTodo} from './actions/entityActions'
-import FooComponent from './components/fooCompo'
+//import FooComponent from './components/fooCompo'
 
 ////TESTING-OVER
 
@@ -513,8 +513,7 @@ export default class App extends React.Component {
 
     //let fullTitle = `${this.state.design.title} ---- ${this.state.appInfos.name} v  ${this.state.appInfos.version}`;
     /*
-       <div ref="title" style={titleStyle} > {fullTitle} </div>
-          <ThreeJs testProp={this.state.test} cubeRot={this.state.cube} ref="glview"*/
+       <FooComponent/>*/
           
           
 
@@ -527,7 +526,7 @@ export default class App extends React.Component {
             <EntityInfos entities={this.state.selectedEntities}/>
           </div>
           <div ref="infoLayer" style={infoLayerStyle} >
-            <FooComponent/>
+            
             <button onClick={this.handleClick.bind(this)}> ShowState (in console) </button>
           </div>
         </div>
