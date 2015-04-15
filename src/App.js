@@ -39,49 +39,15 @@ import keymaster from 'keymaster'
 
 import logger from './utils/log'
 let log = logger("Jam-Root");
-log.setLevel("info");
+log.setLevel("warn");
 
-
+import state from './state'
 
 
 export default class App extends React.Component {
   constructor(props){
     super(props);
-    this.state = {
-      appInfos:{
-        ns:"youmagineJam",
-        name:"Jam!",
-        version:"0.0.0"
-      },
-      settings:{//TODO: each component should "register its settings"
-        grid:{
-          show:false,
-          size:"",
-        },
-        bom:{
-          show:false,//this belongs in the bom system
-        },
-         annotations:{
-          show:false,
-        }
-      },
-      shortcuts:{
-        'duplicateEntity':'⌘+r,ctrl+d',
-        'removeEntity':'delete',
-        'toTranslateMode':'m',
-        'toRotateMode':'r',
-        'toScaleMode':'s'
-      },
-
-      //real state 
-      camActive : false,//is a camera movement taking place ?
-      activeTool: null,
-      design:{
-        title:"untitled design",
-        description:"",
-      },
-      selectedEntities:[]
-    };
+    this.state = state;
 
     this.assetManager = new AssetManager();
     this.assetManager.addParser("stl", new StlParser());
@@ -92,7 +58,6 @@ export default class App extends React.Component {
     this.assetManager.addStore( "xhr"    , new XhrStore() );
 
     this.kernel = new Kernel(this.state);
-    this.kernel.setState = this.setState.bind(this);
   }
   
   componentDidMount(){
@@ -109,7 +74,7 @@ export default class App extends React.Component {
     //add drag & drop behaviour 
     let container = this.refs.wrapper.getDOMNode();
     DndBehaviour.attach( container );
-    DndBehaviour.dropHandler = this.dropHandler.bind(this);
+    DndBehaviour.dropHandler = this.handleDrop.bind(this);
 
     let glview   = this.refs.glview;
     let meshesCh = glview.selectedMeshesCh;
@@ -121,12 +86,10 @@ export default class App extends React.Component {
     }
 
     let filterEntities = function( x ){
-      log.info("x",x)
       return (x.userData && x.userData.entity)
     }
 
     let fetchEntities = function( x ){
-      log.info("x",x)
       return x.userData.entity;
     }
 
@@ -155,16 +118,13 @@ export default class App extends React.Component {
       //.map(fetchEntities);
       //.flatMap( x => x )
       
-      /*.distinct()
-      */
-
-    //truc.subscribe(foo)
+    truc.subscribe(foo)
 
     //let trac = Observable.return([])
 
     //let yeah = trac.merge(truc);//.skipUntil(selectedMeshesChAlt)
 
-    truc.subscribe(finalLog);
+    //truc.subscribe(finalLog);
 
     //truc.merge(trac).skipUntil(bla).map(foo)
 
@@ -193,7 +153,54 @@ export default class App extends React.Component {
           console.log('Completed');
       });*/
 
+    let extractAttributes = function(mesh){
+      let attrs = {
+        pos:mesh.position,
+        rot:mesh.rotation,
+        sca:mesh.scale
+      }
+      return attrs;
+    }
 
+    let attributesToArrays= function(attrs){
+      let output= {};
+      for(let key in attrs){
+        output[key] = attrs[key].toArray();
+      }
+      return output;
+    }
+
+    let setEntityT = function(attrsAndEntity){
+      let [attrs,entity] = attrsAndEntity;
+      self.setEntityTransforms(entity,attrs)
+      return attrsAndEntity
+    }
+
+
+    let rawTranforms     =  glview.objectsTransformSub.debounce(20).filter(filterEntities).share();
+    let objectTransforms = rawTranforms 
+      .map(extractAttributes)
+      .map(attributesToArrays)
+      .take(1)
+      //.subscribe(finalLog);
+    let objectsId = rawTranforms
+      .map(fetchEntities)
+      .take(1)
+
+    let test = Observable.forkJoin(
+      objectTransforms,
+      objectsId
+    )
+    .repeat()
+    .subscribe( setEntityT )
+    
+    //.subscribe(function (data) {
+    //  console.log("objectChange",data)
+    //});
+
+    //var subscription = rawTranforms.subscribe(function (event) {
+    //  console.log("objectChange",event)
+    //});
 
     //setup key bindings
     this.setupKeyboard()
@@ -244,19 +251,14 @@ export default class App extends React.Component {
     //keymaster.unbind('esc', this.onClose)
   }
 
-  dropHandler(data){
+  handleDrop(data){
     log.info("data was dropped into jam!", data)
     for (var i = 0, f; f = data.data[i]; i++) {
         this.loadMesh( f, {display: true} );
     }
   }
-  doubleTapHandler( event ){
-    var pickingInfos = event.detail.pickingInfos;
-    if(!pickingInfos) return;
-    if(pickingInfos.length == 0) return;
-    var object = pickingInfos[0].object; 
-    //console.log("object double tapped", object);
-    this._zoomInOnObject.execute( object, {position:pickingInfos[0].point} );
+  handleClick(event){
+    console.log("STATE", this.state);
   }
 
   setupMouseTrack(trackerEl, outputEl){
@@ -269,6 +271,7 @@ export default class App extends React.Component {
     this.assetManager.unLoad( resource.uri )
   }
 
+  //-------COMMANDS OR SOMETHING LIKE THEM -----
   //FIXME; this should be a command or something
   setSeletedEntites(selectedEntities){
     let selectedEntities = selectedEntities || [];
@@ -279,6 +282,44 @@ export default class App extends React.Component {
     log.info("selectedEntities",selectedEntities)
   }
 
+  //FIXME; this should be a command or something
+  setEntityTransforms(entity,transforms){
+    log.info("setting transforms of",entity, "to", transforms)
+
+    let _entitiesById = this.state._entitiesById;
+
+    _entitiesById[entity.iuid].pos = transforms.pos;
+    _entitiesById[entity.iuid].rot = transforms.rot;
+    _entitiesById[entity.iuid].sca = transforms.sca;
+
+    this.setState({_entitiesById:_entitiesById})
+  }
+
+  //FIXME; this should be a command or something
+  /*register a new entity type*/
+  addEntityType( type ){
+    log.info("adding entity type", type)
+    let nKlasses  = this.state._entityKlasses;
+    nKlasses.push( type )
+    //this.setState({_entityKlasses:this.state._entityKlasses.push(type)})
+    this.setState({_entityKlasses:nKlasses})
+  }
+
+  //FIXME; this should be a command or something
+  /*save a new entity instance*/
+  addEntityInstance( instance ){
+    log.info("adding entity instance", instance)
+    let nEntities  = this.state._entities;
+    nEntities.push( instance )
+    this.setState({_entities:nEntities})
+
+    let _entitiesById = this.state._entitiesById;
+    _entitiesById[instance.iuid] = instance;
+    this.setState({_entitiesById:_entitiesById})
+  }
+
+
+  //API
   loadMesh( uriOrData, options ){
     const DEFAULTS={
     }
@@ -321,6 +362,9 @@ export default class App extends React.Component {
         self.kernel.registerPartInstance( partInstance );
       }
 
+      //FIXME: remove, this is just for testing
+      self.addEntityType( partKlass)
+      self.addEntityInstance(partInstance)
       //we do not return the shape since that becomes the "reference shape", not the
       //one that will be shown
       return {klass:partKlass,instance:partInstance};
@@ -331,6 +375,8 @@ export default class App extends React.Component {
         //klassAndInstance.instance._selected = true;//SETTIN STATE !! not good like this
         self._tempForceDataUpdate();
       }
+
+      console.log("bla",self.state)
       return klassAndInstance
     }
 
@@ -339,8 +385,6 @@ export default class App extends React.Component {
       .map( centerMesh )
       .share();
 
-    /*mainProc.map( register ).subscribe(logNext,logError);
-    mainProc.map( showIt ).subscribe(logNext,logError);*/
     mainProc
       .map( register )
       .map( showIt )
@@ -446,7 +490,8 @@ export default class App extends React.Component {
       bottom:0,
       right:0,
       width:'100%',
-      height:'100%'
+      height:'100%',
+      overflow:'hidden'
     }
     let infoLayerStyle = {
       color: 'red',
@@ -454,8 +499,8 @@ export default class App extends React.Component {
       height:'300px',
       zIndex:15,
       position: 'absolute',
-      left: 0,
-      top: 0,
+      right: 0,
+      bottom: 0,
     };
 
     let titleStyle = {
@@ -469,21 +514,28 @@ export default class App extends React.Component {
       bottom: 0,
     };
 
+    let toolbarStyle={
+      width:'100%',
+      height:'100%',
+    };
+
     //let fullTitle = `${this.state.design.title} ---- ${this.state.appInfos.name} v  ${this.state.appInfos.version}`;
     /*
        <div ref="title" style={titleStyle} > {fullTitle} </div>
-          <ThreeJs testProp={this.state.test} cubeRot={this.state.cube} ref="glview"
+          <ThreeJs testProp={this.state.test} cubeRot={this.state.cube} ref="glview"*/
           
-          <div ref="infoLayer" style={infoLayerStyle} />*/
-                      //<button onClick={this.handleClick.bind(this)}> Test </button>
+          
 
     return (
         <div ref="wrapper" style={wrapperStyle}>
-          <MainToolbar design={this.state.design} appInfos={this.state.appInfos}> </MainToolbar>
+          <MainToolbar design={this.state.design} appInfos={this.state.appInfos} style={toolbarStyle}> </MainToolbar>
           <ThreeJs ref="glview"/>
 
           <div ref="testArea" style={testAreaStyle}>
             <EntityInfos entities={this.state.selectedEntities}/>
+          </div>
+          <div ref="infoLayer" style={infoLayerStyle} >
+            <button onClick={this.handleClick.bind(this)}> Test </button>
           </div>
         </div>
     );
