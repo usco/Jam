@@ -43,8 +43,18 @@ var getSymlinkedModules = function(){
 var extraModulePaths = xtraModulesWLoaders.map(function(entry){ return path.join(__dirname, "node_modules",entry); });
 var pathsToInclude = getSymlinkedModules().concat( path.join(__dirname, srcPath) ).concat( extraModulePaths );
 
-//FIXME !! temporary hack
+//FIXME !! temporary hack: add any paths where loaders should be apllied
 pathsToInclude.push( path.join(__dirname, "node_modules", "glView-helpers")   )
+pathsToInclude.push( path.join(__dirname, "node_modules", "usco-kernel2")   )
+//pathsToInclude.push( path.join(__dirname, "node_modules", "usco-assetmanager")   )
+
+//ugh, also needed because of workers
+pathsToInclude.push( path.join(__dirname, "node_modules", "usco-stl-parser")   )
+pathsToInclude.push( path.join(__dirname, "node_modules", "usco-ctm-parser")   )
+pathsToInclude.push( path.join(__dirname, "node_modules", "usco-ply-parser")   )
+
+
+
 console.log("will user loaders on",pathsToInclude)
 
 var config= {

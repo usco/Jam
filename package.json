@@ -28,7 +28,7 @@
     "co": "^4.5.1",
     "curry-d": "^0.6.0",
     "fynx": "^1.6.0",
-    "glView-helpers": "file:../../../../../../tmp/npm-10748-d58188e1/git-cache-933cae3329bd/b1058c6466b14624122888ec5c6a8574f7844cf9",
+    "glView-helpers": "usco/glView-helpers#dev",
     "immutable": "^3.7.0",
     "install": "^0.1.8",
     "js-csp": "^0.4.0",
