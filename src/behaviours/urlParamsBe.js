@@ -1,20 +1,30 @@
 
 import url from 'url'
+import Rx from 'rx'
 
 var ParseUrlParamsBehaviour = {
   attach:function( domNode ){
     //TODO: best way to add handlers?
     this.dropHandler = undefined;
 
-    this.fire('urlparams-found', {params:urlParams} );
-        return urlParams;
-        if(this.dropHandler) this.dropHandler({data:data, type:"text"});
-    //let foo = url.parse("http://jam.youmagine.com/jam?designUrl=foobar&designUrl=baara",true);
+    //"http://jam.youmagine.com/jam?designUrl=foobar&designUrl=baara"
+    let targetUrl = window.location;
+    let params = url.parse(targetUrl,true);
+
+    //let outCh = new Rx.Subject();
+    //outCh.onNext(params);
   },
   detach:function(){
-    this.domNode.removeEventListener("dragover", this.handleDragOver);
-    this.domNode.removeEventListener("drop"    , this.handleDrop);
   },
+  fetch:function(paramName){
+    let targetUrl = window.location.href;
+    let params = url.parse(targetUrl, true);
+    let result = params.query;
+    //TODO: always return query
+    if(paramName in result) return [].concat( result[paramName] )
+    return []
+  }
+
 };
   
 export default ParseUrlParamsBehaviour;

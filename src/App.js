@@ -1,3 +1,4 @@
+let colors= undefined;
 import React from 'react';
 import co from "co";
 
@@ -11,7 +12,7 @@ import postProcessMesh from './meshpp/postProcessMesh'
 import helpers         from 'glView-helpers'
 let centerMesh         = helpers.mesthTools.centerMesh;
 
-import AssetManager from 'usco-assetmanager'
+import AssetManager from 'usco-asset-manager'
 import DesktopStore from 'usco-desktop-store'
 import XhrStore     from 'usco-xhr-store'
 import StlParser    from 'usco-stl-parser'
@@ -32,7 +33,9 @@ let Observable = Rx.Observable;
 import {partitionMin} from './coms/utils'
 
 
-import DndBehaviour           from './behaviours/dndBe'
+import DndBehaviour             from './behaviours/dndBe'
+import ParseUrlParamsBehaviour  from './behaviours/urlParamsBe'
+
 
 import keymaster from 'keymaster'
 
@@ -42,9 +45,6 @@ let log = logger("Jam-Root");
 log.setLevel("warn");
 
 import state from './state'
-
-
-
 
 ////TESTING
 
@@ -85,6 +85,7 @@ export default class App extends React.Component {
     let container = this.refs.wrapper.getDOMNode();
     DndBehaviour.attach( container );
     DndBehaviour.dropHandler = this.handleDrop.bind(this);
+
 
     let glview   = this.refs.glview;
     let meshesCh = glview.selectedMeshesCh;
@@ -172,6 +173,20 @@ export default class App extends React.Component {
     //setup key bindings
     this.setupKeyboard()
     this.setupMouseTrack()
+    ///////////
+
+    //fetch & handle url parameters
+    let designUrls = ParseUrlParamsBehaviour.fetch("designUrl");
+    let meshUrls   = ParseUrlParamsBehaviour.fetch("meshUrl");
+    
+    //only handle a single design url
+    let singleDesign = designUrls.pop();
+    if(singleDesign) designUrls = [singleDesign];
+    
+    designUrls.map(function( designUrl ){ self.loadDesign(designUrls) });
+
+    //only load meshes if no designs need to be loaded 
+    if(!singleDesign)  meshUrls.map(function( meshUrl ){ self.loadMesh(meshUrl) });
   }
 
   componentWillUnmount(){
@@ -252,12 +267,7 @@ export default class App extends React.Component {
     log.info("")
   }
 
-  //FIXME: move this into assetManager
-  dismissResource(resource){
-    resource.deferred.reject("cancelling");
-    this.assetManager.unLoad( resource.uri )
-  }
-
+  
   //-------COMMANDS OR SOMETHING LIKE THEM -----
   //FIXME; this should be a command or something
   selectEntities(selectedEntities){
@@ -275,14 +285,11 @@ export default class App extends React.Component {
 
     let _entitiesById = this.state._entitiesById;
 
-    for(key in transforms){
+    for(let key in transforms){
       _entitiesById[entity.iuid][key] = transforms[key];
     }
-
     // _entitiesById[entity.iuid].rot = transforms.rot;
     //  _entitiesById[entity.iuid].sca = transforms.sca;
-    
-
     this.setState({_entitiesById:_entitiesById})
   }
 
@@ -340,7 +347,7 @@ export default class App extends React.Component {
     }
     let cleanupResource = function( resource ){
       log.info("cleaning up resources")
-      self.dismissResource(resource);
+      self.assetManager.dismissResource( resource );
     }
 
     let register = function( shape ){
