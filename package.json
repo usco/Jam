@@ -1,6 +1,6 @@
 {
   "name": "exp",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "jam react experiment",
   "main": "index.js",
   "scripts": {
@@ -48,7 +48,8 @@
     "three": "^0.70.0",
     "transducers.js": "^0.3.1",
     "tween.js": "^0.14.0",
-    "usco-assetmanager": "git://github.com/usco/usco-asset-manager",
+    "usco-asset-manager": "git://github.com/usco/usco-asset-manager",
+    "log-minim": "git://github.com/usco/log-minim",
     "usco-ctm-parser": "git://github.com/usco/usco-ctm-parser",
     "usco-desktop-store": "git://github.com/usco/usco-desktop-store",
     "usco-kernel2": "git://github.com/usco/usco-kernel2",

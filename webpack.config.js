@@ -44,11 +44,14 @@ var extraModulePaths = xtraModulesWLoaders.map(function(entry){ return path.join
 var pathsToInclude = getSymlinkedModules().concat( path.join(__dirname, srcPath) ).concat( extraModulePaths );
 
 //FIXME !! temporary hack: add any paths where loaders should be apllied
-pathsToInclude.push( path.join(__dirname, "node_modules", "glView-helpers")   )
-pathsToInclude.push( path.join(__dirname, "node_modules", "usco-kernel2")   )
-//pathsToInclude.push( path.join(__dirname, "node_modules", "usco-assetmanager")   )
+pathsToInclude.push( path.join(__dirname, "node_modules", "glView-helpers") )
+pathsToInclude.push( path.join(__dirname, "node_modules", "usco-kernel2") )
+pathsToInclude.push( path.join(__dirname, "node_modules", "usco-asset-manager") )
+pathsToInclude.push( path.join(__dirname, "node_modules", "usco-xhr-store") )
+pathsToInclude.push( path.join(__dirname, "node_modules", "usco-desktop-store") )
 
-//ugh, also needed because of workers
+
+//ugh, also needed because of workers (ie worker loader)
 pathsToInclude.push( path.join(__dirname, "node_modules", "usco-stl-parser")   )
 pathsToInclude.push( path.join(__dirname, "node_modules", "usco-ctm-parser")   )
 pathsToInclude.push( path.join(__dirname, "node_modules", "usco-ply-parser")   )
