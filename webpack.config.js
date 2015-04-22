@@ -144,8 +144,6 @@ else{
   config.plugins = config.plugins.concat([
     new webpack.HotModuleReplacementPlugin(),
   ])
-
-
 }
 
 
