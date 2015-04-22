@@ -75,9 +75,6 @@ export function addItemToFeed(title) {
 }
 
 
-
-
-
 /*save a new entity instance*/
 /*addEntityInstance( instance ){
   log.info("adding entity instance", instance)
