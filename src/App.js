@@ -1,4 +1,3 @@
-let colors= undefined;
 import React from 'react';
 import co from "co";
 
@@ -45,6 +44,12 @@ let log = logger("Jam-Root");
 log.setLevel("warn");
 
 import state from './state'
+
+import BomView from './components/Bom/BomView'
+let fakeBomData = [
+  {id:0,name:"TestPart",qty:1,unit:"EA",version:"0.0.0"},
+  {id:1,name:"Bolt",qty:10,unit:"EA",version:"0.2.7"},
+] 
 
 ////TESTING
 
@@ -261,6 +266,7 @@ export default class App extends React.Component {
   }
   handleClick(event){
     console.log("STATE", this.state);
+    console.log("bom", this.kernel.bom.bom)
   }
 
   setupMouseTrack(trackerEl, outputEl){
@@ -494,12 +500,12 @@ export default class App extends React.Component {
     }
     let infoLayerStyle = {
       color: 'red',
-      width:'300px',
+      width:'400px',
       height:'300px',
       zIndex:15,
       position: 'absolute',
       right: 0,
-      bottom: 0,
+      top: "42px"
     };
 
     let titleStyle = {
@@ -510,7 +516,7 @@ export default class App extends React.Component {
     let testAreaStyle = {
       position: 'absolute',
       left: 0,
-      bottom: 0,
+      bottom:0
     };
 
     let toolbarStyle={
@@ -521,8 +527,8 @@ export default class App extends React.Component {
     //let fullTitle = `${this.state.design.title} ---- ${this.state.appInfos.name} v  ${this.state.appInfos.version}`;
     /*
        <FooComponent/>*/
-          
-          
+    
+    let bomData = this.kernel.bom.bom;
 
     return (
         <div ref="wrapper" style={wrapperStyle}>
@@ -532,8 +538,9 @@ export default class App extends React.Component {
           <div ref="testArea" style={testAreaStyle}>
             <EntityInfos entities={this.state.selectedEntities}/>
           </div>
-          <div ref="infoLayer" style={infoLayerStyle} >
-            
+          
+          <div ref="infoLayer" className="infoLayer" style={infoLayerStyle} >
+            <BomView data={bomData}/>
             <button onClick={this.handleClick.bind(this)}> ShowState (in console) </button>
           </div>
         </div>
