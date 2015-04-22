@@ -50,7 +50,10 @@ let isLong = function(elapsed){
   //only get the fields we need
   let extractSize = function(x){ 
     let x = x.target;
-    let res = {width:x.innerWidth, height:x.innerHeight, aspect:x.innerWidth/x.innerHeight, bRect:x.getBoundingClientRect()} 
+    let bRect = {left:0,top:0,bottom:0,right:0,width:0,height:0}
+    if(x.getBoundingClientRect) bRect = x.getBoundingClientRect();
+
+    let res = {width:x.innerWidth, height:x.innerHeight, aspect:x.innerWidth/x.innerHeight, bRect:bRect} 
     return res;
   }
 
