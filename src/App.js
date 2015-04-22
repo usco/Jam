@@ -41,7 +41,7 @@ import keymaster from 'keymaster'
 
 import logger from './utils/log'
 let log = logger("Jam-Root");
-log.setLevel("warn");
+log.setLevel("info");
 
 import state from './state'
 
@@ -73,6 +73,10 @@ export default class App extends React.Component {
     this.assetManager.addStore( "xhr"    , new XhrStore() );
 
     this.kernel = new Kernel(this.state);
+
+    //temporary
+    this.kernel.dataApi.store = this.assetManager.stores["xhr"];
+    this.kernel.assetManager  = this.assetManager;
   }
   
   componentDidMount(){
@@ -273,6 +277,14 @@ export default class App extends React.Component {
     log.info("")
   }
 
+  //api 
+  loadDesign(uri,options){
+    log.warn("loading design from ",uri);
+    let designPromise = this.kernel.loadDesign(uri,options);
+
+    //var source = Rx.Observable.fromPromise(resource.deferred.promise);
+    this._tempForceDataUpdate();
+  }
   
   //-------COMMANDS OR SOMETHING LIKE THEM -----
   //FIXME; this should be a command or something
@@ -380,7 +392,6 @@ export default class App extends React.Component {
         self._tempForceDataUpdate();
       }
 
-      console.log("bla",self.state)
       return klassAndInstance
     }
 
@@ -393,7 +404,7 @@ export default class App extends React.Component {
       .map( register )
       .map( showIt )
       .map( function(klassAndInstance){
-        klassAndInstance.instance.pos[2]+=30;
+        //klassAndInstance.instance.pos[2]+=30;
         return klassAndInstance;
       })
         .catch(handleLoadError)
@@ -538,7 +549,7 @@ export default class App extends React.Component {
           <div ref="testArea" style={testAreaStyle}>
             <EntityInfos entities={this.state.selectedEntities}/>
           </div>
-          
+
           <div ref="infoLayer" className="infoLayer" style={infoLayerStyle} >
             <BomView data={bomData}/>
             <button onClick={this.handleClick.bind(this)}> ShowState (in console) </button>
