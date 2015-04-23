@@ -10,68 +10,7 @@ import logger from '../utils/log'
 let log = logger("Jam-ToolBar");
 log.setLevel("info");
 
-
-
-/*validator for design title: why is this here*/
-let validateTitle = function( inputTile ){
-  return inputTile;
-}
-
-
-let checkForDesignNameAvailability = function( inputTile){
-
-}
-
-
-var EditableItem = React.createClass({
-    getInitialState: function () {
-        return {
-            isEditMode: false,
-            data: ""
-        };
-    },
-    componentWillMount: function () {
-        this.setState({
-            isEditMode: this.props.isEditMode,
-            data: this.props.data
-        });
-    },
-    handleEditCell: function (evt) {
-        this.setState({isEditMode: true});
-
-    },
-    handleKeyDown: function (evt) {
-        switch (evt.keyCode) {
-            case 13: // Enter
-            case 9: // Tab
-                this.setState({isEditMode: false});
-                break;
-        }
-    },
-    handleBlur :function (evt) {
-      this.setState({isEditMode: false});
-    },
-    handleChange: function (evt) {
-        this.setState({data: evt.target.value});
-    },
-
-    componentWillReceiveProps:function(nextProps){
-      //console.log(nextProps)
-      this.setState({data: nextProps.data});
-    },
-
-    render: function () {
-        var cellHtml;
-        if (this.state.isEditMode) {
-            cellHtml = <input type='text' autoFocus value={this.state.data}
-                onKeyDown={this.handleKeyDown} onChange={this.handleChange} onBlur={this.handleBlur} /> 
-        }
-        else {
-            cellHtml = <span onClick={this.handleEditCell} onBlur={this.handleBlur} >{this.state.data}</span>
-        }
-        return cellHtml;
-    }
-});
+import EditableItem from './EditableItem'
 
 
 class MainToolBar extends RxReact.Component {
@@ -96,12 +35,20 @@ class MainToolBar extends RxReact.Component {
   render() {
     //log.info("bla",this.props)
     let fullTitle = `(${this.props.appInfos.name} v  ${this.props.appInfos.version})`;
+    let titleStyle = {
+      width:"100%",
+      padding: "5 0 0 10"
+    };
+    let fooStyle  = {
+      display: "inline-block"
+    };
+
     return (
-      <div>
+      <div className="titleBar" style={titleStyle}>
         <EditableItem data={this.props.design.title} ref="title"/> 
         <span ref="title"> {fullTitle} </span>
-        <div>
-          <button onClick={this.handleClick.bind(this)} > Test </button>
+        <div style={fooStyle}>
+          <button onClick={this.handleClick.bind(this)} > TestBtn </button>
         </div>
       </div>
     );
