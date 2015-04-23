@@ -54,6 +54,12 @@ var EditableItem = React.createClass({
     handleChange: function (evt) {
         this.setState({data: evt.target.value});
     },
+
+    componentWillReceiveProps:function(nextProps){
+      //console.log(nextProps)
+      this.setState({data: nextProps.data});
+    },
+
     render: function () {
         var cellHtml;
         if (this.state.isEditMode) {
@@ -72,9 +78,6 @@ class MainToolBar extends RxReact.Component {
   constructor(props) {
     super(props);
     this.state = {
-      design:{
-        title:"unnamed design",
-      },
       appInfos:{
         name:"bla",
         version:"0.0.0"
@@ -92,7 +95,7 @@ class MainToolBar extends RxReact.Component {
   
   render() {
     //log.info("bla",this.props)
-    let fullTitle = `${this.props.appInfos.name} v  ${this.props.appInfos.version}`;
+    let fullTitle = `(${this.props.appInfos.name} v  ${this.props.appInfos.version})`;
     return (
       <div>
         <EditableItem data={this.props.design.title} ref="title"/> 
