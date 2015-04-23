@@ -46,10 +46,6 @@ log.setLevel("info");
 import state from './state'
 
 import BomView from './components/Bom/BomView'
-let fakeBomData = [
-  {id:0,name:"TestPart",qty:1,unit:"EA",version:"0.0.0"},
-  {id:1,name:"Bolt",qty:10,unit:"EA",version:"0.2.7"},
-] 
 
 ////TESTING
 
@@ -280,10 +276,30 @@ export default class App extends React.Component {
   //api 
   loadDesign(uri,options){
     log.warn("loading design from ",uri);
-    let designPromise = this.kernel.loadDesign(uri,options);
+    let self = this;
 
-    //var source = Rx.Observable.fromPromise(resource.deferred.promise);
-    this._tempForceDataUpdate();
+     function logNext( next ){
+      log.info( next )
+    }
+    function logError( err){
+      log.error(err)
+    }
+    function logDone( data) {
+      log.info("DONE",data);
+      self._tempForceDataUpdate();
+      //FIXME: hack
+      self.setState({
+        design:{
+          title: self.kernel.activeDesign.title,
+          description:self.kernel.activeDesign.description,
+        }
+      });
+      
+    }
+
+    let a = this.kernel.loadDesign(uri,options)
+    .subscribe( logNext, logError, logDone);
+    //a.subscribe(self._tempForceDataUpdate)
   }
   
   //-------COMMANDS OR SOMETHING LIKE THEM -----
@@ -381,6 +397,7 @@ export default class App extends React.Component {
       //FIXME: remove, this is just for testing
       self.addEntityType( partKlass)
       self.addEntityInstance(partInstance)
+
       //we do not return the shape since that becomes the "reference shape", not the
       //one that will be shown
       return {klass:partKlass,instance:partInstance};
@@ -461,14 +478,13 @@ export default class App extends React.Component {
 
       co(function* (){
         let meshInstance = yield self.kernel.getPartMeshInstance( entity ) ;
-        console.log("meshInstance",meshInstance)
         if( meshInstance){
           meshInstance.userData.entity = entity;//FIXME : should we have this sort of backlink ?
           //FIXME/ make a list of all operations needed to be applied on part meshes
           //computeObject3DBoundingSphere( meshInstance, true );
           //centerMesh( meshInstance ); //FIXME do not use the "global" centerMesh
           
-          log.info("instance",meshInstance)
+          //log.info("instance",meshInstance, meshInstance.userData.entity.typeUid)
 
           meshInstance.position.fromArray( entity.pos )
           meshInstance.rotation.fromArray( entity.rot );
