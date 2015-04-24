@@ -302,6 +302,18 @@ export default class App extends React.Component {
 
     */
 
+
+     /*let mouseState = 
+      mouseDowns.map(true)
+      .merge(
+        mouseUps.map(false));
+
+    let _holds = mouseState
+      .bufferWithTimeOrCount(longPressDelay,2)
+      .filter( x => x.length == 1 )
+      .filter( x => x[0] ===true )//.take(1).repeat();
+      .takeUntil( mouseMoves2.filter( data => isMoving(data.delta, deltaSqr) ) )*/
+
   }
 
 

@@ -6,11 +6,6 @@ import logger from '../utils/log'
 let log = logger("interactions");
 log.setLevel("info");
 
-//FIXME: HACK ! This should be elsewhere
-let multiClickDelay = 200;
-let longPressDelay  = 600;
-let maxTime         = 600;
-
 
 //various helpers
 let getOffset=function(event) {
@@ -20,7 +15,7 @@ let getOffset=function(event) {
   };
 }
 
-let isMoving=function(startEnd, deltaSqr){
+let isMovingOLD=function(startEnd, deltaSqr){
   let {start,end} = startEnd;
   let offset = {x:end.x-start.x, y:end.y-start.y}
   let distSqr  = (offset.x*offset.x + offset.y * offset.y);
@@ -28,16 +23,22 @@ let isMoving=function(startEnd, deltaSqr){
   return distSqr > deltaSqr;
 }
 
-let isStatic=function(startEnd, deltaSqr){
-  return !isMoving(startEnd);
+let isMoving=function(moveDelta, deltaSqr){
+  let distSqr  = (moveDelta.x * moveDelta.x + moveDelta.y*moveDelta.y);
+  let isMoving = (distSqr > deltaSqr);
+  return isMoving;
+}
+
+let isStatic=function(moveDelta, deltaSqr){
+  return !isMoving(moveDelta);
 }
 
 //TODO ,: regroup / refactor all "delta" operation ?
-let isShort = function(elapsed){
+let isShort = function(elapsed, maxTime){
   return elapsed < maxTime;
 }
 
-let isLong = function(elapsed){
+let isLong = function(elapsed, maxTime){
   return elapsed > maxTime;
 }
 
@@ -86,7 +87,6 @@ let isLong = function(elapsed){
         return isStatic({start:start,end:end}, deltaSqr);//allow for small movement (shaky hands!)
 
       })
-        //.map(function(event){console.log(event); return event;})
         .takeUntil(mouseUps)
         .filter( x => x===true )
     });
@@ -107,12 +107,61 @@ let isLong = function(elapsed){
     return fakeClicks;
  }
 
+function altMouseMoves( mouseMoves ){
+ return mouseMoves
+      .skip(1)
+      .zip( mouseMoves, function(a, b){
+        return  {
+            client:{x: a.clientX,y: a.clientY },
+            delta:{x: a.clientX - b.clientX, y: a.clientY - b.clientY}};
+      });
+}
+
+function altClicks(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
+  //only doing any "clicks if the time between mDOWN and mUP is below longpressDelay"
+  //any small mouseMove is ignored (shaky hands)
+   return mouseDowns
+      .flatMap( function(downEvent){
+        let target = downEvent.currentTarget;
+        return Observable.amb(
+          [
+            // Skip if we get a movement before a mouse up
+            mouseMoves
+              .filter( data => isMoving(data.delta, deltaSqr) )//allow for small movement (shaky hands!)
+              .take(1).flatMap( x => Rx.Observable.empty() ),
+
+            mouseUps.take(1),
+
+          ]).timeout(longPressDelay, Rx.Observable.empty());
+    });
+}
+
+function holds(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
+   return mouseDowns
+      .flatMap( function(downEvent){
+        let target = downEvent.currentTarget;
+        return Observable.amb(
+          [
+            // Skip if we get a movement before timeout
+            mouseMoves
+              .filter( data => isMoving(data.delta, deltaSqr) )//allow for small movement (shaky hands!)
+              .take(1).flatMap( x => Rx.Observable.empty() ),
+
+            //Skip if we get a mouseup before main timeout
+            mouseUps.take(1).flatMap( x => Rx.Observable.empty() ),
+
+            Rx.Observable.return(2).delay(1000).timeout(1000, Rx.Observable.return(42))
+
+          ])
+        //.timeout(longPressDelay, Rx.Observable.empty());
+    });
+
+}
 
 
  export let pointerInteractions = function(targetEl){
-    let multiClickDelay = 150;
-    let longPressDelay  = 600;
-    let maxTime         = 600;
+    let multiClickDelay = 250;
+    let longPressDelay  = 800;
 
     let minDelta        = 50;//max 100 pixels delta
     let deltaSqr        = (minDelta*minDelta);
@@ -122,25 +171,75 @@ let isLong = function(elapsed){
     let mouseDowns  = fromEvent(targetEl, 'mousedown');
     let mouseUps    = fromEvent(targetEl, 'mouseup');
     let mouseMoves  = fromEvent(targetEl, 'mousemove');
-    let rightclick  = fromEvent(targetEl, 'contextmenu').do(
+    let rightclicks = fromEvent(targetEl, 'contextmenu').do(
       function(e){ e.preventDefault();
     }); // disable the context menu / right click
+    let mouseMoves2 = altMouseMoves(mouseMoves);
 
-    let _clicks = clicks(mouseDowns, mouseUps, mouseMoves, multiClickDelay, deltaSqr);
+    let _clicks = altClicks(mouseDowns, mouseUps, mouseMoves2, multiClickDelay, deltaSqr).share();
 
     let clickStreamBase = _clicks
+      .filter( event => ('button' in event && event.button === 0) )
       .buffer(function() { return _clicks.debounce( multiClickDelay ); })
       .map( list => ({list:list,nb:list.length}) )
       .share();
 
 
+    //we get our custom right clicks
+    let rightClicks2 = _clicks.filter( event => ('button' in event && event.button === 2) );
+    let _holds       = holds(mouseDowns, mouseUps, mouseMoves2, multiClickDelay, deltaSqr);
+    
+
     let unpack = function(list){ return list.list};
     let extractData = function(event){ return {clientX:event.clientX,clientY:event.clientY}};
 
-    let singleClicks = clickStreamBase.filter( x => x.nb == 1 ).flatMap(unpack);
-    let doubleClicks = clickStreamBase.filter( x => x.nb == 2 ).flatMap(unpack).take(1).map(extractData).repeat();
-    //let multiClicks  = clickStreamBase.filter( x => x.nb >= 2 ).flatMap(unpack);
-    let longTap      =  undefined;
+
+    let $singleClicks = clickStreamBase.filter( x => x.nb == 1 ).flatMap(unpack);
+    let $doubleClicks = clickStreamBase.filter( x => x.nb == 2 ).flatMap(unpack).take(1).map(extractData).repeat();
+    let $contextTaps  =  _holds.amb( rightClicks2 ).take(1).repeat(); // contextTaps: either HELD leftmouse/pointer or right click
+    //let $multiClicks  = clickStreamBase.filter( x => x.nb >= 2 ).flatMap(unpack);
+
+    //.flatMap(function(bla){console.log(bla);return bla}).mergeAll().
+    //first()
+
+    /*let foo = altMouseMoves(mouseMoves)
+      .map( function( data ){
+        return isMoving(data.delta, deltaSqr);//allow for small movement (shaky hands!)
+      } )*/
+    //.share();
+
+      //.throttleWithTimeout(800);
+      /*.bufferWithTime(400)
+      .map(function (arr) { 
+        console.log(arr); 
+        let start = arr[0];
+        let end   = arr[arr.length-1]
+        return "foo"
+      })*/
+      /*.scan(
+        function (acc, x) {
+            acc.client.x += x.client.x;
+            acc.client.y += x.client.y;
+            return acc;
+        }
+      )
+      .timeout(800, Rx.Observable.empty()).repeat();*/
+
+    /*foo.subscribe(function(event){
+      console.log("mousemove",event)
+    })*/
+
+
+    /*_clicks.subscribe(function(event){
+      console.log("mouse clicks alt",event)
+    })*/
+
+    //let $contextTaps2 = holds(mouseDowns, mouseUps, mouseMoves2, multiClickDelay, deltaSqr)
+   
+    /*$contextTaps.subscribe(function(event){
+      console.log("holdIIIING/right click",event)
+    })*/
+
 
     //DEBUG
     /*singleClicks.subscribe(function (event) {
@@ -156,11 +255,10 @@ let isLong = function(elapsed){
     //TODO need a better name
     //var interactions = Observable.merge(rightclick, clickhold);
     */
-    Observable.merge(singleClicks, doubleClicks, rightclick)
+    Observable.merge($singleClicks, $doubleClicks, $contextTaps)
         //.debounce(200)
-        .subscribe(function (suggestion) {
-    });
+        .subscribe(function (suggestion) {});
 
-    return {taps:clickStreamBase, singleTaps:singleClicks, doubleTaps:doubleClicks} 
+    return {taps:clickStreamBase, singleTaps:$singleClicks, doubleTaps:$doubleClicks, contextTaps:$contextTaps} 
  }
 

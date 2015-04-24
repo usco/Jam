@@ -199,19 +199,22 @@ class ThreeJs extends React.Component{
     handleResize({width:window.innerWidth,height:window.innerHeight,aspect:0})
     //subscribe(listen)
 
+    //setup INTERACTIONS
     let sAt = this._getSelectionsAt.bind(this)
-
     this.pointerInteractions = pointerInteractions(container);
+
     this.pointerInteractions.singleTaps.map( sAt ).map( this.handleTap.bind(this) ).subscribe( listen, listen,errors );
     this.pointerInteractions.doubleTaps.map( sAt ).map( this.handleDoubleTap.bind(this) ).subscribe( listen, listen,errors );
+    this.pointerInteractions.contextTaps.map( sAt ).map( this.handleContextMenu.bind(this) ).subscribe( listen, listen,errors );
 
     let extractObject = function(event){ return event.target.object}
     let objectsTransforms = Observable.fromEvent(this.transformControls, 'objectChange')
       .map(extractObject);
 
     this.objectsTransformSub = objectsTransforms;
-    //this.objectsTransformSub = new Rx.Subject();
-    //objectsTransforms.subscribe(this.objectsTransformSub).bind(this));
+
+    
+
 
 
     /* idea of mappings , from react-pixi
@@ -481,6 +484,10 @@ for tap/toubleTaps etc*/
     var object = pickingInfos[0].object; 
     //console.log("object double tapped", object);
     this._zoomInOnObject.execute( object, {position:pickingInfos[0].point} );
+  }
+
+  handleContextMenu( event ){
+    log.info("context menu would be called now",event)
   }
 
   //"core" methods

@@ -481,7 +481,7 @@ var OrbitControls = function ( object, domElement, upVector ) {
 
     function onPointerDown( event )
     {
-      console.log("pointer down in orbit controls");
+      //console.log("pointer down in orbit controls");
       //scope.pointers[event.pointerId] = {x: event.pageX, y: event.pageY};
   
       /*if(Object.keys(scope.pointers).length >1 && event.pointerType !== 'mouse'){
