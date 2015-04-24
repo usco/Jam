@@ -7,12 +7,10 @@ let log = logger("interactions");
 log.setLevel("info");
 
 //FIXME: HACK ! This should be elsewhere
-    let multiClickDelay = 250;
-    let longPressDelay  = 600;
-    let maxTime         = 600;
+let multiClickDelay = 200;
+let longPressDelay  = 600;
+let maxTime         = 600;
 
-    let minDelta        = 50;//max 100 pixels delta
-    let deltaSqr        = (minDelta*minDelta);
 
 //various helpers
 let getOffset=function(event) {
@@ -22,7 +20,7 @@ let getOffset=function(event) {
   };
 }
 
-let isMoving=function(startEnd){
+let isMoving=function(startEnd, deltaSqr){
   let {start,end} = startEnd;
   let offset = {x:end.x-start.x, y:end.y-start.y}
   let distSqr  = (offset.x*offset.x + offset.y * offset.y);
@@ -30,7 +28,7 @@ let isMoving=function(startEnd){
   return distSqr > deltaSqr;
 }
 
-let isStatic=function(startEnd){
+let isStatic=function(startEnd, deltaSqr){
   return !isMoving(startEnd);
 }
 
@@ -64,7 +62,8 @@ let isLong = function(elapsed){
   return throttledWinResize;
  }
 
- export let clicks = function(mouseDowns, mouseUps, mouseMoves){
+
+ export let clicks = function(mouseDowns, mouseUps, mouseMoves, timing=200, deltaSqr){
     /*
     "pseudo click" that does not trigger when there was
     a mouse movement 
@@ -75,7 +74,7 @@ let isLong = function(elapsed){
       //get only valid moves 
       let mMoves  = mouseMoves
         .map( false )
-        .bufferWithTimeOrCount(200,1)
+        .bufferWithTimeOrCount(timing,1)
         .filter( x => x.length == 1 )
         .map( x => x[0]);
 
@@ -84,7 +83,7 @@ let isLong = function(elapsed){
       return __moves.combineLatest(mouseUps, function(m, mu){
         //log.info(m, mu)
         var end = {x: mu.clientX, y: mu.clientY };
-        return isStatic({start:start,end:end});//allow for small movement (shaky hands!)
+        return isStatic({start:start,end:end}, deltaSqr);//allow for small movement (shaky hands!)
 
       })
         //.map(function(event){console.log(event); return event;})
@@ -111,7 +110,7 @@ let isLong = function(elapsed){
 
 
  export let pointerInteractions = function(targetEl){
-    let multiClickDelay = 250;
+    let multiClickDelay = 150;
     let longPressDelay  = 600;
     let maxTime         = 600;
 
@@ -127,17 +126,12 @@ let isLong = function(elapsed){
       function(e){ e.preventDefault();
     }); // disable the context menu / right click
 
-    let _clicks = clicks(mouseDowns, mouseUps, mouseMoves);
+    let _clicks = clicks(mouseDowns, mouseUps, mouseMoves, multiClickDelay, deltaSqr);
 
     let clickStreamBase = _clicks
       .buffer(function() { return _clicks.debounce( multiClickDelay ); })
       .map( list => ({list:list,nb:list.length}) )
       .share();
-
-    let logSome=function(entry){
-      console.log(entry)
-      return entry;
-    }
 
 
     let unpack = function(list){ return list.list};
@@ -146,7 +140,7 @@ let isLong = function(elapsed){
     let singleClicks = clickStreamBase.filter( x => x.nb == 1 ).flatMap(unpack);
     let doubleClicks = clickStreamBase.filter( x => x.nb == 2 ).flatMap(unpack).take(1).map(extractData).repeat();
     //let multiClicks  = clickStreamBase.filter( x => x.nb >= 2 ).flatMap(unpack);
-
+    let longTap      =  undefined;
 
     //DEBUG
     /*singleClicks.subscribe(function (event) {
@@ -163,7 +157,7 @@ let isLong = function(elapsed){
     //var interactions = Observable.merge(rightclick, clickhold);
     */
     Observable.merge(singleClicks, doubleClicks, rightclick)
-        .debounce(1000)
+        //.debounce(200)
         .subscribe(function (suggestion) {
     });
 

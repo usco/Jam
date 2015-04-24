@@ -29,7 +29,7 @@ let Observable= Rx.Observable;
 let Subject   = Rx.Subject;
 
 
-import {windowResizes,pointerInteractions} from '../../coms/interactions2'
+import {windowResizes,pointerInteractions} from '../../interactions/interactions'
 
 import logger from '../../utils/log'
 let log = logger("glView");
@@ -450,24 +450,25 @@ for tap/toubleTaps etc*/
 
     //console.log("selectedMeshes",selectedMeshes);
 
-    this._prevSelectedMeshes = this.selectedMeshes;
     this.selectedMeshes      = selectedMeshes;
     this.setState({
       selectedMeshes: selectedMeshes
     })
 
-    if(selectedMeshes.length>0){
-      //console.log(selectedMeshes[0] === selectedMeshes[1]);
-      this.transformControls.attach(selectedMeshes[0])
-    }
 
     if(this._prevSelectedMeshes && this._prevSelectedMeshes.length>0){
       console.log(this._prevSelectedMeshes)
       this.transformControls.detach(this._prevSelectedMeshes[0])
     }
+
+    if(selectedMeshes.length>0){
+      this.transformControls.attach(selectedMeshes[0])
+    }
+
     /* function show(selectedMesh){
       console.log("selectedMesh",selectedMesh);
     }*/
+    this._prevSelectedMeshes = this.selectedMeshes;
 
     this.selectedMeshesSub.onNext(selectedMeshes);
   }
