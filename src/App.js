@@ -561,7 +561,13 @@ export default class App extends React.Component {
 
     //let fullTitle = `${this.state.design.title} ---- ${this.state.appInfos.name} v  ${this.state.appInfos.version}`;
     /*
-       <FooComponent/>*/
+       <FooComponent/>
+ <div ref="infoLayer" className="infoLayer" style={infoLayerStyle} >
+            <BomView data={bomData}/>
+            <button onClick={this.handleClick.bind(this)}> ShowState (in console) </button>
+          </div>
+
+    */
     
     let bomData = this.kernel.bom.bom;
 
@@ -574,10 +580,7 @@ export default class App extends React.Component {
             <EntityInfos entities={this.state.selectedEntities}/>
           </div>
 
-          <div ref="infoLayer" className="infoLayer" style={infoLayerStyle} >
-            <BomView data={bomData}/>
-            <button onClick={this.handleClick.bind(this)}> ShowState (in console) </button>
-          </div>
+         
         </div>
     );
   }
