@@ -118,6 +118,8 @@ export default class App extends React.Component {
        return x;
     }
 
+    
+
     let selectedMeshesChAlt = glview.selectedMeshesSub
       .defaultIfEmpty([])
       .map(
@@ -177,7 +179,6 @@ export default class App extends React.Component {
     ///////////
     //setup key bindings
     this.setupKeyboard()
-    this.setupMouseTrack()
     ///////////
 
     //fetch & handle url parameters
@@ -269,16 +270,12 @@ export default class App extends React.Component {
     console.log("bom", this.kernel.bom.bom)
   }
 
-  setupMouseTrack(trackerEl, outputEl){
-    log.info("")
-  }
-
   //api 
   loadDesign(uri,options){
     log.warn("loading design from ",uri);
     let self = this;
 
-     function logNext( next ){
+    function logNext( next ){
       log.info( next )
     }
     function logError( err){
@@ -294,12 +291,20 @@ export default class App extends React.Component {
           description:self.kernel.activeDesign.description,
         }
       });
+
+      //FIXME: godawful hack because we have multiple "central states" for now
+      self.kernel.activeAssembly.children.map(
+        function(entityInstance){
+        self.addEntityInstance(entityInstance);
+        }
+      );
+
+        
       
     }
 
-    let a = this.kernel.loadDesign(uri,options)
+    this.kernel.loadDesign(uri,options)
     .subscribe( logNext, logError, logDone);
-    //a.subscribe(self._tempForceDataUpdate)
   }
   
   //-------COMMANDS OR SOMETHING LIKE THEM -----
@@ -318,13 +323,15 @@ export default class App extends React.Component {
     log.info("setting transforms of",entity, "to", transforms)
 
     let _entitiesById = this.state._entitiesById;
+    let tgtEntity     = _entitiesById[entity.iuid];
 
+    if(!tgtEntity) return;
     for(let key in transforms){
-      _entitiesById[entity.iuid][key] = transforms[key];
+      tgtEntity[key] = transforms[key];
     }
     // _entitiesById[entity.iuid].rot = transforms.rot;
     //  _entitiesById[entity.iuid].sca = transforms.sca;
-    this.setState({_entitiesById:_entitiesById})
+    this.setState({_entitiesById:_entitiesById});
   }
 
   //FIXME; this should be a command or something
@@ -457,6 +464,7 @@ export default class App extends React.Component {
     let mapper = function( entity, addTo, xform ){
       let self = this;
 
+
       /*let getInstance  = self.kernel.getPartMeshInstance( entity );
       return Rx.Observable.from( getInstance )
         .map(function(meshInstance){
@@ -484,7 +492,7 @@ export default class App extends React.Component {
           //computeObject3DBoundingSphere( meshInstance, true );
           //centerMesh( meshInstance ); //FIXME do not use the "global" centerMesh
           
-          //log.info("instance",meshInstance, meshInstance.userData.entity.typeUid)
+          //log.info("instance",meshInstance, meshInstance.userData.entity)
 
           meshInstance.position.fromArray( entity.pos )
           meshInstance.rotation.fromArray( entity.rot );
