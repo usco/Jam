@@ -159,11 +159,11 @@ class ThreeJs extends React.Component{
     let shadowPlane = new ShadowPlane(200,200,null,this.config.cameras[0].up);
     this.scene.add(shadowPlane);
 
-    let camViewControls = new CamViewControls({size:9, cornerWidth:1.5,highlightColor:"#ffd200",opacity:0.95},[this.camera])
+    /*let camViewControls = new CamViewControls({size:9, cornerWidth:1.5,highlightColor:"#ffd200",opacity:0.95},[this.camera])
     camViewControls.init( this.camera, container );
     this.scene.add(camViewControls)
 
-    this.camViewControls = camViewControls;
+    this.camViewControls = camViewControls;*/
     //planesColor:"#17a9f5",edgesColor:"#17a9f5",cornersColor:"#17a9f5",
 
 
@@ -177,7 +177,7 @@ class ThreeJs extends React.Component{
     this.resizer = windowResizes(1);
 
     let handleResize = function(sizeInfos){
-      //console.log("setting size",sizeInfos);
+      console.log("setting size",sizeInfos);
       let {width,height,aspect} = sizeInfos;
     
       this.width  = width;
@@ -185,8 +185,8 @@ class ThreeJs extends React.Component{
       let camera = this.camera;
       let renderer = this.renderer;
 
-      camera.aspect = 1;
-      //camera.aspect = aspect;
+      //camera.aspect = 1;
+      camera.aspect = aspect;
       camera.updateProjectionMatrix();
       renderer.setSize( width, height );
     }
@@ -262,7 +262,6 @@ class ThreeJs extends React.Component{
     PreventScrollBehaviour.attach( container );
     //TODO: , create an abstraction above channels/rx
     this.selectedMeshesSub = new Rx.Subject();
-    //this.selectedMeshesSub.subscribe(listen)
 
     this._setupExtras();
 
@@ -444,13 +443,16 @@ for tap/toubleTaps etc*/
 
   //interactions : should these be in a "wrapper above the base 3d view ?"
   handleTap(event){
-    console.log("tapped in view")
+    //console.log("tapped in view")
     let intersects = event.detail.pickingInfos;
     let rect = this.container.getBoundingClientRect();
 
     let selectedMeshes = intersects.map( intersect => intersect.object );
     selectedMeshes.sort().filter( ( mesh, pos ) => { return (!pos || mesh != intersects[pos - 1]) } );
 
+    selectedMeshes = selectedMeshes.shift();//we actually only get the best match
+    if(selectedMeshes){ selectedMeshes = [selectedMeshes]; }
+    else{ selectedMeshes = []}
     //console.log("selectedMeshes",selectedMeshes);
 
     this.selectedMeshes      = selectedMeshes;
