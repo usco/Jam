@@ -8,14 +8,23 @@ log.setLevel("info");
 
 
 //various helpers
-let getOffset=function(event) {
+function preventEventDefault(event) {
+  event.preventDefault();
+}
+
+function hasTwoTouchPoints(event) {
+  return event.touches && event.touches.length === 2;
+}
+
+
+function getOffset(event) {
   return {
     x: event.offsetX === undefined ? event.layerX : event.offsetX,
     y: event.offsetY === undefined ? event.layerY : event.offsetY
   };
 }
 
-let isMovingOLD=function(startEnd, deltaSqr){
+function isMovingOLD(startEnd, deltaSqr){
   let {start,end} = startEnd;
   let offset = {x:end.x-start.x, y:end.y-start.y}
   let distSqr  = (offset.x*offset.x + offset.y * offset.y);
@@ -23,22 +32,24 @@ let isMovingOLD=function(startEnd, deltaSqr){
   return distSqr > deltaSqr;
 }
 
-let isMoving=function(moveDelta, deltaSqr){
+function isMoving(moveDelta, deltaSqr){
+  return true;
   let distSqr  = (moveDelta.x * moveDelta.x + moveDelta.y*moveDelta.y);
   let isMoving = (distSqr > deltaSqr);
+  //console.log("moving",isMoving)
   return isMoving;
 }
 
-let isStatic=function(moveDelta, deltaSqr){
+function isStatic(moveDelta, deltaSqr){
   return !isMoving(moveDelta);
 }
 
 //TODO ,: regroup / refactor all "delta" operation ?
-let isShort = function(elapsed, maxTime){
+function isShort(elapsed, maxTime){
   return elapsed < maxTime;
 }
 
-let isLong = function(elapsed, maxTime){
+function isLong(elapsed, maxTime){
   return elapsed > maxTime;
 }
 
@@ -111,12 +122,19 @@ function altMouseMoves( mouseMoves ){
  return mouseMoves
       .skip(1)
       .zip( mouseMoves, function(a, b){
-        return  {
+        
+        let data = {
             client:{x: a.clientX,y: a.clientY },
-            delta:{x: a.clientX - b.clientX, y: a.clientY - b.clientY}};
-      });
+            delta:{x: a.clientX - b.clientX, y: a.clientY - b.clientY}
+          };
+        
+          return Object.assign(data, b);
+        }
+      );
 }
 
+/*alternative "clicks" (ie mouseDown -> mouseUp ) implementation, with more fine
+grained control*/
 function altClicks(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
   //only doing any "clicks if the time between mDOWN and mUP is below longpressDelay"
   //any small mouseMove is ignored (shaky hands)
@@ -136,6 +154,7 @@ function altClicks(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSq
     });
 }
 
+/*this emits events whenever pointers are held */
 function holds(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
    return mouseDowns
       .flatMap( function(downEvent){
@@ -150,33 +169,117 @@ function holds(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
             //Skip if we get a mouseup before main timeout
             mouseUps.take(1).flatMap( x => Rx.Observable.empty() ),
 
-            Rx.Observable.return(2).delay(1000).timeout(1000, Rx.Observable.return(42))
+            Rx.Observable.return(2).delay(longPressDelay).timeout(longPressDelay, Rx.Observable.return(42))
 
           ])
         //.timeout(longPressDelay, Rx.Observable.empty());
     });
-
 }
 
+function drags(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
+  return mouseDowns
+      .flatMap( function(downEvent){
+        let target = downEvent.currentTarget;
+        //let origin = target.position();
+        log.info("kldf")
+        return Observable.amb(
+          [
+            // Skip if we get a mouse up before we move
+            mouseUps.take(1).flatMap( x => Rx.Observable.empty() ),
+
+            mouseMoves.take(1).map(function(x){
+              return{
+                target: target,
+                //origin: target.position(),
+                drags: mouseMoves.takeUntil(mouseUps).map(function(x){
+                  return {
+                    delta: x.delta,
+                    offset: { 
+                      x: x.client.x - downEvent.clientX,
+                      y: x.client.y - downEvent.clientY
+                    }
+                  }
+                })
+              }
+            })
+
+          ]);
+
+      });
+}
+
+//this one just works by dispatching at the end of the movement
+function drags2(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
+  return mouseDowns.flatMap(function (md) {
+      var start = { x: md.clientX, y: md.clientY };
+      return mouseMoves.combineLatest(mouseUps, function (mm, mu) {
+        //log.info("mm",mm,"mu",mu)
+        var stop = {x: mu.clientX, y: mu.clientY };
+        return {
+          start: start,
+          end: stop
+        };
+      })
+        //.delay(400)
+        .takeUntil(mouseUps);
+    });
+}
+
+
+//based on http://jsfiddle.net/mattpodwysocki/pfCqq/
+function drags3(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
+  return mouseDowns.selectMany(function (md) {
+
+            // calculate offsets when mouse down
+            var startX = md.offsetX, startY = md.offsetY;
+
+            // Calculate delta with mousemove until mouseup
+            return mouseMoves.map(function (mm) {
+                (mm.preventDefault) ? mm.preventDefault() : event.returnValue = false; 
+
+                let delta = {
+                    left: mm.clientX - startX,
+                    top: mm.clientY - startY
+                };
+                return Object.assign(mm, delta);
+
+            }).takeUntil(mouseUps);
+        });
+}
+
+//pinch, taken from https://github.com/hugobessaa/rx-react-pinch
+function pinches(touchstarts, touchmoves, touchEnds) {
+    return touchStarts
+      .do(eventPreventDefault)
+      .takeWhile(hasTwoTouchPoints)
+      .flatMap(() => {
+        return touchMoves
+          .pluck('scale')
+          .takeUntil(touchEnds)
+      })
+}
 
  export let pointerInteractions = function(targetEl){
     let multiClickDelay = 250;
     let longPressDelay  = 800;
 
-    let minDelta        = 50;//max 100 pixels delta
+    let minDelta        = 25;//max 50 pixels delta
     let deltaSqr        = (minDelta*minDelta);
 
-
-    let clickStream = fromEvent(targetEl, 'click');
     let mouseDowns  = fromEvent(targetEl, 'mousedown');
     let mouseUps    = fromEvent(targetEl, 'mouseup');
     let mouseMoves  = fromEvent(targetEl, 'mousemove');
-    let rightclicks = fromEvent(targetEl, 'contextmenu').do(
-      function(e){ e.preventDefault();
-    }); // disable the context menu / right click
+    let rightclicks = fromEvent(targetEl, 'contextmenu').do(preventEventDefault);// disable the context menu / right click
     let mouseMoves2 = altMouseMoves(mouseMoves);
+    let zoomIntents = fromEvent(targetEl, 'wheel');
 
-    let _clicks = altClicks(mouseDowns, mouseUps, mouseMoves2, multiClickDelay, deltaSqr).share();
+    let touchStart  = fromEvent('touchstart');//dom.touchstart(window);
+    let touchMove   = fromEvent('touchmove');//dom.touchmove(window);
+    let touchEnd    = fromEvent('touchend');//dom.touchend(window);
+
+
+    ///// now setup the more complex interactions
+    let _clicks = altClicks(mouseDowns, mouseUps, mouseMoves2, longPressDelay, deltaSqr).share();
 
     let clickStreamBase = _clicks
       .filter( event => ('button' in event && event.button === 0) )
@@ -196,39 +299,24 @@ function holds(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
 
     let $singleClicks = clickStreamBase.filter( x => x.nb == 1 ).flatMap(unpack);
     let $doubleClicks = clickStreamBase.filter( x => x.nb == 2 ).flatMap(unpack).take(1).map(extractData).repeat();
-    let $contextTaps  =  _holds.amb( rightClicks2 ).take(1).repeat(); // contextTaps: either HELD leftmouse/pointer or right click
-    //let $multiClicks  = clickStreamBase.filter( x => x.nb >= 2 ).flatMap(unpack);
+    let $contextTaps  =  Observable.amb([
+      _holds.map(function(x){ console.log("HOLDS");return x}),
+      rightClicks2.map(function(x){ console.log("rightClicks2");return x}),
+      // Skip if we get a movement
+      mouseMoves
+        .take(1).flatMap( x => Rx.Observable.empty() ),
+      ]
+    ).take(1).repeat();// contextTaps: either HELD leftmouse/pointer or right click
+    
+    let $dragMoves = drags3(mouseDowns, mouseUps, mouseMoves2, longPressDelay, deltaSqr);
 
-    //.flatMap(function(bla){console.log(bla);return bla}).mergeAll().
-    //first()
+    let $zoomIntents = zoomIntents; 
 
-    /*let foo = altMouseMoves(mouseMoves)
-      .map( function( data ){
-        return isMoving(data.delta, deltaSqr);//allow for small movement (shaky hands!)
-      } )*/
-    //.share();
+    //zoomIntents.subscribe(function(event){console.log("ZOOM/WHEEL",event)})
 
-      //.throttleWithTimeout(800);
-      /*.bufferWithTime(400)
-      .map(function (arr) { 
-        console.log(arr); 
-        let start = arr[0];
-        let end   = arr[arr.length-1]
-        return "foo"
-      })*/
-      /*.scan(
-        function (acc, x) {
-            acc.client.x += x.client.x;
-            acc.client.y += x.client.y;
-            return acc;
-        }
-      )
-      .timeout(800, Rx.Observable.empty()).repeat();*/
-
-    /*foo.subscribe(function(event){
-      console.log("mousemove",event)
+    /*$drags.subscribe(function(event){
+      console.log("drags",event)
     })*/
-
 
     /*_clicks.subscribe(function(event){
       console.log("mouse clicks alt",event)
@@ -255,10 +343,17 @@ function holds(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
     //TODO need a better name
     //var interactions = Observable.merge(rightclick, clickhold);
     */
-    Observable.merge($singleClicks, $doubleClicks, $contextTaps)
+    Observable.merge($singleClicks, $doubleClicks, $contextTaps, $dragMoves, $zoomIntents)
         //.debounce(200)
         .subscribe(function (suggestion) {});
 
-    return {taps:clickStreamBase, singleTaps:$singleClicks, doubleTaps:$doubleClicks, contextTaps:$contextTaps} 
+    return {
+      taps:clickStreamBase, 
+      singleTaps: $singleClicks, 
+      doubleTaps: $doubleClicks, 
+      contextTaps:$contextTaps,
+      dragMoves:  $dragMoves,
+      zoomIntents:$zoomIntents
+    } 
  }
 

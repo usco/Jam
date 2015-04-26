@@ -314,6 +314,35 @@ export default class App extends React.Component {
       .filter( x => x[0] ===true )//.take(1).repeat();
       .takeUntil( mouseMoves2.filter( data => isMoving(data.delta, deltaSqr) ) )*/
 
+
+      //let $multiClicks  = clickStreamBase.filter( x => x.nb >= 2 ).flatMap(unpack);
+
+    //.flatMap(function(bla){console.log(bla);return bla}).mergeAll().
+    //first()
+
+    /*let foo = altMouseMoves(mouseMoves)
+      .map( function( data ){
+        return isMoving(data.delta, deltaSqr);//allow for small movement (shaky hands!)
+      } )*/
+    //.share();
+
+      //.throttleWithTimeout(800);
+      /*.bufferWithTime(400)
+      .map(function (arr) { 
+        console.log(arr); 
+        let start = arr[0];
+        let end   = arr[arr.length-1]
+        return "foo"
+      })*/
+      /*.scan(
+        function (acc, x) {
+            acc.client.x += x.client.x;
+            acc.client.y += x.client.y;
+            return acc;
+        }
+      )
+      .timeout(800, Rx.Observable.empty()).repeat();*/
+
   }
 
 
