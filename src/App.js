@@ -53,6 +53,9 @@ import BomView from './components/Bom/BomView'
 //import FooComponent from './components/fooCompo'
 
 ////TESTING-OVER
+import * as blar from './core/fooYeah'
+import {setEntityTransforms} from './actions/entityActions'
+
 
 
 export default class App extends React.Component {
@@ -137,7 +140,7 @@ export default class App extends React.Component {
     let extractAttributes = function(mesh){
       let attrs = {
         pos:mesh.position,
-        rot:mesh.rotation,
+        rot:mesh.rotation.slice(0,3),
         sca:mesh.scale
       }
       return attrs;
@@ -153,7 +156,9 @@ export default class App extends React.Component {
 
     let setEntityT = function(attrsAndEntity){
       let [attrs,entity] = attrsAndEntity;
+      console.log("attrs",attrs)
       self.setEntityTransforms(entity,attrs)
+      setEntityTransforms(entity,attrs)
       return attrsAndEntity
     }
 
@@ -193,6 +198,14 @@ export default class App extends React.Component {
 
     //only load meshes if no designs need to be loaded 
     if(!singleDesign)  meshUrls.map(function( meshUrl ){ self.loadMesh(meshUrl) });
+
+
+    //FIXME: horrible, this should not be here
+    setEntityTransforms._action.debounce(20).subscribe(function(val){
+      //console.log("jam!!!")
+      self.setEntityTransforms(val.entity, val.transforms);
+      self._tempForceDataUpdate();
+    });
   }
 
   componentWillUnmount(){
@@ -299,8 +312,6 @@ export default class App extends React.Component {
         }
       );
 
-        
-      
     }
 
     this.kernel.loadDesign(uri,options)
@@ -329,8 +340,7 @@ export default class App extends React.Component {
     for(let key in transforms){
       tgtEntity[key] = transforms[key];
     }
-    // _entitiesById[entity.iuid].rot = transforms.rot;
-    //  _entitiesById[entity.iuid].sca = transforms.sca;
+
     this.setState({_entitiesById:_entitiesById});
   }
 
@@ -404,6 +414,9 @@ export default class App extends React.Component {
       //FIXME: remove, this is just for testing
       self.addEntityType( partKlass)
       self.addEntityInstance(partInstance)
+      //this needs to be added somewhere
+      partInstance.bbox.min = shape.boundingBox.min.toArray();
+      partInstance.bbox.max = shape.boundingBox.max.toArray();
 
       //we do not return the shape since that becomes the "reference shape", not the
       //one that will be shown
