@@ -41,10 +41,28 @@
 
   //FIXME; this should be a command or something
 
+import Rx from 'rx'
+let Observable= Rx.Observable;
+let Subject   = Rx.Subject;
+
+let _action = new Subject();
+/*set transforms of given entity*/
+export function setEntityTransforms(entity, transforms){
+  //log.info("setting transforms of",entity, "to", transforms)
+  _action.onNext({entity:entity,transforms:transforms})
+}
+
+setEntityTransforms.subscribe = function(onNext, onError, onDone){
+  this._action = _action;
+  this._action.subscribe(onNext, onError, onDone)
+}
+
+ 
+
 
 //import {newTodoCursor, todosCursor} from '../core/testState'
 
-import stateTree from '../core/_stateTree'
+//import stateTree from '../core/_stateTree'
 
 /*
 export function showOnlyProductsInStock(){
@@ -68,11 +86,11 @@ export function setUserAge(age){
 }
 */
 
-export function addItemToFeed(title) {
+/*export function addItemToFeed(title) {
   let title = title || "yeah"+Math.random();
   let item = {title:title};
   return stateTree.select('home','feeds').push(item);
-}
+}*/
 
 
 /*save a new entity instance*/
