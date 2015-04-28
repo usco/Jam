@@ -1,9 +1,14 @@
-import {setEntityTransforms} from '../actions/entityActions'
+import Rx from 'rx'
+let Observable= Rx.Observable;
+let fromEvent = Observable.fromEvent;
+
+import {setEntityTransforms, deleteEntities, duplicateEntities} from '../actions/entityActions'
+
 
 //this would be a stand in for example for a "sink" in 
 //charge of saving data, or a central state manager etc
 
-setEntityTransforms.subscribe(
+Observable.merge(setEntityTransforms, deleteEntities, duplicateEntities).subscribe(
   function(val){console.log("next",val)},
   function(error){console.log("error",error)}
 )

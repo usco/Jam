@@ -47,15 +47,12 @@ import state from './state'
 
 import BomView from './components/Bom/BomView'
 
-////TESTING
-
-//import {createTodo} from './actions/entityActions'
-//import FooComponent from './components/fooCompo'
 
 ////TESTING-OVER
 import * as blar from './core/fooYeah'
-import {setEntityTransforms} from './actions/entityActions'
+import {setEntityTransforms, deleteEntities, duplicateEntities } from './actions/entityActions'
 
+let commands = {"removeEntities":deleteEntities, "duplicateEntities":duplicateEntities}
 
 
 export default class App extends React.Component {
@@ -88,6 +85,7 @@ export default class App extends React.Component {
         version:pjson.version
       }  
     });
+    ////////////////
 
     //add drag & drop behaviour 
     let container = this.refs.wrapper.getDOMNode();
@@ -96,7 +94,6 @@ export default class App extends React.Component {
 
 
     let glview   = this.refs.glview;
-    let meshesCh = glview.selectedMeshesCh;
     let self     = this;
 
     //get entities 
@@ -123,7 +120,7 @@ export default class App extends React.Component {
 
     
 
-    let selectedMeshesChAlt = glview.selectedMeshesSub
+    let selectedMeshes$ = glview.selectedMeshes$
       .defaultIfEmpty([])
       .map(
         function(selections){
@@ -131,16 +128,13 @@ export default class App extends React.Component {
           self.selectEntities(res)
         }
       );
-      //.filter(filterEntities)
-      //.map(fetchEntities);
-      //.flatMap( x => x )
-    selectedMeshesChAlt.subscribe(foo)
+    selectedMeshes$.subscribe(foo)
 
 
     let extractAttributes = function(mesh){
       let attrs = {
         pos:mesh.position,
-        rot:mesh.rotation.slice(0,3),
+        rot:mesh.rotation,
         sca:mesh.scale
       }
       return attrs;
@@ -151,6 +145,12 @@ export default class App extends React.Component {
       for(let key in attrs){
         output[key] = attrs[key].toArray();
       }
+      //special case for rotation
+      if("rot" in attrs)
+      {
+        output["rot"] = output["rot"].slice(0,3);
+      }
+
       return output;
     }
 
@@ -163,7 +163,7 @@ export default class App extends React.Component {
     }
 
 
-    let rawTranforms     =  glview.objectsTransformSub.debounce(20).filter(filterEntities).share();
+    let rawTranforms     =  glview.objectsTransformSub.debounce(10).filter(filterEntities).share();
     let objectTransforms = rawTranforms 
       .map(extractAttributes)
       .map(attributesToArrays)
@@ -199,13 +199,30 @@ export default class App extends React.Component {
     //only load meshes if no designs need to be loaded 
     if(!singleDesign)  meshUrls.map(function( meshUrl ){ self.loadMesh(meshUrl) });
 
-
-    //FIXME: horrible, this should not be here
-    setEntityTransforms._action.debounce(20).subscribe(function(val){
+    /////////
+    //FIXME: horrible, this should not be here, all related to actions etc
+    setEntityTransforms.subscribe(function(val){
       //console.log("jam!!!")
       self.setEntityTransforms(val.entity, val.transforms);
       self._tempForceDataUpdate();
     });
+
+    deleteEntities.subscribe(function(entities){
+      self.removeEntityInstances(entities);
+      //not sure this should be here
+      //reset selection
+      self.selectEntities();
+    });
+
+    duplicateEntities.subscribe(function(entities){
+      let dupes = self.duplicateEntities(entities);
+
+      //not sure this should be here
+      //set selection to duplicates
+      self.selectEntities(dupes)
+    })
+
+
   }
 
   componentWillUnmount(){
@@ -214,6 +231,7 @@ export default class App extends React.Component {
 
   //event handlers
   setupKeyboard(){
+    let self = this;
     //non settable shortcuts
     //prevent backspace
     keymaster('backspace', function(){ 
@@ -230,14 +248,27 @@ export default class App extends React.Component {
     });
 
     //deal with all shortcuts
+    console.log("shortcuts")
     let shortcuts = this.state.shortcuts;
-    for(let actionName in shortcuts){
+    shortcuts.map(function(shortcutEntry){
+      let {keys, command} = shortcutEntry;
+
+      keymaster(keys, function(){ 
+        console.log(`will do ${command}`)
+        if(command in commands){
+          commands[command](self.state.selectedEntities);
+        }
+        return false;
+      });
+
+    });
+    /*for(let actionName in shortcuts){
       let keys = shortcuts[actionName]
       keymaster(keys, function(){ 
         console.log(`will do ${actionName}`)
         return false;
       });
-    }
+    }*/
 
     /*
       //self.removeEntity();
@@ -320,13 +351,14 @@ export default class App extends React.Component {
   
   //-------COMMANDS OR SOMETHING LIKE THEM -----
   //FIXME; this should be a command or something
-  selectEntities(selectedEntities){
-    let selectedEntities = selectedEntities || [];
-    if(selectedEntities.constructor !== Array) selectedEntities = [selectedEntities]
+  selectEntities(entities){
+    log.info("selecting entitites",entities)
+    let entities = entities || [];
+    if(entities.constructor !== Array) entities = [entities]
     this.setState({
-      selectedEntities:selectedEntities
+      selectedEntities:entities
     });
-    log.info("selectedEntities",selectedEntities)
+    
   }
 
   //FIXME; this should be a command or something
@@ -336,10 +368,33 @@ export default class App extends React.Component {
     let _entitiesById = this.state._entitiesById;
     let tgtEntity     = _entitiesById[entity.iuid];
 
+    //let currentScale = tgtEntity.sca;
+
     if(!tgtEntity) return;
     for(let key in transforms){
       tgtEntity[key] = transforms[key];
     }
+    //we need to update the entitie's bbox too just in case
+    //FIXME: then again, this is only for parts...
+    //ALSO , for now we suppose uniform scaling
+    //console.log("oldScale",currentScale,)
+    /*let newScale = transforms["sca"];
+    let diff = 1 + (newScale[1]-currentScale[1]);
+    let a = newScale[1];
+    let b = currentScale[1];
+    diff = 1 + ( parseFloat(a.toPrecision(12)) - parseFloat(b.toPrecision(12)) );
+    diff =  parseFloat(diff.toPrecision(12))
+    console.log("diff",diff)
+
+    tgtEntity.bbox.min[0] *= diff;//transforms.sca[1];
+    tgtEntity.bbox.max[0] *= diff;//transforms.sca[1];*/
+
+    /*if("sca" in transforms){
+      [0,1,2].map(function(index){
+        tgtEntity.bbox.min[index] *= transforms.sca[index];
+        tgtEntity.bbox.max[index] *= transforms.sca[index];
+      });
+    }*/
 
     this.setState({_entitiesById:_entitiesById});
   }
@@ -365,6 +420,37 @@ export default class App extends React.Component {
     let _entitiesById = this.state._entitiesById;
     _entitiesById[instance.iuid] = instance;
     this.setState({_entitiesById:_entitiesById})
+  }
+
+  /*remove an entity : it actually only 
+  removes it from the active assembly*/
+  removeEntityInstances( instances ){
+    log.info("removing entity instances", instances)
+    let self = this;
+    instances.map(function(instance){
+      self.kernel.removeEntity(instance);
+      self._tempForceDataUpdate();
+    });
+  }
+
+  /*duplicate all given instances of entities*/
+  duplicateEntities( instances ){
+    log.info("duplicating entity instances", instances)
+    let self  = this;
+    let dupes = [];
+    instances.map(function(instance){
+      dupes.push( self.kernel.duplicateEntity(instance) );
+
+      //FIXME: this is redundant  
+      self.addEntityInstance(instance);
+    });
+
+    
+
+
+    self._tempForceDataUpdate();
+
+    return dupes;
   }
 
 
@@ -590,7 +676,7 @@ export default class App extends React.Component {
           <ThreeJs ref="glview"/>
 
           <div ref="testArea" style={testAreaStyle}>
-            <EntityInfos entities={this.state.selectedEntities}/>
+            <EntityInfos entities={this.state.selectedEntities} debug={false}/>
           </div>
 
          

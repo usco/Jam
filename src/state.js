@@ -16,13 +16,13 @@ let state = {
       show:false,
     }
   },
-  shortcuts:{
-    'duplicateEntity':'⌘+r,ctrl+d',
-    'removeEntity':'delete',
-    'toTranslateMode':'m',
-    'toRotateMode':'r',
-    'toScaleMode':'s'
-  },
+  shortcuts:[
+    {keys:'⌘+r,ctrl+d', "command":'duplicateEntities'},
+    {keys:'delete,backspace'    , "command":'removeEntities'},
+    {keys:'m'         , "command":'toTranslateMode'},
+    {keys:'r'         , "command":'toRotateMode'},
+    {keys:'s'         , "command":'toScaleMode'}
+  ],
 
   //real state 
   camActive : false,//is a camera movement taking place ?
