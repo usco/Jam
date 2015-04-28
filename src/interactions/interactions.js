@@ -297,9 +297,9 @@ function pinches(touchstarts, touchmoves, touchEnds) {
     let extractData = function(event){ return {clientX:event.clientX,clientY:event.clientY}};
 
 
-    let $singleClicks = clickStreamBase.filter( x => x.nb == 1 ).flatMap(unpack);
-    let $doubleClicks = clickStreamBase.filter( x => x.nb == 2 ).flatMap(unpack).take(1).map(extractData).repeat();
-    let $contextTaps  =  Observable.amb([
+    let singleClicks$ = clickStreamBase.filter( x => x.nb == 1 ).flatMap(unpack);
+    let doubleClicks$ = clickStreamBase.filter( x => x.nb == 2 ).flatMap(unpack).take(1).map(extractData).repeat();
+    let contextTaps$  =  Observable.amb([
       _holds.map(function(x){ console.log("HOLDS");return x}),
       rightClicks2.map(function(x){ console.log("rightClicks2");return x}),
       // Skip if we get a movement
@@ -308,9 +308,9 @@ function pinches(touchstarts, touchmoves, touchEnds) {
       ]
     ).take(1).repeat();// contextTaps: either HELD leftmouse/pointer or right click
     
-    let $dragMoves = drags3(mouseDowns, mouseUps, mouseMoves2, longPressDelay, deltaSqr);
+    let dragMoves$ = drags3(mouseDowns, mouseUps, mouseMoves2, longPressDelay, deltaSqr);
 
-    let $zoomIntents = zoomIntents; 
+    let zoomIntents$ = zoomIntents; 
 
     //zoomIntents.subscribe(function(event){console.log("ZOOM/WHEEL",event)})
 
@@ -343,17 +343,17 @@ function pinches(touchstarts, touchmoves, touchEnds) {
     //TODO need a better name
     //var interactions = Observable.merge(rightclick, clickhold);
     */
-    Observable.merge($singleClicks, $doubleClicks, $contextTaps, $dragMoves, $zoomIntents)
+    Observable.merge(singleClicks$, doubleClicks$, contextTaps$, dragMoves$, zoomIntents$)
         //.debounce(200)
         .subscribe(function (suggestion) {});
 
     return {
       taps:clickStreamBase, 
-      singleTaps: $singleClicks, 
-      doubleTaps: $doubleClicks, 
-      contextTaps:$contextTaps,
-      dragMoves:  $dragMoves,
-      zoomIntents:$zoomIntents
+      singleTaps: singleClicks$, 
+      doubleTaps: doubleClicks$, 
+      contextTaps:contextTaps$,
+      dragMoves:  dragMoves$,
+      zoomIntents:zoomIntents$
     } 
  }
 
