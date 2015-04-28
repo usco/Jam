@@ -7,13 +7,13 @@ import Rx from 'rx'
 let Observable= Rx.Observable;
 let fromEvent = Observable.fromEvent;
 
-import {formatNumberTo, toAbsSize} from '../utils/formatters'
+import {formatNumberTo, absSizeFromBBox} from '../utils/formatters'
 
 import logger from '../utils/log'
 let log = logger("Jam-ToolBar");
 log.setLevel("info");
 
-import {setEntityTransforms} from '../actions/entityActions'
+import {setEntityTransforms, setEntityBBox} from '../actions/entityActions'
 
 /*
   Component to display (& edit) some of the main properties of entities: ie
@@ -78,6 +78,24 @@ class EntityInfos extends RxReact.Component {
     setEntityTransforms(entity,attrs)
   }
 
+  handleSizeChange(index, event) {
+    console.log("handling size change", index, parseFloat(event.target.value));
+    //this.setState({value: event.target.value});
+    let entity= this.props.entities[0] ;
+    let bbox = {
+      min:Object.assign([],entity.bbox.min),
+      max:Object.assign([],entity.bbox.max),
+    };
+    let value = parseFloat(event.target.value);
+    //attrs[type][index]=parseFloat(event.target.value);
+    //TODO: convert abs size to bbox
+    //bbox.min[index] = value/2;
+    //bbox.max[index] = value/2;
+    
+    setEntityBBox(entity, bbox);
+  }
+
+
   handleAngleInput(event){
     let value = event.target.value;
   }
@@ -122,6 +140,7 @@ class EntityInfos extends RxReact.Component {
     }*/
     let entityInfo;
     let canDisplay = this.props.entities.length>0;
+    let debug  = this.props.debug || false;
 
     let numberPrecision = 2;
     let controlsStep = 0.1;
@@ -142,7 +161,8 @@ class EntityInfos extends RxReact.Component {
           value={entry} 
           step= {controlsStep}
           style={styles.numbers} 
-          onChange={self.handleChange.bind(self,"pos",index)} />);
+          onChange={self.handleChange.bind(self,"pos",index)} />
+        );
       })
 
       let rotationInputs = [];
@@ -152,7 +172,8 @@ class EntityInfos extends RxReact.Component {
           value={entry} 
           step = {controlsStep}
           style={styles.numbers}
-          onChange={self.handleChange.bind(self,"rot",index)} />);
+          onChange={self.handleChange.bind(self,"rot",index)} />
+        );
       })
 
       let scaleInputs = [];
@@ -163,21 +184,32 @@ class EntityInfos extends RxReact.Component {
           value={entry} 
           step={controlsStep}
           style={styles.numbers}
-          onChange={self.handleChange.bind(self,"sca",index)} />);
+          onChange={self.handleChange.bind(self,"sca",index)} />
+        );
       })
 
       let absSizeInputs = [];
-      console.log("BBOX",entity.bbox)
-      entity.sca.forEach(function(entry, index){
+      let absSize = absSizeFromBBox(entity.bbox);
+      //convert to array to keep logic the same for all fields
+      absSize = [absSize.w,absSize.l,absSize.h];
+      absSize.forEach(function(entry, index){
         let entry = formatNumberTo(entry, numberPrecision);
         absSizeInputs.push(
           <input type="number" 
           value={entry} 
           step={controlsStep}
-          style={styles.numbers}
-          onChange={self.handleChange.bind(self,"sca",index)} />
-          );
+          style={styles.numbers} onChange={self.handleSizeChange.bind(self,index)}/>
+        );
       })
+
+      let debugFields = undefined;
+
+      if(debug){
+        debugFields = <div>
+          <span> iuid: </span> <span>{entity.iuid}</span>
+          <span> tuid: </span> <span>{entity.typeUid}</span>
+          </div>
+      }
 
 
       entityInfo = (
@@ -198,6 +230,7 @@ class EntityInfos extends RxReact.Component {
           <span>
             <span>D:</span> {absSizeInputs}
           </span>
+          {debugFields}
         </div>)
     }
     
