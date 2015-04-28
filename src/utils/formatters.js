@@ -17,16 +17,21 @@ export let toDegree  = function(input)
 
 
 //convert between scale and absolute size
-export function toAbsSize(input) 
+export function absSizeFromBBox(input) 
 {
   //console.log("getting absolute size");
   if(!input) return undefined;
   let size = {w:0,l:0,h:0};
+  //ordering is always x,y,z
 
-  let bbox = new THREE.Box3().setFromObject( input );
-  let length = ( (bbox.max.x-bbox.min.x).toFixed(2) )/1; // division by one to coerce to number
+  let bbox   = input ;
+  /*let length = ( (bbox.max.x-bbox.min.x).toFixed(2) )/1; // division by one to coerce to number
   let width  = ( (bbox.max.y-bbox.min.y).toFixed(2) )/1;
-  let height = ( (bbox.max.z-bbox.min.z).toFixed(2) )/1;
+  let height = ( (bbox.max.z-bbox.min.z).toFixed(2) )/1;*/
+
+  let length = ( (bbox.max[0]-bbox.min[0]).toFixed(2) )/1; // division by one to coerce to number
+  let width  = ( (bbox.max[1]-bbox.min[1]).toFixed(2) )/1;
+  let height = ( (bbox.max[2]-bbox.min[2]).toFixed(2) )/1;
 
   size.w = width;
   size.l = length;
