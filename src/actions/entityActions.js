@@ -57,7 +57,45 @@ setEntityTransforms.subscribe = function(onNext, onError, onDone){
   this._action.subscribe(onNext, onError, onDone)
 }
 
- 
+////////////
+let _bbox_action = new Subject();
+/*set bounding box of given entity*/
+export function setEntityBBox(entity, bbox){
+  //log.info("setting transforms of",entity, "to", transforms)
+  _bbox_action.onNext({entity:entity,bbox:bbox})
+}
+
+setEntityBBox.subscribe = function(onNext, onError, onDone){
+  this._action = _bbox_action;
+  this._action.subscribe(onNext, onError, onDone)
+}
+
+////////////
+let _delete_actions = new Subject();
+/*delete given entities*/
+export function deleteEntities(entities){
+  log.info("deleting entities",entities)
+  _delete_actions.onNext(entities)
+}
+
+deleteEntities.subscribe = function(onNext, onError, onDone){
+  this._action = _delete_actions;
+  this._action.subscribe(onNext, onError, onDone)
+}
+
+/////////////
+
+let _duplicate_actions = new Subject();
+/*duplicate given entitites*/
+export function duplicateEntities(entities){
+  log.info("duplicate entities",entities)
+  _duplicate_actions.onNext(entities)
+}
+
+duplicateEntities.subscribe = function(onNext, onError, onDone){
+  this._action = _duplicate_actions;
+  this._action.subscribe(onNext, onError, onDone)
+}
 
 
 //import {newTodoCursor, todosCursor} from '../core/testState'
