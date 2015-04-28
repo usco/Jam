@@ -36,7 +36,6 @@ let log = logger("glView");
 log.setLevel("info");
 
 
-
 class ThreeJs extends React.Component{
   constructor(props){
     super(props);
@@ -213,10 +212,7 @@ class ThreeJs extends React.Component{
 
     this.objectsTransformSub = objectsTransforms;
 
-    
-
-
-
+ 
     /* idea of mappings , from react-pixi
      spritemapping : {
     'vanilla' : assetpath('creamVanilla.png'),
@@ -261,10 +257,9 @@ class ThreeJs extends React.Component{
 
     PreventScrollBehaviour.attach( container );
     //TODO: , create an abstraction above channels/rx
-    this.selectedMeshesSub = new Rx.Subject();
-
+    this.selectedMeshes$ = new Rx.Subject();
+    
     this._setupExtras();
-
   }
   
   componentWillUnmount() {
@@ -475,7 +470,7 @@ for tap/toubleTaps etc*/
     }*/
     this._prevSelectedMeshes = this.selectedMeshes;
 
-    this.selectedMeshesSub.onNext(selectedMeshes);
+    this.selectedMeshes$.onNext(selectedMeshes);
   }
 
   handleDoubleTap( event ){
@@ -526,17 +521,18 @@ for tap/toubleTaps etc*/
     this.scene.remove( this.dynamicInjector );
     let dynamicInjector = new THREE.Object3D();//all dynamic mapped objects reside here
     this.scene.add( dynamicInjector );
+     let self = this;
 
     this.dynamicInjector = dynamicInjector
 
     let fx = {
       oldValue: undefined,
       appl:function(mesh){
-
       }
     }
 
     let xform = function( entity, mesh ){
+      //self._render();
       if(entity._selected){
         mesh.material.oldColor = mesh.material.color;
         mesh.material.color.set("#FF0000")
@@ -548,11 +544,14 @@ for tap/toubleTaps etc*/
       }
     }
 
+   
     function foo (entry) {
       mapper(entry, dynamicInjector, xform)
+          self._render();
     }
 
     data.map( foo );//entry => { this.scene.add( mapper(entry) );} )
+
   }
 
   render(){
