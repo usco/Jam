@@ -44,59 +44,22 @@
 import Rx from 'rx'
 let Observable= Rx.Observable;
 let Subject   = Rx.Subject;
+import {createAction} from '../utils/obsUtils'
 
-let _action = new Subject();
-/*set transforms of given entity*/
-export function setEntityTransforms(entity, transforms){
-  //log.info("setting transforms of",entity, "to", transforms)
-  _action.onNext({entity:entity,transforms:transforms})
-}
+/*set transforms of given entity in the form 
+{entity:entity,transforms:transforms}*/
+export let setEntityTransforms = createAction();
 
-setEntityTransforms.subscribe = function(onNext, onError, onDone){
-  this._action = _action;
-  this._action.subscribe(onNext, onError, onDone)
-}
+/*set bounding box of given entity
+in the form : {entity:entity,bbox:bbox}
+*/
+export let setEntityBBox = createAction();
 
-////////////
-let _bbox_action = new Subject();
-/*set bounding box of given entity*/
-export function setEntityBBox(entity, bbox){
-  //log.info("setting transforms of",entity, "to", transforms)
-  _bbox_action.onNext({entity:entity,bbox:bbox})
-}
-
-setEntityBBox.subscribe = function(onNext, onError, onDone){
-  this._action = _bbox_action;
-  this._action.subscribe(onNext, onError, onDone)
-}
-
-////////////
-let _delete_actions = new Subject();
 /*delete given entities*/
-export function deleteEntities(entities){
-  log.info("deleting entities",entities)
-  _delete_actions.onNext(entities)
-}
+export let deleteEntities = createAction();
 
-deleteEntities.subscribe = function(onNext, onError, onDone){
-  this._action = _delete_actions;
-  this._action.subscribe(onNext, onError, onDone)
-}
-
-/////////////
-
-let _duplicate_actions = new Subject();
 /*duplicate given entitites*/
-export function duplicateEntities(entities){
-  log.info("duplicate entities",entities)
-  _duplicate_actions.onNext(entities)
-}
-
-duplicateEntities.subscribe = function(onNext, onError, onDone){
-  this._action = _duplicate_actions;
-  this._action.subscribe(onNext, onError, onDone)
-}
-
+export let duplicateEntities = createAction();
 
 //import {newTodoCursor, todosCursor} from '../core/testState'
 
