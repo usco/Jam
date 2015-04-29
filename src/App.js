@@ -155,15 +155,17 @@ export default class App extends React.Component {
     }
 
     let setEntityT = function(attrsAndEntity){
-      let [attrs,entity] = attrsAndEntity;
-      console.log("attrs",attrs)
-      self.setEntityTransforms(entity,attrs)
-      setEntityTransforms(entity,attrs)
+      let [transforms,entity] = attrsAndEntity;
+      
+      console.log("transforms",transforms)
+      self.setEntityTransforms(entity,transforms)
+      setEntityTransforms({entity,transforms})
+
       return attrsAndEntity
     }
 
-
-    let rawTranforms     =  glview.objectsTransformSub.debounce(10).filter(filterEntities).share();
+    //debounce 16.666 ie 60 fps ?
+    let rawTranforms     =  glview.objectsTransform$.debounce(16.6666).filter(filterEntities).share();
     let objectTransforms = rawTranforms 
       .map(extractAttributes)
       .map(attributesToArrays)
@@ -202,7 +204,7 @@ export default class App extends React.Component {
     /////////
     //FIXME: horrible, this should not be here, all related to actions etc
     setEntityTransforms.subscribe(function(val){
-      //console.log("jam!!!")
+      console.log("jam!!!",val)
       self.setEntityTransforms(val.entity, val.transforms);
       self._tempForceDataUpdate();
     });

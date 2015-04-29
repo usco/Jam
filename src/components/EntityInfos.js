@@ -68,14 +68,14 @@ class EntityInfos extends RxReact.Component {
     console.log(type, index, parseFloat(event.target.value));
     //this.setState({value: event.target.value});
     let entity= this.props.entities[0] ;
-    let attrs = {
+    let transforms = {
       pos:Object.assign([],entity.pos),
       rot:Object.assign([],entity.rot),
       sca:Object.assign([],entity.sca),
     };
-    attrs[type][index]=parseFloat(event.target.value);
+    transforms[type][index]=parseFloat(event.target.value);
     
-    setEntityTransforms(entity,attrs)
+    setEntityTransforms({entity,transforms})
   }
 
   handleSizeChange(index, event) {
@@ -92,7 +92,7 @@ class EntityInfos extends RxReact.Component {
     //bbox.min[index] = value/2;
     //bbox.max[index] = value/2;
     
-    setEntityBBox(entity, bbox);
+    setEntityBBox({entity, bbox});
   }
 
 
