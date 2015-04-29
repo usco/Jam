@@ -164,7 +164,7 @@ class ThreeJs extends React.Component{
 
     this.camViewControls = camViewControls;*/
     //planesColor:"#17a9f5",edgesColor:"#17a9f5",cornersColor:"#17a9f5",
-
+    let self = this;
 
     this.renderer = renderer;
     this._animate();
@@ -188,6 +188,7 @@ class ThreeJs extends React.Component{
       camera.aspect = aspect;
       camera.updateProjectionMatrix();
       renderer.setSize( width, height );
+      self._render();
     }
 
     handleResize = handleResize.bind(this);
@@ -210,9 +211,23 @@ class ThreeJs extends React.Component{
     let objectsTransforms = Observable.fromEvent(this.transformControls, 'objectChange')
       .map(extractObject);
 
-    this.objectsTransformSub = objectsTransforms;
+    this.objectsTransform$ = objectsTransforms;
+    //TODO: , create an abstraction above channels/rx
+    this.selectedMeshes$   = new Rx.Subject();    
 
- 
+    //hande all the cases where events require re-rendering
+    let controlsChanges$      = Observable.fromEvent(this.controls,'change');
+    let objectControlChanges$ = Observable.fromEvent(this.transformControls,'change');
+
+    Observable.merge(controlsChanges$, objectControlChanges$, this.selectedMeshes$, this.objectsTransform$).subscribe(
+      this._render.bind(this)
+    )
+
+
+    PreventScrollBehaviour.attach( container );
+    this._setupExtras();
+    this._render();
+
     /* idea of mappings , from react-pixi
      spritemapping : {
     'vanilla' : assetpath('creamVanilla.png'),
@@ -254,12 +269,6 @@ class ThreeJs extends React.Component{
     //window.addEventListener("resize", this.resizeHandler.bind(this) );
     //container.addEventListener( "click", this.handleTap.bind(this), false );
     //this.domElement.addEventListener( "mousedown", onPointerDown, false );
-
-    PreventScrollBehaviour.attach( container );
-    //TODO: , create an abstraction above channels/rx
-    this.selectedMeshes$ = new Rx.Subject();
-    
-    this._setupExtras();
   }
   
   componentWillUnmount() {
@@ -495,7 +504,7 @@ for tap/toubleTaps etc*/
 
     TWEEN.update(time);
 
-	  this._render();		
+	  //this._render();		
 	  this._update();
   }
 
@@ -532,7 +541,7 @@ for tap/toubleTaps etc*/
     }
 
     let xform = function( entity, mesh ){
-      //self._render();
+      self._render();
       if(entity._selected){
         mesh.material.oldColor = mesh.material.color;
         mesh.material.color.set("#FF0000")
@@ -547,7 +556,7 @@ for tap/toubleTaps etc*/
    
     function foo (entry) {
       mapper(entry, dynamicInjector, xform)
-          self._render();
+          //self._render();
     }
 
     data.map( foo );//entry => { this.scene.add( mapper(entry) );} )
