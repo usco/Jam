@@ -36,6 +36,10 @@ let log = logger("glView");
 log.setLevel("info");
 
 
+//FIXME: hack for now, should not be set here
+import {setToTranslateMode, setToRotateMode, setToScaleMode} from "../../actions/transformActions"
+
+
 class ThreeJs extends React.Component{
   constructor(props){
     super(props);
@@ -222,6 +226,15 @@ class ThreeJs extends React.Component{
     Observable.merge(controlsChanges$, objectControlChanges$, this.selectedMeshes$, this.objectsTransform$).subscribe(
       this._render.bind(this)
     )
+
+
+    //set handling of transform modes
+
+    function areThereSelections(){ return (self.selectedMeshes && self.selectedMeshes.length>0); }
+
+    setToTranslateMode.filter(areThereSelections).subscribe( this.transformControls.setMode.bind(this.transformControls,"translate") )
+    setToRotateMode.filter(areThereSelections).subscribe( this.transformControls.setMode.bind(this.transformControls,"rotate") )
+    setToScaleMode.filter(areThereSelections).subscribe( this.transformControls.setMode.bind(this.transformControls,"scale") )
 
 
     PreventScrollBehaviour.attach( container );
@@ -542,6 +555,8 @@ for tap/toubleTaps etc*/
 
     let xform = function( entity, mesh ){
       self._render();
+      self.transformControls.update();
+
       if(entity._selected){
         mesh.material.oldColor = mesh.material.color;
         mesh.material.color.set("#FF0000")

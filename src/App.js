@@ -51,8 +51,15 @@ import BomView from './components/Bom/BomView'
 ////TESTING-OVER
 import * as blar from './core/fooYeah'
 import {setEntityTransforms, deleteEntities, duplicateEntities } from './actions/entityActions'
+import {setToTranslateMode, setToRotateMode, setToScaleMode} from './actions/transformActions'
 
-let commands = {"removeEntities":deleteEntities, "duplicateEntities":duplicateEntities}
+let commands = {
+  "removeEntities":deleteEntities,
+  "duplicateEntities":duplicateEntities,
+  "toTranslateMode":setToTranslateMode, 
+  "toRotateMode": setToRotateMode, 
+  "toScaleMode":setToScaleMode
+}
 
 
 export default class App extends React.Component {
