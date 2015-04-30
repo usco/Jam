@@ -55,7 +55,7 @@ class ThreeJs extends React.Component{
         shadowMapEnabled:true,
         shadowMapAutoUpdate:true,
         shadowMapSoft:true,
-        shadowMapType : THREE.PCFShadowMap,//THREE.PCFSoftShadowMap,//; 
+        shadowMapType : THREE.PCFSoftShadowMap,//THREE.PCFSoftShadowMap,//PCFShadowMap; 
         autoUpdateScene : true,
         physicallyBasedShading : false,
         autoClear:true,
@@ -94,10 +94,11 @@ class ThreeJs extends React.Component{
       ],
       scenes:{
         "main":[
-          { type:"hemisphereLight", color:"#FFFFEE", gndColor:"#FFFFEE", pos:[0, 1200, 1500], intensity:0.6 },
           //{ type:"hemisphereLight", color:"#FFFF33", gndColor:"#FF9480", pos:[0, 0, 500], intensity:0.6 },
+          { type:"hemisphereLight", color:"#FFEEEE", gndColor:"#FFFFEE", pos:[0, 1200, 1500], intensity:0.8 },
           { type:"ambientLight", color:"#0x252525", intensity:0.03 },
           { type:"directionalLight", color:"#262525", intensity:0.2 , pos:[150,150,1500], castShadow:true, onlyShadow:true}
+          //{ type:"directionalLight", color:"#FFFFFF", intensity:0.2 , pos:[150,150,1500], castShadow:true, onlyShadow:true}
         ],
         "helpers":[
           {type:"LabeledGrid"}
@@ -133,10 +134,10 @@ class ThreeJs extends React.Component{
     renderer.shadowMapEnabled = this.config.renderer.shadowMapEnabled;
     renderer.shadowMapAutoUpdate = this.config.renderer.shadowMapAutoUpdate;
     renderer.shadowMapSoft = this.config.renderer.shadowMapSoft;
-    renderer.shadowMapType = this.config.renderer.PCFSoftShadowMap;//THREE.PCFShadowMap; 
-    renderer.autoUpdateScene = this.config.renderer.autoUpdateScene;
-    renderer.physicallyBasedShading = this.config.renderer.physicallyBasedShading;
-    renderer.autoClear = this.config.renderer.autoClear;
+    //renderer.shadowMapType = this.config.renderer.PCFSoftShadowMap;//THREE.PCFShadowMap; 
+    //renderer.autoUpdateScene = this.config.renderer.autoUpdateScene;
+    //renderer.physicallyBasedShading = this.config.renderer.physicallyBasedShading;
+    //renderer.autoClear = this.config.renderer.autoClear;
     renderer.gammaInput = this.config.renderer.gammaInput;
     renderer.gammaOutput = this.config.renderer.gammaOutput;
 
@@ -157,9 +158,9 @@ class ThreeJs extends React.Component{
     //TODO: for testing, remove
     //this._makeTestStuff();
     let grid = new LabeledGrid(200,200,10,this.config.cameras[0].up);
-    this.scene.add(grid);
+    //this.scene.add(grid);
 
-    let shadowPlane = new ShadowPlane(200,200,null,this.config.cameras[0].up);
+    let shadowPlane = new ShadowPlane(2000,2000,null,this.config.cameras[0].up);
     this.scene.add(shadowPlane);
 
     /*let camViewControls = new CamViewControls({size:9, cornerWidth:1.5,highlightColor:"#ffd200",opacity:0.95},[this.camera])
@@ -433,7 +434,7 @@ for tap/toubleTaps etc*/
           shadowCameraFar:5000,
           shadowCameraFov:50,
           shadowBias:0.0001,
-          shadowDarkness:0.5,
+          shadowDarkness:0.3,
           shadowCameraVisible:false
         };
         lightData = Object.assign({}, dirLightDefaults, lightData);
@@ -443,6 +444,7 @@ for tap/toubleTaps etc*/
             light[key] = lightData[key]
           }
         }
+
       break;
       default:
         throw new Error("could not create light")
