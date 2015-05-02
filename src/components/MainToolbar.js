@@ -45,11 +45,20 @@ class MainToolBar extends RxReact.Component {
 
     return (
       <div className="titleBar" style={titleStyle}>
-        <EditableItem data={this.props.design.title} ref="title"/> 
-        <span ref="title"> {fullTitle} </span>
+        <EditableItem data={this.props.design.title} ref="title" className="designName"/> 
+        <span ref="title" className="appInfos"> {fullTitle} </span>
         <div style={fooStyle}>
-          <button onClick={this.handleClick.bind(this)} > TestBtn </button>
+          <button onClick={this.handleClick.bind(this)} className="viewOnYm"> View on YM </button>
         </div>
+        <span>
+          <button onClick={this.handleClick.bind(this)} className="download"> Download </button>
+        </span>
+        <span>
+          <button onClick={this.handleClick.bind(this)} className="share"> Share </button>
+        </span>
+        <span>
+          <button onClick={this.handleClick.bind(this)} className="like"> Like </button>
+        </span>
       </div>
     );
   }
