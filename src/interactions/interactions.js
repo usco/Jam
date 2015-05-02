@@ -169,7 +169,7 @@ function holds(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
             //Skip if we get a mouseup before main timeout
             mouseUps.take(1).flatMap( x => Rx.Observable.empty() ),
 
-            Rx.Observable.return(2).delay(longPressDelay).timeout(longPressDelay, Rx.Observable.return(42))
+            Rx.Observable.return(2).delay(longPressDelay).timeout(longPressDelay, Rx.Observable.return(downEvent))
 
           ])
         //.timeout(longPressDelay, Rx.Observable.empty());
@@ -308,7 +308,7 @@ function pinches(touchstarts, touchmoves, touchEnds) {
       ]
     ).take(1).repeat();// contextTaps: either HELD leftmouse/pointer or right click
     
-    let dragMoves$ = drags3(mouseDowns, mouseUps, mouseMoves2, longPressDelay, deltaSqr);
+    let dragMoves$   = drags3(mouseDowns, mouseUps, mouseMoves2, longPressDelay, deltaSqr);
 
     let zoomIntents$ = zoomIntents; 
 
@@ -349,11 +349,11 @@ function pinches(touchstarts, touchmoves, touchEnds) {
 
     return {
       taps:clickStreamBase, 
-      singleTaps: singleClicks$, 
-      doubleTaps: doubleClicks$, 
-      contextTaps:contextTaps$,
-      dragMoves:  dragMoves$,
-      zoomIntents:zoomIntents$
+      singleTaps$: singleClicks$, 
+      doubleTaps$: doubleClicks$, 
+      contextTaps$:contextTaps$,
+      dragMoves$:  dragMoves$,
+      zoomIntents$:zoomIntents$
     } 
  }
 
