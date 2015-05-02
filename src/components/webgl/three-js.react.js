@@ -38,6 +38,8 @@ log.setLevel("info");
 
 //FIXME: hack for now, should not be set here
 import {setToTranslateMode, setToRotateMode, setToScaleMode} from "../../actions/transformActions"
+//NOT so sure about these
+import {showContextMenu, hideContextMenu} from '../../actions/appActions'
 
 
 class ThreeJs extends React.Component{
@@ -205,12 +207,34 @@ class ThreeJs extends React.Component{
     //subscribe(listen)
 
     //setup INTERACTIONS
-    let sAt = this._getSelectionsAt.bind(this)
+    let selectionAt = this._getSelectionsAt.bind(this);
+    function coordsFromEvent(event){return {x:event.x, y:event.y}}
+    function positionFromCoords(coords){return{position:{x:coords.x,y:coords.y},event:coords}}
+    //function extractField(input, "fieldName")
+    function getPickingObjectAndPoint(pickingInfo){
+      
+      return {object: pickingInfo.object,position:pickingInfo.point}
+    } 
+
+
+    
+    //filters
+    function arePickingInfos(event){ return (event.detail.pickingInfos && event.detail.pickingInfos.length >0);}
+    function exists(data){ return data;}
+
+
+
     this.pointerInteractions = pointerInteractions(container);
 
-    this.pointerInteractions.singleTaps.map( sAt ).map( this.handleTap.bind(this) ).subscribe( listen, listen,errors );
-    this.pointerInteractions.doubleTaps.map( sAt ).map( this.handleDoubleTap.bind(this) ).subscribe( listen, listen,errors );
-    this.pointerInteractions.contextTaps.map( sAt ).map( this.handleContextMenu.bind(this) ).subscribe( listen, listen,errors );
+    let {singleTaps$, doubleTaps$, contextTaps$, 
+      dragMoves$, zoomIntents$} =  this.pointerInteractions;
+
+    singleTaps$.map( selectionAt ).subscribe( this.handleTap.bind(this) );
+    doubleTaps$.map( selectionAt ).subscribe( this.handleDoubleTap.bind(this) );
+
+    //handle context menu type interactions
+    contextTaps$.map( selectionAt ).map( positionFromCoords ).subscribe( showContextMenu );
+
 
     let extractObject = function(event){ return event.target.object}
     let objectsTransforms = Observable.fromEvent(this.transformControls, 'objectChange')
@@ -228,6 +252,12 @@ class ThreeJs extends React.Component{
       this._render.bind(this)
     )
 
+    //handle all the cases where events require removal of context menu
+    //ie anything else but context
+    Observable.merge(singleTaps$, doubleTaps$, dragMoves$, zoomIntents$)
+      .take(1)
+      .repeat()
+      .subscribe(hideContextMenu);
 
     //set handling of transform modes
 
@@ -507,10 +537,6 @@ for tap/toubleTaps etc*/
     this._zoomInOnObject.execute( object, {position:pickingInfos[0].point} );
   }
 
-  handleContextMenu( event ){
-    log.info("context menu would be called now",event)
-  }
-
   //"core" methods
   _animate(time) 
   {
@@ -572,11 +598,11 @@ for tap/toubleTaps etc*/
 
    
     function foo (entry) {
-      mapper(entry, dynamicInjector, xform)
-          //self._render();
+      mapper(entry, dynamicInjector, xform);
     }
-
     data.map( foo );//entry => { this.scene.add( mapper(entry) );} )
+    //also force render in case we do not have entities left to render
+    self._render();
 
   }
 

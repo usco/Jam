@@ -46,12 +46,16 @@ log.setLevel("info");
 import state from './state'
 
 import BomView from './components/Bom/BomView'
+import ContextMenu from './components/ContextMenu'
+
 
 
 ////TESTING-OVER
 import * as blar from './core/fooYeah'
 import {setEntityTransforms, deleteEntities, duplicateEntities } from './actions/entityActions'
 import {setToTranslateMode, setToRotateMode, setToScaleMode} from './actions/transformActions'
+import {showContextMenu, hideContextMenu} from './actions/appActions'
+
 
 let commands = {
   "removeEntities":deleteEntities,
@@ -117,7 +121,7 @@ export default class App extends React.Component {
     }
 
     let foo = function(x){
-       console.log("here",x)
+       //console.log("here",x)
        return x;
     }
     let finalLog=function(x){
@@ -197,7 +201,7 @@ export default class App extends React.Component {
 
     //fetch & handle url parameters
     let designUrls = ParseUrlParamsBehaviour.fetch("designUrl");
-    let meshUrls   = ParseUrlParamsBehaviour.fetch("meshUrl");
+    let meshUrls   = ParseUrlParamsBehaviour.fetch("modelUrl");
     
     //only handle a single design url
     let singleDesign = designUrls.pop();
@@ -230,6 +234,34 @@ export default class App extends React.Component {
       //set selection to duplicates
       self.selectEntities(dupes)
     })
+
+    /////This is ok here ??
+    ///////////
+    
+    showContextMenu.subscribe(function(requestData){
+      console.log("showing contextmenu")
+      self.setState({
+        contextMenu:{
+          active:true,
+          position:requestData.position,
+          //not sure about all these
+          selectedEntities:self.state.selectedEntities,
+          actions:{
+            "deleteEntities": deleteEntities,
+            "duplicateEntities":duplicateEntities
+          }
+        }
+      });
+    });
+
+    hideContextMenu.subscribe(function(requestData){
+      console.log("hiding contextmenu")
+      self.setState({
+        contextMenu:{
+          active:false,
+        }
+      });
+    });
 
 
   }
@@ -536,7 +568,7 @@ export default class App extends React.Component {
       .map( register )
       .map( showIt )
       .map( function(klassAndInstance){
-        //klassAndInstance.instance.pos[2]+=30;
+        klassAndInstance.instance.pos[2]+=50;
         return klassAndInstance;
       })
         .catch(handleLoadError)
@@ -679,16 +711,32 @@ export default class App extends React.Component {
     
     let bomData = this.kernel.bom.bom;
 
+    //FIXME too complex
+    let contextMenuActive   = this.state.contextMenu && this.state.contextMenu.active || false;
+    let contextMenuPosition = this.state.contextMenu && this.state.contextMenu.position || {x:0,y:0};
+
+
+    let contextmenuActions  = {};
+    if(this.state.contextMenu) contextmenuActions = this.state.contextMenu.actions;
+
+    let contextmenuSelectedEntities  = this.state.contextMenu && this.state.contextMenu.selectedEntities || [];
+
     return (
         <div ref="wrapper" style={wrapperStyle}>
           <MainToolbar design={this.state.design} appInfos={this.state.appInfos} style={toolbarStyle}> </MainToolbar>
           <ThreeJs ref="glview"/>
 
-          <div ref="testArea" style={testAreaStyle}>
+          <div ref="testArea" style={testAreaStyle} className="toolBarBottom">
             <EntityInfos entities={this.state.selectedEntities} debug={false}/>
           </div>
 
-         
+
+          <ContextMenu 
+            active={contextMenuActive} 
+            position={contextMenuPosition} 
+            actions={contextmenuActions}
+            selectedEntities={contextmenuSelectedEntities}
+            > </ContextMenu>         
         </div>
     );
   }
