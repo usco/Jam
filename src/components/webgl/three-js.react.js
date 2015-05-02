@@ -233,7 +233,10 @@ class ThreeJs extends React.Component{
     doubleTaps$.map( selectionAt ).subscribe( this.handleDoubleTap.bind(this) );
 
     //handle context menu type interactions
-    contextTaps$.map( selectionAt ).map( positionFromCoords ).subscribe( showContextMenu );
+    contextTaps$.map( selectionAt )
+      .map(this.selectMeshes.bind(this))
+      .map( positionFromCoords )
+      .subscribe( showContextMenu );
 
 
     let extractObject = function(event){ return event.target.object}
@@ -488,11 +491,7 @@ for tap/toubleTaps etc*/
     return light
   }
 
-
-
-  //interactions : should these be in a "wrapper above the base 3d view ?"
-  handleTap(event){
-    //console.log("tapped in view")
+  selectMeshes(event){
     let intersects = event.detail.pickingInfos;
     let rect = this.container.getBoundingClientRect();
 
@@ -504,7 +503,7 @@ for tap/toubleTaps etc*/
     else{ selectedMeshes = []}
     //console.log("selectedMeshes",selectedMeshes);
 
-    this.selectedMeshes      = selectedMeshes;
+    this.selectedMeshes = selectedMeshes;
     this.setState({
       selectedMeshes: selectedMeshes
     })
@@ -525,6 +524,14 @@ for tap/toubleTaps etc*/
     this._prevSelectedMeshes = this.selectedMeshes;
 
     this.selectedMeshes$.onNext(selectedMeshes);
+
+    return event;
+  }
+
+  //interactions : should these be in a "wrapper above the base 3d view ?"
+  handleTap(event){
+    //console.log("tapped in view")
+    this.selectMeshes(event);
   }
 
   handleDoubleTap( event ){
