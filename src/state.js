@@ -5,6 +5,7 @@ let state = {
     version:"0.0.0"
   },
   settings:{//TODO: each component should "register its settings"
+    activeMode: true,//if not, disable 3d view ,replace with some static content
     grid:{
       show:false,
       size:"",
@@ -12,7 +13,7 @@ let state = {
     bom:{
       show:false,//this belongs in the bom system
     },
-     annotations:{
+    annotations:{
       show:false,
     }
   },
@@ -26,7 +27,9 @@ let state = {
 
   //real state 
   camActive : false,//is a camera movement taking place ?
+  fullScreen: false,
   activeTool: null,
+
   design:{
     title:"untitled design",
     description:"",
