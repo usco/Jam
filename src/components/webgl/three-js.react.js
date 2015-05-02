@@ -283,6 +283,10 @@ class ThreeJs extends React.Component{
     'pink' : assetpath('creamPink.png'),
     },*/
 
+
+
+    //let composer    = new THREE.EffectComposer(renderer);
+
     /*let renderTargetParameters = {
         minFilter: THREE.LinearFilter,
         magFilter: THREE.LinearFilter,
@@ -292,7 +296,7 @@ class ThreeJs extends React.Component{
     let renderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, renderTargetParameters);
 
 
-    let composer    = new THREE.EffectComposer(renderer);
+    
     composer.renderTarget1.stencilBuffer = true;
     composer.renderTarget2.stencilBuffer = true;
 
@@ -573,20 +577,22 @@ for tap/toubleTaps etc*/
 	  this.renderer.render( this.scene, this.camera );
   }
 
-  //this would actually be close to react's standard "render"
-  forceUpdate( data , mapper){
-    this.scene.remove( this.dynamicInjector );
+  /*this would actually be close to react's standard "render"
+  /*NOTE: right now, too "brute force", causes flickering because of
+   - adding/removing the whole
+  "controlled branch" (the scene entry point which can be changed dynamically)
+   - mappings between entities and visuals are provided each time
+   - this should not even be in the basic "3D view " as it deals with higher abstractions
+
+  so a "diff " method is in order , to determine what changed between two forced updates/renders
+
+  var jsondiffpatch = require('jsondiffpatch').create(options);
+
+  */
+  forceUpdate( data , mapper ){
     let dynamicInjector = new THREE.Object3D();//all dynamic mapped objects reside here
-    this.scene.add( dynamicInjector );
-     let self = this;
+    let self = this;
 
-    this.dynamicInjector = dynamicInjector
-
-    let fx = {
-      oldValue: undefined,
-      appl:function(mesh){
-      }
-    }
 
     let xform = function( entity, mesh ){
       self._render();
@@ -604,10 +610,16 @@ for tap/toubleTaps etc*/
     }
 
    
-    function foo (entry) {
+    function renderItems (entry) {
+      console.log("per entry")
       mapper(entry, dynamicInjector, xform);
     }
-    data.map( foo );//entry => { this.scene.add( mapper(entry) );} )
+    data.map( renderItems );//entry => { this.scene.add( mapper(entry) );} )
+
+    this.scene.remove( this.dynamicInjector );
+    this.dynamicInjector = dynamicInjector;
+    this.scene.add( dynamicInjector );
+
     //also force render in case we do not have entities left to render
     self._render();
 
