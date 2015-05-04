@@ -49,17 +49,24 @@ class MainToolBar extends RxReact.Component {
           <EditableItem data={this.props.design.title} ref="title" className="designName"/> 
         </h1>
         <span ref="title" className="appInfos"> {fullTitle} </span>
-        <div style={fooStyle}>
-          <button onClick={this.handleClick.bind(this)} className="viewOnYm"> View on YM </button>
-        </div>
+        <span>
+          <button onClick={this.handleClick.bind(this)} className="details"> Details </button>
+        </span>
         <span>
           <button onClick={this.handleClick.bind(this)} className="download"> Download </button>
         </span>
+        <div style={fooStyle}>
+          <button onClick={this.handleClick.bind(this)} className="viewOnYm"> View on YM </button>
+        </div>
         <span>
           <button onClick={this.handleClick.bind(this)} className="share"> Share </button>
         </span>
         <span>
           <button onClick={this.handleClick.bind(this)} className="like"> Like </button>
+        </span>
+
+        <span className="otherStuff">
+          <button onClick={this.handleClick.bind(this)} className="options"> options </button>
         </span>
       </div>
     );
