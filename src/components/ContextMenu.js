@@ -12,13 +12,9 @@ export default class ContextMenu extends React.Component {
         x:0,
         y:0
       },
-      entries:[
-        {name:"duplicateEntities"},
-        {name:"deleteEntities"}
-      ],
       //too specific???
       selectedEntities:[],
-      actions:{}
+      actions:[]
     }
   }
 
@@ -49,12 +45,12 @@ export default class ContextMenu extends React.Component {
   }
 
   //TODO: replace with RXJS stuff
-  handleEntryClick(entryName){
-    console.log("here",entryName, this.state, this.state.selectedEntities);
+  handleEntryClick(entryAction){
+    console.log("here",entryAction, this.state, this.state.selectedEntities);
 
 
     //no good, that is not generic
-    let action = this.state.actions[entryName];
+    let action = entryAction;//this.state.actions[entryName];
     action(this.state.selectedEntities);
 
 
@@ -64,12 +60,12 @@ export default class ContextMenu extends React.Component {
 
   }
 
-  renderMenuEntries(entries){
+  renderMenuEntries(actions= []){
     let self = this;
     let entriesDom = []
-    entries.map(function(entry){
+    actions.map(function(entry){
       entriesDom.push(
-        <li> <button onClick={self.handleEntryClick.bind(self,entry.name)}>{entry.name} </button> </li>
+        <li> <button onClick={self.handleEntryClick.bind(self,entry.action)}>{entry.name} </button> </li>
       )
     });
     return entriesDom;
@@ -80,20 +76,21 @@ export default class ContextMenu extends React.Component {
       left: this.state.position.x,
       top: this.state.position.y,
       position: 'fixed',
-      background:'orange',
+      /*background:'orange',*/
     };
 
     let menuEntriesStyle = {
-      listStyle: 'none',
+      /*listStyle: 'none',
       padding:'5px',
-      margin:'2px'
+      margin:'2px'*/
     }
     
-    let menuEntries = this.renderMenuEntries(this.state.entries);
+    let menuEntries = this.renderMenuEntries(this.state.actions);
     let content  = undefined;
+
     if(this.state && this.state.active){
       content = (
-        <ul style={menuEntriesStyle}>
+        <ul style={menuEntriesStyle} className="menuEntries">
           {menuEntries}
         </ul>
       );

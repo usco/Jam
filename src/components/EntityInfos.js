@@ -188,10 +188,7 @@ class EntityInfos extends RxReact.Component {
         );
       })
 
-
-      console.log("here")
       let absSizeInputs = [];
-
       let absSize = absSizeFromBBox(entity.bbox);
       absSize = absSize || {w:0,l:0,h:0};
       //convert to array to keep logic the same for all fields

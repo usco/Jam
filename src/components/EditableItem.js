@@ -10,28 +10,28 @@ let EditableItem = React.createClass({
         };
     },
     componentWillMount: function () {
-        this.setState({
-            isEditMode: this.props.isEditMode,
-            data: this.props.data
-        });
+      this.setState({
+        isEditMode: this.props.isEditMode,
+        data: this.props.data
+      });
     },
     handleEditCell: function (evt) {
-        this.setState({isEditMode: true});
+      this.setState({isEditMode: true});
 
     },
     handleKeyDown: function (evt) {
-        switch (evt.keyCode) {
-            case 13: // Enter
-            case 9: // Tab
-                this.setState({isEditMode: false});
-                break;
-        }
+      switch (evt.keyCode) {
+        case 13: // Enter
+        case 9: // Tab
+          this.setState({isEditMode: false});
+          break;
+      }
     },
     handleBlur :function (evt) {
       this.setState({isEditMode: false});
     },
     handleChange: function (evt) {
-        this.setState({data: evt.target.value});
+      this.setState({data: evt.target.value});
     },
 
     componentWillReceiveProps:function(nextProps){
@@ -41,15 +41,15 @@ let EditableItem = React.createClass({
     },
 
     render: function () {
-        var cellHtml;
-        if (this.state.isEditMode) {
-            cellHtml = <input type='text' autoFocus value={this.state.data}
-                onKeyDown={this.handleKeyDown} onChange={this.handleChange} onBlur={this.handleBlur} /> 
-        }
-        else {
-            cellHtml = <span onClick={this.handleEditCell} onBlur={this.handleBlur} >{this.state.data}</span>
-        }
-        return cellHtml;
+      let cellHtml;
+      if (this.state.isEditMode) {
+        cellHtml = <input type='text' autoFocus value={this.state.data}
+          onKeyDown={this.handleKeyDown} onChange={this.handleChange} onBlur={this.handleBlur} /> 
+      }
+      else {
+        cellHtml = <span onClick={this.handleEditCell} onBlur={this.handleBlur} >{this.state.data}</span>
+      }
+      return cellHtml;
     }
 });
 

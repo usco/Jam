@@ -35,17 +35,19 @@ class MainToolBar extends RxReact.Component {
   render() {
     //log.info("bla",this.props)
     let fullTitle = `(${this.props.appInfos.name} v  ${this.props.appInfos.version})`;
-    let titleStyle = {
-      width:"100%",
+    let titleStyle = {};
+    /*  width:"100%",
       padding: "5 0 0 10"
-    };
+    };*/
     let fooStyle  = {
       display: "inline-block"
     };
 
     return (
       <div className="titleBar" style={titleStyle}>
-        <EditableItem data={this.props.design.title} ref="title" className="designName"/> 
+        <h1>
+          <EditableItem data={this.props.design.title} ref="title" className="designName"/> 
+        </h1>
         <span ref="title" className="appInfos"> {fullTitle} </span>
         <div style={fooStyle}>
           <button onClick={this.handleClick.bind(this)} className="viewOnYm"> View on YM </button>
