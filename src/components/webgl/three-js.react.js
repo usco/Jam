@@ -72,7 +72,7 @@ class ThreeJs extends React.Component{
       cameras:[
         {
           name:"bla",
-          pos:[100,-100,100],
+          pos:[75,60,145] ,//[100,-100,100],//72.31452486225086, y: 61.11051151952455, z: 145.03832209374463
           up:[0,0,1],
           lens:{
             fov:45,
@@ -143,7 +143,10 @@ class ThreeJs extends React.Component{
     renderer.gammaInput = this.config.renderer.gammaInput;
     renderer.gammaOutput = this.config.renderer.gammaOutput;
 
-    this._makeCamera(this.config.cameras[0]);
+    let camera  = this._makeCamera(this.config.cameras[0]);
+    this.camera = camera ;
+    this.scene.add( camera );
+    camera.lookAt(this.scene.position); 
     
     let container = this.refs.container.getDOMNode();
     container.appendChild( renderer.domElement );
@@ -165,12 +168,47 @@ class ThreeJs extends React.Component{
     let shadowPlane = new ShadowPlane(2000,2000,null,this.config.cameras[0].up);
     this.scene.add(shadowPlane);
 
-    /*let camViewControls = new CamViewControls({size:9, cornerWidth:1.5,highlightColor:"#ffd200",opacity:0.95},[this.camera])
-    camViewControls.init( this.camera, container );
-    this.scene.add(camViewControls)
+    ////////camera view controls
+    let camViewRenderer = new THREE.WebGLRenderer( {antialias:true, alpha: true} );
+    camViewRenderer.setSize( 256, 128 );
 
-    this.camViewControls = camViewControls;*/
+    camViewRenderer.setClearColor( 0x000000,0 );
+     
+    let camViewContainer = this.refs.camViewControls.getDOMNode();
+    camViewContainer.appendChild( camViewRenderer.domElement );
+
+    this.camViewScene = new THREE.Scene();
+
+    //1:5 ratio to the main camera position seems ok
+    let camPos = this.camera.position.clone().divideScalar(5).toArray();
+    //camPos[2] = -camPos[2]
+
+    let camViewCamConfig = {
+        //width:256,
+        //height:128,
+        pos:camPos,
+        up:[0,0,1]
+    }
+    
+
+    let camViewCam   = this._makeCamera(camViewCamConfig);
+    
+    //camViewCam.toDiagonalView();
+    //camViewCam.toOrthographic();
+    camViewCam.aspect = 1;
+    camViewCam.updateProjectionMatrix();
+    camViewCam.lookAt(this.camViewScene.position); 
+
+    let camViewControls = new CamViewControls({size:9, cornerWidth:1.5,highlightColor:"#ffd200",opacity:0.95},[this.camera,camViewCam])
+    camViewControls.init( camViewCam, camViewContainer );
+    this.camViewScene.add(camViewControls);
+
+    this.camViewCam      = camViewCam;
+    this.camViewControls = camViewControls;
+    this.camViewRenderer = camViewRenderer;
+    this.controls.addObject( camViewCam);
     //planesColor:"#17a9f5",edgesColor:"#17a9f5",cornersColor:"#17a9f5",
+
     let self = this;
 
     this.renderer = renderer;
@@ -223,7 +261,6 @@ class ThreeJs extends React.Component{
     function exists(data){ return data;}
 
 
-
     this.pointerInteractions = pointerInteractions(container);
 
     let {singleTaps$, doubleTaps$, contextTaps$, 
@@ -248,10 +285,13 @@ class ThreeJs extends React.Component{
     this.selectedMeshes$   = new Rx.Subject();    
 
     //hande all the cases where events require re-rendering
-    let controlsChanges$      = Observable.fromEvent(this.controls,'change');
-    let objectControlChanges$ = Observable.fromEvent(this.transformControls,'change');
+    let controlsChanges$       = Observable.fromEvent(this.controls,'change');
+    let objectControlChanges$  = Observable.fromEvent(this.transformControls,'change');
+    let camViewControlChanges$ = Observable.fromEvent(this.camViewControls,'change');
 
-    Observable.merge(controlsChanges$, objectControlChanges$, this.selectedMeshes$, this.objectsTransform$).subscribe(
+    Observable.merge(controlsChanges$, objectControlChanges$, camViewControlChanges$ ,
+      this.selectedMeshes$, this.objectsTransform$)
+    .subscribe(
       this._render.bind(this)
     )
 
@@ -282,8 +322,6 @@ class ThreeJs extends React.Component{
     'mocha' : assetpath('creamMocha.png'),
     'pink' : assetpath('creamPink.png'),
     },*/
-
-
 
     //let composer    = new THREE.EffectComposer(renderer);
 
@@ -386,28 +424,33 @@ for tap/toubleTaps etc*/
   
   /*setup a camera instance from the provided data*/
   _makeCamera( cameraData ){
-    let cameraData = cameraData;//TODO: merge with defaults using object.assign
-    let aspect = window.innerWidth/window.innerHeight;
-    
-    let camera = new THREE.PerspectiveCamera( cameraData.lens.fov, 
-      aspect, cameraData.lens.near, cameraData.lens.far );
+    //let cameraData = cameraData;//TODO: merge with defaults using object.assign
+    const DEFAULTS ={
+      width:window.innerWidth,
+      height:window.innerHeight,
+      lens:{
+            fov:45,
+            near:0.1,
+            far:20000,
+      },
+      aspect: window.innerWidth/window.innerHeight,
+      up:[0,0,1],
+      pos:[0,0,0]
+    };
+    let cameraData = Object.assign({}, DEFAULTS, cameraData);
 
-    camera = new CombinedCamera(
-          window.innerWidth,
-          window.innerHeight,
+  
+    let camera = new CombinedCamera(
+          cameraData.width,
+          cameraData.height,
           cameraData.lens.fov,
           cameraData.lens.near,
           cameraData.lens.far,
           cameraData.lens.near,
           cameraData.lens.far);
+
     camera.up.fromArray( cameraData.up );  
     camera.position.fromArray( cameraData.pos );
-    camera.lookAt(this.scene.position);	
-
-    //FIXME: hack
-    this.camera = camera ;
-	  this.scene.add( camera );
-    
     return camera;
   }
   
@@ -575,6 +618,8 @@ for tap/toubleTaps etc*/
   _render() 
   {	
 	  this.renderer.render( this.scene, this.camera );
+
+    this.camViewRenderer.render( this.camViewScene,this.camViewCam);
   }
 
   /*this would actually be close to react's standard "render"
@@ -586,17 +631,81 @@ for tap/toubleTaps etc*/
 
   so a "diff " method is in order , to determine what changed between two forced updates/renders
 
-  var jsondiffpatch = require('jsondiffpatch').create(options);
+  
 
   */
   forceUpdate( data , mapper ){
     let dynamicInjector = new THREE.Object3D();//all dynamic mapped objects reside here
     let self = this;
 
+    if(data && data.length>0){
+      console.log("NEW",data[0].pos)
+      if(this._oldEntries && this._oldEntries.length>0){
+      console.log("OLD",this._oldEntries[0].pos)
+      }
+    }
+
+
+    this._entries    =  JSON.parse(JSON.stringify(data)) || undefined;
+    this._mappings   = {};
+
+    //this._entries    = data;
+
+
+    /*
+    let jsondiffOptions ={
+      objectHash: function(obj) {
+        // this function is used only to when objects are not equal by ref
+        return obj.iuid;
+      },
+      arrays: {
+        // default true, detect items moved inside the array (otherwise they will be registered as remove+add)
+        detectMove: true,
+        // default false, the value of items moved is not included in deltas
+        includeValueOnMove: false
+      },
+    }
+    let jsondiffpatch = require('jsondiffpatch').create(jsondiffOptions);
+    let delta = jsondiffpatch.diff(this._oldEntries, this._entries);
+    try{
+
+
+    if(delta && delta && delta[0].pos){
+
+      function noUnderscore( key ){
+        return key[0] !== "_";
+      }
+      let realChangesItems = Object.keys(delta[0].pos).filter(noUnderscore);
+      realChangesItems = realChangesItems.map(function(key){return delta[0].pos[key]});
+      //delta[0].pos.map()
+      console.log("FOODELTA",delta[0].pos, realChangesItems);
+
+    }
+    }
+    catch(error){}*/
+    var diff = require('deep-diff').diff;
+    var delta = diff(this._oldEntries, this._entries);
+
+    delta.map(function(change){
+      console.log("change",change);
+      switch(change.kind){
+        case "A":
+          console.log("ARRAY")
+        break;
+        case "E":
+          console.log("Edit")
+        break;
+      }
+    });
+    console.log("DELTA",delta)
+    
+
 
     let xform = function( entity, mesh ){
       self._render();
       self.transformControls.update();
+
+      self._mappings[entity.iuid] = mesh;
 
       if(entity._selected){
         mesh.material.oldColor = mesh.material.color;
@@ -607,27 +716,47 @@ for tap/toubleTaps etc*/
           mesh.material.color = mesh.material.oldColor
         }
       }
+
+      //console.log("MAPPINGS", self, self._mappings)
     }
 
    
-    function renderItems (entry) {
-      console.log("per entry")
+    function renderItem (entry) {
       mapper(entry, dynamicInjector, xform);
-    }
-    data.map( renderItems );//entry => { this.scene.add( mapper(entry) );} )
 
-    this.scene.remove( this.dynamicInjector );
+    }
+    data.map( renderItem );//entry => { this.scene.add( mapper(entry) );} )
+
+
+    let oldDynamicInjector = this.dynamicInjector;
     this.dynamicInjector = dynamicInjector;
     this.scene.add( dynamicInjector );
+
+    //FIXME: GODawfull hack 
+    setTimeout(function() {
+      self.scene.remove( oldDynamicInjector );
+      self._render();
+    }, 10);
+    
 
     //also force render in case we do not have entities left to render
     self._render();
 
+
+    this._oldEntries = JSON.parse(JSON.stringify(data));// || undefined;
+    console.log("MAPPINGS", this._mappings)
+    //this._oldMappings= {};
+    //this._oldEntries = data;
+
   }
 
   render(){
+
     return (
-      <div className="container" ref="container" />
+      <div>
+        <div className="container" ref="container" />
+        <div className="camViewControls" ref="camViewControls"/>
+      </div>
     );
   }
   
