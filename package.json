@@ -1,6 +1,6 @@
 {
   "name": "exp",
-  "version": "0.0.4",
+  "version": "0.0.5",
   "description": "jam react experiment",
   "main": "index.js",
   "scripts": {
@@ -26,11 +26,13 @@
     "classnames": "^1.2.0",
     "co": "^4.5.1",
     "curry-d": "^0.6.0",
+    "deep-diff": "^0.3.2",
     "fynx": "^1.6.0",
     "glView-helpers": "usco/glView-helpers#dev",
     "immutable": "^3.7.0",
     "install": "^0.1.8",
     "js-csp": "^0.4.0",
+    "jsondiffpatch": "^0.1.31",
     "keymaster": "^1.6.2",
     "kurtsore": "^0.1.2",
     "lodash": "^3.6.0",
