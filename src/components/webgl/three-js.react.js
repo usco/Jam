@@ -751,13 +751,20 @@ for tap/toubleTaps etc*/
   }
 
   render(){
-
-    return (
-      <div>
-        <div className="container" ref="container" />
-        <div className="camViewControls" ref="camViewControls"/>
-      </div>
-    );
+    let webglEnabled = Detector.webgl;
+    let renderContents = null;
+    if(webglEnabled){
+      renderContents = (
+        <div>
+          <div className="container" ref="container" />
+          <div className="camViewControls" ref="camViewControls"/>
+        </div>
+      );
+    }
+    else{
+      renderContents = <div><span>Sorry, it seems you do not have a WebGL capable computer/browser!</span></div>
+    }
+    return (renderContents);
   }
   
 }
