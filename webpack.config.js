@@ -80,7 +80,8 @@ var config= {
     loaders: [
       { test: /\.json$/,   loader: "json-loader" },
       { test: /-worker*\.js$/, loader: "worker-loader",include : pathsToInclude},//if any module does "require(XXX-worker)" it converts to a web worker
-      {test: /\.js?$/,loaders: ['react-hot', 'babel?experimental&optional=runtime'],include : pathsToInclude},
+      { test: /\.js?$/,loaders: ['react-hot', 'babel?experimental&optional=runtime'],include : pathsToInclude},
+      { test: /\.css$/, loader: "style-loader!css-loader" }
     ],
     noParse: /\.min\.js/
   },
@@ -111,7 +112,7 @@ if (production) {
   config.plugins = config.plugins.concat([
     new webpack.DefinePlugin({'process.env': {'NODE_ENV': JSON.stringify('production') } }),
     new webpack.optimize.DedupePlugin(),
-    new webpack.optimize.UglifyJsPlugin({
+    /*new webpack.optimize.UglifyJsPlugin({
       mangle: {
         except: ['require', 'export', '$super', 'import']
       },
@@ -133,7 +134,7 @@ if (production) {
       regExp: /\.js$|\.html$/,
       threshold: 10240,
       minRatio: 0.8
-    })
+    })*/
   ]);
 }
 else{

@@ -1,3 +1,4 @@
+require("./app.css")
 import React from 'react';
 import co from "co";
 
