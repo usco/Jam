@@ -166,16 +166,14 @@ export default class App extends React.Component {
     }
 
     let setEntityT = function(attrsAndEntity){
-      let [transforms,entity] = attrsAndEntity;
-      
-      console.log("transforms",transforms)
-      self.setEntityTransforms(entity,transforms)
+      let [transforms, entity] = attrsAndEntity;      
       setEntityTransforms({entity,transforms})
 
       return attrsAndEntity
     }
 
     //debounce 16.666 ie 60 fps ?
+
     let rawTranforms     =  glview.objectsTransform$.debounce(16.6666).filter(filterEntities).share();
     let objectTransforms = rawTranforms 
       .map(extractAttributes)
@@ -215,7 +213,6 @@ export default class App extends React.Component {
     /////////
     //FIXME: horrible, this should not be here, all related to actions etc
     setEntityTransforms.subscribe(function(val){
-      console.log("jam!!!",val)
       self.setEntityTransforms(val.entity, val.transforms);
       self._tempForceDataUpdate();
     });
@@ -239,23 +236,36 @@ export default class App extends React.Component {
     ///////////
     
     showContextMenu.subscribe(function(requestData){
-      console.log("showing contextmenu")
+      let selectedEntities = self.state.selectedEntities;
+      let active = true;//(selectedEntities && selectedEntities.length>0)
+      let actions = [];
+
+      //default actions ?
+      actions = [
+        {name:"Import file (NA)",action:undefined},
+        {name:"Export design (NA)",action:undefined}
+      ]
+
+      if(selectedEntities && selectedEntities.length>0)
+      {
+         actions=[
+          {name:"Delete",action: deleteEntities},
+          {name:"Duplicate",action:duplicateEntities}
+         ]
+      }
+
       self.setState({
         contextMenu:{
-          active:true,
+          active:active,
           position:requestData.position,
           //not sure about all these
           selectedEntities:self.state.selectedEntities,
-          actions:{
-            "deleteEntities": deleteEntities,
-            "duplicateEntities":duplicateEntities
-          }
+          actions,
         }
       });
     });
 
     hideContextMenu.subscribe(function(requestData){
-      console.log("hiding contextmenu")
       self.setState({
         contextMenu:{
           active:false,
@@ -289,7 +299,6 @@ export default class App extends React.Component {
     });
 
     //deal with all shortcuts
-    console.log("shortcuts")
     let shortcuts = this.state.shortcuts;
     shortcuts.map(function(shortcutEntry){
       let {keys, command} = shortcutEntry;
@@ -303,23 +312,7 @@ export default class App extends React.Component {
       });
 
     });
-    /*for(let actionName in shortcuts){
-      let keys = shortcuts[actionName]
-      keymaster(keys, function(){ 
-        console.log(`will do ${actionName}`)
-        return false;
-      });
-    }*/
-
-    /*
-      //self.removeEntity();
-      //self.duplicateEntity();
-      //self.toTranslateMode();
-      //self.toRotateMode();
-      //self.toScaleMode();
-    */
-
-
+   
     //TAKEN FROM ESTE
     // For Om-like app state persistence. Press shift+ctrl+s to save app state
     // and shift+ctrl+l to load.
@@ -568,7 +561,7 @@ export default class App extends React.Component {
       .map( register )
       .map( showIt )
       .map( function(klassAndInstance){
-        klassAndInstance.instance.pos[2]+=50;
+        klassAndInstance.instance.pos[2]+=20;
         return klassAndInstance;
       })
         .catch(handleLoadError)
@@ -601,6 +594,12 @@ export default class App extends React.Component {
     let assembly = this.kernel.activeAssembly;
     let entries  = assembly.children;
 
+    /*function that provides a mapping between an entity and its visuals (in this case 
+    // a 3d object/mesh)
+      @param entity : the entity to get the mapping of
+      @param addTo : item to add the visual to
+      @param xform : any extra tranformation to apply to the entity
+    */
     let mapper = function( entity, addTo, xform ){
       let self = this;
 
@@ -640,8 +639,8 @@ export default class App extends React.Component {
 
           self._meshInjectPostProcess( meshInstance );
           
-          if (addTo)addTo.add( meshInstance);
-          if (xform) xform(entity,meshInstance);
+          if(addTo) addTo.add( meshInstance);
+          if(xform) xform(entity, meshInstance);
           
           return meshInstance;
         }
@@ -699,7 +698,6 @@ export default class App extends React.Component {
       height:'100%',
     };
 
-    //let fullTitle = `${this.state.design.title} ---- ${this.state.appInfos.name} v  ${this.state.appInfos.version}`;
     /*
        <FooComponent/>
  <div ref="infoLayer" className="infoLayer" style={infoLayerStyle} >
@@ -714,11 +712,8 @@ export default class App extends React.Component {
     //FIXME too complex
     let contextMenuActive   = this.state.contextMenu && this.state.contextMenu.active || false;
     let contextMenuPosition = this.state.contextMenu && this.state.contextMenu.position || {x:0,y:0};
-
-
-    let contextmenuActions  = {};
+    let contextmenuActions  = [];
     if(this.state.contextMenu) contextmenuActions = this.state.contextMenu.actions;
-
     let contextmenuSelectedEntities  = this.state.contextMenu && this.state.contextMenu.selectedEntities || [];
 
     return (
