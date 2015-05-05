@@ -206,7 +206,7 @@ class ThreeJs extends React.Component{
     this.camViewCam      = camViewCam;
     this.camViewControls = camViewControls;
     this.camViewRenderer = camViewRenderer;
-    this.controls.addObject( camViewCam);
+    this.controls.addObject( camViewCam, {userZoom:false, userPan:false});
     //planesColor:"#17a9f5",edgesColor:"#17a9f5",cornersColor:"#17a9f5",
 
     let self = this;

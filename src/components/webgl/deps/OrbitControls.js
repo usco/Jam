@@ -11,6 +11,9 @@ var OrbitControls = function ( object, domElement, upVector ) {
 
     //this.object = object;
     this.objects = [];
+    this.objectOptions = [];
+    this.camStates = [];
+
     
     this.domElement = ( domElement !== undefined ) ? domElement : document;
     this.upVector = upVector || new THREE.Vector3(0,1,0);
@@ -77,19 +80,19 @@ var OrbitControls = function ( object, domElement, upVector ) {
     var STATE = { NONE: -1, ROTATE: 0, ZOOM: 1, PAN: 2 };
     var state = STATE.NONE;
 
-    this.camStates = [];
     //to add control of multiple cameras
-    this.addObject = function( object ){
+    this.addObject = function( object, options){
       if(this.objects.indexOf(object) != -1) return;
+      const DEFAULTS = {userZoom:true, userPan:true, userRotate:true} 
+      let options = Object.assign({}, DEFAULTS, options)
       this.objects.push( object );
+      this.objectOptions.push(options);
       this.centers.push( new THREE.Vector3() );
-      this.camStates.push( {phiDelta:0,thetaDelta:0,scale:0,lastPosition:new THREE.Vector3()} );
+      this.camStates.push( {phiDelta:0,thetaDelta:0,scale:1,lastPosition:new THREE.Vector3()} );
     };
 
     // events
-
     var changeEvent = { type: 'change' };
-
 
     function fireActivated(){
       //console.log("dea move",scope.active);
@@ -114,6 +117,13 @@ var OrbitControls = function ( object, domElement, upVector ) {
         }
 
         thetaDelta += angle;
+
+        //do this PER camera
+        this.objects.map(function(object, index){
+          if(scope.objectOptions[index].userRotate){
+            scope.camStates[index].thetaDelta += angle;
+          }
+        })   
     };
 
     this.rotateRight = function ( angle ) {
@@ -124,6 +134,12 @@ var OrbitControls = function ( object, domElement, upVector ) {
 
         thetaDelta -= angle;
 
+        //do this PER camera
+        this.objects.map(function(object, index){
+          if(scope.objectOptions[index].userRotate){
+            scope.camStates[index].thetaDelta -= angle;
+          }
+        })  
     };
 
     this.rotateUp = function ( angle ) {
@@ -133,6 +149,13 @@ var OrbitControls = function ( object, domElement, upVector ) {
         }
 
         phiDelta -= angle;
+
+        //do this PER camera
+        this.objects.map(function(object, index){
+          if(scope.objectOptions[index].userRotate){
+            scope.camStates[index].phiDelta -= angle;
+          }
+        })  
 
     };
 
@@ -144,42 +167,61 @@ var OrbitControls = function ( object, domElement, upVector ) {
 
         phiDelta += angle;
 
+        //do this PER camera
+        this.objects.map(function(object, index){
+          if(scope.objectOptions[index].userRotate){
+            scope.camStates[index].phiDelta += angle;
+          }
+        })  
     };
 
     this.zoomIn = function ( zoomScale ) {
 
         if ( zoomScale === undefined ) {
-
             zoomScale = getZoomScale();
         }
-        scale /= zoomScale;
-        this.scale = scale;
+        //scale /= zoomScale;
+        //this.scale = scale;
+
+        //do this PER camera
+        this.objects.map(function(object, index){
+          if(scope.objectOptions[index].userZoom){
+              scope.camStates[index].scale /= zoomScale;
+          }
+        })  
     };
 
     this.zoomOut = function ( zoomScale ) {
 
         if ( zoomScale === undefined ) {
-
             zoomScale = getZoomScale();
         }
-        scale *= zoomScale;
-        this.scale = scale;
+        //scale *= zoomScale;
+        //this.scale = scale;
+
+        //do this PER camera
+        this.objects.map(function(object, index){
+          if(scope.objectOptions[index].userZoom){
+            scope.camStates[index].scale *= zoomScale;
+          }
+        })  
     };
 
     this.pan = function ( distance ) {
         //fixme:
         var _origDist = distance.clone();
-        for(var i=0;i<this.objects.length;i++)
-        {
-          var distance = _origDist.clone();
-          distance.transformDirection( this.objects[i].matrix );
-          distance.multiplyScalar( scope.userPanSpeed );
-          
-          this.objects[i].position.add( distance );
-          this.centers[i].add( distance );
-        }
 
-       
+       //do this PER camera
+        this.objects.map(function(object, index){
+          if(scope.objectOptions[index].userPan){
+            let distance = _origDist.clone();
+            distance.transformDirection( object.matrix );
+            distance.multiplyScalar( scope.userPanSpeed );
+            
+            object.position.add( distance );
+            scope.centers[index].add( distance );
+          }
+        })  
     };
 
     this.update = function (dt) {
@@ -191,9 +233,9 @@ var OrbitControls = function ( object, domElement, upVector ) {
           var center = this.centers[i];
           var camState = this.camStates[i];
           
-          var curThetaDelta = thetaDelta;
-          var curPhiDelta   = phiDelta;
-          var curScale      = scale;
+          var curThetaDelta = camState.thetaDelta;
+          var curPhiDelta   = camState.phiDelta;
+          var curScale      = camState.scale;
           
           var lastPosition = camState.lastPosition;
           
@@ -262,12 +304,14 @@ var OrbitControls = function ( object, domElement, upVector ) {
             fireDeActivated();
           }
           
+          camState.thetaDelta /= 1.5;
+          camState.phiDelta /= 1.5;
+          camState.scale = 1;
         }
-        //thetaDelta = 0;
-        //phiDelta = 0;
-        thetaDelta /= 1.5;
+
+        /*thetaDelta /= 1.5;
         phiDelta /= 1.5;
-        scale = 1;
+        scale = 1;*/
     };
 
 
@@ -282,88 +326,7 @@ var OrbitControls = function ( object, domElement, upVector ) {
         return Math.pow( 0.95, scope.userZoomSpeed );
 
     }
-
-    function onMouseDown( event ) {
-      console.log("blaaah");
-        if ( scope.enabled === false ) return;
-        if ( scope.userRotate === false ) return;
-        //event.preventDefault();
-
-        //FIXME : make it configurable
-        if ( state === STATE.NONE )
-        {
-            if ( event.button === scope.rotateButton ) 
-                state = STATE.ROTATE;
-            if ( event.button === 1 )
-                state = STATE.ZOOM;
-            if ( event.button === scope.panButton )
-                state = STATE.PAN;
-        }
-        
-        
-        if ( state === STATE.ROTATE ) {
-            rotateStart.set( event.clientX, event.clientY );
-
-        } else if ( state === STATE.ZOOM ) {
-            zoomStart.set( event.clientX, event.clientY );
-
-        } else if ( state === STATE.PAN ) {
-            //state = STATE.PAN;
-        }
-        document.addEventListener( 'mousemove', onMouseMove, false );
-        document.addEventListener( 'up', onMouseUp, false );
-    }
-
-    function onMouseMove( event ) {
-        if ( scope.enabled === false ) return;
-        
-        //event.preventDefault();
-        
-        if ( state === STATE.ROTATE ) {
-
-            rotateEnd.set( event.clientX, event.clientY );
-            rotateDelta.subVectors( rotateEnd, rotateStart );
-
-            scope.rotateLeft( 2 * Math.PI * rotateDelta.x / PIXELS_PER_ROUND * scope.userRotateSpeed );
-            scope.rotateUp( 2 * Math.PI * rotateDelta.y / PIXELS_PER_ROUND * scope.userRotateSpeed );
-
-            rotateStart.copy( rotateEnd );
-
-        } else if ( state === STATE.ZOOM ) {
-
-            zoomEnd.set( event.clientX, event.clientY );
-            zoomDelta.subVectors( zoomEnd, zoomStart );
-
-            if ( zoomDelta.y > 0 ) {
-
-                scope.zoomIn();
-
-            } else {
-
-                scope.zoomOut();
-
-            }
-
-            zoomStart.copy( zoomEnd );
-
-        } else if ( state === STATE.PAN ) {
-            var movementX = event.movementX || event.mozMovementX || event.webkitMovementX || 0;
-            var movementY = event.movementY || event.mozMovementY || event.webkitMovementY || 0;
-            scope.pan( new THREE.Vector3( - movementX, movementY, 0 ) );
-
-        }
-
-    }
-
-    function onMouseUp( event ) {
-        if ( scope.enabled === false ) return;
-        if ( scope.userRotate === false ) return;
-        scope.domElement.removeEventListener( 'mousemove', onMouseMove, false );
-        scope.domElement.removeEventListener( 'up', onMouseUp, false );
-        state = STATE.NONE;
-        
-    }
-
+   
     function onMouseWheel( event ) {
         if ( scope.enabled === false ) return;
         if ( scope.userZoom === false ) return;
@@ -387,13 +350,6 @@ var OrbitControls = function ( object, domElement, upVector ) {
         if ( delta > 0 ) {
 
             scope.zoomOut();
-            
-            /*if(!scope.active){
-              scope.active = true;
-              scope.dispatchEvent({type:'activated'});
-            }
-            scope.active = false;
-            scope.dispatchEvent({type:'deactivated'});*/
 
         } else {
 
@@ -470,10 +426,8 @@ var OrbitControls = function ( object, domElement, upVector ) {
         //console.log("pinching",delta);
         
         if ( delta > 1 ) {
-            //console.log("zooming out");
             scope.zoomOut();
         } else {
-            //console.log("zooming in");
             scope.zoomIn();
         }
         scope.pointers = {};
@@ -481,16 +435,6 @@ var OrbitControls = function ( object, domElement, upVector ) {
 
     function onPointerDown( event )
     {
-      //console.log("pointer down in orbit controls");
-      //scope.pointers[event.pointerId] = {x: event.pageX, y: event.pageY};
-  
-      /*if(Object.keys(scope.pointers).length >1 && event.pointerType !== 'mouse'){
-        //console.log("more than one pointer, pinch zoom etc enabled",Object.keys(scope.pointers).length);
-        state = STATE.NONE;
-        return;
-      }*/
-      //FIXME: scope.active = true; should also work with autorotate
-      
       if ( scope.enabled === false ) return;
       if ( scope.userRotate === false ) return;
         //event.preventDefault();
@@ -511,36 +455,16 @@ var OrbitControls = function ( object, domElement, upVector ) {
         
         if ( state === STATE.ROTATE ) {
             rotateStart.set( event.clientX, event.clientY );
-            /*event.preventDefault();
-			      event.stopPropagation();
-			      event.stopImmediatePropagation();*/
-
         } else if ( state === STATE.ZOOM ) {
             zoomStart.set( event.clientX, event.clientY );
-            
-            /*event.preventDefault();
-			      event.stopPropagation();
-			      event.stopImmediatePropagation();*/
-
         } else if ( state === STATE.PAN ) {
-            //state = STATE.PAN;
-            /*event.preventDefault();
-			      event.stopPropagation();
-			      event.stopImmediatePropagation();*/
         }
         scope.domElement.addEventListener( 'mousemove', onPointerMove, false );
-        scope.domElement.addEventListener( 'up', onPointerUp, false );
-        
-        
-        
-        //scope.dispatchEvent( { type: 'active' } );
-        
+        scope.domElement.addEventListener( 'up', onPointerUp, false );        
     }
 
     function onPointerUp( event )
     {
-
-      //delete scope.pointers[event.pointerId];
       state = STATE.NONE;
       
       scope.mainPointerPressed = false; 
@@ -549,16 +473,10 @@ var OrbitControls = function ( object, domElement, upVector ) {
 
       scope.domElement.removeEventListener( 'mousemove', onPointerMove, false );
       scope.domElement.removeEventListener( 'up', onPointerUp, false );
-              
-      
     }
 
     function onPointerMove( event )
     {
-    
-      //console.log("Pointer move, in orbit controls");
-      //if(event.button ==2 ) console.log("pointer move", event);
-      //is primary
         if ( scope.enabled === false ) return;
         event.preventDefault();
         event.stopPropagation();
@@ -617,9 +535,14 @@ var OrbitControls = function ( object, domElement, upVector ) {
         var center = this.centers[i];
         center = new THREE.Vector3();
       }
-      this.phiDelta= origPhiDelta;
-      this.thetaDelta= origThetaDelta ;
-      this.scale = origScale = scale;
+      this.objects.map(function(object, index){
+        let center = this.centers[index];
+        center = new THREE.Vector3();
+        this.camStates[index].phiDelta   = origPhiDelta;
+        this.camStates[index].thetaDelta = origThetaDelta ;
+        this.camStates[index].scale = origScale = scale;
+      })
+
       this.update();
     } 
     
@@ -630,18 +553,15 @@ var OrbitControls = function ( object, domElement, upVector ) {
       this.domElement.addEventListener( 'contextmenu', function ( event ) { event.preventDefault(); }, false );
       this.domElement.addEventListener( 'pinch', onPinch, false);
       
-      //this.domElement.addEventListener( 'down', onPointerDown, false );
       this.domElement.addEventListener( "mousedown", onPointerDown, false );
 		  this.domElement.addEventListener( "touchstart", onPointerDown, false );
       
       
-      //this.domElement.addEventListener( 'up', onPointerUp, false );
   		this.domElement.addEventListener( "mouseup", onPointerUp, false );
 		  this.domElement.addEventListener( "mouseout", onPointerUp, false );
 		  this.domElement.addEventListener( "touchend", onPointerUp, false );
 		  this.domElement.addEventListener( "touchcancel", onPointerUp, false );
-		  this.domElement.addEventListener( "touchleave", onPointerUp, false );
-      
+		  this.domElement.addEventListener( "touchleave", onPointerUp, false );      
       
       this.domElement.addEventListener( 'mousemove', onPointerMove, false );
       
