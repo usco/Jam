@@ -99,6 +99,7 @@ export default class App extends React.Component {
     });
     ////////////////
 
+
     //add drag & drop behaviour 
     let container = this.refs.wrapper.getDOMNode();
     DndBehaviour.attach( container );
@@ -709,6 +710,9 @@ export default class App extends React.Component {
     */
     
     let bomData = this.kernel.bom.bom;
+
+    //TODO: do this elsewhere
+    window.document.title = `${this.state.design.title} -- Jam!`;
 
     //FIXME too complex
     let contextMenuActive   = this.state.contextMenu && this.state.contextMenu.active || false;
