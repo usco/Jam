@@ -9,6 +9,14 @@ let LabeledGrid = helpers.grids.LabeledGrid;
 let ShadowPlane = helpers.planes.ShadowPlane;
 let CamViewControls= helpers.CamViewControls;
 
+import CopyShader from './deps/post-process/CopyShader'
+import FXAAShader from './deps/post-process/FXAAShader'
+
+import EffectComposer from './deps/post-process/EffectComposer'
+import ShaderPass from './deps/post-process/ShaderPass'
+import RenderPass from './deps/post-process/RenderPass'
+import {ClearMaskPass, MaskPass} from './deps/post-process/MaskPass'
+
 
 //import CanvasRenderer from './deps/CanvasRenderer';
 import OrbitControls from './deps/OrbitControls';
@@ -130,7 +138,7 @@ class ThreeJs extends React.Component{
       //Detector.addGetWebGLMessage();
       //renderer = new CanvasRenderer(); 
     } else {
-      renderer = new THREE.WebGLRenderer( {antialias:true} );
+      renderer = new THREE.WebGLRenderer( {antialias:false} );
     }
     renderer.setClearColor( 0xffffff );
     renderer.shadowMapEnabled = this.config.renderer.shadowMapEnabled;
@@ -142,6 +150,9 @@ class ThreeJs extends React.Component{
     //renderer.autoClear = this.config.renderer.autoClear;
     renderer.gammaInput = this.config.renderer.gammaInput;
     renderer.gammaOutput = this.config.renderer.gammaOutput;
+
+    let pixelRatio = window.devicePixelRatio || 1;
+    renderer.setPixelRatio( pixelRatio );
 
     let camera  = this._makeCamera(this.config.cameras[0]);
     this.camera = camera ;
@@ -168,11 +179,17 @@ class ThreeJs extends React.Component{
     let shadowPlane = new ShadowPlane(2000,2000,null,this.config.cameras[0].up);
     this.scene.add(shadowPlane);
 
+    ////////setup post processing
+    log.info("setting up post processing")
+    this.renderer = renderer;
+    this._setupPostProcess();
+
+
     ////////camera view controls
     let camViewRenderer = new THREE.WebGLRenderer( {antialias:true, alpha: true} );
     camViewRenderer.setSize( 256, 128 );
-
     camViewRenderer.setClearColor( 0x000000,0 );
+    camViewRenderer.setPixelRatio( pixelRatio );
      
     let camViewContainer = this.refs.camViewControls.getDOMNode();
     camViewContainer.appendChild( camViewRenderer.domElement );
@@ -189,7 +206,6 @@ class ThreeJs extends React.Component{
         pos:camPos,
         up:[0,0,1]
     }
-    
 
     let camViewCam   = this._makeCamera(camViewCamConfig);
     
@@ -209,13 +225,14 @@ class ThreeJs extends React.Component{
     this.controls.addObject( camViewCam, {userZoom:false, userPan:false});
     //planesColor:"#17a9f5",edgesColor:"#17a9f5",cornersColor:"#17a9f5",
 
-    let self = this;
-
-    this.renderer = renderer;
-    this._animate();
-
     this.selector = new Selector();
     this.selector.camera = this.camera;
+    let self = this;
+
+    
+    this._animate();
+
+   
 
     ///////////:setup ui interactions
     this.resizer = windowResizes(1);
@@ -229,10 +246,17 @@ class ThreeJs extends React.Component{
       let camera = this.camera;
       let renderer = this.renderer;
 
+      renderer.setSize( width, height );
       //camera.aspect = 1;
       camera.aspect = aspect;
       camera.updateProjectionMatrix();
-      renderer.setSize( width, height );
+      
+      self.composer.reset();
+
+      let pixelRatio = window.devicePixelRatio || 1;
+      self.fxaaPass.uniforms[ 'resolution' ].value.set (1 / (width * pixelRatio), 1 / (height * pixelRatio));
+      self.composer.setSize(width * pixelRatio, height * pixelRatio);
+
       self._render();
     }
 
@@ -254,8 +278,6 @@ class ThreeJs extends React.Component{
       return {object: pickingInfo.object,position:pickingInfo.point}
     } 
 
-
-    
     //filters
     function arePickingInfos(event){ return (event.detail.pickingInfos && event.detail.pickingInfos.length >0);}
     function exists(data){ return data;}
@@ -310,11 +332,6 @@ class ThreeJs extends React.Component{
     setToRotateMode.filter(areThereSelections).subscribe( this.transformControls.setMode.bind(this.transformControls,"rotate") )
     setToScaleMode.filter(areThereSelections).subscribe( this.transformControls.setMode.bind(this.transformControls,"scale") )
 
-
-    PreventScrollBehaviour.attach( container );
-    this._setupExtras();
-    this._render();
-
     /* idea of mappings , from react-pixi
      spritemapping : {
     'vanilla' : assetpath('creamVanilla.png'),
@@ -323,41 +340,16 @@ class ThreeJs extends React.Component{
     'pink' : assetpath('creamPink.png'),
     },*/
 
-    //let composer    = new THREE.EffectComposer(renderer);
-
-    /*let renderTargetParameters = {
-        minFilter: THREE.LinearFilter,
-        magFilter: THREE.LinearFilter,
-        format: THREE.RGBAFormat,
-        stencilBuffer: true
-    };
-    let renderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, renderTargetParameters);
-
-
-    
-    composer.renderTarget1.stencilBuffer = true;
-    composer.renderTarget2.stencilBuffer = true;
-
-    let normal      = new THREE.RenderPass(scene, camera);
-    let outline     = new THREE.RenderPass(outScene, camera);
-    outline.clear = false;
-    
-    let mask        = new THREE.MaskPass(maskScene, camera);
-    mask.inverse = true;
-    let clearMask   = new THREE.ClearMaskPass();
-    let copyPass    = new THREE.ShaderPass(THREE.CopyShader);
-    copyPass.renderToScreen = true;
-
-    composer.addPass(normal);
-    composer.addPass(mask);
-    composer.addPass(outline);
-    composer.addPass(clearMask);
-    composer.addPass(copyPass);*/
 
     
     //window.addEventListener("resize", this.resizeHandler.bind(this) );
     //container.addEventListener( "click", this.handleTap.bind(this), false );
     //this.domElement.addEventListener( "mousedown", onPointerDown, false );
+
+    PreventScrollBehaviour.attach( container );
+    this._setupExtras();
+    this._render();
+
   }
   
   componentWillUnmount() {
@@ -538,6 +530,56 @@ for tap/toubleTaps etc*/
     return light
   }
 
+  _setupPostProcess(){
+    ////////post processing
+    let renderTargetParameters = {
+        minFilter: THREE.LinearFilter,
+        magFilter: THREE.LinearFilter,
+        format: THREE.RGBAFormat,
+        stencilBuffer: true
+    };
+    
+    let camera = this.camera;
+    let renderer = this.renderer;
+
+    let scene = this.scene;
+    let outScene = new THREE.Scene();
+    let maskScene = new THREE.Scene();
+
+    let renderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, renderTargetParameters);
+
+    //setup composer
+    let composer    = new EffectComposer(renderer);
+    //composer.renderTarget1.stencilBuffer = true;
+    composer.renderTarget2.stencilBuffer = true;
+
+    let normal      = new RenderPass(scene, camera);
+    /*let outline     = new RenderPass(outScene, camera);
+    outline.clear = false;
+    
+    let mask        = new MaskPass(maskScene, camera);
+    mask.inverse = true;
+    let clearMask   = new THREE.ClearMaskPass();*/
+    let copyPass    = new THREE.ShaderPass(THREE.CopyShader);
+    let fxaaPass    = new THREE.ShaderPass( THREE.FXAAShader );
+    fxaaPass.uniforms[ 'resolution' ].value.set( 1 / window.innerWidth*window.devicePixelRatio, 1 / window.innerHeight*window.devicePixelRatio );
+
+    composer.addPass(normal);
+    composer.addPass(fxaaPass);
+    composer.addPass(copyPass);
+
+    let lastPass = composer.passes[composer.passes.length-1];
+    lastPass.renderToScreen = true;
+    console.log(composer)
+    /*composer.addPass(mask);
+    composer.addPass(outline);
+    composer.addPass(clearMask);
+    composer.addPass(copyPass);*/
+
+    this.fxaaPass = fxaaPass;
+    this.composer = composer; 
+  }
+
   selectMeshes(event){
     let intersects = event.detail.pickingInfos;
     let rect = this.container.getBoundingClientRect();
@@ -617,9 +659,10 @@ for tap/toubleTaps etc*/
   
   _render() 
   {	
-	  this.renderer.render( this.scene, this.camera );
-
+	  //this.renderer.render( this.scene, this.camera );
     this.camViewRenderer.render( this.camViewScene,this.camViewCam);
+
+    this.composer.render();
   }
 
   /*this would actually be close to react's standard "render"
@@ -639,9 +682,9 @@ for tap/toubleTaps etc*/
     let self = this;
 
     if(data && data.length>0){
-      console.log("NEW",data[0].pos)
+      //console.log("NEW",data[0].pos)
       if(this._oldEntries && this._oldEntries.length>0){
-      console.log("OLD",this._oldEntries[0].pos)
+      //console.log("OLD",this._oldEntries[0].pos)
       }
     }
 
@@ -683,7 +726,7 @@ for tap/toubleTaps etc*/
     }
     }
     catch(error){}*/
-    var diff = require('deep-diff').diff;
+    /*var diff = require('deep-diff').diff;
     var delta = diff(this._oldEntries, this._entries);
 
     delta.map(function(change){
@@ -697,7 +740,7 @@ for tap/toubleTaps etc*/
         break;
       }
     });
-    console.log("DELTA",delta)
+    console.log("DELTA",delta)*/
     
 
 
@@ -744,7 +787,7 @@ for tap/toubleTaps etc*/
 
 
     this._oldEntries = JSON.parse(JSON.stringify(data));// || undefined;
-    console.log("MAPPINGS", this._mappings)
+    //console.log("MAPPINGS", this._mappings)
     //this._oldMappings= {};
     //this._oldEntries = data;
 
