@@ -123,6 +123,13 @@
   border-width: 0px;
 }
 
+/*.tooolbarBottom */input[type=color]{
+  width: 24px;
+  margin: 0;
+  border: 0px;
+  background: none;
+}
+
 .toolbarBottom input[type=text]:focus{
   outline: none;
 }

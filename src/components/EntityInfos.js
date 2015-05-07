@@ -13,7 +13,7 @@ import logger from '../utils/log'
 let log = logger("Jam-ToolBar");
 log.setLevel("info");
 
-import {setEntityTransforms, setEntityBBox} from '../actions/entityActions'
+import {setEntityTransforms, setEntityBBox, setEntityColor} from '../actions/entityActions'
 
 /*
   Component to display (& edit) some of the main properties of entities: ie
@@ -98,6 +98,13 @@ class EntityInfos extends RxReact.Component {
 
   handleAngleInput(event){
     let value = event.target.value;
+  }
+
+  handleColorChange(event){
+
+    let entity= this.props.entities[0] ;
+    let color = event.target.value;
+    setEntityColor({entity, color});
   }
 
   
@@ -215,6 +222,9 @@ class EntityInfos extends RxReact.Component {
 
       entityInfo = (
         <div>
+          <span>
+            <input type="color" value={entity.color} onChange={this.handleColorChange.bind(this)}/> 
+          </span>
           <span>
             <span>N:</span>
             <input type="text" value={entityName} style={styles.text} onChange={this.keyup.bind(this)}> </input>
