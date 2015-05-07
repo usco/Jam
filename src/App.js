@@ -56,7 +56,7 @@ import * as blar from './core/fooYeah'
 import {setEntityTransforms, deleteEntities, duplicateEntities } from './actions/entityActions'
 import {setToTranslateMode, setToRotateMode, setToScaleMode} from './actions/transformActions'
 import {showContextMenu, hideContextMenu} from './actions/appActions'
-
+import {setDesignData} from './actions/designActions'
 
 let commands = {
   "removeEntities":deleteEntities,
@@ -234,6 +234,8 @@ export default class App extends React.Component {
       self.selectEntities(dupes)
     })
 
+    setDesignData.subscribe(self.setDesignData.bind(self));
+
     /////This is ok here ??
     ///////////
     
@@ -252,7 +254,18 @@ export default class App extends React.Component {
       {
          actions=[
           {name:"Delete",action: deleteEntities},
-          {name:"Duplicate",action:duplicateEntities}
+          {name:"Duplicate",action:duplicateEntities},
+
+          {
+            name:"Annotations", 
+            items:[
+              {name:"Note",action:undefined},
+              {name:"Distance",action:undefined},
+              {name:"Thickness",action:undefined},
+              {name:"Diameter",action:undefined},
+              {name:"Angle",action:undefined}
+            ]
+          }
          ]
       }
 
@@ -386,6 +399,18 @@ export default class App extends React.Component {
   }
   
   //-------COMMANDS OR SOMETHING LIKE THEM -----
+  setDesignData(data){
+    log.info("setting design data", data);
+
+    let design = Object.assign({}, this.state.design, data);
+    this.setState({
+      design:design
+    })
+    //FIXME: horrible
+    this.kernel.saveDesignInfos(design);
+  }
+
+
   //FIXME; this should be a command or something
   selectEntities(entities){
     log.info("selecting entitites",entities)
@@ -714,15 +739,10 @@ export default class App extends React.Component {
     //TODO: do this elsewhere
     window.document.title = `${this.state.design.title} -- Jam!`;
 
-    //FIXME too complex
-    let contextMenuActive   = this.state.contextMenu && this.state.contextMenu.active || false;
-    let contextMenuPosition = this.state.contextMenu && this.state.contextMenu.position || {x:0,y:0};
-    let contextmenuActions  = [];
-    if(this.state.contextMenu) contextmenuActions = this.state.contextMenu.actions;
-    let contextmenuSelectedEntities  = this.state.contextMenu && this.state.contextMenu.selectedEntities || [];
+    let contextmenuSettings = this.state.contextMenu;
 
     return (
-        <div ref="wrapper" style={wrapperStyle}>
+        <div ref="wrapper" style={wrapperStyle} className="Jam">
           <MainToolbar design={this.state.design} appInfos={this.state.appInfos} style={toolbarStyle}> </MainToolbar>
           <ThreeJs ref="glview"/>
 
@@ -730,13 +750,8 @@ export default class App extends React.Component {
             <EntityInfos entities={this.state.selectedEntities} debug={false}/>
           </div>
 
+          <ContextMenu settings={contextmenuSettings} />
 
-          <ContextMenu 
-            active={contextMenuActive} 
-            position={contextMenuPosition} 
-            actions={contextmenuActions}
-            selectedEntities={contextmenuSelectedEntities}
-            > </ContextMenu>         
         </div>
     );
   }

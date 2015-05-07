@@ -19,28 +19,19 @@ export default class ContextMenu extends React.Component {
   }
 
   componentWillReceiveProps(props){
-    if("position" in props){
-      this.setState({
-        position: props.position
-      })
+
+    const DEFAULTS = {
+      active:false,
+      position:{x:0,y:0},
+      actions:[],
+      selectedEntities:[]
     }
 
-    if("actions" in props){
-      this.setState({
-        actions: props.actions
-      })
-    }
-
-    if("selectedEntities" in props){
-      this.setState({
-        selectedEntities: props.selectedEntities
-      })
-    }
-
-    if("active" in props){
-      this.setState({
-        active: props.active
-      })
+    if("settings" in props){
+      if(props.settings){
+        let state = Object.assign({}, this.state, props.settings);
+        this.setState(state);
+      }
     }
   }
 
@@ -60,14 +51,24 @@ export default class ContextMenu extends React.Component {
 
   }
 
-  renderMenuEntries(actions= []){
+  renderMenuEntries(actions= [], level=0){
     let self = this;
-    let entriesDom = []
+    let entriesDom = [];
+
+    let offsetStyle = {
+     paddingLeft:`${level*20}px`
+    };
+
     actions.map(function(entry){
       entriesDom.push(
-        <li> <button onClick={self.handleEntryClick.bind(self,entry.action)}>{entry.name} </button> </li>
+        <li style={offsetStyle}> 
+          <button onClick={self.handleEntryClick.bind(self,entry.action)}> {entry.name} </button> 
+          {entry.items ? '>' : ''}
+          {entry.items ? self.renderMenuEntries(entry.items, 1) : ''}
+        </li>
       )
     });
+
     return entriesDom;
   }
 
