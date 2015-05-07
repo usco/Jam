@@ -11,6 +11,9 @@ let log = logger("Jam-ToolBar");
 log.setLevel("info");
 
 import EditableItem from './EditableItem'
+import DesignCard   from './DesignCard'
+
+import {setDesignData} from '../actions/designActions'
 
 
 class MainToolBar extends RxReact.Component {
@@ -20,7 +23,8 @@ class MainToolBar extends RxReact.Component {
       appInfos:{
         name:"bla",
         version:"0.0.0"
-      }
+      },
+      designCardVisible:false,
     }
   }
 
@@ -30,6 +34,16 @@ class MainToolBar extends RxReact.Component {
 
   handleClick(event){
     console.log("state & props", this.state, this.props)
+  }
+
+  setDesignTitle(value){
+    setDesignData({title:value});
+  }
+
+  toggleDesignCard(){
+    this.setState({
+      designCardVisible: !this.state.designCardVisible
+    })
   }
   
   render() {
@@ -43,14 +57,22 @@ class MainToolBar extends RxReact.Component {
       display: "inline-block"
     };
 
+    let designCardWrapper = <div className="designCardWrapper fadesIn" />;
+    if(this.state.designCardVisible){
+      designCardWrapper = (
+      <div className="designCardWrapper fadesOut">
+        <DesignCard design={this.props.design}/> 
+      </div>);
+    }
+
     return (
       <div className="titleBar" style={titleStyle}>
         <h1>
-          <EditableItem data={this.props.design.title} ref="title" className="designName"/> 
+          <EditableItem data={this.props.design.title} changeCallback={ this.setDesignTitle } ref="title" className="designName"/> 
         </h1>
         <span ref="title" className="appInfos"> {fullTitle} </span>
         <span>
-          <button onClick={this.handleClick.bind(this)} className="details"> Details </button>
+          <button onClick={this.toggleDesignCard.bind(this)} className="details"> Details </button>
         </span>
         <span>
           <button onClick={this.handleClick.bind(this)} className="download"> Download </button>
@@ -68,6 +90,9 @@ class MainToolBar extends RxReact.Component {
         <span className="otherStuff">
           <button onClick={this.handleClick.bind(this)} className="options"> options </button>
         </span>
+
+        {designCardWrapper}
+
       </div>
     );
   }

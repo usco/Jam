@@ -31,7 +31,14 @@ let EditableItem = React.createClass({
       this.setState({isEditMode: false});
     },
     handleChange: function (evt) {
-      this.setState({data: evt.target.value});
+      //this.setState({data: evt.target.value});
+      this.onChangeItem(evt.target.value)
+    },
+    onChangeItem: function(value){
+      this.setState({data:value});
+      if(this.props.changeCallback){
+        this.props.changeCallback(value);
+      }
     },
 
     componentWillReceiveProps:function(nextProps){
