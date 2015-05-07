@@ -1,9 +1,36 @@
+/*
+  #f5f5f5 //ultimaker site pale blue
+*/
 #root{
   font-family: 'Open Sans', sans-serif;
+  /*-webkit-transition: opacity 0.5s ease-in;
+  opacity:1;*/
+  
+  overflow:hidden;
+  
+  /*make things unselectable, cross browser*/
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+
+}
+
+.jam {
+  background-color:#f5f5f5;
+}
+
+.jam input[type=text]{
+  background-color:#f5f5f5;
+}
+.jam input[type=number]{
+  background-color:#f5f5f5;
 }
 
 .titleBar{
-  background: white;
+  background: #f5f5f5;
   width:'100%';
   height:'100%';
   padding: 0;/*5 0 0 10; */
@@ -22,7 +49,7 @@
 
 /* text entry*/
 .titleBar input[type=text]{
-  color:red;
+  color:#60c4f8;
   outline: none;
   font-size: 1.1em;
   font-weight: 500;
@@ -112,4 +139,56 @@
   height: 128px;
   left: 0px;
   bottom: 48px;
+}
+
+
+
+/*//////////////*/
+/*generic styling*/
+.fadesIn{
+  opacity: 0;
+  transition: opacity 0.4s ease-in;
+  -ms-transition: opacity 0.4s ease-in;
+  -moz-transition: opacity 0.4s ease-in;
+  -webkit-transition: opacity 0.4s ease-in;
+}
+
+.fadesOut{
+  opacity: 1;
+  transition: opacity 0.4s ease-out;
+  -ms-transition: opacity 0.4s ease-out;
+  -moz-transition: opacity 0.4s ease-out;
+  -webkit-transition: opacity 0.4s ease-out;
+}
+
+/*//////////////*/
+/*design card wrapper overlay*/
+.designCardWrapper{
+}
+
+
+.designCard{
+  position: absolute;
+  max-height: 90%;
+  color: #f5f5f5;
+  padding: 10px;
+  margin: 10px;
+  font-size: 0.8em;
+  background: #60c4f8;
+  z-index: 1;
+}
+.designCard h1{
+  padding: 5px;
+  padding-bottom: 10px;
+  font-weight: bold;
+  margin: 0px;
+}
+
+.designCard section{
+  margin: 5px;
+}
+
+.designCard .version{
+  font-size: 0.8em;
+  padding: 10px;
 }
