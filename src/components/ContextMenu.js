@@ -59,12 +59,14 @@ export default class ContextMenu extends React.Component {
      paddingLeft:`${level*20}px`
     };
 
+    // {entry.items ? self.renderMenuEntries(entry.items, 1) : ''}
+
     actions.map(function(entry){
       entriesDom.push(
         <li style={offsetStyle}> 
           <button onClick={self.handleEntryClick.bind(self,entry.action)}> {entry.name} </button> 
           {entry.items ? '>' : ''}
-          {entry.items ? self.renderMenuEntries(entry.items, 1) : ''}
+         
         </li>
       )
     });
@@ -77,7 +79,6 @@ export default class ContextMenu extends React.Component {
       left: this.state.position.x,
       top: this.state.position.y,
       position: 'fixed',
-      /*background:'orange',*/
     };
 
     let menuEntriesStyle = {
