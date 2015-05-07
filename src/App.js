@@ -53,7 +53,7 @@ import ContextMenu from './components/ContextMenu'
 
 ////TESTING-OVER
 import * as blar from './core/fooYeah'
-import {setEntityTransforms, deleteEntities, duplicateEntities } from './actions/entityActions'
+import {setEntityTransforms, setEntityColor, deleteEntities, duplicateEntities } from './actions/entityActions'
 import {setToTranslateMode, setToRotateMode, setToScaleMode} from './actions/transformActions'
 import {showContextMenu, hideContextMenu} from './actions/appActions'
 import {setDesignData} from './actions/designActions'
@@ -219,6 +219,10 @@ export default class App extends React.Component {
       self._tempForceDataUpdate();
     });
 
+    setEntityColor.subscribe( function(val){
+      self.setEntityColor(val.entity, val.color);
+    });
+
     deleteEntities.subscribe(function(entities){
       self.removeEntityInstances(entities);
       //not sure this should be here
@@ -234,7 +238,7 @@ export default class App extends React.Component {
       self.selectEntities(dupes)
     })
 
-    setDesignData.subscribe(self.setDesignData.bind(self));
+    setDesignData.debounce(500).subscribe(self.setDesignData.bind(self));
 
     /////This is ok here ??
     ///////////
@@ -391,7 +395,6 @@ export default class App extends React.Component {
         self.addEntityInstance(entityInstance);
         }
       );
-
     }
 
     this.kernel.loadDesign(uri,options)
@@ -399,6 +402,18 @@ export default class App extends React.Component {
   }
   
   //-------COMMANDS OR SOMETHING LIKE THEM -----
+
+  //this helpers forces a serialization, should be a watcher 
+  _serializeState(){
+  }
+
+  _serializeAssemblyState(){
+  }  
+
+  _serializeBomState(){
+    this.kernel.saveAssemblyState();
+  }
+
   setDesignData(data){
     log.info("setting design data", data);
 
@@ -406,6 +421,7 @@ export default class App extends React.Component {
     this.setState({
       design:design
     })
+
     //FIXME: horrible
     this.kernel.saveDesignInfos(design);
   }
@@ -416,10 +432,18 @@ export default class App extends React.Component {
     log.info("selecting entitites",entities)
     let entities = entities || [];
     if(entities.constructor !== Array) entities = [entities]
+    entities.map(function(entity){
+      //FIXME : not right, modifying original data
+      //FIXME: also not ok to add fields like this
+      entity._selected = true;
+      return entity
+    })
+
     this.setState({
       selectedEntities:entities
     });
-    
+
+    this._tempForceDataUpdate();
   }
 
   //FIXME; this should be a command or something
@@ -458,6 +482,20 @@ export default class App extends React.Component {
     }*/
 
     this.setState({_entitiesById:_entitiesById});
+  }
+
+  setEntityColor( entity, color ){
+    log.debug("setting entity color",entity, color)
+    if(!color) return;
+    let _entitiesById = this.state._entitiesById;
+    let tgtEntity     = _entitiesById[entity.iuid];
+
+    //let currentScale = tgtEntity.sca;
+
+    if(!tgtEntity) return;
+    tgtEntity.color = color;
+    this.setState({_entitiesById:_entitiesById});
+    this._tempForceDataUpdate();
   }
 
   //FIXME; this should be a command or something
@@ -505,9 +543,6 @@ export default class App extends React.Component {
       //FIXME: this is redundant  
       self.addEntityInstance(instance);
     });
-
-    
-
 
     self._tempForceDataUpdate();
 
@@ -588,7 +623,7 @@ export default class App extends React.Component {
       .map( register )
       .map( showIt )
       .map( function(klassAndInstance){
-        klassAndInstance.instance.pos[2]+=20;
+        //klassAndInstance.instance.pos[2]+=20;
         return klassAndInstance;
       })
         .catch(handleLoadError)
@@ -663,6 +698,8 @@ export default class App extends React.Component {
           meshInstance.position.fromArray( entity.pos )
           meshInstance.rotation.fromArray( entity.rot );
           meshInstance.scale.fromArray(  entity.sca );
+
+          meshInstance.material.color.set( entity.color );
 
           self._meshInjectPostProcess( meshInstance );
           

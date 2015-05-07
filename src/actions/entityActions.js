@@ -61,6 +61,11 @@ export let deleteEntities = createAction();
 /*duplicate given entitites*/
 export let duplicateEntities = createAction();
 
+/*set entity color*/
+export let setEntityColor = createAction();
+
+
+
 //import {newTodoCursor, todosCursor} from '../core/testState'
 
 //import stateTree from '../core/_stateTree'
