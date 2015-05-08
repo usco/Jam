@@ -655,6 +655,7 @@ export default class App extends React.Component {
     let glview   = this.refs.glview;
     let assembly = this.kernel.activeAssembly;
     let entries  = assembly.children;
+    let selectedEntities = this.state.selectedEntities;
 
     /*function that provides a mapping between an entity and its visuals (in this case 
     // a 3d object/mesh)
@@ -711,7 +712,7 @@ export default class App extends React.Component {
       });
     };
 
-    glview.forceUpdate(entries, mapper.bind(this));
+    glview.forceUpdate(entries, mapper.bind(this), selectedEntities);
   }
 
   selectedMeshesChangedHandler( selectedMeshes ){
