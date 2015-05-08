@@ -14,6 +14,7 @@ import EditableItem from './EditableItem'
 import DesignCard   from './DesignCard'
 
 import {setDesignData} from '../actions/designActions'
+import {undo,redo} from '../actions/appActions'
 
 
 class MainToolBar extends RxReact.Component {
@@ -49,6 +50,10 @@ class MainToolBar extends RxReact.Component {
   render() {
     //log.info("bla",this.props)
     let fullTitle = `(${this.props.appInfos.name} v  ${this.props.appInfos.version})`;
+    let history   = this.props.history;
+    //disabled={!disabled}
+
+
     let titleStyle = {};
     /*  width:"100%",
       padding: "5 0 0 10"
@@ -74,6 +79,12 @@ class MainToolBar extends RxReact.Component {
         <span>
           <button onClick={this.toggleDesignCard.bind(this)} className="details"> Details </button>
         </span>
+
+        <span>
+          <button disabled={false} onClick={undo} className="undo"> Undo </button> 
+          <button disabled={false} onClick={redo} className="redo"> Redo </button> 
+        </span>
+
         <span>
           <button onClick={this.handleClick.bind(this)} className="download"> Download </button>
         </span>

@@ -49,13 +49,11 @@ import state from './state'
 import BomView from './components/Bom/BomView'
 import ContextMenu from './components/ContextMenu'
 
-
-
-////TESTING-OVER
+////TESTING
 import * as blar from './core/fooYeah'
 import {setEntityTransforms, setEntityColor, deleteEntities, duplicateEntities } from './actions/entityActions'
 import {setToTranslateMode, setToRotateMode, setToScaleMode} from './actions/transformActions'
-import {showContextMenu, hideContextMenu} from './actions/appActions'
+import {showContextMenu, hideContextMenu, undo, redo} from './actions/appActions'
 import {setDesignData} from './actions/designActions'
 
 let commands = {
@@ -85,6 +83,28 @@ export default class App extends React.Component {
     //temporary
     this.kernel.dataApi.store = this.assetManager.stores["xhr"];
     this.kernel.assetManager  = this.assetManager;
+
+    let self = this
+    let oldSetState = this.setState.bind(this);
+    this._history   = []
+    this._historyIdx= 0;
+
+    this.setState   = function(value, callback, alterHistory=true){
+      function callbackWrapper(...params){
+        if(callback) callback(params);
+      }
+      
+      oldSetState(value, callback);
+      if(alterHistory){
+        let oldState = JSON.parse(JSON.stringify(self.state))//,function(key,val){
+        //  console.log("reviving state")
+        //});//Object.assign({},self.state);
+        self._history.push(oldState);
+        self._historyIdx = self._history.length-1;
+      }
+     
+      
+    } 
   }
   
   componentDidMount(){
@@ -293,6 +313,40 @@ export default class App extends React.Component {
     });
 
 
+    undo.subscribe(function(){
+      console.log("UNDO")
+      let lastState = self._history[self._historyIdx-1];
+      console.log("revert state to ",lastState)
+      if(!lastState) return;
+
+      function afterSetState(){
+        self._tempForceDataUpdate();
+      }
+      self._historyIdx-=1;
+      self.setState(lastState,afterSetState,false)
+      
+    });
+
+    redo.subscribe(function(){
+      console.log("REDO")
+
+      if(self._historyIdx !== self._history.length-1){
+        let prevState = self._history[self._historyIdx+1];
+        console.log("revert state to ",prevState)
+        if(prevState){
+          function afterSetState(){
+            self._tempForceDataUpdate();
+          }
+          self._historyIdx +=1;
+          self.setState(prevState,null,false)
+          
+          //self._tempForceDataUpdate()
+        }
+      }
+
+    })
+
+
   }
 
   componentWillUnmount(){
@@ -425,7 +479,6 @@ export default class App extends React.Component {
     //FIXME: horrible
     this.kernel.saveDesignInfos(design);
   }
-
 
   //FIXME; this should be a command or something
   selectEntities(entities){
@@ -648,7 +701,7 @@ export default class App extends React.Component {
   _tempForceDataUpdate(){
     let glview   = this.refs.glview;
     let assembly = this.kernel.activeAssembly;
-    let entries  = assembly.children;
+    let entries  = this.state._entities;//assembly.children;
     let selectedEntities = this.state.selectedEntities;
 
     /*function that provides a mapping between an entity and its visuals (in this case 
@@ -775,7 +828,11 @@ export default class App extends React.Component {
 
     return (
         <div ref="wrapper" style={wrapperStyle} className="Jam">
-          <MainToolbar design={this.state.design} appInfos={this.state.appInfos} style={toolbarStyle}> </MainToolbar>
+          <MainToolbar 
+            design={this.state.design} 
+            appInfos={this.state.appInfos} 
+            history ={this._history}
+            style={toolbarStyle}> </MainToolbar>
           <ThreeJs ref="glview"/>
 
           <div ref="testArea" style={testAreaStyle} className="toolBarBottom">
