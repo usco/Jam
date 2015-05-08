@@ -432,12 +432,6 @@ export default class App extends React.Component {
     log.info("selecting entitites",entities)
     let entities = entities || [];
     if(entities.constructor !== Array) entities = [entities]
-    entities.map(function(entity){
-      //FIXME : not right, modifying original data
-      //FIXME: also not ok to add fields like this
-      entity._selected = true;
-      return entity
-    })
 
     this.setState({
       selectedEntities:entities
