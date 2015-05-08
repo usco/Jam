@@ -590,6 +590,8 @@ for tap/toubleTaps etc*/
     ////just for testing
     let self = this;
 
+    /*
+    //THIS WORKS
     let geometry =new THREE.TorusKnotGeometry( 50, 10, 128, 16);
     let cMesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color:"#FFFF00"}));
     self.scene.add(cMesh)
@@ -620,7 +622,7 @@ for tap/toubleTaps etc*/
     //outlineMesh.quaternion = mesh1.quaternion;
     outlineMesh.material.depthTest = false;
 
-    self.outScene.add(outlineMesh);
+    self.outScene.add(outlineMesh);*/
   }
 
   selectMeshes(event){
@@ -723,7 +725,7 @@ for tap/toubleTaps etc*/
   
 
   */
-  forceUpdate( data , mapper ){
+  forceUpdate( data , mapper, selectedEntities ){
     let dynamicInjector = new THREE.Object3D();//all dynamic mapped objects reside here
     let self = this;
 
@@ -819,43 +821,57 @@ for tap/toubleTaps etc*/
           mesh.material.color = mesh.material.oldColor
         }
       }*/
+      console.log(selectedEntities)
+      if(selectedEntities.indexOf(entity) !== -1){
+        
+        let geometry = mesh.geometry;
 
-      if(entity._selected){
-        return;
-        //let mesh = mesh;
-        let geometry =new THREE.TorusKnotGeometry( 50, 10, 128, 16);
+        
+        
+        /*let cMesh = new THREE.Mesh(new THREE.TorusKnotGeometry( 50, 10, 128, 16), new THREE.MeshPhongMaterial({color:"#FFFF00"}));
+        self.scene.add(cMesh);
+        geometry = cMesh.geometry;*/
+        
 
-        let cMesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({color:"#FFFF00"}));
-        self.scene.add(cMesh)
-        //let geometry = mesh.geometry;
+         let matFlat = new THREE.MeshBasicMaterial({color: 0xffffff});
+          let maskMesh = new THREE.Mesh( geometry, matFlat );
+          //maskMesh.quaternion = mesh.quaternion;
+          maskMesh.position.fromArray( entity.pos );
+          maskMesh.rotation.fromArray( entity.rot);
+          maskMesh.scale.fromArray( entity.sca );
 
-        /*let matFlat = new THREE.MeshBasicMaterial({color: 0xffffff});
-        let maskMesh = new THREE.Mesh( geometry, matFlat );
-        //maskMesh.quaternion = mesh.quaternion;
-        self.maskScene.add( maskMesh );*/
+          self.maskScene.add( maskMesh );
 
+          let uniforms = {
+            offset: {
+              type: "f",
+              value: 0.5
+            },
+            color:{ 
+              type: "c", 
+              value: new THREE.Color("#ff2500")//[1.0,0.0,0.0] 
+            }
+          };
 
-        let uniforms = {
-          offset: {
-            type: "f",
-            value: 0.5
-          }
-        };
+          let shader = require("./deps/post-process/OutlineShader");
+          let outShader = shader['outline'];
 
-        let shader = require("./deps/post-process/OutlineShader");
-        let outShader = shader['outline'];
+          let matShader = new THREE.ShaderMaterial({
+            uniforms: uniforms,
+            vertexShader: outShader.vertex_shader,
+            fragmentShader: outShader.fragment_shader
+          });
 
-        let matShader = new THREE.ShaderMaterial({
-          uniforms: uniforms,
-          vertexShader: outShader.vertex_shader,
-          fragmentShader: outShader.fragment_shader
-        });
+          let outlineMesh = new THREE.Mesh(geometry, matShader);
+          //outlineMesh.quaternion = mesh1.quaternion;
+          outlineMesh.material.depthTest = false;
 
-        let outlineMesh = new THREE.Mesh(geometry, matShader);
-        //outlineMesh.quaternion = mesh1.quaternion;
-        outlineMesh.material.depthTest = false;
+          outlineMesh.position.fromArray( entity.pos );
+          outlineMesh.rotation.fromArray( entity.rot);
+          outlineMesh.scale.fromArray( entity.sca );
 
-        self.outScene.add(outlineMesh);
+          self.outScene.add(outlineMesh);
+
       }
 
       //console.log("MAPPINGS", self, self._mappings)
