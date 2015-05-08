@@ -9,8 +9,10 @@ let LabeledGrid = helpers.grids.LabeledGrid;
 let ShadowPlane = helpers.planes.ShadowPlane;
 let CamViewControls= helpers.CamViewControls;
 
-import CopyShader from './deps/post-process/CopyShader'
-import FXAAShader from './deps/post-process/FXAAShader'
+import CopyShader     from './deps/post-process/CopyShader'
+import FXAAShader     from './deps/post-process/FXAAShader'
+import vignetteShader from './deps/post-process/vignetteShader'
+
 
 import EffectComposer from './deps/post-process/EffectComposer'
 import ShaderPass from './deps/post-process/ShaderPass'
@@ -80,7 +82,7 @@ class ThreeJs extends React.Component{
       cameras:[
         {
           name:"bla",
-          pos:[75,60,145] ,//[100,-100,100],//72.31452486225086, y: 61.11051151952455, z: 145.03832209374463
+          pos:[75,75,145] ,//[100,-100,100],//72.31452486225086, y: 61.11051151952455, z: 145.03832209374463
           up:[0,0,1],
           lens:{
             fov:45,
@@ -140,7 +142,7 @@ class ThreeJs extends React.Component{
     } else {
       renderer = new THREE.WebGLRenderer( {antialias:false} );
     }
-    renderer.setClearColor( 0xffffff );
+    renderer.setClearColor( "#f5f5f5" );
     renderer.shadowMapEnabled = this.config.renderer.shadowMapEnabled;
     renderer.shadowMapAutoUpdate = this.config.renderer.shadowMapAutoUpdate;
     renderer.shadowMapSoft = this.config.renderer.shadowMapSoft;
@@ -201,8 +203,8 @@ class ThreeJs extends React.Component{
     //camPos[2] = -camPos[2]
 
     let camViewCamConfig = {
-        //width:256,
-        //height:128,
+        width:512,
+        height:256,
         pos:camPos,
         up:[0,0,1]
     }
@@ -233,7 +235,6 @@ class ThreeJs extends React.Component{
     this._animate();
 
    
-
     ///////////:setup ui interactions
     this.resizer = windowResizes(1);
 
@@ -339,12 +340,6 @@ class ThreeJs extends React.Component{
     'mocha' : assetpath('creamMocha.png'),
     'pink' : assetpath('creamPink.png'),
     },*/
-
-
-    
-    //window.addEventListener("resize", this.resizeHandler.bind(this) );
-    //container.addEventListener( "click", this.handleTap.bind(this), false );
-    //this.domElement.addEventListener( "mousedown", onPointerDown, false );
 
     PreventScrollBehaviour.attach( container );
     this._setupExtras();
@@ -538,6 +533,7 @@ for tap/toubleTaps etc*/
         format: THREE.RGBAFormat,
         stencilBuffer: true
     };
+
     
     let camera = this.camera;
     let renderer = this.renderer;
@@ -550,34 +546,81 @@ for tap/toubleTaps etc*/
 
     //setup composer
     let composer    = new EffectComposer(renderer);
-    //composer.renderTarget1.stencilBuffer = true;
+    composer.renderTarget1.stencilBuffer = true;
     composer.renderTarget2.stencilBuffer = true;
 
     let normal      = new RenderPass(scene, camera);
-    /*let outline     = new RenderPass(outScene, camera);
-    outline.clear = false;
-    
-    let mask        = new MaskPass(maskScene, camera);
-    mask.inverse = true;
-    let clearMask   = new THREE.ClearMaskPass();*/
-    let copyPass    = new THREE.ShaderPass(THREE.CopyShader);
-    let fxaaPass    = new THREE.ShaderPass( THREE.FXAAShader );
+    let outline     = new RenderPass(outScene, camera);
+    let maskPass        = new THREE.MaskPass(maskScene, camera);
+    maskPass.inverse = true;
+    let clearMask   = new THREE.ClearMaskPass();
+    let copyPass     = new THREE.ShaderPass(THREE.CopyShader);
+    let fxaaPass     = new THREE.ShaderPass( THREE.FXAAShader );
+    let vignettePass = new THREE.ShaderPass( THREE.VignetteShader );
+
     fxaaPass.uniforms[ 'resolution' ].value.set( 1 / window.innerWidth*window.devicePixelRatio, 1 / window.innerHeight*window.devicePixelRatio );
+    vignettePass.uniforms[ "offset" ].value = 0.95;
+    vignettePass.uniforms[ "darkness" ].value = 0.9;
+
+    renderer.autoClear = false;
+    //renderer.autoClearStencil = false;
+    
+    outline.clear = false;  
+    //normal.clear = false;    
 
     composer.addPass(normal);
-    composer.addPass(fxaaPass);
+    composer.addPass(maskPass);
+    composer.addPass(outline);
+    
+    composer.addPass(clearMask);
+    //composer.addPass(vignettePass);
+    //composer.addPass(fxaaPass);
     composer.addPass(copyPass);
 
     let lastPass = composer.passes[composer.passes.length-1];
     lastPass.renderToScreen = true;
-    console.log(composer)
-    /*composer.addPass(mask);
-    composer.addPass(outline);
-    composer.addPass(clearMask);
-    composer.addPass(copyPass);*/
-
+    
     this.fxaaPass = fxaaPass;
     this.composer = composer; 
+    this.outScene = outScene;
+    this.maskScene= maskScene;
+
+
+
+    ////just for testing
+    let self = this;
+
+    let geometry =new THREE.TorusKnotGeometry( 50, 10, 128, 16);
+    let cMesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color:"#FFFF00"}));
+    self.scene.add(cMesh)
+    //let geometry = mesh.geometry;
+
+    let matFlat = new THREE.MeshBasicMaterial({color: 0xffffff});
+    let maskMesh = new THREE.Mesh( geometry, matFlat );
+    //maskMesh.quaternion = mesh.quaternion;
+    self.maskScene.add( maskMesh );
+
+    let uniforms = {
+      offset: {
+        type: "f",
+        value: 0.5
+      }
+    };
+
+    let shader = require("./deps/post-process/OutlineShader");
+    let outShader = shader['outline'];
+
+    let matShader = new THREE.ShaderMaterial({
+      uniforms: uniforms,
+      vertexShader: outShader.vertex_shader,
+      fragmentShader: outShader.fragment_shader
+    });
+
+    let outlineMesh = new THREE.Mesh(geometry, matShader);
+    //outlineMesh.quaternion = mesh1.quaternion;
+    outlineMesh.material.depthTest = false;
+
+    self.outScene.add(outlineMesh);
   }
 
   selectMeshes(event){
@@ -663,6 +706,9 @@ for tap/toubleTaps etc*/
     this.camViewRenderer.render( this.camViewScene,this.camViewCam);
 
     this.composer.render();
+
+    //this.renderer.render( this.outScene, this.camera ) 
+    //this.renderer.render( this.scene, this.camera ) 
   }
 
   /*this would actually be close to react's standard "render"
@@ -680,6 +726,20 @@ for tap/toubleTaps etc*/
   forceUpdate( data , mapper ){
     let dynamicInjector = new THREE.Object3D();//all dynamic mapped objects reside here
     let self = this;
+
+    let children = this.outScene.children;
+    for(let i = children.length-1;i>=0;i--){
+        let child = children[i];
+        this.outScene.remove(child);
+    };
+
+    children = this.maskScene.children;
+    for(let i = children.length-1;i>=0;i--){
+        let child = children[i];
+        this.maskScene.remove(child);
+    };
+
+
 
     if(data && data.length>0){
       //console.log("NEW",data[0].pos)
@@ -750,7 +810,7 @@ for tap/toubleTaps etc*/
 
       self._mappings[entity.iuid] = mesh;
 
-      if(entity._selected){
+      /*if(entity._selected){
         mesh.material.oldColor = mesh.material.color;
         mesh.material.color.set("#FF0000")
       }else
@@ -758,6 +818,44 @@ for tap/toubleTaps etc*/
         if(mesh.material.oldColor){
           mesh.material.color = mesh.material.oldColor
         }
+      }*/
+
+      if(entity._selected){
+        return;
+        //let mesh = mesh;
+        let geometry =new THREE.TorusKnotGeometry( 50, 10, 128, 16);
+
+        let cMesh = new THREE.Mesh(geometry, new THREE.MeshBasicMaterial({color:"#FFFF00"}));
+        self.scene.add(cMesh)
+        //let geometry = mesh.geometry;
+
+        /*let matFlat = new THREE.MeshBasicMaterial({color: 0xffffff});
+        let maskMesh = new THREE.Mesh( geometry, matFlat );
+        //maskMesh.quaternion = mesh.quaternion;
+        self.maskScene.add( maskMesh );*/
+
+
+        let uniforms = {
+          offset: {
+            type: "f",
+            value: 0.5
+          }
+        };
+
+        let shader = require("./deps/post-process/OutlineShader");
+        let outShader = shader['outline'];
+
+        let matShader = new THREE.ShaderMaterial({
+          uniforms: uniforms,
+          vertexShader: outShader.vertex_shader,
+          fragmentShader: outShader.fragment_shader
+        });
+
+        let outlineMesh = new THREE.Mesh(geometry, matShader);
+        //outlineMesh.quaternion = mesh1.quaternion;
+        outlineMesh.material.depthTest = false;
+
+        self.outScene.add(outlineMesh);
       }
 
       //console.log("MAPPINGS", self, self._mappings)
