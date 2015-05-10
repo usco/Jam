@@ -88,19 +88,25 @@ export default class App extends React.Component {
     let oldSetState = this.setState.bind(this);
     this._history   = []
     this._historyIdx= 0;
+    this._undos  = []
+    this._redos  = []
 
     this.setState   = function(value, callback, alterHistory=true){
       function callbackWrapper(...params){
         if(callback) callback(params);
       }
-      
+
       oldSetState(value, callback);
       if(alterHistory){
         let oldState = JSON.parse(JSON.stringify(self.state))//,function(key,val){
-        //  console.log("reviving state")
+        console.log("adding history", self._history)
         //});//Object.assign({},self.state);
-        self._history.push(oldState);
-        self._historyIdx = self._history.length-1;
+
+        self._history.splice(self._historyIdx, 0, oldState);
+        self._historyIdx +=1;
+        //self._history.push(oldState);
+        //self._historyIdx = self._history.length-1;
+        self._undos.push( oldState);
       }
      
       
@@ -292,7 +298,7 @@ export default class App extends React.Component {
           }
          ]
       }
-
+      //TODO: this is ui state, not logic state
       self.setState({
         contextMenu:{
           active:active,
@@ -301,7 +307,7 @@ export default class App extends React.Component {
           selectedEntities:self.state.selectedEntities,
           actions,
         }
-      });
+      },null, false);
     });
 
     hideContextMenu.subscribe(function(requestData){
@@ -309,40 +315,55 @@ export default class App extends React.Component {
         contextMenu:{
           active:false,
         }
-      });
+      },null, false);
     });
 
 
     undo.subscribe(function(){
       console.log("UNDO")
-      let lastState = self._history[self._historyIdx-1];
+      /*let lastState = self._history[self._historyIdx-1];
       console.log("revert state to ",lastState)
       if(!lastState) return;
 
+     
+      self._historyIdx-=1;*/
       function afterSetState(){
         self._tempForceDataUpdate();
       }
-      self._historyIdx-=1;
-      self.setState(lastState,afterSetState,false)
+      if(self._undos.length<2) return;
+
+      let lastState = self._undos.pop()
+      self._redos.push(lastState)
+
+      let prevState = self._undos[self._undos.length-1] //.pop()
+      self.setState(prevState, afterSetState,false)
       
     });
 
     redo.subscribe(function(){
       console.log("REDO")
 
-      if(self._historyIdx !== self._history.length-1){
-        let prevState = self._history[self._historyIdx+1];
-        console.log("revert state to ",prevState)
+      function afterSetState(){
+        self._tempForceDataUpdate();
+      }
+      let lastState = self._redos.pop();
+      if(!lastState) return;
+
+      self._undos.push(lastState);
+      self.setState(lastState,afterSetState,false)
+
+      /*if(self._historyIdx !== self._history.length-1){
+        let prevState = self._history[self._historyIdx];
+        console.log("revert state to ",prevState, self._historyIdx)
         if(prevState){
           function afterSetState(){
             self._tempForceDataUpdate();
           }
           self._historyIdx +=1;
-          self.setState(prevState,null,false)
-          
-          //self._tempForceDataUpdate()
+          self.setState(prevState,afterSetState,false)
+
         }
-      }
+      }*/
 
     })
 
@@ -432,7 +453,7 @@ export default class App extends React.Component {
     function logError( err){
       log.error(err)
     }
-    function logDone( data) {
+    function onDone( data) {
       log.info("DONE",data);
       self._tempForceDataUpdate();
       //FIXME: hack
@@ -446,13 +467,16 @@ export default class App extends React.Component {
       //FIXME: godawful hack because we have multiple "central states" for now
       self.kernel.activeAssembly.children.map(
         function(entityInstance){
-        self.addEntityInstance(entityInstance);
+          self.addEntityInstance(entityInstance);
         }
       );
+
+      //FIXME : half assed hack
+      undo()
     }
 
     this.kernel.loadDesign(uri,options)
-    .subscribe( logNext, logError, logDone);
+      .subscribe( logNext, logError, onDone);
   }
   
   //-------COMMANDS OR SOMETHING LIKE THEM -----
@@ -486,8 +510,11 @@ export default class App extends React.Component {
     let entities = entities || [];
     if(entities.constructor !== Array) entities = [entities]
 
+    let ids = entities.map( entity => entity.iuid)
+
     this.setState({
-      selectedEntities:entities
+      selectedEntities:entities,
+      selectedEntitiesIds:ids
     });
 
     this._tempForceDataUpdate();
@@ -495,7 +522,7 @@ export default class App extends React.Component {
 
   //FIXME; this should be a command or something
   setEntityTransforms(entity, transforms){
-    log.info("setting transforms of",entity, "to", transforms)
+    log.debug("setting transforms of",entity, "to", transforms)
 
     let _entitiesById = this.state._entitiesById;
     let tgtEntity     = _entitiesById[entity.iuid];
@@ -528,7 +555,17 @@ export default class App extends React.Component {
       });
     }*/
 
-    this.setState({_entitiesById:_entitiesById});
+    //this.setState({_entitiesById:_entitiesById});
+    //FIXME : not sure
+    let _entities = [];
+    for(let key in _entitiesById) {
+      let value = _entitiesById[key]
+      _entities.push( value )
+    }
+    this.setState({
+      _entities:_entities,
+      _entitiesById:_entitiesById
+    });
   }
 
   setEntityColor( entity, color ){
@@ -541,7 +578,18 @@ export default class App extends React.Component {
 
     if(!tgtEntity) return;
     tgtEntity.color = color;
-    this.setState({_entitiesById:_entitiesById});
+
+    //FIXME : not sure
+    let _entities = [];
+    for(let key in _entitiesById) {
+      let value = _entitiesById[key]
+      _entities.push( value )
+    }
+    this.setState({
+      _entities:_entities,
+      _entitiesById:_entitiesById
+    });
+    
     this._tempForceDataUpdate();
   }
 
@@ -561,11 +609,15 @@ export default class App extends React.Component {
     log.info("adding entity instance", instance)
     let nEntities  = this.state._entities;
     nEntities.push( instance )
-    this.setState({_entities:nEntities})
+    //this.setState({_entities:nEntities})
 
     let _entitiesById = this.state._entitiesById;
     _entitiesById[instance.iuid] = instance;
-    this.setState({_entitiesById:_entitiesById})
+
+    this.setState({
+      _entitiesById:_entitiesById,
+      _entities:nEntities
+    })
   }
 
   /*remove an entity : it actually only 
@@ -699,10 +751,14 @@ export default class App extends React.Component {
 
   /*temporary method to force 3d view updates*/
   _tempForceDataUpdate(){
+    let self     = this;
     let glview   = this.refs.glview;
     let assembly = this.kernel.activeAssembly;
     let entries  = this.state._entities;//assembly.children;
-    let selectedEntities = this.state.selectedEntities;
+    
+    let selectedEntities = this.state.selectedEntitiesIds.map(entityId => self.state._entitiesById[entityId])
+    let selectedEntitiesIds = this.state.selectedEntitiesIds;
+
 
     /*function that provides a mapping between an entity and its visuals (in this case 
     // a 3d object/mesh)
@@ -759,7 +815,7 @@ export default class App extends React.Component {
       });
     };
 
-    glview.forceUpdate(entries, mapper.bind(this), selectedEntities);
+    glview.forceUpdate(entries, mapper.bind(this), selectedEntitiesIds);
   }
 
   selectedMeshesChangedHandler( selectedMeshes ){
@@ -824,7 +880,9 @@ export default class App extends React.Component {
     //TODO: do this elsewhere
     window.document.title = `${this.state.design.title} -- Jam!`;
 
-    let contextmenuSettings = this.state.contextMenu;
+    let self=this
+    let contextmenuSettings = this.state.contextMenu
+    let selectedEntities = this.state.selectedEntitiesIds.map(entityId => self.state._entitiesById[entityId])
 
     return (
         <div ref="wrapper" style={wrapperStyle} className="Jam">
@@ -832,11 +890,13 @@ export default class App extends React.Component {
             design={this.state.design} 
             appInfos={this.state.appInfos} 
             history ={this._history}
+            undos = {this._undos}
+            redos = {this._redos}
             style={toolbarStyle}> </MainToolbar>
           <ThreeJs ref="glview"/>
 
           <div ref="testArea" style={testAreaStyle} className="toolBarBottom">
-            <EntityInfos entities={this.state.selectedEntities} debug={false}/>
+            <EntityInfos entities={selectedEntities} debug={false}/>
           </div>
 
           <ContextMenu settings={contextmenuSettings} />

@@ -32,9 +32,22 @@ let state = {
 
   design:{
     title:"untitled design",
-    description:"",
+    name:"untitledDesign",
+    description:"Some description",
+    version: undefined,//"0.0.0",
+    authors:[
+      {name:"foo","email":"gna","url":"http://foo"},
+      {name:"bar","email":"yup","url":"https://secure"}
+    ],
+    tags:["foo","bar"],
+    licenses:[ 
+      "GPLV3",
+      "MIT"],
+    meta:undefined,
+    _persisted:false//internal flag, do not serialize
   },
   selectedEntities:[],
+  selectedEntitiesIds:[],
   assembly:[
   ],
   //special, for testing

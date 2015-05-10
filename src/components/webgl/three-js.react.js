@@ -822,7 +822,7 @@ for tap/toubleTaps etc*/
         }
       }*/
       console.log(selectedEntities)
-      if(selectedEntities.indexOf(entity) !== -1){
+      if(selectedEntities.indexOf(entity.iuid) !== -1){
         
         let geometry = mesh.geometry;
 

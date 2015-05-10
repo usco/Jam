@@ -65,7 +65,7 @@ class EntityInfos extends RxReact.Component {
   }
 
   handleChange(type, index, event) {
-    console.log(type, index, parseFloat(event.target.value));
+    //console.log(type, index, parseFloat(event.target.value));
     //this.setState({value: event.target.value});
     let entity= this.props.entities[0] ;
     let transforms = {

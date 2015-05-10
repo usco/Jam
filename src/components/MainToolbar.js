@@ -70,6 +70,11 @@ class MainToolBar extends RxReact.Component {
       </div>);
     }
 
+    //console.log("this.props.undos.length===0",this.props.undos.length===0, this.props.undos.length, this.props.undos)
+
+    let undosDisabled = this.props.undos.length===0;//
+    let redosDisabled = this.props.redos.length===0;
+
     return (
       <div className="titleBar" style={titleStyle}>
         <h1>
@@ -81,8 +86,8 @@ class MainToolBar extends RxReact.Component {
         </span>
 
         <span>
-          <button disabled={false} onClick={undo} className="undo"> Undo </button> 
-          <button disabled={false} onClick={redo} className="redo"> Redo </button> 
+          <button disabled={undosDisabled} onClick={undo} className="undo"> Undo </button> 
+          <button disabled={redosDisabled} onClick={redo} className="redo"> Redo </button> 
         </span>
 
         <span>
