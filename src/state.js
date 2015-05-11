@@ -18,6 +18,9 @@ let state = {
     }
   },
   shortcuts:[
+    {keys:'⌘+z,ctrl+z', "command":'undo'},
+    {keys:'⌘+shift+z,ctrl+shift+z', "command":'redo'},
+
     {keys:'⌘+r,ctrl+d', "command":'duplicateEntities'},
     {keys:'delete,backspace'    , "command":'removeEntities'},
     {keys:'m'         , "command":'toTranslateMode'},

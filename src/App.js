@@ -57,6 +57,9 @@ import {showContextMenu, hideContextMenu, undo, redo} from './actions/appActions
 import {setDesignData} from './actions/designActions'
 
 let commands = {
+  "undo":undo,
+  "redo":redo,
+
   "removeEntities":deleteEntities,
   "duplicateEntities":duplicateEntities,
   "toTranslateMode":setToTranslateMode, 
@@ -107,6 +110,7 @@ export default class App extends React.Component {
         //self._history.push(oldState);
         //self._historyIdx = self._history.length-1;
         self._undos.push( oldState);
+        self._redos = [];
       }
      
       
@@ -122,7 +126,7 @@ export default class App extends React.Component {
         name: this.state.appInfos.name,
         version:pjson.version
       }  
-    });
+    },null,false);
     ////////////////
 
 
@@ -321,12 +325,6 @@ export default class App extends React.Component {
 
     undo.subscribe(function(){
       console.log("UNDO")
-      /*let lastState = self._history[self._historyIdx-1];
-      console.log("revert state to ",lastState)
-      if(!lastState) return;
-
-     
-      self._historyIdx-=1;*/
       function afterSetState(){
         self._tempForceDataUpdate();
       }
@@ -384,12 +382,6 @@ export default class App extends React.Component {
     });
     keymaster('F11', function(){ 
       //self.handleFullScreen();
-    });
-    keymaster('⌘+z,ctrl+z', function(){ 
-      //self.undo();
-    });
-    keymaster('⌘+shift+z,ctrl+shift+z', function(){ 
-      //self.redo();
     });
 
     //deal with all shortcuts
@@ -512,10 +504,14 @@ export default class App extends React.Component {
 
     let ids = entities.map( entity => entity.iuid)
 
-    this.setState({
-      selectedEntities:entities,
-      selectedEntitiesIds:ids
-    });
+    //if(ids !== this.state.selectedEntitiesIds){
+    //TODO: should it be serialized in history ?
+      this.setState({
+        selectedEntities:entities,
+        selectedEntitiesIds:ids
+      }, null, false); 
+    
+   
 
     this._tempForceDataUpdate();
   }
@@ -589,7 +585,7 @@ export default class App extends React.Component {
       _entities:_entities,
       _entitiesById:_entitiesById
     });
-    
+
     this._tempForceDataUpdate();
   }
 
@@ -597,10 +593,12 @@ export default class App extends React.Component {
   /*register a new entity type*/
   addEntityType( type ){
     log.info("adding entity type", type)
-    let nKlasses  = this.state._entityKlasses;
+    let nKlasses  = this.state._entityKlasses
     nKlasses.push( type )
+
+    //TODO: should it be part of the app's history 
     //this.setState({_entityKlasses:this.state._entityKlasses.push(type)})
-    this.setState({_entityKlasses:nKlasses})
+    this.setState({_entityKlasses:nKlasses},null, false)
   }
 
   //FIXME; this should be a command or something
