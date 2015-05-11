@@ -66,6 +66,16 @@
   outline: none;
 }
 
+.titlebar .history{
+    padding-left: 5px;
+  padding-right: 5px;
+}
+
+.titlebar .social{
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
 /*//////////////*/
 /*contextMenu*/
 .contextMenu{

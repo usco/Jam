@@ -72,7 +72,7 @@ class MainToolBar extends RxReact.Component {
 
     //console.log("this.props.undos.length===0",this.props.undos.length===0, this.props.undos.length, this.props.undos)
 
-    let undosDisabled = this.props.undos.length===0;//
+    let undosDisabled = this.props.undos.length<=1;//
     let redosDisabled = this.props.redos.length===0;
 
     return (
@@ -85,26 +85,32 @@ class MainToolBar extends RxReact.Component {
           <button onClick={this.toggleDesignCard.bind(this)} className="details"> Details </button>
         </span>
 
-        <span>
+        <span className="history">
           <button disabled={undosDisabled} onClick={undo} className="undo"> Undo </button> 
           <button disabled={redosDisabled} onClick={redo} className="redo"> Redo </button> 
         </span>
 
-        <span>
-          <button onClick={this.handleClick.bind(this)} className="download"> Download </button>
-        </span>
-        <div style={fooStyle}>
-          <button onClick={this.handleClick.bind(this)} className="viewOnYm"> View on YM </button>
-        </div>
-        <span>
-          <button onClick={this.handleClick.bind(this)} className="share"> Share </button>
-        </span>
-        <span>
-          <button onClick={this.handleClick.bind(this)} className="like"> Like </button>
+        <span className="social"> 
+          <span>
+            <button onClick={this.handleClick.bind(this)} className="download"> Download </button>
+          </span>
+          <div style={fooStyle}>
+            <button onClick={this.handleClick.bind(this)} className="viewOnYm"> View on YM </button>
+          </div>
+          <span>
+            <button onClick={this.handleClick.bind(this)} className="share"> Share </button>
+          </span>
+          <span>
+            <button onClick={this.handleClick.bind(this)} className="like"> Like </button>
+          </span>
         </span>
 
         <span className="otherStuff">
           <button onClick={this.handleClick.bind(this)} className="options"> options </button>
+        </span>
+
+        <span>
+
         </span>
 
         {designCardWrapper}
