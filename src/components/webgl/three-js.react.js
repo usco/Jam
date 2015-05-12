@@ -299,9 +299,18 @@ class ThreeJs extends React.Component{
       .subscribe( showContextMenu );
 
 
-    let extractObject = function(event){ return event.target.object}
+    function extractObject(event){ return event.target.object}
+    function extractTransforms(object){ 
+      return {
+        pos:mesh.position,
+        rot:mesh.rotation,
+        sca:mesh.scale,
+        object:object.userData,
+      }
+    }
     let objectsTransforms = Observable.fromEvent(this.transformControls, 'objectChange')
-      .map(extractObject);
+      .map(extractObject)
+      //.map(extractTransforms)
 
     this.objectsTransform$ = objectsTransforms;
     //TODO: , create an abstraction above channels/rx

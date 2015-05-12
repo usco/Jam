@@ -59,6 +59,9 @@ export let setEntityBBox = createAction();
 /*set entities as selectedd*/
 export let selectEntities = createAction();
 
+/*add new entities*/
+export let addEntities = createAction();
+
 /*delete given entities*/
 export let deleteEntities = createAction();
 

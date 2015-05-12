@@ -124,7 +124,7 @@ export default class App extends React.Component {
   }
 
   componentDidMount(){
-    var pjson = require('../package.json');
+    let pjson = require('../package.json');
     this.setState(
     {
       appInfos:{
@@ -146,11 +146,12 @@ export default class App extends React.Component {
     let self     = this;
 
     //get entities 
-    function entititesOnly( x ){
+    function entitiesOnly( x ){
       return (x.userData && x.userData.entity)
     }
 
     function getEntity( x ){
+      console.log(x)
       return x.userData.entity;
     }
 
@@ -158,7 +159,7 @@ export default class App extends React.Component {
       .defaultIfEmpty([])
       .subscribe(
         function(selections){
-          let res= selections.filter(entititesOnly).map(getEntity);
+          let res= selections.filter(entitiesOnly).map(getEntity);
           self.selectEntities(res)
         }
       )
@@ -173,6 +174,7 @@ export default class App extends React.Component {
     }
 
     function attributesToArrays(attrs){
+      console.log("here")
       let output= {};
       for(let key in attrs){
         output[key] = attrs[key].toArray();
@@ -187,6 +189,7 @@ export default class App extends React.Component {
     }
 
     function setEntityT(attrsAndEntity){
+      console.log("bla")
       let [transforms, entity] = attrsAndEntity;      
       setEntityTransforms({entity,transforms})
 
@@ -197,9 +200,13 @@ export default class App extends React.Component {
 
     let rawTranforms     =  glview.objectsTransform$
       .debounce(16.6666)
-      .filter(entititesOnly)
+      .filter(entitiesOnly)
       .share()
-      
+      /*.map(getEntity)
+      .map(extractAttributes)
+      .map(attributesToArrays)
+      .subscribe( setEntityT )*/
+
     let objectTransforms = rawTranforms 
       .map(extractAttributes)
       .map(attributesToArrays)
@@ -234,6 +241,52 @@ export default class App extends React.Component {
 
     //only load meshes if no designs need to be loaded 
     if(!singleDesign)  meshUrls.map(function( meshUrl ){ self.loadMesh(meshUrl) });
+
+
+    //////handle overall change?
+    /*let modelChanges$ = Observable.merge([
+      setEntityTransforms,
+      setEntityColor,
+      deleteEntities,
+      duplicateEntities,
+
+      setDesignData
+    ])*/
+
+    /*modelChanges$.subscribe(function(data){
+      console.log("hi there, the model changed!",data)
+    })*/
+
+    /*
+    let foo$ = Rx.Observable.combineLatest(
+      setEntityTransforms,
+      setEntityColor,
+      //deleteEntities,
+      //duplicateEntities,
+      function(transforms, color){
+        console.log("here")
+        let key = transforms.entity.iuid
+
+        let entities = {
+        }
+
+        entities[key] = {
+          name:transforms.entity.name,
+          t:transforms.transforms,
+          c:color.color
+        }
+
+        return entities
+      }
+    )
+   
+    foo$.subscribe(
+      function(data){
+        console.log("hi there, the model changed!",data)
+      },
+      function(bla){console.log("heredsf")},
+      function(bla){console.log("error")}
+      )*/
 
 
 
@@ -406,10 +459,6 @@ export default class App extends React.Component {
     for (var i = 0, f; f = data.data[i]; i++) {
         this.loadMesh( f, {display: true} );
     }
-  }
-  handleClick(event){
-    console.log("STATE", this.state);
-    console.log("bom", this.kernel.bom.bom)
   }
 
   //api 
