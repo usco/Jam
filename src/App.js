@@ -511,9 +511,8 @@ export default class App extends React.Component {
         selectedEntitiesIds:ids
       }, null, false); 
     
-   
-
     this._tempForceDataUpdate();
+    return entities;
   }
 
   //FIXME; this should be a command or something
@@ -552,14 +551,16 @@ export default class App extends React.Component {
     }*/
 
     //this.setState({_entitiesById:_entitiesById});
-    //FIXME : not sure
-    let _entities = [];
+    //FIXME : needs to be based on improved structure ?
+
+    let assemblyChildren = [];
     for(let key in _entitiesById) {
       let value = _entitiesById[key]
-      _entities.push( value )
+      assemblyChildren.push( value )
     }
+
     this.setState({
-      _entities:_entities,
+      assemblies_main_children:assemblyChildren,
       _entitiesById:_entitiesById
     });
   }
@@ -576,13 +577,13 @@ export default class App extends React.Component {
     tgtEntity.color = color;
 
     //FIXME : not sure
-    let _entities = [];
+    let assemblyChildren = [];
     for(let key in _entitiesById) {
       let value = _entitiesById[key]
-      _entities.push( value )
+      assemblyChildren.push( value )
     }
     this.setState({
-      _entities:_entities,
+      assemblies_main_children:assemblyChildren,
       _entitiesById:_entitiesById
     });
 
@@ -605,17 +606,21 @@ export default class App extends React.Component {
   /*save a new entity instance*/
   addEntityInstance( instance ){
     log.info("adding entity instance", instance)
-    let nEntities  = this.state._entities;
+    let nEntities  = this.state.assemblies_main_children
     nEntities.push( instance )
-    //this.setState({_entities:nEntities})
 
     let _entitiesById = this.state._entitiesById;
     _entitiesById[instance.iuid] = instance;
 
     this.setState({
       _entitiesById:_entitiesById,
-      _entities:nEntities
+      assemblies_main_children:nEntities
     })
+  }
+
+  addEntityInstanceTo( instance , parent){
+    let parent = parent || null
+
   }
 
   /*remove an entity : it actually only 
@@ -650,18 +655,17 @@ export default class App extends React.Component {
   //API
   loadMesh( uriOrData, options ){
     const DEFAULTS={
+      display:true,//addToAssembly
+      keepRawData:true
     }
-    var options     = options || {};
-    var display     = options.display === undefined ? true: options.display;
-    var addToAssembly= options.addToAssembly === undefined ? true: options.addToAssembly;
-    var keepRawData = options.keepRawData === undefined ? true: options.keepRawData;
+    let options = Object.assign({},DEFAULTS,options);
     
     if(!uriOrData) throw new Error("no uri or data to load!");
 
     let self = this;
     let resource = this.assetManager.load( uriOrData, {keepRawData:true, parsing:{useWorker:true,useBuffers:true} } );
 
-    var source = Rx.Observable.fromPromise(resource.deferred.promise);
+    let dataSource = Rx.Observable.fromPromise(resource.deferred.promise);
 
     let logNext  = function( next ){
       log.info( next )
@@ -680,70 +684,49 @@ export default class App extends React.Component {
       self.assetManager.dismissResource( resource );
     }
 
-    let register = function( shape ){
+    let registerMeshAndPart = function( shape ){
       //part type registration etc
       //we are registering a yet-uknown Part's type, getting back an instance of that type
       let partKlass    = self.kernel.registerPartType( null, null, shape, {name:resource.name, resource:resource} );
-      let partInstance = undefined;
-      if( addToAssembly ) {
-        partInstance = self.kernel.makePartTypeInstance( partKlass );
-        self.kernel.registerPartInstance( partInstance );
-      }
-
-      //FIXME: remove, this is just for testing
-      self.addEntityType( partKlass)
-      self.addEntityInstance(partInstance)
-      //this needs to be added somewhere
-      partInstance.bbox.min = shape.boundingBox.min.toArray();
-      partInstance.bbox.max = shape.boundingBox.max.toArray();
+      self.addEntityType( partKlass )
 
       //we do not return the shape since that becomes the "reference shape", not the
       //one that will be shown
-      return {klass:partKlass,instance:partInstance};
+      return partKlass;
     }
 
-    let showIt = function( klassAndInstance ){
-      if( display || addToAssembly ){
-        //klassAndInstance.instance._selected = true;//SETTIN STATE !! not good like this
-        self._tempForceDataUpdate();
+    let showEntity = function( partKlass ){
+      let partInstance = undefined
+      if( options.display ){
+
+        partInstance = self.kernel.makePartTypeInstance( partKlass )
+        self.kernel.registerPartInstance( partInstance )
+      
+        //this needs to be added somewhere
+        //partInstance.bbox.min = shape.boundingBox.min.toArray()
+        //partInstance.bbox.max = shape.boundingBox.max.toArray()  
+        
+        self.addEntityInstance(partInstance)
+        self._tempForceDataUpdate()
+
       }
 
-      return klassAndInstance
+      return partInstance
     }
 
-    let mainProc = source
+    dataSource
       .map( postProcessMesh )
       .map( centerMesh )
-      .share();
-
-    mainProc
-      .map( register )
-      .map( showIt )
-      .map( function(klassAndInstance){
+      .map( registerMeshAndPart )
+      .map( showEntity )
+      .map( function(instance){
         //klassAndInstance.instance.pos[2]+=20;
-        return klassAndInstance;
+        return instance;
       })
+      /*.map( kI => kI.instance)
+      .map( self.selectEntities.bind(this) )*/
         .catch(handleLoadError)
-        //.timeout(100,cleanupResource)
         .subscribe(logNext,logError);
-
-    mainProc.subscribe(logNext,logError);
-  }
-
-  //mesh insertion post process
-  //FIXME: do this better , but where ?
-  _meshInjectPostProcess( mesh ){
-    //FIXME: not sure about these, they are used for selection levels
-    mesh.selectable      = true;
-    mesh.selectTrickleUp = false;
-    mesh.transformable   = true;
-    //FIXME: not sure, these are very specific for visuals
-    mesh.castShadow      = true;
-    //mesh.receiveShadow = true;
-    return mesh;
-    //FIXME: not sure where this should be best: used to dispatch "scene insertion"/creation operation
-    //var operation = new MeshAddition( mesh );
-    //self.historyManager.addCommand( operation );
   }
 
 
@@ -752,11 +735,22 @@ export default class App extends React.Component {
     let self     = this;
     let glview   = this.refs.glview;
     let assembly = this.kernel.activeAssembly;
-    let entries  = this.state._entities;//assembly.children;
+    let entries  = this.state.assemblies_main_children;
     
     let selectedEntities = this.state.selectedEntitiesIds.map(entityId => self.state._entitiesById[entityId])
     let selectedEntitiesIds = this.state.selectedEntitiesIds;
 
+    //mesh insertion post process
+    function meshInjectPostProcess( mesh ){
+      //FIXME: not sure about these, they are used for selection levels
+      mesh.selectable      = true;
+      mesh.selectTrickleUp = false;
+      mesh.transformable   = true;
+      //FIXME: not sure, these are very specific for visuals
+      mesh.castShadow      = true;
+      //mesh.receiveShadow = true;
+      return mesh;
+    }
 
     /*function that provides a mapping between an entity and its visuals (in this case 
     // a 3d object/mesh)
@@ -766,7 +760,6 @@ export default class App extends React.Component {
     */
     let mapper = function( entity, addTo, xform ){
       let self = this;
-
 
       /*let getInstance  = self.kernel.getPartMeshInstance( entity );
       return Rx.Observable.from( getInstance )
@@ -803,7 +796,7 @@ export default class App extends React.Component {
 
           meshInstance.material.color.set( entity.color );
 
-          self._meshInjectPostProcess( meshInstance );
+          meshInjectPostProcess( meshInstance );
           
           if(addTo) addTo.add( meshInstance);
           if(xform) xform(entity, meshInstance);
@@ -816,6 +809,7 @@ export default class App extends React.Component {
     glview.forceUpdate(entries, mapper.bind(this), selectedEntitiesIds);
   }
 
+  /*
   selectedMeshesChangedHandler( selectedMeshes ){
     //console.log("selectedMeshes",selectedMeshes)
     let kernel = this.kernel;
@@ -824,7 +818,7 @@ export default class App extends React.Component {
       }
     );
     //console.log("selectedEntities",selectedEntities)
-  }
+  }*/
   
   render() {
 
@@ -863,15 +857,6 @@ export default class App extends React.Component {
       width:'100%',
       height:'100%',
     };
-
-    /*
-       <FooComponent/>
- <div ref="infoLayer" className="infoLayer" style={infoLayerStyle} >
-            <BomView data={bomData}/>
-            <button onClick={this.handleClick.bind(this)}> ShowState (in console) </button>
-          </div>
-
-    */
     
     let bomData = this.kernel.bom.bom;
 

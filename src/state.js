@@ -51,10 +51,15 @@ let state = {
   },
   selectedEntities:[],
   selectedEntitiesIds:[],
-  assembly:[
-  ],
   //special, for testing
-  _entities:[],
+  /*assemblies:{
+    main:{
+      children:[
+      ]
+    }
+  },*/
+  //temporary hack for the above
+  assemblies_main_children:[],
   _entityKlasses:[],
   _entitiesById: {}
 };
