@@ -23,3 +23,11 @@ export function createAction(paramsMap){
 
   return action;
 }
+
+
+export function logNext( next ){
+  log.info( next )
+}
+export function logError( err){
+  log.error(err)
+}

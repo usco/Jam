@@ -46,6 +46,7 @@ let Observable= Rx.Observable;
 let Subject   = Rx.Subject;
 import {createAction} from '../utils/obsUtils'
 
+
 /*set transforms of given entity in the form 
 {entity:entity,transforms:transforms}*/
 export let setEntityTransforms = createAction();
@@ -54,6 +55,9 @@ export let setEntityTransforms = createAction();
 in the form : {entity:entity,bbox:bbox}
 */
 export let setEntityBBox = createAction();
+
+/*set entities as selectedd*/
+export let selectEntities = createAction();
 
 /*delete given entities*/
 export let deleteEntities = createAction();

@@ -117,6 +117,12 @@ export default class App extends React.Component {
     } 
   }
   
+
+  componentWillUpdate(){
+    //console.log("component will update")
+    //this._tempForceDataUpdate()
+  }
+
   componentDidMount(){
     var pjson = require('../package.json');
     this.setState(
@@ -140,50 +146,33 @@ export default class App extends React.Component {
     let self     = this;
 
     //get entities 
-    let checkCount = function(x){
-      return (x.length>0)
-    }
-
-    let filterEntities = function( x ){
+    function entititesOnly( x ){
       return (x.userData && x.userData.entity)
     }
 
-    let fetchEntities = function( x ){
+    function getEntity( x ){
       return x.userData.entity;
     }
 
-    let foo = function(x){
-       //console.log("here",x)
-       return x;
-    }
-    let finalLog=function(x){
-       console.log("FINAL",x)
-       return x;
-    }
-
-    
-
     let selectedMeshes$ = glview.selectedMeshes$
       .defaultIfEmpty([])
-      .map(
+      .subscribe(
         function(selections){
-          let res= selections.filter(filterEntities).map(fetchEntities);
+          let res= selections.filter(entititesOnly).map(getEntity);
           self.selectEntities(res)
         }
-      );
-    selectedMeshes$.subscribe(foo)
+      )
 
-
-    let extractAttributes = function(mesh){
+    function extractAttributes(mesh){
       let attrs = {
         pos:mesh.position,
         rot:mesh.rotation,
         sca:mesh.scale
       }
-      return attrs;
+      return attrs
     }
 
-    let attributesToArrays= function(attrs){
+    function attributesToArrays(attrs){
       let output= {};
       for(let key in attrs){
         output[key] = attrs[key].toArray();
@@ -197,7 +186,7 @@ export default class App extends React.Component {
       return output;
     }
 
-    let setEntityT = function(attrsAndEntity){
+    function setEntityT(attrsAndEntity){
       let [transforms, entity] = attrsAndEntity;      
       setEntityTransforms({entity,transforms})
 
@@ -206,14 +195,18 @@ export default class App extends React.Component {
 
     //debounce 16.666 ie 60 fps ?
 
-    let rawTranforms     =  glview.objectsTransform$.debounce(16.6666).filter(filterEntities).share();
+    let rawTranforms     =  glview.objectsTransform$
+      .debounce(16.6666)
+      .filter(entititesOnly)
+      .share()
+      
     let objectTransforms = rawTranforms 
       .map(extractAttributes)
       .map(attributesToArrays)
       .take(1)
-      //.subscribe(finalLog);
+
     let objectsId = rawTranforms
-      .map(fetchEntities)
+      .map(getEntity)
       .take(1)
 
     let test = Observable.forkJoin(
@@ -242,33 +235,33 @@ export default class App extends React.Component {
     //only load meshes if no designs need to be loaded 
     if(!singleDesign)  meshUrls.map(function( meshUrl ){ self.loadMesh(meshUrl) });
 
+
+
     /////////
     //FIXME: horrible, this should not be here, all related to actions etc
-    setEntityTransforms.subscribe(function(val){
-      self.setEntityTransforms(val.entity, val.transforms);
-      self._tempForceDataUpdate();
-    });
+    setEntityTransforms
+      .subscribe(function(val){
+        self.setEntityTransforms(val.entity, val.transforms);
+        self._tempForceDataUpdate();
+      })
 
-    setEntityColor.subscribe( function(val){
-      self.setEntityColor(val.entity, val.color);
-    });
+    setEntityColor
+      .debounce(3)
+      .subscribe( function(val){self.setEntityColor(val.entity, val.color);})
 
-    deleteEntities.subscribe(function(entities){
-      self.removeEntityInstances(entities);
-      //not sure this should be here
-      //reset selection
-      self.selectEntities();
-    });
+    deleteEntities
+      .map(self.removeEntityInstances.bind(self))
+      .map(self.selectEntities.bind(self))//reset selection
+      .subscribe(self._tempForceDataUpdate.bind(self))
 
-    duplicateEntities.subscribe(function(entities){
-      let dupes = self.duplicateEntities(entities);
+    duplicateEntities
+      .map(self.duplicateEntities.bind(self))
+      .map(self.selectEntities.bind(self))//set selection to new ones
+      .subscribe(self._tempForceDataUpdate.bind(self))
 
-      //not sure this should be here
-      //set selection to duplicates
-      self.selectEntities(dupes)
-    })
-
-    setDesignData.debounce(500).subscribe(self.setDesignData.bind(self));
+    setDesignData
+      .debounce(500)
+      .subscribe(self.setDesignData.bind(self))
 
     /////This is ok here ??
     ///////////
@@ -349,22 +342,7 @@ export default class App extends React.Component {
 
       self._undos.push(lastState);
       self.setState(lastState,afterSetState,false)
-
-      /*if(self._historyIdx !== self._history.length-1){
-        let prevState = self._history[self._historyIdx];
-        console.log("revert state to ",prevState, self._historyIdx)
-        if(prevState){
-          function afterSetState(){
-            self._tempForceDataUpdate();
-          }
-          self._historyIdx +=1;
-          self.setState(prevState,afterSetState,false)
-
-        }
-      }*/
-
     })
-
 
   }
 
@@ -470,6 +448,8 @@ export default class App extends React.Component {
     this.kernel.loadDesign(uri,options)
       .subscribe( logNext, logError, onDone);
   }
+
+
   
   //-------COMMANDS OR SOMETHING LIKE THEM -----
 
@@ -517,7 +497,7 @@ export default class App extends React.Component {
 
   //FIXME; this should be a command or something
   setEntityTransforms(entity, transforms){
-    log.debug("setting transforms of",entity, "to", transforms)
+    log.debug("setting transforms of", entity, "to", transforms)
 
     let _entitiesById = this.state._entitiesById;
     let tgtEntity     = _entitiesById[entity.iuid];
@@ -599,7 +579,7 @@ export default class App extends React.Component {
 
     //TODO: should it be part of the app's history 
     //this.setState({_entityKlasses:this.state._entityKlasses.push(type)})
-    this.setState({_entityKlasses:nKlasses},null, false)
+    this.setState({_entityKlasses:nKlasses}, null, false)
   }
 
   //FIXME; this should be a command or something
@@ -630,8 +610,16 @@ export default class App extends React.Component {
     let self = this;
     instances.map(function(instance){
       self.kernel.removeEntity(instance);
-      self._tempForceDataUpdate();
     });
+
+    //FIXME: not sure...., duplication of the above again
+    let nEntities  = this.state.assemblies_main_children
+    let _tmp = instances.map(entity=>entity.iuid)
+    let outNEntities = nEntities.map(entity=>entity.iuid).filter(function(iuid){ return _tmp.indexOf(iuid)===-1})
+
+    this.setState({
+      assemblies_main_children:outNEntities
+    })   
   }
 
   /*duplicate all given instances of entities*/
@@ -639,14 +627,13 @@ export default class App extends React.Component {
     log.info("duplicating entity instances", instances)
     let self  = this;
     let dupes = [];
+
     instances.map(function(instance){
-      dupes.push( self.kernel.duplicateEntity(instance) );
-
+      let duplicate = self.kernel.duplicateEntity(instance)
+      dupes.push( duplicate );
       //FIXME: this is redundant  
-      self.addEntityInstance(instance);
+      self.addEntityInstance(duplicate);
     });
-
-    self._tempForceDataUpdate();
 
     return dupes;
   }
@@ -664,38 +651,32 @@ export default class App extends React.Component {
 
     let self = this;
     let resource = this.assetManager.load( uriOrData, {keepRawData:true, parsing:{useWorker:true,useBuffers:true} } );
-
     let dataSource = Rx.Observable.fromPromise(resource.deferred.promise);
 
-    let logNext  = function( next ){
-      log.info( next )
-    }
-    let logError = function( err){
-      log.error(err)
-    }
-    let handleLoadError = function( err ){
+    
+    function handleLoadError( err ){
        log.error("failed to load resource", err, resource.error);
        //do not keep error message on screen for too long, remove it after a while
        setTimeout(cleanupResource, self.dismissalTimeOnError);
        return resource;
     }
-    let cleanupResource = function( resource ){
+    function cleanupResource( resource ){
       log.info("cleaning up resources")
-      self.assetManager.dismissResource( resource );
+      self.assetManager.dismissResource( resource )
     }
 
-    let registerMeshAndPart = function( shape ){
+    function registerMeshOfPart( mesh ){
       //part type registration etc
       //we are registering a yet-uknown Part's type, getting back an instance of that type
-      let partKlass    = self.kernel.registerPartType( null, null, shape, {name:resource.name, resource:resource} );
+      let partKlass    = self.kernel.registerPartType( null, null, mesh, {name:resource.name, resource:resource} );
       self.addEntityType( partKlass )
 
-      //we do not return the shape since that becomes the "reference shape", not the
+      //we do not return the shape since that becomes the "reference shape/mesh", not the
       //one that will be shown
       return partKlass;
     }
 
-    let showEntity = function( partKlass ){
+    function showEntity( partKlass ){
       let partInstance = undefined
       if( options.display ){
 
@@ -705,10 +686,8 @@ export default class App extends React.Component {
         //this needs to be added somewhere
         //partInstance.bbox.min = shape.boundingBox.min.toArray()
         //partInstance.bbox.max = shape.boundingBox.max.toArray()  
-        
+    
         self.addEntityInstance(partInstance)
-        self._tempForceDataUpdate()
-
       }
 
       return partInstance
@@ -717,7 +696,7 @@ export default class App extends React.Component {
     dataSource
       .map( postProcessMesh )
       .map( centerMesh )
-      .map( registerMeshAndPart )
+      .map( registerMeshOfPart )
       .map( showEntity )
       .map( function(instance){
         //klassAndInstance.instance.pos[2]+=20;
@@ -725,13 +704,14 @@ export default class App extends React.Component {
       })
       /*.map( kI => kI.instance)
       .map( self.selectEntities.bind(this) )*/
-        .catch(handleLoadError)
-        .subscribe(logNext,logError);
+      .catch(handleLoadError)
+      .subscribe(self._tempForceDataUpdate.bind(self))
   }
 
 
   /*temporary method to force 3d view updates*/
   _tempForceDataUpdate(){
+    log.info("forcing re-render")
     let self     = this;
     let glview   = this.refs.glview;
     let assembly = this.kernel.activeAssembly;
@@ -808,17 +788,6 @@ export default class App extends React.Component {
 
     glview.forceUpdate(entries, mapper.bind(this), selectedEntitiesIds);
   }
-
-  /*
-  selectedMeshesChangedHandler( selectedMeshes ){
-    //console.log("selectedMeshes",selectedMeshes)
-    let kernel = this.kernel;
-    let selectedEntities = selectedMeshes.map( mesh => {
-        return kernel.getEntityOfMesh( mesh )
-      }
-    );
-    //console.log("selectedEntities",selectedEntities)
-  }*/
   
   render() {
 
@@ -865,7 +834,7 @@ export default class App extends React.Component {
 
     let self=this
     let contextmenuSettings = this.state.contextMenu
-    let selectedEntities = this.state.selectedEntitiesIds.map(entityId => self.state._entitiesById[entityId])
+    let selectedEntities = this.state.selectedEntitiesIds.map(entityId => self.state._entitiesById[entityId]).filter(id => id!==undefined)
 
     return (
         <div ref="wrapper" style={wrapperStyle} className="Jam">
