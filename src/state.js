@@ -33,6 +33,9 @@ let state = {
   fullScreen: false,
   activeTool: null,
 
+  //////////////////
+  //after this point, actual design & sub elements state
+   _persistent:false,//internal flag, do not serialize
   design:{
     title:"untitled design",
     name:"untitledDesign",
@@ -47,7 +50,6 @@ let state = {
       "GPLV3",
       "MIT"],
     meta:undefined,
-    _persisted:false//internal flag, do not serialize
   },
   selectedEntities:[],
   selectedEntitiesIds:[],
@@ -60,7 +62,7 @@ let state = {
   },*/
   //temporary hack for the above
   assemblies_main_children:[],
-  _entityKlasses:[],
+  _entityKlasses:{},
   _entitiesById: {}
 };
 

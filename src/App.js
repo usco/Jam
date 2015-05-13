@@ -53,8 +53,8 @@ import ContextMenu from './components/ContextMenu'
 import * as blar from './core/fooYeah'
 import {setEntityTransforms, setEntityColor, deleteEntities, duplicateEntities } from './actions/entityActions'
 import {setToTranslateMode, setToRotateMode, setToScaleMode} from './actions/transformActions'
-import {showContextMenu, hideContextMenu, undo, redo} from './actions/appActions'
-import {setDesignData} from './actions/designActions'
+import {showContextMenu, hideContextMenu, undo, redo, setDesignAsPersistent$} from './actions/appActions'
+import {setDesignData$} from './actions/designActions'
 
 let commands = {
   "undo":undo,
@@ -312,9 +312,17 @@ export default class App extends React.Component {
       .map(self.selectEntities.bind(self))//set selection to new ones
       .subscribe(self._tempForceDataUpdate.bind(self))
 
-    setDesignData
-      .debounce(500)
-      .subscribe(self.setDesignData.bind(self))
+
+    setDesignAsPersistent$
+      .subscribe(function(){
+        self.setState({_persisting:!self.state._persisting},null,false)})
+
+    setDesignData$
+      .debounce(1000)
+      .map(self.setDesignData.bind(self))
+      //seperation of sinks from the rest
+      .filter(()=>self.state._persisting)//only save when design is set to persisten
+      .subscribe(self.kernel.saveDesignMeta.bind(self.kernel))
 
     /////This is ok here ??
     ///////////
@@ -521,8 +529,9 @@ export default class App extends React.Component {
       design:design
     })
 
-    //FIXME: horrible
-    this.kernel.saveDesignInfos(design);
+
+
+    return design
   }
 
   //FIXME; this should be a command or something
@@ -620,14 +629,15 @@ export default class App extends React.Component {
   }
 
   //FIXME; this should be a command or something
+
   /*register a new entity type*/
-  addEntityType( type ){
+  addEntityType( type, typeUid ){
     log.info("adding entity type", type)
     let nKlasses  = this.state._entityKlasses
-    nKlasses.push( type )
+    nKlasses[typeUid] = type;
+    //nKlasses.push( type )
 
     //TODO: should it be part of the app's history 
-    //this.setState({_entityKlasses:this.state._entityKlasses.push(type)})
     this.setState({_entityKlasses:nKlasses}, null, false)
   }
 
@@ -717,8 +727,8 @@ export default class App extends React.Component {
     function registerMeshOfPart( mesh ){
       //part type registration etc
       //we are registering a yet-uknown Part's type, getting back an instance of that type
-      let partKlass    = self.kernel.registerPartType( null, null, mesh, {name:resource.name, resource:resource} );
-      self.addEntityType( partKlass )
+      let {partKlass,typeUid}    = self.kernel.registerPartType( null, null, mesh, {name:resource.name, resource:resource} );
+      self.addEntityType( partKlass, typeUid )
 
       //we do not return the shape since that becomes the "reference shape/mesh", not the
       //one that will be shown
@@ -890,10 +900,11 @@ export default class App extends React.Component {
           <MainToolbar 
             design={this.state.design} 
             appInfos={this.state.appInfos} 
-            history ={this._history}
+            persisted={this.state._persisting}
             undos = {this._undos}
             redos = {this._redos}
             style={toolbarStyle}> </MainToolbar>
+
           <ThreeJs ref="glview"/>
 
           <div ref="testArea" style={testAreaStyle} className="toolBarBottom">

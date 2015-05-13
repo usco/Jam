@@ -13,8 +13,8 @@ log.setLevel("info");
 import EditableItem from './EditableItem'
 import DesignCard   from './DesignCard'
 
-import {setDesignData} from '../actions/designActions'
-import {undo,redo} from '../actions/appActions'
+import {setDesignData$} from '../actions/designActions'
+import {undo,redo,setDesignAsPersistent$} from '../actions/appActions'
 
 
 class MainToolBar extends RxReact.Component {
@@ -38,7 +38,7 @@ class MainToolBar extends RxReact.Component {
   }
 
   setDesignTitle(value){
-    setDesignData({title:value});
+    setDesignData$({title:value});
   }
 
   toggleDesignCard(){
@@ -48,7 +48,6 @@ class MainToolBar extends RxReact.Component {
   }
   
   render() {
-    //log.info("bla",this.props)
     let fullTitle = `(${this.props.appInfos.name} v  ${this.props.appInfos.version})`;
     let history   = this.props.history;
     //disabled={!disabled}
@@ -83,6 +82,11 @@ class MainToolBar extends RxReact.Component {
         <span ref="title" className="appInfos"> {fullTitle} </span>
         <span>
           <button onClick={this.toggleDesignCard.bind(this)} className="details"> Details </button>
+        </span>
+
+        <span>
+          <span>AutoSave online (temporary button?)</span>
+          <input type="checkbox" checked={this.props.persisting} onChange={setDesignAsPersistent$}> </input>
         </span>
 
         <span className="history">

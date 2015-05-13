@@ -8,7 +8,11 @@ export let showContextMenu = createAction();
 export let hideContextMenu = createAction();
 
 /*ermm... undo ?*/
-export let undo = createAction();
+export let undo = createAction()
 
 /*ermm... redo ?*/
-export let redo = createAction();
+export let redo = createAction()
+
+
+/*not sure if this belongs here or in design actions*/
+export let setDesignAsPersistent$ = createAction()
