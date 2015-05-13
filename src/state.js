@@ -33,12 +33,17 @@ let state = {
   fullScreen: false,
   activeTool: null,
 
+  //generate data, stored to ensure "RWYLO" (rgiht where you left off)
+  _lastProjectUri: undefined,
+  _lastProjectName: undefined,
+
+
   //////////////////
   //after this point, actual design & sub elements state
    _persistent:false,//internal flag, do not serialize
   design:{
-    title:"untitled design",
-    name:"untitledDesign",
+    //title:"untitled design",
+    name:"untitled design",
     description:"Some description",
     version: undefined,//"0.0.0",
     authors:[

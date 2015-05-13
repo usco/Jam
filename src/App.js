@@ -243,6 +243,40 @@ export default class App extends React.Component {
     if(!singleDesign)  meshUrls.map(function( meshUrl ){ self.loadMesh(meshUrl) });
 
 
+    /////////
+    //FIXME: horrible, this should not be here, all related to actions etc
+    setEntityTransforms
+      .subscribe(function(val){
+        self.setEntityTransforms(val.entity, val.transforms);
+        self._tempForceDataUpdate();
+      })
+
+    setEntityColor
+      .debounce(3)
+      .subscribe( function(val){self.setEntityColor(val.entity, val.color);})
+
+    deleteEntities
+      .map(self.removeEntityInstances.bind(self))
+      .map(self.selectEntities.bind(self))//reset selection
+      .subscribe(self._tempForceDataUpdate.bind(self))
+
+    duplicateEntities
+      .map(self.duplicateEntities.bind(self))
+      .map(self.selectEntities.bind(self))//set selection to new ones
+      .subscribe(self._tempForceDataUpdate.bind(self))
+
+    setDesignAsPersistent$
+      .subscribe(function(){
+        self.setState({_persistent:!self.state._persistent},null,false)})
+
+    setDesignData$
+      .debounce(1000)
+      .map(self.setDesignData.bind(self))
+      //seperation of sinks from the rest
+      .filter(()=>self.state._persistent)//only save when design is set to persistent
+      .subscribe(self.kernel.saveDesignMeta.bind(self.kernel))
+
+
     //////handle overall change?
     /*let modelChanges$ = Observable.merge([
       setEntityTransforms,
@@ -289,40 +323,6 @@ export default class App extends React.Component {
       )*/
 
 
-
-    /////////
-    //FIXME: horrible, this should not be here, all related to actions etc
-    setEntityTransforms
-      .subscribe(function(val){
-        self.setEntityTransforms(val.entity, val.transforms);
-        self._tempForceDataUpdate();
-      })
-
-    setEntityColor
-      .debounce(3)
-      .subscribe( function(val){self.setEntityColor(val.entity, val.color);})
-
-    deleteEntities
-      .map(self.removeEntityInstances.bind(self))
-      .map(self.selectEntities.bind(self))//reset selection
-      .subscribe(self._tempForceDataUpdate.bind(self))
-
-    duplicateEntities
-      .map(self.duplicateEntities.bind(self))
-      .map(self.selectEntities.bind(self))//set selection to new ones
-      .subscribe(self._tempForceDataUpdate.bind(self))
-
-
-    setDesignAsPersistent$
-      .subscribe(function(){
-        self.setState({_persisting:!self.state._persisting},null,false)})
-
-    setDesignData$
-      .debounce(1000)
-      .map(self.setDesignData.bind(self))
-      //seperation of sinks from the rest
-      .filter(()=>self.state._persisting)//only save when design is set to persisten
-      .subscribe(self.kernel.saveDesignMeta.bind(self.kernel))
 
     /////This is ok here ??
     ///////////
@@ -900,7 +900,7 @@ export default class App extends React.Component {
           <MainToolbar 
             design={this.state.design} 
             appInfos={this.state.appInfos} 
-            persisted={this.state._persisting}
+            persisted={this.state._persistent}
             undos = {this._undos}
             redos = {this._redos}
             style={toolbarStyle}> </MainToolbar>

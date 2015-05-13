@@ -37,8 +37,8 @@ class MainToolBar extends RxReact.Component {
     console.log("state & props", this.state, this.props)
   }
 
-  setDesignTitle(value){
-    setDesignData$({title:value});
+  setDesignName(value){
+    setDesignData$({name:value});
   }
 
   toggleDesignCard(){
@@ -77,7 +77,7 @@ class MainToolBar extends RxReact.Component {
     return (
       <div className="titleBar" style={titleStyle}>
         <h1>
-          <EditableItem data={this.props.design.title} changeCallback={ this.setDesignTitle } ref="title" className="designName"/> 
+          <EditableItem data={this.props.design.name} changeCallback={ this.setDesignName } ref="title" className="designName"/> 
         </h1>
         <span ref="title" className="appInfos"> {fullTitle} </span>
         <span>

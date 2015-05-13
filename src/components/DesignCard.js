@@ -7,7 +7,6 @@ export default class DesignCard extends React.Component{
 
   render() {
     let design = this.props.design;
-    console.log("design",design);
 
     let authorsList = [];
     design.authors.map(function(author){
@@ -32,7 +31,7 @@ export default class DesignCard extends React.Component{
     return(
       <div className="designCard" >
         <h1>
-          {design.title} 
+          {design.name} 
           { versionField }
         </h1>
         <section>
