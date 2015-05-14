@@ -40,22 +40,22 @@ let state = {
 
   //////////////////
   //after this point, actual design & sub elements state
-   _persistent:false,//internal flag, do not serialize
-   _persistentUri:undefined,
+  _persistent:false,//internal flag, do not serialize
+
   design:{
     //title:"untitled design",
     name:"untitled design",
     description:"Some description",
     version: undefined,//"0.0.0",
     authors:[
-      {name:"foo","email":"gna","url":"http://foo"},
-      {name:"bar","email":"yup","url":"https://secure"}
+      /*{name:"foo","email":"gna","url":"http://foo"}*/
     ],
-    tags:["foo","bar"],
-    licenses:[ 
-      "GPLV3",
-      "MIT"],
+    tags:[],
+    licenses:[],
     meta:undefined,
+
+    _persistentUri:undefined,
+
   },
   selectedEntities:[],
   selectedEntitiesIds:[],
