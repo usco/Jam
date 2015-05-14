@@ -13,7 +13,7 @@ log.setLevel("info");
 import EditableItem from './EditableItem'
 import DesignCard   from './DesignCard'
 
-import {setDesignData$} from '../actions/designActions'
+import {newDesign$, setDesignData$} from '../actions/designActions'
 import {undo,redo,setDesignAsPersistent$} from '../actions/appActions'
 
 
@@ -71,8 +71,10 @@ class MainToolBar extends RxReact.Component {
 
     //console.log("this.props.undos.length===0",this.props.undos.length===0, this.props.undos.length, this.props.undos)
 
-    let undosDisabled = this.props.undos.length<=1;//
-    let redosDisabled = this.props.redos.length===0;
+    let undosDisabled = this.props.undos.length<=1
+    let redosDisabled = this.props.redos.length===0
+
+    let persistent    = this.props.persistent || false
 
     return (
       <div className="titleBar" style={titleStyle}>
@@ -82,11 +84,12 @@ class MainToolBar extends RxReact.Component {
         <span ref="title" className="appInfos"> {fullTitle} </span>
         <span>
           <button onClick={this.toggleDesignCard.bind(this)} className="details"> Details </button>
+          <button onClick={newDesign$} className="new"> New design</button>
         </span>
 
         <span>
           <span>AutoSave online (temporary button?)</span>
-          <input type="checkbox" checked={this.props.persisting} onChange={setDesignAsPersistent$}> </input>
+          <input type="checkbox" checked={persistent} onChange={setDesignAsPersistent$}> </input>
         </span>
 
         <span className="history">
@@ -96,25 +99,29 @@ class MainToolBar extends RxReact.Component {
 
         <span className="social"> 
           <span>
-            <button onClick={this.handleClick.bind(this)} className="download"> Download </button>
+            <button onClick={this.handleClick.bind(this)} className="fork" disabled={true}> Fork </button>
+          </span>
+          <span>
+            <button onClick={this.handleClick.bind(this)} className="download" disabled={true}> Download </button>
           </span>
           <div style={fooStyle}>
-            <button onClick={this.handleClick.bind(this)} className="viewOnYm"> View on YM </button>
+            <button onClick={this.handleClick.bind(this)} className="viewOnYm" disabled={true}> View on YM </button>
           </div>
           <span>
-            <button onClick={this.handleClick.bind(this)} className="share"> Share </button>
+            <button onClick={this.handleClick.bind(this)} className="share" disabled={true}> Share </button>
           </span>
           <span>
-            <button onClick={this.handleClick.bind(this)} className="like"> Like </button>
+            <button onClick={this.handleClick.bind(this)} className="like" disabled={true}> Like </button>
           </span>
         </span>
 
         <span className="otherStuff">
-          <button onClick={this.handleClick.bind(this)} className="options"> options </button>
+          <button onClick={this.handleClick.bind(this)} className="options" disabled={true}> options </button>
         </span>
 
-        <span>
-
+        <span className="tools">
+          <button onClick={this.handleClick.bind(this)} className="bom" disabled={true}> Bom </button>
+          <button onClick={this.handleClick.bind(this)} className="networkGraph" disabled={true}> NetworkGraph </button>
         </span>
 
         {designCardWrapper}
