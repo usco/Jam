@@ -51,7 +51,7 @@ import ContextMenu from './components/ContextMenu'
 
 ////TESTING
 import * as blar from './core/fooYeah'
-import {setEntityTransforms, setEntityColor, deleteEntities, duplicateEntities } from './actions/entityActions'
+import {addEntityInstances$, setEntityTransforms, setEntityColor, deleteEntities, duplicateEntities } from './actions/entityActions'
 import {setToTranslateMode, setToRotateMode, setToScaleMode} from './actions/transformActions'
 import {showContextMenu, hideContextMenu, undo, redo, setDesignAsPersistent$} from './actions/appActions'
 import {newDesign$, setDesignData$} from './actions/designActions'
@@ -76,7 +76,9 @@ export default class App extends React.Component {
     //TODO: store this elsewhere ? use stores system ?
     this.state._lastProjectName= localStorage.getItem("jam!-lastProjectName") 
     this.state.design.name    = this.state._lastProjectName || "untitled design"
-    this.state._persistentUri = localStorage.getItem("jam!-persistentUri") || undefined
+    
+    let lastProjectUri  = localStorage.getItem("jam!-lastProjectUri") || undefined
+    this.state.design._persistentUri = lastProjectUri
     this.state._persistent     = JSON.parse( localStorage.getItem("jam!-persistent") ) || false
 
 
@@ -91,11 +93,14 @@ export default class App extends React.Component {
     this.kernel = new Kernel(this.state);
 
     //temporary
-    this.kernel.dataApi.store = this.assetManager.stores["xhr"];
-    this.kernel.assetManager  = this.assetManager;
-    this.kernel.dataApi.rootUri = this.state._persistentUri
+    this.kernel.dataApi.store = this.assetManager.stores["xhr"]
+    this.kernel.assetManager  = this.assetManager
 
-
+    if(this.state._persistent){
+      this.kernel.setDesignAsPersistent()
+      this.kernel.dataApi.rootUri = lastProjectUri
+    } 
+    
     let self = this
     let oldSetState = this.setState.bind(this);
 
@@ -116,9 +121,8 @@ export default class App extends React.Component {
         self._undos.push( oldState);
         self._redos = [];
       }
-     
-      
     } 
+
   }
   
 
@@ -226,6 +230,24 @@ export default class App extends React.Component {
     )
     .repeat()
     .subscribe( setEntityT )
+
+    /*var bla = objectsTransform
+    .debounce(16)
+    .filter(entitiesOnly)
+ 
+    var eId = bla.map(getEntity).map('.iuid').toProperty(-1)
+    var pos = bla.map('.position').map(toArray).toProperty([0,0,0])
+    var rot = bla.map('.rotation').map(toArray).toProperty([0,0,0])
+    var sca = bla.map('.scale').map(toArray).toProperty([0,0,0])
+     
+    var endTranforms = Bacon.combineTemplate(
+      {entityId:eId, 
+       pos:pos,
+       rot:rot,
+       sca:sca}
+    ).onValue(function(value){
+      console.log("transforms value",JSON.stringify(value))
+    })*/
     
 
     ///////////
@@ -249,6 +271,10 @@ export default class App extends React.Component {
 
     /////////
     //FIXME: horrible, this should not be here, all related to actions etc
+    addEntityInstances$
+      .map(self.addEntityInstance.bind(self))
+      .subscribe(self._tempForceDataUpdate.bind(self))
+
     setEntityTransforms
       .subscribe(function(val){
         self.setEntityTransforms(val.entity, val.transforms);
@@ -277,7 +303,11 @@ export default class App extends React.Component {
       })
 
       //seperation of "sinks" from the rest
-      .subscribe((value)=>localStorage.setItem("jam!-persistent",value))
+      .subscribe(function(value){
+        localStorage.setItem("jam!-persistent",value)
+        if(value) self.kernel.setDesignAsPersistent()
+      })
+      //.subscribe((value)=>localStorage.setItem("jam!-persistent",value))
 
     setDesignData$
       .debounce(1000)
@@ -292,8 +322,8 @@ export default class App extends React.Component {
           console.log("save result",result)
           let serverResp =  JSON.parse(result)
           let persistentUri = self.kernel.dataApi.designsUri+"/"+serverResp.slug
-          localStorage.setItem("jam!-persistentUri",persistentUri)
-         
+
+          localStorage.setItem("jam!-lastProjectUri",persistentUri)
         })
         localStorage.setItem("jam!-lastProjectName",self.state.design.name)
 
@@ -322,23 +352,30 @@ export default class App extends React.Component {
         },null,false)
 
         localStorage.removeItem("jam!-lastProjectName")
-        localStorage.removeItem("jam!-persistentUri")
+        localStorage.removeItem("jam!-lastProjectUri")
 
         //remove meshes, resources etc
         self.assetManager.clearResources()
         self.kernel.clearAll()
+
+        self._tempForceDataUpdate()
       })
 
     //////handle overall change pertinent to assemblies
     let modelChanges$ = Observable.merge([
-      setEntityTransforms,
-      setEntityColor,
+      addEntityInstances$,
       deleteEntities,
       duplicateEntities,
+
+      setEntityTransforms,
+      setEntityColor
     ])
+      .debounce(500)//don't save too often
+
       //seperation of "sinks" from the rest
       .filter(()=>self.state._persistent)//only save when design is set to persistent
       .subscribe(function(){
+        //console.log("GNNNNA")
         self.kernel.saveBom()//TODO: should not be conflated with assembly
         self.kernel.saveAssemblyState(self.state.assemblies_main_children)
       })
@@ -461,6 +498,13 @@ export default class App extends React.Component {
       self.setState(lastState,afterSetState,false)
     })
 
+
+
+    if(this.state.design._persistentUri)
+    {
+      this.loadDesign(this.state.design._persistentUri)
+    }
+
   }
 
   componentWillUnmount(){
@@ -537,8 +581,8 @@ export default class App extends React.Component {
       log.error(err)
     }
     function onDone( data) {
-      log.info("DONE",data);
-      self._tempForceDataUpdate();
+      log.info("DONE",data)
+      
       //FIXME: hack
       self.setState({
         design:{
@@ -546,23 +590,22 @@ export default class App extends React.Component {
           description:self.kernel.activeDesign.description,
           authors:self.kernel.activeDesign.authors|| [],
           tags:self.kernel.activeDesign.tags|| [],
-          licenses:self.kernel.activeDesign.licenses|| []
+          licenses:self.kernel.activeDesign.licenses|| [],
+          _persistentUri:self.state.design._persistentUri
         }
-      });
+      })
 
       //FIXME: godawful hack because we have multiple "central states" for now
       self.kernel.activeAssembly.children.map(
         function(entityInstance){
           self.addEntityInstance(entityInstance);
         }
-      );
-
-      //FIXME : half assed hack
-      undo()
+      )
+      self._tempForceDataUpdate()
     }
 
     this.kernel.loadDesign(uri,options)
-      .subscribe( logNext, logError, onDone);
+      .subscribe( logNext, logError, onDone)
   }
 
 
@@ -575,10 +618,6 @@ export default class App extends React.Component {
 
   _serializeAssemblyState(){
   }  
-
-  _serializeBomState(){
-    this.kernel.saveAssemblyState();
-  }
 
   setDesignData(data){
     log.info("setting design data", data);
@@ -802,7 +841,8 @@ export default class App extends React.Component {
         //partInstance.bbox.min = shape.boundingBox.min.toArray()
         //partInstance.bbox.max = shape.boundingBox.max.toArray()  
     
-        self.addEntityInstance(partInstance)
+        //self.addEntityInstance(partInstance)
+        addEntityInstances$(partInstance)
       }
 
       return partInstance
@@ -949,7 +989,9 @@ export default class App extends React.Component {
 
     let self=this
     let contextmenuSettings = this.state.contextMenu
-    let selectedEntities = this.state.selectedEntitiesIds.map(entityId => self.state._entitiesById[entityId]).filter(id => id!==undefined)
+    let selectedEntities = this.state.selectedEntitiesIds
+      .map(entityId => self.state._entitiesById[entityId])
+      .filter(id => id!==undefined)
 
     //console.log("persistent",this.state._persistent)
     return (
