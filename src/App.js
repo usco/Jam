@@ -54,7 +54,7 @@ import * as blar from './core/fooYeah'
 import {setEntityTransforms, setEntityColor, deleteEntities, duplicateEntities } from './actions/entityActions'
 import {setToTranslateMode, setToRotateMode, setToScaleMode} from './actions/transformActions'
 import {showContextMenu, hideContextMenu, undo, redo, setDesignAsPersistent$} from './actions/appActions'
-import {setDesignData$} from './actions/designActions'
+import {newDesign$, setDesignData$} from './actions/designActions'
 
 let commands = {
   "undo":undo,
@@ -71,7 +71,14 @@ let commands = {
 export default class App extends React.Component {
   constructor(props){
     super(props);
+
     this.state = state;
+    //TODO: store this elsewhere ? use stores system ?
+    this.state._lastProjectName= localStorage.getItem("jam!-lastProjectName") 
+    this.state.design.name    = this.state._lastProjectName || "untitled design"
+    this.state._persistentUri = localStorage.getItem("jam!-persistentUri") || undefined
+    this.state._persistent     = JSON.parse( localStorage.getItem("jam!-persistent") ) || false
+
 
     this.assetManager = new AssetManager();
     this.assetManager.addParser("stl", new StlParser());
@@ -86,11 +93,12 @@ export default class App extends React.Component {
     //temporary
     this.kernel.dataApi.store = this.assetManager.stores["xhr"];
     this.kernel.assetManager  = this.assetManager;
+    this.kernel.dataApi.rootUri = this.state._persistentUri
+
 
     let self = this
     let oldSetState = this.setState.bind(this);
-    this._history   = []
-    this._historyIdx= 0;
+
     this._undos  = []
     this._redos  = []
 
@@ -102,13 +110,9 @@ export default class App extends React.Component {
       oldSetState(value, callback);
       if(alterHistory){
         let oldState = JSON.parse(JSON.stringify(self.state))//,function(key,val){
-        console.log("adding history", self._history)
+        console.log("adding history", self._undos)
         //});//Object.assign({},self.state);
 
-        self._history.splice(self._historyIdx, 0, oldState);
-        self._historyIdx +=1;
-        //self._history.push(oldState);
-        //self._historyIdx = self._history.length-1;
         self._undos.push( oldState);
         self._redos = [];
       }
@@ -237,7 +241,7 @@ export default class App extends React.Component {
     let singleDesign = designUrls.pop();
     if(singleDesign) designUrls = [singleDesign];
     
-    designUrls.map(function( designUrl ){ self.loadDesign(designUrls) });
+    designUrls.map(function( designUrl ){ self.loadDesign(designUrl) });
 
     //only load meshes if no designs need to be loaded 
     if(!singleDesign)  meshUrls.map(function( meshUrl ){ self.loadMesh(meshUrl) });
@@ -266,26 +270,78 @@ export default class App extends React.Component {
       .subscribe(self._tempForceDataUpdate.bind(self))
 
     setDesignAsPersistent$
-      .subscribe(function(){
-        self.setState({_persistent:!self.state._persistent},null,false)})
+      .map(function(){
+        let value = !self.state._persistent
+        self.setState({_persistent:value},null,false)
+        return value
+      })
+
+      //seperation of "sinks" from the rest
+      .subscribe((value)=>localStorage.setItem("jam!-persistent",value))
 
     setDesignData$
       .debounce(1000)
       .map(self.setDesignData.bind(self))
-      //seperation of sinks from the rest
+
+      //seperation of "sinks" from the rest
       .filter(()=>self.state._persistent)//only save when design is set to persistent
-      .subscribe(self.kernel.saveDesignMeta.bind(self.kernel))
+      .map(self.kernel.saveDesignMeta.bind(self.kernel))
+      .subscribe(function(def){
+        def.promise.then(function(result){
+          //FIXME: hack for now
+          console.log("save result",result)
+          let serverResp =  JSON.parse(result)
+          let persistentUri = self.kernel.dataApi.designsUri+"/"+serverResp.slug
+          localStorage.setItem("jam!-persistentUri",persistentUri)
+         
+        })
+        localStorage.setItem("jam!-lastProjectName",self.state.design.name)
 
+      })
 
-    //////handle overall change?
-    /*let modelChanges$ = Observable.merge([
+    newDesign$
+      .subscribe(function(){
+        //TODO : this needs to be elsewhere
+        const defaultDesign = {
+          name:"untitled design",
+          description:"Some description",
+          version: undefined,//"0.0.0",
+          authors:[],
+          tags:[],
+          licenses:[],
+          meta:undefined,
+        }
+
+        self.setState({
+          design:defaultDesign,
+          selectedEntities:[],
+          selectedEntitiesIds:[],
+          assemblies_main_children:[],
+          _entityKlasses:{},
+          _entitiesById: {}
+        },null,false)
+
+        localStorage.removeItem("jam!-lastProjectName")
+        localStorage.removeItem("jam!-persistentUri")
+
+        //remove meshes, resources etc
+        self.assetManager.clearResources()
+        self.kernel.clearAll()
+      })
+
+    //////handle overall change pertinent to assemblies
+    let modelChanges$ = Observable.merge([
       setEntityTransforms,
       setEntityColor,
       deleteEntities,
       duplicateEntities,
-
-      setDesignData
-    ])*/
+    ])
+      //seperation of "sinks" from the rest
+      .filter(()=>self.state._persistent)//only save when design is set to persistent
+      .subscribe(function(){
+        self.kernel.saveBom()//TODO: should not be conflated with assembly
+        self.kernel.saveAssemblyState(self.state.assemblies_main_children)
+      })
 
     /*modelChanges$.subscribe(function(data){
       console.log("hi there, the model changed!",data)
@@ -486,8 +542,11 @@ export default class App extends React.Component {
       //FIXME: hack
       self.setState({
         design:{
-          title: self.kernel.activeDesign.title,
+          name: self.kernel.activeDesign.title,
           description:self.kernel.activeDesign.description,
+          authors:self.kernel.activeDesign.authors|| [],
+          tags:self.kernel.activeDesign.tags|| [],
+          licenses:self.kernel.activeDesign.licenses|| []
         }
       });
 
@@ -528,9 +587,6 @@ export default class App extends React.Component {
     this.setState({
       design:design
     })
-
-
-
     return design
   }
 
@@ -889,18 +945,19 @@ export default class App extends React.Component {
     let bomData = this.kernel.bom.bom;
 
     //TODO: do this elsewhere
-    window.document.title = `${this.state.design.title} -- Jam!`;
+    window.document.title = `${this.state.design.name} -- Jam!`;
 
     let self=this
     let contextmenuSettings = this.state.contextMenu
     let selectedEntities = this.state.selectedEntitiesIds.map(entityId => self.state._entitiesById[entityId]).filter(id => id!==undefined)
 
+    //console.log("persistent",this.state._persistent)
     return (
         <div ref="wrapper" style={wrapperStyle} className="Jam">
           <MainToolbar 
             design={this.state.design} 
             appInfos={this.state.appInfos} 
-            persisted={this.state._persistent}
+            persistent={this.state._persistent}
             undos = {this._undos}
             redos = {this._redos}
             style={toolbarStyle}> </MainToolbar>

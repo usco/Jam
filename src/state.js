@@ -41,6 +41,7 @@ let state = {
   //////////////////
   //after this point, actual design & sub elements state
    _persistent:false,//internal flag, do not serialize
+   _persistentUri:undefined,
   design:{
     //title:"untitled design",
     name:"untitled design",
