@@ -1,14 +1,14 @@
-import RxReact from 'rx-react';
-import React from 'react';
-let StateStreamMixin = RxReact.StateStreamMixin;
+import RxReact from 'rx-react'
+import React from 'react'
+let StateStreamMixin = RxReact.StateStreamMixin
 
 import Rx from 'rx'
-let Observable= Rx.Observable;
-let fromEvent = Observable.fromEvent;
+let Observable= Rx.Observable
+let fromEvent = Observable.fromEvent
 
 import logger from '../utils/log'
-let log = logger("Jam-ToolBar");
-log.setLevel("info");
+let log = logger("Jam-ToolBar")
+log.setLevel("info")
 
 import EditableItem from './EditableItem'
 import DesignCard   from './DesignCard'
@@ -19,7 +19,7 @@ import {undo,redo,setDesignAsPersistent$} from '../actions/appActions'
 
 class MainToolBar extends RxReact.Component {
   constructor(props) {
-    super(props);
+    super(props)
     this.state = {
       appInfos:{
         name:"bla",
@@ -38,7 +38,7 @@ class MainToolBar extends RxReact.Component {
   }
 
   setDesignName(value){
-    setDesignData$({name:value});
+    setDesignData$({name:value})
   }
 
   toggleDesignCard(){
@@ -48,25 +48,25 @@ class MainToolBar extends RxReact.Component {
   }
   
   render() {
-    let fullTitle = `(${this.props.appInfos.name} v  ${this.props.appInfos.version})`;
-    let history   = this.props.history;
+    let fullTitle = `(${this.props.appInfos.name} v  ${this.props.appInfos.version})`
+    let history   = this.props.history
     //disabled={!disabled}
 
 
-    let titleStyle = {};
+    let titleStyle = {}
     /*  width:"100%",
       padding: "5 0 0 10"
-    };*/
+    }*/
     let fooStyle  = {
       display: "inline-block"
-    };
+    }
 
-    let designCardWrapper = <div className="designCardWrapper fadesIn" />;
+    let designCardWrapper = <div className="designCardWrapper fadesIn" />
     if(this.state.designCardVisible){
       designCardWrapper = (
       <div className="designCardWrapper fadesOut">
         <DesignCard design={this.props.design}/> 
-      </div>);
+      </div>)
     }
 
     //console.log("this.props.undos.length===0",this.props.undos.length===0, this.props.undos.length, this.props.undos)
@@ -88,7 +88,7 @@ class MainToolBar extends RxReact.Component {
         </span>
 
         <span>
-          <span>AutoSave online (temporary button?)</span>
+          <span>AutoSave online(temp btn?)</span>
           <input type="checkbox" checked={persistent} onChange={setDesignAsPersistent$}> </input>
         </span>
 
@@ -122,12 +122,13 @@ class MainToolBar extends RxReact.Component {
         <span className="tools">
           <button onClick={this.handleClick.bind(this)} className="bom" disabled={true}> Bom </button>
           <button onClick={this.handleClick.bind(this)} className="networkGraph" disabled={true}> NetworkGraph </button>
+          <button onClick={this.handleClick.bind(this)} className="commit" disabled={true}> Commit (named save) </button>
         </span>
 
         {designCardWrapper}
 
       </div>
-    );
+    )
   }
 }
 
