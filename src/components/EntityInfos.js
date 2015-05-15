@@ -1,20 +1,22 @@
-import RxReact from 'rx-react';
-import React from 'react';
-let StateStreamMixin = RxReact.StateStreamMixin;
-let FuncSubject      = RxReact.FuncSubject;
+import RxReact from 'rx-react'
+import React from 'react'
+let StateStreamMixin = RxReact.StateStreamMixin
+let FuncSubject      = RxReact.FuncSubject
 
 import Rx from 'rx'
-let Observable= Rx.Observable;
-let fromEvent = Observable.fromEvent;
+let Observable= Rx.Observable
+let fromEvent = Observable.fromEvent
 
 import {formatNumberTo, absSizeFromBBox} from '../utils/formatters'
 
 import logger from '../utils/log'
-let log = logger("Jam-ToolBar");
-log.setLevel("info");
+let log = logger("Jam-ToolBar")
+log.setLevel("info")
 
-import {setEntityTransforms, setEntityBBox, setEntityColor} from '../actions/entityActions'
+import {setEntityData$, setEntityBBox} from '../actions/entityActions'
 
+import EditableItem from './EditableItem'
+import ColorPicker from 'react-color-picker'
 /*
   Component to display (& edit) some of the main properties of entities: ie
   - position
@@ -23,15 +25,15 @@ import {setEntityTransforms, setEntityBBox, setEntityColor} from '../actions/ent
 */
 class EntityInfos extends RxReact.Component {
   constructor(props) {
-    super(props);
+    super(props)
     this.state={entityName:""}
-    this.keyup = FuncSubject.create();
+    this.keyup = FuncSubject.create()
 
-    this.degreeAngles = true;
+    this.degreeAngles = true
   }
 
   componentWillReceiveProps(nextProps){
-    let entities = nextProps.entities;
+    let entities = nextProps.entities
     if(entities && entities.length >0 )
     {
       this.setState({
@@ -42,7 +44,7 @@ class EntityInfos extends RxReact.Component {
 
   getStateStream() {
     //return (
-    //  Observable.empty());
+    //  Observable.empty())
     function loggg(text){
       console.log("here",text)
       return text
@@ -56,60 +58,68 @@ class EntityInfos extends RxReact.Component {
       //.flatMapLatest(text => searchWikipedia(text))
       //.map(loggg)
       .map(results => ({entityName: results}))
-    );
+    )
   }
 
   _keyup(event){
     console.log(event)
-    this.setState({results: event.target.value});
+    this.setState({results: event.target.value})
   }
 
   handleChange(type, index, event) {
-    //console.log(type, index, parseFloat(event.target.value));
-    //this.setState({value: event.target.value});
-    let entity= this.props.entities[0] ;
+    console.log(type, index, parseFloat(event.target.value))
+    //this.setState({value: event.target.value})
+    let entity= this.props.entities[0] 
     let transforms = {
       pos:Object.assign([],entity.pos),
       rot:Object.assign([],entity.rot),
       sca:Object.assign([],entity.sca),
-    };
-    transforms[type][index]=parseFloat(event.target.value);
+    }
+    transforms[type][index]=parseFloat(event.target.value)
     
-    setEntityTransforms({entity,transforms})
+    let data = transforms
+    data["entity"] = entity
+    setEntityData$(data)
   }
 
   handleSizeChange(index, event) {
-    console.log("handling size change", index, parseFloat(event.target.value));
-    //this.setState({value: event.target.value});
-    let entity= this.props.entities[0] ;
+    console.log("handling size change", index, parseFloat(event.target.value))
+    //this.setState({value: event.target.value})
+    let entity= this.props.entities[0] 
     let bbox = {
       min:Object.assign([],entity.bbox.min),
       max:Object.assign([],entity.bbox.max),
-    };
-    let value = parseFloat(event.target.value);
-    //attrs[type][index]=parseFloat(event.target.value);
+    }
+    let value = parseFloat(event.target.value)
+    //attrs[type][index]=parseFloat(event.target.value)
     //TODO: convert abs size to bbox
-    //bbox.min[index] = value/2;
-    //bbox.max[index] = value/2;
+    //bbox.min[index] = value/2
+    //bbox.max[index] = value/2
     
-    setEntityBBox({entity, bbox});
+    setEntityBBox({entity, bbox})
   }
 
-
   handleAngleInput(event){
-    let value = event.target.value;
+    let value = event.target.value
   }
 
   handleColorChange(event){
+    let entity= this.props.entities[0] 
+    let color = event.target.value
+    this.handleEntityDataChange("color",entity,color)
+  }
 
-    let entity= this.props.entities[0] ;
-    let color = event.target.value;
-    setEntityColor({entity, color});
+  handleEntityDataChange(field, entity, value){
+    console.log("entity data bla ",field, value, entity)// this.props.entities[0] )
+    let data = {}
+    data[field]  = value
+    data["entity"] = entity
+    setEntityData$(data)
   }
 
   
   render() {
-    //let styles = Object.assign({}, this.constructor.styles);
+    //let styles = Object.assign({}, this.constructor.styles)
     let styles ={
       numbers:{
         width:"10em",
@@ -145,72 +155,72 @@ class EntityInfos extends RxReact.Component {
       rot : [0,0,7],
       sca: [0,0,0]
     }*/
-    let entityInfo;
-    let canDisplay = this.props.entities.length>0;
-    let debug  = this.props.debug || false;
+    let entityInfo
+    let canDisplay = this.props.entities.length>0
+    let debug  = this.props.debug || false
 
-    let numberPrecision = 2;
-    let controlsStep = 0.1;
+    let numberPrecision = 2
+    let controlsStep = 0.1
 
-    var entityName = this.state && this.state.entityName || [];
+    var entityName = this.state && this.state.entityName || []
 
 
     if(canDisplay){
-      let entity= this.props.entities[0] ;
+      let entity= this.props.entities[0] 
       //let absSize = toAbsSize(entity.sca)
 
-      let self  = this;//workaround for babel + jsx "this" issue
+      let self  = this//workaround for babel + jsx "this" issue
 
-      let positionInputs = [];
+      let positionInputs = []
       entity.pos.forEach(function(entry, index){
-        let entry = formatNumberTo(entry, numberPrecision);
+        let entry = formatNumberTo(entry, numberPrecision)
         positionInputs.push(<input type="number" 
           value={entry} 
           step= {controlsStep}
           style={styles.numbers} 
           onChange={self.handleChange.bind(self,"pos",index)} />
-        );
+        )
       })
 
-      let rotationInputs = [];
+      let rotationInputs = []
       entity.rot.forEach(function(entry, index){
-        let entry = formatNumberTo(entry, numberPrecision);
+        let entry = formatNumberTo(entry, numberPrecision)
         rotationInputs.push(<input type="number"
           value={entry} 
           step = {controlsStep}
           style={styles.numbers}
           onChange={self.handleChange.bind(self,"rot",index)} />
-        );
+        )
       })
 
-      let scaleInputs = [];
+      let scaleInputs = []
       entity.sca.forEach(function(entry, index){
-        let entry = formatNumberTo(entry, numberPrecision);
+        let entry = formatNumberTo(entry, numberPrecision)
         scaleInputs.push(
           <input type="number" 
           value={entry} 
           step={controlsStep}
           style={styles.numbers}
           onChange={self.handleChange.bind(self,"sca",index)} />
-        );
+        )
       })
 
-      let absSizeInputs = [];
-      let absSize = absSizeFromBBox(entity.bbox);
-      absSize = absSize || {w:0,l:0,h:0};
+      let absSizeInputs = []
+      let absSize = absSizeFromBBox(entity.bbox)
+      absSize = absSize || {w:0,l:0,h:0}
       //convert to array to keep logic the same for all fields
-      absSize = [absSize.w,absSize.l,absSize.h];
+      absSize = [absSize.w,absSize.l,absSize.h]
       absSize.forEach(function(entry, index){
-        let entry = formatNumberTo(entry, numberPrecision);
+        let entry = formatNumberTo(entry, numberPrecision)
         absSizeInputs.push(
           <input type="number" 
           value={entry} 
           step={controlsStep}
           style={styles.numbers} onChange={self.handleSizeChange.bind(self,index)}/>
-        );
+        )
       })
 
-      let debugFields = undefined;
+      let debugFields = undefined
 
       if(debug){
         debugFields = <div>
@@ -227,7 +237,7 @@ class EntityInfos extends RxReact.Component {
           </span>
           <span>
             <span>N:</span>
-            <input type="text" value={entityName} style={styles.text} onChange={this.keyup.bind(this)}> </input>
+            <EditableItem data={entityName} changeCallback={ this.handleEntityDataChange.bind(this,"name",entity) }/> 
           </span>
           <span>
             <span>P:</span> {positionInputs}
@@ -249,7 +259,7 @@ class EntityInfos extends RxReact.Component {
       <div>
        {entityInfo}
       </div>
-    );
+    )
   }
 }
 

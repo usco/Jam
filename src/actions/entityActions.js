@@ -46,11 +46,6 @@ let Observable= Rx.Observable
 let Subject   = Rx.Subject
 import {createAction} from '../utils/obsUtils'
 
-
-/*set transforms of given entity in the form 
-{entity:entity,transforms:transforms}*/
-export let setEntityTransforms = createAction()
-
 /*set bounding box of given entity
 in the form : {entity:entity,bbox:bbox}
 */
@@ -71,9 +66,8 @@ export let deleteEntities = createAction()
 /*duplicate given entitites*/
 export let duplicateEntities = createAction()
 
-/*set entity color*/
-export let setEntityColor = createAction()
-
+/*set entity data : FIXME : merge all the above ?*/
+export let setEntityData$ = createAction()
 
 
 //import {newTodoCursor, todosCursor} from '../core/testState'

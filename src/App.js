@@ -26,6 +26,7 @@ import Kernel       from 'usco-kernel2'
 
 
 import Rx from 'rx'
+Rx.config.longStackSupport = true
 let fromEvent = Rx.Observable.fromEvent;
 let Observable = Rx.Observable;
 
@@ -51,7 +52,7 @@ import ContextMenu from './components/ContextMenu'
 
 ////TESTING
 import * as blar from './core/fooYeah'
-import {addEntityInstances$, setEntityTransforms, setEntityColor, deleteEntities, duplicateEntities } from './actions/entityActions'
+import {addEntityInstances$, setEntityData$, deleteEntities, duplicateEntities } from './actions/entityActions'
 import {setToTranslateMode, setToRotateMode, setToScaleMode} from './actions/transformActions'
 import {showContextMenu, hideContextMenu, undo, redo, setDesignAsPersistent$} from './actions/appActions'
 import {newDesign$, setDesignData$} from './actions/designActions'
@@ -199,7 +200,11 @@ export default class App extends React.Component {
     function setEntityT(attrsAndEntity){
       console.log("bla")
       let [transforms, entity] = attrsAndEntity;      
-      setEntityTransforms({entity,transforms})
+      setEntityData$({entity:entity,
+        pos:transforms.pos,
+        rot:transforms.rot,
+        sca:transforms.sca
+      })
 
       return attrsAndEntity
     }
@@ -275,24 +280,27 @@ export default class App extends React.Component {
       .map(self.addEntityInstance.bind(self))
       .subscribe(self._tempForceDataUpdate.bind(self))
 
-    setEntityTransforms
+    setEntityData$
+      .debounce(3)
+      .map(self.setEntityData.bind(self))
+      .subscribe(self._tempForceDataUpdate.bind(self))
+
+    /*setEntityTransforms
       .subscribe(function(val){
         self.setEntityTransforms(val.entity, val.transforms);
         self._tempForceDataUpdate();
-      })
-
-    setEntityColor
-      .debounce(3)
-      .subscribe( function(val){self.setEntityColor(val.entity, val.color);})
+      })*/
 
     deleteEntities
       .map(self.removeEntityInstances.bind(self))
       .map(self.selectEntities.bind(self))//reset selection
+
       .subscribe(self._tempForceDataUpdate.bind(self))
 
     duplicateEntities
       .map(self.duplicateEntities.bind(self))
       .map(self.selectEntities.bind(self))//set selection to new ones
+
       .subscribe(self._tempForceDataUpdate.bind(self))
 
     setDesignAsPersistent$
@@ -366,9 +374,7 @@ export default class App extends React.Component {
       addEntityInstances$,
       deleteEntities,
       duplicateEntities,
-
-      setEntityTransforms,
-      setEntityColor
+      setEntityData$,
     ])
       .debounce(500)//don't save too often
 
@@ -379,10 +385,6 @@ export default class App extends React.Component {
         self.kernel.saveBom()//TODO: should not be conflated with assembly
         self.kernel.saveAssemblyState(self.state.assemblies_main_children)
       })
-
-    /*modelChanges$.subscribe(function(data){
-      console.log("hi there, the model changed!",data)
-    })*/
 
     /*
     let foo$ = Rx.Observable.combineLatest(
@@ -629,6 +631,38 @@ export default class App extends React.Component {
     return design
   }
 
+  setEntityData(data){
+    log.info("setting entity data", data)
+
+    if(!data) return
+
+    let entity = data.entity
+    let _entitiesById = this.state._entitiesById
+    let tgtEntity     = _entitiesById[entity.iuid]
+    delete data.entity
+
+    for(let key in data){
+      console.log("change", key)
+      tgtEntity[key] = data[key]
+    }
+   
+
+    if(!tgtEntity) return
+    //tgtEntity. = color
+
+    //FIXME : not sure
+    let assemblyChildren = []
+    for(let key in _entitiesById) {
+      let value = _entitiesById[key]
+      assemblyChildren.push( value )
+    }
+    this.setState({
+      assemblies_main_children:assemblyChildren,
+      _entitiesById:_entitiesById
+    });
+
+  }
+
   //FIXME; this should be a command or something
   selectEntities(entities){
     log.info("selecting entitites",entities)
@@ -648,81 +682,7 @@ export default class App extends React.Component {
     return entities;
   }
 
-  //FIXME; this should be a command or something
-  setEntityTransforms(entity, transforms){
-    log.debug("setting transforms of", entity, "to", transforms)
-
-    let _entitiesById = this.state._entitiesById;
-    let tgtEntity     = _entitiesById[entity.iuid];
-
-    //let currentScale = tgtEntity.sca;
-
-    if(!tgtEntity) return;
-    for(let key in transforms){
-      tgtEntity[key] = transforms[key];
-    }
-    //we need to update the entitie's bbox too just in case
-    //FIXME: then again, this is only for parts...
-    //ALSO , for now we suppose uniform scaling
-    //console.log("oldScale",currentScale,)
-    /*let newScale = transforms["sca"];
-    let diff = 1 + (newScale[1]-currentScale[1]);
-    let a = newScale[1];
-    let b = currentScale[1];
-    diff = 1 + ( parseFloat(a.toPrecision(12)) - parseFloat(b.toPrecision(12)) );
-    diff =  parseFloat(diff.toPrecision(12))
-    console.log("diff",diff)
-
-    tgtEntity.bbox.min[0] *= diff;//transforms.sca[1];
-    tgtEntity.bbox.max[0] *= diff;//transforms.sca[1];*/
-
-    /*if("sca" in transforms){
-      [0,1,2].map(function(index){
-        tgtEntity.bbox.min[index] *= transforms.sca[index];
-        tgtEntity.bbox.max[index] *= transforms.sca[index];
-      });
-    }*/
-
-    //this.setState({_entitiesById:_entitiesById});
-    //FIXME : needs to be based on improved structure ?
-
-    let assemblyChildren = [];
-    for(let key in _entitiesById) {
-      let value = _entitiesById[key]
-      assemblyChildren.push( value )
-    }
-
-    this.setState({
-      assemblies_main_children:assemblyChildren,
-      _entitiesById:_entitiesById
-    });
-  }
-
-  setEntityColor( entity, color ){
-    log.debug("setting entity color",entity, color)
-    if(!color) return;
-    let _entitiesById = this.state._entitiesById;
-    let tgtEntity     = _entitiesById[entity.iuid];
-
-    //let currentScale = tgtEntity.sca;
-
-    if(!tgtEntity) return;
-    tgtEntity.color = color;
-
-    //FIXME : not sure
-    let assemblyChildren = [];
-    for(let key in _entitiesById) {
-      let value = _entitiesById[key]
-      assemblyChildren.push( value )
-    }
-    this.setState({
-      assemblies_main_children:assemblyChildren,
-      _entitiesById:_entitiesById
-    });
-
-    this._tempForceDataUpdate();
-  }
-
+  
   //FIXME; this should be a command or something
 
   /*register a new entity type*/
