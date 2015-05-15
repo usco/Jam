@@ -1,7 +1,7 @@
 {
   "name": "exp",
-  "version": "0.0.8",
-  "description": "jam react experiment",
+  "version": "0.0.9",
+  "description": "jam! experimental version",
   "main": "index.js",
   "scripts": {
     "test": "",
