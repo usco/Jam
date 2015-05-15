@@ -310,11 +310,11 @@ export default class App extends React.Component {
       //.subscribe((value)=>localStorage.setItem("jam!-persistent",value))
 
     setDesignData$
-      .debounce(1000)
       .map(self.setDesignData.bind(self))
 
       //seperation of "sinks" from the rest
       .filter(()=>self.state._persistent)//only save when design is set to persistent
+      .debounce(1000)
       .map(self.kernel.saveDesignMeta.bind(self.kernel))
       .subscribe(function(def){
         def.promise.then(function(result){
@@ -588,9 +588,9 @@ export default class App extends React.Component {
         design:{
           name: self.kernel.activeDesign.title,
           description:self.kernel.activeDesign.description,
-          authors:self.kernel.activeDesign.authors|| [],
-          tags:self.kernel.activeDesign.tags|| [],
-          licenses:self.kernel.activeDesign.licenses|| [],
+          authors:self.kernel.activeDesign.authors || [],
+          tags:self.kernel.activeDesign.tags || [],
+          licenses:self.kernel.activeDesign.licenses || [],
           _persistentUri:self.state.design._persistentUri
         }
       })
