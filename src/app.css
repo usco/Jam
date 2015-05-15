@@ -54,6 +54,7 @@
   font-size: 1.1em;
   font-weight: 500;
 
+  min-width: 10em;
   width:100%;
   box-sizing:border-box;
   -moz-box-sizing:border-box;
