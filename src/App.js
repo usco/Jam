@@ -52,7 +52,7 @@ import ContextMenu from './components/ContextMenu'
 
 ////TESTING
 import * as blar from './core/fooYeah'
-import {addEntityInstances$, setEntityData$, deleteEntities, duplicateEntities } from './actions/entityActions'
+import {addEntityInstances$, setEntityData$, deleteEntities$, duplicateEntities$ } from './actions/entityActions'
 import {setToTranslateMode, setToRotateMode, setToScaleMode} from './actions/transformActions'
 import {showContextMenu, hideContextMenu, undo, redo, setDesignAsPersistent$} from './actions/appActions'
 import {newDesign$, setDesignData$} from './actions/designActions'
@@ -61,8 +61,8 @@ let commands = {
   "undo":undo,
   "redo":redo,
 
-  "removeEntities":deleteEntities,
-  "duplicateEntities":duplicateEntities,
+  "removeEntities":deleteEntities$,
+  "duplicateEntities":duplicateEntities$,
   "toTranslateMode":setToTranslateMode, 
   "toRotateMode": setToRotateMode, 
   "toScaleMode":setToScaleMode
@@ -291,13 +291,13 @@ export default class App extends React.Component {
         self._tempForceDataUpdate();
       })*/
 
-    deleteEntities
+    deleteEntities$
       .map(self.removeEntityInstances.bind(self))
       .map(self.selectEntities.bind(self))//reset selection
 
       .subscribe(self._tempForceDataUpdate.bind(self))
 
-    duplicateEntities
+    duplicateEntities$
       .map(self.duplicateEntities.bind(self))
       .map(self.selectEntities.bind(self))//set selection to new ones
 
@@ -372,8 +372,8 @@ export default class App extends React.Component {
     //////handle overall change pertinent to assemblies
     let modelChanges$ = Observable.merge([
       addEntityInstances$,
-      deleteEntities,
-      duplicateEntities,
+      deleteEntities$,
+      duplicateEntities$,
       setEntityData$,
     ])
       .debounce(500)//don't save too often
@@ -391,7 +391,7 @@ export default class App extends React.Component {
       setEntityTransforms,
       setEntityColor,
       //deleteEntities,
-      //duplicateEntities,
+      //duplicateEntities$,
       function(transforms, color){
         console.log("here")
         let key = transforms.entity.iuid
@@ -436,8 +436,8 @@ export default class App extends React.Component {
       if(selectedEntities && selectedEntities.length>0)
       {
          actions=[
-          {name:"Delete",action: deleteEntities},
-          {name:"Duplicate",action:duplicateEntities},
+          {name:"Delete",action: deleteEntities$},
+          {name:"Duplicate",action:duplicateEntities$},
 
           {
             name:"Annotations", 
@@ -739,15 +739,15 @@ export default class App extends React.Component {
   /*duplicate all given instances of entities*/
   duplicateEntities( instances ){
     log.info("duplicating entity instances", instances)
-    let self  = this;
-    let dupes = [];
+    let self  = this
+    let dupes = []
 
     instances.map(function(instance){
       let duplicate = self.kernel.duplicateEntity(instance)
-      dupes.push( duplicate );
+      dupes.push( duplicate )
       //FIXME: this is redundant  
-      self.addEntityInstance(duplicate);
-    });
+      self.addEntityInstance(duplicate)
+    })
 
     return dupes;
   }

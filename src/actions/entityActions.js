@@ -52,7 +52,7 @@ in the form : {entity:entity,bbox:bbox}
 export let setEntityBBox = createAction()
 
 /*set entities as selectedd*/
-export let selectEntities = createAction()
+export let selectEntities$ = createAction()
 
 /*add new entities to active assembly*/
 export let addEntityInstances$ = createAction()
@@ -61,10 +61,10 @@ export let addEntityInstances$ = createAction()
 export let addEntityType$ = createAction()
 
 /*delete given entities*/
-export let deleteEntities = createAction()
+export let deleteEntities$ = createAction()
 
 /*duplicate given entitites*/
-export let duplicateEntities = createAction()
+export let duplicateEntities$ = createAction()
 
 /*set entity data : FIXME : merge all the above ?*/
 export let setEntityData$ = createAction()
