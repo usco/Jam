@@ -1,8 +1,4 @@
-import RxReact from 'rx-react'
 import React from 'react'
-let StateStreamMixin = RxReact.StateStreamMixin
-let FuncSubject      = RxReact.FuncSubject
-
 import Rx from 'rx'
 let Observable= Rx.Observable
 let fromEvent = Observable.fromEvent
@@ -23,12 +19,10 @@ import ColorPicker from 'react-color-picker'
   - rotation 
   - scale
 */
-class EntityInfos extends RxReact.Component {
+class EntityInfos extends React.Component {
   constructor(props) {
     super(props)
     this.state={entityName:""}
-    this.keyup = FuncSubject.create()
-
     this.degreeAngles = true
   }
 
@@ -42,7 +36,7 @@ class EntityInfos extends RxReact.Component {
     }
   }
 
-  getStateStream() {
+  /*getStateStream() {
     //return (
     //  Observable.empty())
     function loggg(text){
@@ -59,7 +53,7 @@ class EntityInfos extends RxReact.Component {
       //.map(loggg)
       .map(results => ({entityName: results}))
     )
-  }
+  }*/
 
   _keyup(event){
     console.log(event)

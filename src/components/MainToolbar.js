@@ -1,6 +1,4 @@
-import RxReact from 'rx-react'
 import React from 'react'
-let StateStreamMixin = RxReact.StateStreamMixin
 
 import Rx from 'rx'
 let Observable= Rx.Observable
@@ -17,7 +15,7 @@ import {newDesign$, setDesignData$} from '../actions/designActions'
 import {undo,redo,setDesignAsPersistent$} from '../actions/appActions'
 
 
-class MainToolBar extends RxReact.Component {
+class MainToolBar extends React.Component {
   constructor(props) {
     super(props)
     this.state = {
