@@ -122,7 +122,6 @@ export default class App extends React.Component {
     } 
 
   }
-  
 
   componentWillUpdate(){
     //console.log("component will update")
@@ -142,7 +141,6 @@ export default class App extends React.Component {
     ////////////////
 
     let self     = this
-
     
     let container = this.refs.wrapper.getDOMNode()
 
@@ -610,13 +608,6 @@ export default class App extends React.Component {
   
   //-------COMMANDS OR SOMETHING LIKE THEM -----
 
-  //this helpers forces a serialization, should be a watcher 
-  _serializeState(){
-  }
-
-  _serializeAssemblyState(){
-  }  
-
   setDesignData(data){
     log.info("setting design data", data)
 
@@ -897,7 +888,11 @@ export default class App extends React.Component {
       })
     }
 
+    //FIXME: hack / experiment
 
+    let annotationsData = {
+      
+    }
 
     glview.forceUpdate({
       data:entries, 

@@ -23,11 +23,9 @@
     "worker-loader": "^0.5.7"
   },
   "dependencies": {
-    "atomo": "^0.1.2",
     "babel-runtime": "^4.7.16",
     "classnames": "^1.2.0",
     "co": "^4.5.1",
-    "curry-d": "^0.6.0",
     "deep-diff": "^0.3.2",
     "fynx": "^1.6.0",
     "glView-helpers": "usco/glView-helpers#dev",
@@ -36,7 +34,6 @@
     "js-csp": "^0.4.0",
     "jsondiffpatch": "^0.1.31",
     "keymaster": "^1.6.2",
-    "kurtsore": "^0.1.2",
     "lodash": "^3.6.0",
     "log-minim": "git://github.com/usco/log-minim",
     "loglevel": "^1.2.0",
