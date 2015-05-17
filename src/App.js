@@ -1,6 +1,6 @@
 require("./app.css")
-import React from 'react';
-import co from "co";
+import React from 'react'
+import co from "co"
 
 
 import ThreeJs     from './components/webgl/three-js.react'
@@ -10,7 +10,7 @@ import EntityInfos from './components/EntityInfos'
 
 import postProcessMesh from './meshpp/postProcessMesh'
 import helpers         from 'glView-helpers'
-let centerMesh         = helpers.mesthTools.centerMesh;
+let centerMesh         = helpers.mesthTools.centerMesh
 
 import AssetManager from 'usco-asset-manager'
 import DesktopStore from 'usco-desktop-store'
@@ -20,15 +20,15 @@ import CtmParser    from 'usco-ctm-parser'
 import PlyParser    from 'usco-ply-parser'
 /*import AMfParser    from 'usco-amf-parser'
 import ObjParser    from 'usco-obj-parser'*/
-//import registerReact from 'reactive-elements';
+//import registerReact from 'reactive-elements'
 
 import Kernel       from 'usco-kernel2'
 
 
 import Rx from 'rx'
 Rx.config.longStackSupport = true
-let fromEvent = Rx.Observable.fromEvent;
-let Observable = Rx.Observable;
+let fromEvent = Rx.Observable.fromEvent
+let Observable = Rx.Observable
 
 
 import {partitionMin} from './coms/utils'
@@ -42,8 +42,8 @@ import keymaster from 'keymaster'
 
 
 import logger from './utils/log'
-let log = logger("Jam-Root");
-log.setLevel("info");
+let log = logger("Jam-Root")
+log.setLevel("info")
 
 import state from './state'
 
@@ -71,9 +71,9 @@ let commands = {
 
 export default class App extends React.Component {
   constructor(props){
-    super(props);
+    super(props)
 
-    this.state = state;
+    this.state = state
     //TODO: store this elsewhere ? use stores system ?
     this.state._lastProjectName= localStorage.getItem("jam!-lastProjectName") 
     this.state.design.name    = this.state._lastProjectName || "untitled design"
@@ -83,15 +83,15 @@ export default class App extends React.Component {
     this.state._persistent     = JSON.parse( localStorage.getItem("jam!-persistent") ) || false
 
 
-    this.assetManager = new AssetManager();
-    this.assetManager.addParser("stl", new StlParser());
-    this.assetManager.addParser("ctm", new CtmParser());
-    this.assetManager.addParser("ply", new PlyParser());
+    this.assetManager = new AssetManager()
+    this.assetManager.addParser("stl", new StlParser())
+    this.assetManager.addParser("ctm", new CtmParser())
+    this.assetManager.addParser("ply", new PlyParser())
 
-    this.assetManager.addStore( "desktop", new DesktopStore() );
-    this.assetManager.addStore( "xhr"    , new XhrStore() );
+    this.assetManager.addStore( "desktop", new DesktopStore() )
+    this.assetManager.addStore( "xhr"    , new XhrStore() )
 
-    this.kernel = new Kernel(this.state);
+    this.kernel = new Kernel(this.state)
 
     //temporary
     this.kernel.dataApi.store = this.assetManager.stores["xhr"]
@@ -103,24 +103,24 @@ export default class App extends React.Component {
     } 
     
     let self = this
-    let oldSetState = this.setState.bind(this);
+    let oldSetState = this.setState.bind(this)
 
     this._undos  = []
     this._redos  = []
 
     this.setState   = function(value, callback, alterHistory=true){
       function callbackWrapper(...params){
-        if(callback) callback(params);
+        if(callback) callback(params)
       }
 
-      oldSetState(value, callback);
+      oldSetState(value, callback)
       if(alterHistory){
         let oldState = JSON.parse(JSON.stringify(self.state))//,function(key,val){
         console.log("adding history", self._undos)
-        //});//Object.assign({},self.state);
+        //})//Object.assign({},self.state)
 
-        self._undos.push( oldState);
-        self._redos = [];
+        self._undos.push( oldState)
+        self._redos = []
       }
     } 
 
@@ -133,7 +133,7 @@ export default class App extends React.Component {
   }
 
   componentDidMount(){
-    let pjson = require('../package.json');
+    let pjson = require('../package.json')
     this.setState(
     {
       appInfos:{
@@ -141,18 +141,28 @@ export default class App extends React.Component {
         name: this.state.appInfos.name,
         version:pjson.version
       }  
-    },null,false);
+    },null,false)
     ////////////////
 
 
     //add drag & drop behaviour 
-    let container = this.refs.wrapper.getDOMNode();
-    DndBehaviour.attach( container );
-    DndBehaviour.dropHandler = this.handleDrop.bind(this);
+    let container = this.refs.wrapper.getDOMNode()
+    DndBehaviour.attach( container )
+    let dnds$ = new Rx.Subject()
+    function dnd(drops){
+      dnds$.onNext(drops)
+    }
+    DndBehaviour.dropHandler = dnd
+    
+    dnds$
+      .map( (drops) => {log.info("data was dropped into jam!", drops);return drops})
+      .map( (drops)=>drops.data)      //.pluck(".data")
+      .flatMap( Rx.Observable.fromArray )
+      .subscribe((entry)=>{ self.loadMesh.bind(self,entry,{display:true})() } ) 
 
 
-    let glview   = this.refs.glview;
-    let self     = this;
+    let glview   = this.refs.glview
+    let self     = this
 
     //get entities 
     function entitiesOnly( x ){
@@ -161,14 +171,14 @@ export default class App extends React.Component {
 
     function getEntity( x ){
       console.log(x)
-      return x.userData.entity;
+      return x.userData.entity
     }
 
     let selectedMeshes$ = glview.selectedMeshes$
       .defaultIfEmpty([])
       .subscribe(
         function(selections){
-          let res= selections.filter(entitiesOnly).map(getEntity);
+          let res= selections.filter(entitiesOnly).map(getEntity)
           self.selectEntities(res)
         }
       )
@@ -184,22 +194,22 @@ export default class App extends React.Component {
 
     function attributesToArrays(attrs){
       console.log("here")
-      let output= {};
+      let output= {}
       for(let key in attrs){
-        output[key] = attrs[key].toArray();
+        output[key] = attrs[key].toArray()
       }
       //special case for rotation
       if("rot" in attrs)
       {
-        output["rot"] = output["rot"].slice(0,3);
+        output["rot"] = output["rot"].slice(0,3)
       }
 
-      return output;
+      return output
     }
 
     function setEntityT(attrsAndEntity){
       console.log("bla")
-      let [transforms, entity] = attrsAndEntity;      
+      let [transforms, entity] = attrsAndEntity      
       setEntityData$({entity:entity,
         pos:transforms.pos,
         rot:transforms.rot,
@@ -261,17 +271,17 @@ export default class App extends React.Component {
     ///////////
 
     //fetch & handle url parameters
-    let designUrls = ParseUrlParamsBehaviour.fetch("designUrl");
-    let meshUrls   = ParseUrlParamsBehaviour.fetch("modelUrl");
+    let designUrls = ParseUrlParamsBehaviour.fetch("designUrl")
+    let meshUrls   = ParseUrlParamsBehaviour.fetch("modelUrl")
     
     //only handle a single design url
-    let singleDesign = designUrls.pop();
-    if(singleDesign) designUrls = [singleDesign];
+    let singleDesign = designUrls.pop()
+    if(singleDesign) designUrls = [singleDesign]
     
-    designUrls.map(function( designUrl ){ self.loadDesign(designUrl) });
+    designUrls.map(function( designUrl ){ self.loadDesign(designUrl) })
 
     //only load meshes if no designs need to be loaded 
-    if(!singleDesign)  meshUrls.map(function( meshUrl ){ self.loadMesh(meshUrl) });
+    if(!singleDesign)  meshUrls.map(function( meshUrl ){ self.loadMesh(meshUrl) })
 
 
     /////////
@@ -287,8 +297,8 @@ export default class App extends React.Component {
 
     /*setEntityTransforms
       .subscribe(function(val){
-        self.setEntityTransforms(val.entity, val.transforms);
-        self._tempForceDataUpdate();
+        self.setEntityTransforms(val.entity, val.transforms)
+        self._tempForceDataUpdate()
       })*/
 
     deleteEntities$
@@ -423,9 +433,9 @@ export default class App extends React.Component {
     ///////////
     
     showContextMenu.subscribe(function(requestData){
-      let selectedEntities = self.state.selectedEntities;
-      let active = true;//(selectedEntities && selectedEntities.length>0)
-      let actions = [];
+      let selectedEntities = self.state.selectedEntities
+      let active = true//(selectedEntities && selectedEntities.length>0)
+      let actions = []
 
       //default actions ?
       actions = [
@@ -460,24 +470,24 @@ export default class App extends React.Component {
           selectedEntities:self.state.selectedEntities,
           actions,
         }
-      },null, false);
-    });
+      },null, false)
+    })
 
     hideContextMenu.subscribe(function(requestData){
       self.setState({
         contextMenu:{
           active:false,
         }
-      },null, false);
-    });
+      },null, false)
+    })
 
 
     undo.subscribe(function(){
       console.log("UNDO")
       function afterSetState(){
-        self._tempForceDataUpdate();
+        self._tempForceDataUpdate()
       }
-      if(self._undos.length<2) return;
+      if(self._undos.length<2) return
 
       let lastState = self._undos.pop()
       self._redos.push(lastState)
@@ -485,18 +495,18 @@ export default class App extends React.Component {
       let prevState = self._undos[self._undos.length-1] //.pop()
       self.setState(prevState, afterSetState,false)
       
-    });
+    })
 
     redo.subscribe(function(){
       console.log("REDO")
 
       function afterSetState(){
-        self._tempForceDataUpdate();
+        self._tempForceDataUpdate()
       }
-      let lastState = self._redos.pop();
-      if(!lastState) return;
+      let lastState = self._redos.pop()
+      if(!lastState) return
 
-      self._undos.push(lastState);
+      self._undos.push(lastState)
       self.setState(lastState,afterSetState,false)
     })
 
@@ -510,35 +520,35 @@ export default class App extends React.Component {
   }
 
   componentWillUnmount(){
-    DndBehaviour.detach( );
+    DndBehaviour.detach( )
   }
 
   //event handlers
   setupKeyboard(){
-    let self = this;
+    let self = this
     //non settable shortcuts
     //prevent backspace
     keymaster('backspace', function(){ 
       return false
-    });
+    })
     keymaster('F11', function(){ 
-      //self.handleFullScreen();
-    });
+      //self.handleFullScreen()
+    })
 
     //deal with all shortcuts
-    let shortcuts = this.state.shortcuts;
+    let shortcuts = this.state.shortcuts
     shortcuts.map(function(shortcutEntry){
-      let {keys, command} = shortcutEntry;
+      let {keys, command} = shortcutEntry
 
       keymaster(keys, function(){ 
         console.log(`will do ${command}`)
         if(command in commands){
-          commands[command](self.state.selectedEntities);
+          commands[command](self.state.selectedEntities)
         }
-        return false;
-      });
+        return false
+      })
 
-    });
+    })
    
     //TAKEN FROM ESTE
     // For Om-like app state persistence. Press shift+ctrl+s to save app state
@@ -549,14 +559,14 @@ export default class App extends React.Component {
       console.log('app state saved')
       console.log('copy the state to your clipboard by calling copy(_appStateString)')
       console.log('for dev type _appState and press enter')
-    });
+    })
 
      keymaster('shift+ctrl+l',function(){
       const stateStr = window.prompt('Copy/Paste the serialized state into the input')
       const newState = JSON.parse(stateStr)
       if (!newState) return
       state.load(newState)
-    });
+    })
 
   }
 
@@ -564,17 +574,10 @@ export default class App extends React.Component {
     //keymaster.unbind('esc', this.onClose)
   }
 
-  handleDrop(data){
-    log.info("data was dropped into jam!", data)
-    for (var i = 0, f; f = data.data[i]; i++) {
-        this.loadMesh( f, {display: true} );
-    }
-  }
-
   //api 
   loadDesign(uri,options){
-    log.warn("loading design from ",uri);
-    let self = this;
+    log.warn("loading design from ",uri)
+    let self = this
 
     function logNext( next ){
       log.info( next )
@@ -600,7 +603,7 @@ export default class App extends React.Component {
       //FIXME: godawful hack because we have multiple "central states" for now
       self.kernel.activeAssembly.children.map(
         function(entityInstance){
-          self.addEntityInstance(entityInstance);
+          self.addEntityInstance(entityInstance)
         }
       )
       self._tempForceDataUpdate()
@@ -622,9 +625,9 @@ export default class App extends React.Component {
   }  
 
   setDesignData(data){
-    log.info("setting design data", data);
+    log.info("setting design data", data)
 
-    let design = Object.assign({}, this.state.design, data);
+    let design = Object.assign({}, this.state.design, data)
     this.setState({
       design:design
     })
@@ -659,14 +662,14 @@ export default class App extends React.Component {
     this.setState({
       assemblies_main_children:assemblyChildren,
       _entitiesById:_entitiesById
-    });
+    })
 
   }
 
-  //FIXME; this should be a command or something
+  //FIXME this should be a command or something
   selectEntities(entities){
     log.info("selecting entitites",entities)
-    let entities = entities || [];
+    let entities = entities || []
     if(entities.constructor !== Array) entities = [entities]
 
     let ids = entities.map( entity => entity.iuid)
@@ -676,35 +679,35 @@ export default class App extends React.Component {
       this.setState({
         selectedEntities:entities,
         selectedEntitiesIds:ids
-      }, null, false); 
+      }, null, false) 
     
-    this._tempForceDataUpdate();
-    return entities;
+    this._tempForceDataUpdate()
+    return entities
   }
 
   
-  //FIXME; this should be a command or something
+  //FIXME this should be a command or something
 
   /*register a new entity type*/
   addEntityType( type, typeUid ){
     log.info("adding entity type", type)
     let nKlasses  = this.state._entityKlasses
-    nKlasses[typeUid] = type;
+    nKlasses[typeUid] = type
     //nKlasses.push( type )
 
     //TODO: should it be part of the app's history 
     this.setState({_entityKlasses:nKlasses}, null, false)
   }
 
-  //FIXME; this should be a command or something
+  //FIXME this should be a command or something
   /*save a new entity instance*/
   addEntityInstance( instance ){
     log.info("adding entity instance", instance)
     let nEntities  = this.state.assemblies_main_children
     nEntities.push( instance )
 
-    let _entitiesById = this.state._entitiesById;
-    _entitiesById[instance.iuid] = instance;
+    let _entitiesById = this.state._entitiesById
+    _entitiesById[instance.iuid] = instance
 
     this.setState({
       _entitiesById:_entitiesById,
@@ -721,10 +724,10 @@ export default class App extends React.Component {
   removes it from the active assembly*/
   removeEntityInstances( instances ){
     log.info("removing entity instances", instances)
-    let self = this;
+    let self = this
     instances.map(function(instance){
-      self.kernel.removeEntity(instance);
-    });
+      self.kernel.removeEntity(instance)
+    })
 
     //FIXME: not sure...., duplication of the above again
     let nEntities  = this.state.assemblies_main_children
@@ -754,24 +757,25 @@ export default class App extends React.Component {
 
   //API
   loadMesh( uriOrData, options ){
+    log.info("loading mesh")
     const DEFAULTS={
       display:true,//addToAssembly
       keepRawData:true
     }
-    let options = Object.assign({},DEFAULTS,options);
+    let options = Object.assign({},DEFAULTS,options)
     
-    if(!uriOrData) throw new Error("no uri or data to load!");
+    if(!uriOrData) throw new Error("no uri or data to load!")
 
-    let self = this;
-    let resource = this.assetManager.load( uriOrData, {keepRawData:true, parsing:{useWorker:true,useBuffers:true} } );
-    let dataSource = Rx.Observable.fromPromise(resource.deferred.promise);
+    let self = this
+    let resource = this.assetManager.load( uriOrData, {keepRawData:true, parsing:{useWorker:true,useBuffers:true} } )
+    let dataSource = Rx.Observable.fromPromise(resource.deferred.promise)
 
     
     function handleLoadError( err ){
-       log.error("failed to load resource", err, resource.error);
+       log.error("failed to load resource", err, resource.error)
        //do not keep error message on screen for too long, remove it after a while
-       setTimeout(cleanupResource, self.dismissalTimeOnError);
-       return resource;
+       setTimeout(cleanupResource, self.dismissalTimeOnError)
+       return resource
     }
     function cleanupResource( resource ){
       log.info("cleaning up resources")
@@ -781,12 +785,12 @@ export default class App extends React.Component {
     function registerMeshOfPart( mesh ){
       //part type registration etc
       //we are registering a yet-uknown Part's type, getting back an instance of that type
-      let {partKlass,typeUid}    = self.kernel.registerPartType( null, null, mesh, {name:resource.name, resource:resource} );
+      let {partKlass,typeUid}    = self.kernel.registerPartType( null, null, mesh, {name:resource.name, resource:resource} )
       self.addEntityType( partKlass, typeUid )
 
       //we do not return the shape since that becomes the "reference shape/mesh", not the
       //one that will be shown
-      return partKlass;
+      return partKlass
     }
 
     function showEntity( partKlass ){
@@ -813,8 +817,8 @@ export default class App extends React.Component {
       .map( registerMeshOfPart )
       .map( showEntity )
       .map( function(instance){
-        //klassAndInstance.instance.pos[2]+=20;
-        return instance;
+        //klassAndInstance.instance.pos[2]+=20
+        return instance
       })
       /*.map( kI => kI.instance)
       .map( self.selectEntities.bind(this) )*/
@@ -826,24 +830,24 @@ export default class App extends React.Component {
   /*temporary method to force 3d view updates*/
   _tempForceDataUpdate(){
     log.info("forcing re-render")
-    let self     = this;
-    let glview   = this.refs.glview;
-    let assembly = this.kernel.activeAssembly;
-    let entries  = this.state.assemblies_main_children;
+    let self     = this
+    let glview   = this.refs.glview
+    let assembly = this.kernel.activeAssembly
+    let entries  = this.state.assemblies_main_children
     
     let selectedEntities = this.state.selectedEntitiesIds.map(entityId => self.state._entitiesById[entityId])
-    let selectedEntitiesIds = this.state.selectedEntitiesIds;
+    let selectedEntitiesIds = this.state.selectedEntitiesIds
 
     //mesh insertion post process
     function meshInjectPostProcess( mesh ){
       //FIXME: not sure about these, they are used for selection levels
-      mesh.selectable      = true;
-      mesh.selectTrickleUp = false;
-      mesh.transformable   = true;
+      mesh.selectable      = true
+      mesh.selectTrickleUp = false
+      mesh.transformable   = true
       //FIXME: not sure, these are very specific for visuals
-      mesh.castShadow      = true;
-      //mesh.receiveShadow = true;
-      return mesh;
+      mesh.castShadow      = true
+      //mesh.receiveShadow = true
+      return mesh
     }
 
     /*function that provides a mapping between an entity and its visuals (in this case 
@@ -853,54 +857,59 @@ export default class App extends React.Component {
       @param xform : any extra tranformation to apply to the entity
     */
     let mapper = function( entity, addTo, xform ){
-      let self = this;
+      let self = this
 
-      /*let getInstance  = self.kernel.getPartMeshInstance( entity );
+      /*let getInstance  = self.kernel.getPartMeshInstance( entity )
       return Rx.Observable.from( getInstance )
         .map(function(meshInstance){
-          meshInstance.userData.entity = entity;//FIXME : should we have this sort of backlink ?
+          meshInstance.userData.entity = entity//FIXME : should we have this sort of backlink ?
           //FIXME/ make a list of all operations needed to be applied on part meshes
-          //computeObject3DBoundingSphere( meshInstance, true );
-          //centerMesh( meshInstance ); //FIXME do not use the "global" centerMesh
+          //computeObject3DBoundingSphere( meshInstance, true )
+          //centerMesh( meshInstance ) //FIXME do not use the "global" centerMesh
           
           log.info("instance",meshInstance)
 
           meshInstance.position.fromArray( entity.pos )
-          meshInstance.rotation.fromArray( entity.rot );
-          meshInstance.scale.fromArray(  entity.sca );
-          if (addTo)addTo.add( meshInstance);
-          if (xform) xform(entity,meshInstance);
+          meshInstance.rotation.fromArray( entity.rot )
+          meshInstance.scale.fromArray(  entity.sca )
+          if (addTo)addTo.add( meshInstance)
+          if (xform) xform(entity,meshInstance)
           return meshInstance
         })
         .map(self._meshInjectPostProcess)*/
 
       co(function* (){
-        let meshInstance = yield self.kernel.getPartMeshInstance( entity ) ;
+        let meshInstance = yield self.kernel.getPartMeshInstance( entity ) 
         if( meshInstance){
-          meshInstance.userData.entity = entity;//FIXME : should we have this sort of backlink ?
+          meshInstance.userData.entity = entity//FIXME : should we have this sort of backlink ?
           //FIXME/ make a list of all operations needed to be applied on part meshes
-          //computeObject3DBoundingSphere( meshInstance, true );
-          //centerMesh( meshInstance ); //FIXME do not use the "global" centerMesh
+          //computeObject3DBoundingSphere( meshInstance, true )
+          //centerMesh( meshInstance ) //FIXME do not use the "global" centerMesh
           
           //log.info("instance",meshInstance, meshInstance.userData.entity)
 
           meshInstance.position.fromArray( entity.pos )
-          meshInstance.rotation.fromArray( entity.rot );
-          meshInstance.scale.fromArray(  entity.sca );
+          meshInstance.rotation.fromArray( entity.rot )
+          meshInstance.scale.fromArray(  entity.sca )
 
-          meshInstance.material.color.set( entity.color );
+          meshInstance.material.color.set( entity.color )
 
-          meshInjectPostProcess( meshInstance );
+          meshInjectPostProcess( meshInstance )
           
-          if(addTo) addTo.add( meshInstance);
-          if(xform) xform(entity, meshInstance);
+          if(addTo) addTo.add( meshInstance)
+          if(xform) xform(entity, meshInstance)
           
-          return meshInstance;
+          return meshInstance
         }
-      });
-    };
+      })
+    }
 
-    glview.forceUpdate({data:entries, mapper:mapper.bind(this), selectedEntities:selectedEntitiesIds});
+
+
+    glview.forceUpdate({
+      data:entries, 
+      mapper:mapper.bind(this), 
+      selectedEntities:selectedEntitiesIds})
   }
   
   render() {
@@ -923,7 +932,7 @@ export default class App extends React.Component {
       position: 'absolute',
       right: 0,
       top: "42px"
-    };
+    }
 
     let titleStyle = {
       position: 'absolute',
@@ -934,17 +943,17 @@ export default class App extends React.Component {
       position: 'absolute',
       left: 0,
       bottom:0
-    };
+    }
 
     let toolbarStyle={
       width:'100%',
       height:'100%',
-    };
+    }
     
-    let bomData = this.kernel.bom.bom;
+    let bomData = this.kernel.bom.bom
 
     //TODO: do this elsewhere
-    window.document.title = `${this.state.design.name} -- Jam!`;
+    window.document.title = `${this.state.design.name} -- Jam!`
 
     let self=this
     let contextmenuSettings = this.state.contextMenu
@@ -972,6 +981,6 @@ export default class App extends React.Component {
           <ContextMenu settings={contextmenuSettings} />
 
         </div>
-    );
+    )
   }
 }
