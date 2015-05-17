@@ -1,13 +1,13 @@
-import React from 'react';
-import THREE from 'three';
+import React from 'react'
+import THREE from 'three'
 import TWEEN from 'tween.js'
 
-import Detector from './deps/Detector.js';
+import Detector from './deps/Detector.js'
 
 import helpers from 'glView-helpers'
-let LabeledGrid = helpers.grids.LabeledGrid;
-let ShadowPlane = helpers.planes.ShadowPlane;
-let CamViewControls= helpers.CamViewControls;
+let LabeledGrid = helpers.grids.LabeledGrid
+let ShadowPlane = helpers.planes.ShadowPlane
+let CamViewControls= helpers.CamViewControls
 
 import CopyShader     from './deps/post-process/CopyShader'
 import FXAAShader     from './deps/post-process/FXAAShader'
@@ -20,30 +20,30 @@ import RenderPass from './deps/post-process/RenderPass'
 import {ClearMaskPass, MaskPass} from './deps/post-process/MaskPass'
 
 
-//import CanvasRenderer from './deps/CanvasRenderer';
-import OrbitControls from './deps/OrbitControls';
-import CombinedCamera from './deps/CombinedCamera';
+//import CanvasRenderer from './deps/CanvasRenderer'
+import OrbitControls from './deps/OrbitControls'
+import CombinedCamera from './deps/CombinedCamera'
 
 import PreventScrollBehaviour from '../../behaviours/preventScrollBe'
 
 //TODO: import this at another level, should not be part of the base gl view
 import TransformControls from './transforms/TransformControls'
 import Selector from './deps/Selector'
-let OutlineObject = helpers.objectEffects.OutlineObject;
-let ZoomInOnObject= helpers.objectEffects.ZoomInOnObject;
+let OutlineObject = helpers.objectEffects.OutlineObject
+let ZoomInOnObject= helpers.objectEffects.ZoomInOnObject
 
 
 
 import Rx from 'rx'
-let Observable= Rx.Observable;
-let Subject   = Rx.Subject;
+let Observable= Rx.Observable
+let Subject   = Rx.Subject
 
 
 import {windowResizes,pointerInteractions} from '../../interactions/interactions'
 
 import logger from '../../utils/log'
-let log = logger("glView");
-log.setLevel("info");
+let log = logger("glView")
+log.setLevel("info")
 
 
 //FIXME: hack for now, should not be set here
@@ -54,12 +54,8 @@ import {showContextMenu, hideContextMenu} from '../../actions/appActions'
 
 class ThreeJs extends React.Component{
   constructor(props){
-    super(props);
-    console.log("props", this.props);
-
-    console.log("helpers",helpers)
-
-    this.scenes = {};
+    super(props)
+    this.scenes = {}
 
     //shoud be props ?
     this.config = {
@@ -67,7 +63,7 @@ class ThreeJs extends React.Component{
         shadowMapEnabled:true,
         shadowMapAutoUpdate:true,
         shadowMapSoft:true,
-        shadowMapType : THREE.PCFSoftShadowMap,//THREE.PCFSoftShadowMap,//PCFShadowMap; 
+        shadowMapType : THREE.PCFSoftShadowMap,//THREE.PCFSoftShadowMap,//PCFShadowMap 
         autoUpdateScene : true,
         physicallyBasedShading : false,
         autoClear:true,
@@ -116,90 +112,90 @@ class ThreeJs extends React.Component{
           {type:"LabeledGrid"}
         ]
       }
-    };
+    }
 
-    this.state={cameras : this.config.cameras };
+    this.state={cameras : this.config.cameras }
   }
   
   componentDidMount(){
     let listen=function(value){
-      console.log("listen",value);
-      return value;
+      console.log("listen",value)
+      return value
     }
     let errors = function(error){
       console.log("error",error)
     }
 
-    this.scene = new THREE.Scene();
-    this.dynamicInjector = new THREE.Object3D();//all dynamic mapped objects reside here
-    this.scene.add( this.dynamicInjector );
+    this.scene = new THREE.Scene()
+    this.dynamicInjector = new THREE.Object3D()//all dynamic mapped objects reside here
+    this.scene.add( this.dynamicInjector )
 
-    let renderer = null;
+    let renderer = null
     
     if(!Detector.webgl){
-      //Detector.addGetWebGLMessage();
-      //renderer = new CanvasRenderer(); 
+      //Detector.addGetWebGLMessage()
+      //renderer = new CanvasRenderer() 
     } else {
-      renderer = new THREE.WebGLRenderer( {antialias:false} );
+      renderer = new THREE.WebGLRenderer( {antialias:false} )
     }
-    renderer.setClearColor( "#f5f5f5" );
-    renderer.shadowMapEnabled = this.config.renderer.shadowMapEnabled;
-    renderer.shadowMapAutoUpdate = this.config.renderer.shadowMapAutoUpdate;
-    renderer.shadowMapSoft = this.config.renderer.shadowMapSoft;
-    //renderer.shadowMapType = this.config.renderer.PCFSoftShadowMap;//THREE.PCFShadowMap; 
-    //renderer.autoUpdateScene = this.config.renderer.autoUpdateScene;
-    //renderer.physicallyBasedShading = this.config.renderer.physicallyBasedShading;
-    //renderer.autoClear = this.config.renderer.autoClear;
-    renderer.gammaInput = this.config.renderer.gammaInput;
-    renderer.gammaOutput = this.config.renderer.gammaOutput;
+    renderer.setClearColor( "#f5f5f5" )
+    renderer.shadowMapEnabled = this.config.renderer.shadowMapEnabled
+    renderer.shadowMapAutoUpdate = this.config.renderer.shadowMapAutoUpdate
+    renderer.shadowMapSoft = this.config.renderer.shadowMapSoft
+    //renderer.shadowMapType = this.config.renderer.PCFSoftShadowMap//THREE.PCFShadowMap 
+    //renderer.autoUpdateScene = this.config.renderer.autoUpdateScene
+    //renderer.physicallyBasedShading = this.config.renderer.physicallyBasedShading
+    //renderer.autoClear = this.config.renderer.autoClear
+    renderer.gammaInput = this.config.renderer.gammaInput
+    renderer.gammaOutput = this.config.renderer.gammaOutput
 
-    let pixelRatio = window.devicePixelRatio || 1;
-    renderer.setPixelRatio( pixelRatio );
+    let pixelRatio = window.devicePixelRatio || 1
+    renderer.setPixelRatio( pixelRatio )
 
-    let camera  = this._makeCamera(this.config.cameras[0]);
-    this.camera = camera ;
-    this.scene.add( camera );
-    camera.lookAt(this.scene.position); 
+    let camera  = this._makeCamera(this.config.cameras[0])
+    this.camera = camera 
+    this.scene.add( camera )
+    camera.lookAt(this.scene.position) 
     
-    let container = this.refs.container.getDOMNode();
-    container.appendChild( renderer.domElement );
-    this.container = container;
+    let container = this.refs.container.getDOMNode()
+    container.appendChild( renderer.domElement )
+    this.container = container
     
-    this._makeControls(this.config.controls[0]);
-    this.transformControls = new TransformControls(this.camera,renderer.domElement);
-    this.scene.add( this.transformControls );
+    this._makeControls(this.config.controls[0])
+    this.transformControls = new TransformControls(this.camera,renderer.domElement)
+    this.scene.add( this.transformControls )
 
     for( let light of this.config.scenes["main"])
     {
-      this._makeLight( light );
+      this._makeLight( light )
     }
     //TODO: for testing, remove
-    //this._makeTestStuff();
-    let grid = new LabeledGrid(200,200,10,this.config.cameras[0].up);
-    //this.scene.add(grid);
+    //this._makeTestStuff()
+    let grid = new LabeledGrid(200,200,10,this.config.cameras[0].up)
+    //this.scene.add(grid)
 
-    let shadowPlane = new ShadowPlane(2000,2000,null,this.config.cameras[0].up);
-    this.scene.add(shadowPlane);
+    let shadowPlane = new ShadowPlane(2000,2000,null,this.config.cameras[0].up)
+    this.scene.add(shadowPlane)
 
     ////////setup post processing
     log.info("setting up post processing")
-    this.renderer = renderer;
-    this._setupPostProcess();
+    this.renderer = renderer
+    this._setupPostProcess()
 
 
     ////////camera view controls
-    let camViewRenderer = new THREE.WebGLRenderer( {antialias:true, alpha: true} );
-    camViewRenderer.setSize( 256, 128 );
-    camViewRenderer.setClearColor( 0x000000,0 );
-    camViewRenderer.setPixelRatio( pixelRatio );
+    let camViewRenderer = new THREE.WebGLRenderer( {antialias:true, alpha: true} )
+    camViewRenderer.setSize( 256, 128 )
+    camViewRenderer.setClearColor( 0x000000,0 )
+    camViewRenderer.setPixelRatio( pixelRatio )
      
-    let camViewContainer = this.refs.camViewControls.getDOMNode();
-    camViewContainer.appendChild( camViewRenderer.domElement );
+    let camViewContainer = this.refs.camViewControls.getDOMNode()
+    camViewContainer.appendChild( camViewRenderer.domElement )
 
-    this.camViewScene = new THREE.Scene();
+    this.camViewScene = new THREE.Scene()
 
     //1:5 ratio to the main camera position seems ok
-    let camPos = this.camera.position.clone().divideScalar(5).toArray();
+    let camPos = this.camera.position.clone().divideScalar(5).toArray()
     //camPos[2] = -camPos[2]
 
     let camViewCamConfig = {
@@ -209,68 +205,68 @@ class ThreeJs extends React.Component{
         up:[0,0,1]
     }
 
-    let camViewCam   = this._makeCamera(camViewCamConfig);
+    let camViewCam   = this._makeCamera(camViewCamConfig)
     
-    //camViewCam.toDiagonalView();
-    //camViewCam.toOrthographic();
-    camViewCam.aspect = 1;
-    camViewCam.updateProjectionMatrix();
-    camViewCam.lookAt(this.camViewScene.position); 
+    //camViewCam.toDiagonalView()
+    //camViewCam.toOrthographic()
+    camViewCam.aspect = 1
+    camViewCam.updateProjectionMatrix()
+    camViewCam.lookAt(this.camViewScene.position) 
 
     let camViewControls = new CamViewControls({size:9, cornerWidth:1.5,highlightColor:"#ffd200",opacity:0.95},[this.camera,camViewCam])
-    camViewControls.init( camViewCam, camViewContainer );
-    this.camViewScene.add(camViewControls);
+    camViewControls.init( camViewCam, camViewContainer )
+    this.camViewScene.add(camViewControls)
 
-    this.camViewCam      = camViewCam;
-    this.camViewControls = camViewControls;
-    this.camViewRenderer = camViewRenderer;
-    this.controls.addObject( camViewCam, {userZoom:false, userPan:false});
+    this.camViewCam      = camViewCam
+    this.camViewControls = camViewControls
+    this.camViewRenderer = camViewRenderer
+    this.controls.addObject( camViewCam, {userZoom:false, userPan:false})
     //planesColor:"#17a9f5",edgesColor:"#17a9f5",cornersColor:"#17a9f5",
 
-    this.selector = new Selector();
-    this.selector.camera = this.camera;
-    let self = this;
+    this.selector = new Selector()
+    this.selector.camera = this.camera
+    let self = this
 
     
-    this._animate();
+    this._animate()
 
    
     ///////////:setup ui interactions
-    this.resizer = windowResizes(1);
+    this.resizer = windowResizes(1)
 
     let handleResize = function(sizeInfos){
-      console.log("setting size",sizeInfos);
-      let {width,height,aspect} = sizeInfos;
+      console.log("setting size",sizeInfos)
+      let {width,height,aspect} = sizeInfos
     
-      this.width  = width;
-      this.height = height;
-      let camera = this.camera;
-      let renderer = this.renderer;
+      this.width  = width
+      this.height = height
+      let camera = this.camera
+      let renderer = this.renderer
 
-      renderer.setSize( width, height );
-      //camera.aspect = 1;
-      camera.aspect = aspect;
-      camera.updateProjectionMatrix();
+      renderer.setSize( width, height )
+      //camera.aspect = 1
+      camera.aspect = aspect
+      camera.updateProjectionMatrix()
       
-      self.composer.reset();
+      self.composer.reset()
 
-      let pixelRatio = window.devicePixelRatio || 1;
-      self.fxaaPass.uniforms[ 'resolution' ].value.set (1 / (width * pixelRatio), 1 / (height * pixelRatio));
-      self.composer.setSize(width * pixelRatio, height * pixelRatio);
+      let pixelRatio = window.devicePixelRatio || 1
+      self.fxaaPass.uniforms[ 'resolution' ].value.set (1 / (width * pixelRatio), 1 / (height * pixelRatio))
+      self.composer.setSize(width * pixelRatio, height * pixelRatio)
 
-      self._render();
+      self._render()
     }
 
-    handleResize = handleResize.bind(this);
+    handleResize = handleResize.bind(this)
 
 
-    this.resizer.subscribe( handleResize.bind(this) );
+    this.resizer.subscribe( handleResize.bind(this) )
     //set the inital size correctly
     handleResize({width:window.innerWidth,height:window.innerHeight,aspect:0})
     //subscribe(listen)
 
     //setup INTERACTIONS
-    let selectionAt = this._getSelectionsAt.bind(this);
+    let selectionAt = this._getSelectionsAt.bind(this)
     function coordsFromEvent(event){return {x:event.x, y:event.y}}
     function positionFromCoords(coords){return{position:{x:coords.x,y:coords.y},event:coords}}
     //function extractField(input, "fieldName")
@@ -280,23 +276,23 @@ class ThreeJs extends React.Component{
     } 
 
     //filters
-    function arePickingInfos(event){ return (event.detail.pickingInfos && event.detail.pickingInfos.length >0);}
-    function exists(data){ return data;}
+    function arePickingInfos(event){ return (event.detail.pickingInfos && event.detail.pickingInfos.length >0)}
+    function exists(data){ return data}
 
 
-    this.pointerInteractions = pointerInteractions(container);
+    this.pointerInteractions = pointerInteractions(container)
 
     let {singleTaps$, doubleTaps$, contextTaps$, 
-      dragMoves$, zoomIntents$} =  this.pointerInteractions;
+      dragMoves$, zoomIntents$} =  this.pointerInteractions
 
-    singleTaps$.map( selectionAt ).subscribe( this.handleTap.bind(this) );
-    doubleTaps$.map( selectionAt ).subscribe( this.handleDoubleTap.bind(this) );
+    singleTaps$.map( selectionAt ).subscribe( this.handleTap.bind(this) )
+    doubleTaps$.map( selectionAt ).subscribe( this.handleDoubleTap.bind(this) )
 
     //handle context menu type interactions
     contextTaps$.map( selectionAt )
       .map(this.selectMeshes.bind(this))
       .map( positionFromCoords )
-      .subscribe( showContextMenu );
+      .subscribe( showContextMenu )
 
 
     function extractObject(event){ return event.target.object}
@@ -312,14 +308,14 @@ class ThreeJs extends React.Component{
       .map(extractObject)
       //.map(extractTransforms)
 
-    this.objectsTransform$ = objectsTransforms;
+    this.objectsTransform$ = objectsTransforms
     //TODO: , create an abstraction above channels/rx
-    this.selectedMeshes$   = new Rx.Subject();    
+    this.selectedMeshes$   = new Rx.Subject()    
 
     //hande all the cases where events require re-rendering
-    let controlsChanges$       = Observable.fromEvent(this.controls,'change');
-    let objectControlChanges$  = Observable.fromEvent(this.transformControls,'change');
-    let camViewControlChanges$ = Observable.fromEvent(this.camViewControls,'change');
+    let controlsChanges$       = Observable.fromEvent(this.controls,'change')
+    let objectControlChanges$  = Observable.fromEvent(this.transformControls,'change')
+    let camViewControlChanges$ = Observable.fromEvent(this.camViewControls,'change')
 
     Observable.merge(controlsChanges$, objectControlChanges$, camViewControlChanges$ ,
       this.selectedMeshes$, this.objectsTransform$)
@@ -332,11 +328,11 @@ class ThreeJs extends React.Component{
     Observable.merge(singleTaps$, doubleTaps$, dragMoves$, zoomIntents$)
       .take(1)
       .repeat()
-      .subscribe(hideContextMenu);
+      .subscribe(hideContextMenu)
 
     //set handling of transform modes
 
-    function areThereSelections(){ return (self.selectedMeshes && self.selectedMeshes.length>0); }
+    function areThereSelections(){ return (self.selectedMeshes && self.selectedMeshes.length>0) }
 
     setToTranslateMode.filter(areThereSelections).subscribe( this.transformControls.setMode.bind(this.transformControls,"translate") )
     setToRotateMode.filter(areThereSelections).subscribe( this.transformControls.setMode.bind(this.transformControls,"rotate") )
@@ -350,22 +346,22 @@ class ThreeJs extends React.Component{
     'pink' : assetpath('creamPink.png'),
     },*/
 
-    PreventScrollBehaviour.attach( container );
-    this._setupExtras();
-    this._render();
+    PreventScrollBehaviour.attach( container )
+    this._setupExtras()
+    this._render()
 
   }
   
   componentWillUnmount() {
-      window.removeEventListener("resize", this.resizeHandler);
+      window.removeEventListener("resize", this.resizeHandler)
       //container.removeEventListener("click",this.projectClick)
-      PreventScrollBehaviour.detach( );
+      PreventScrollBehaviour.detach( )
   }
   
   shouldComponentUpdate(){
-    //console.log("gne",this.props.cubeRot);
-    //this.cube.rotation.z = this.props.cubeRot.rot.z;
-    return false;
+    //console.log("gne",this.props.cubeRot)
+    //this.cube.rotation.z = this.props.cubeRot.rot.z
+    return false
   }
 
 
@@ -376,16 +372,16 @@ class ThreeJs extends React.Component{
 for tap/toubleTaps etc*/
   _getSelectionsAt(event){
     log.debug("selection at",event)
-    let rect = this.container.getBoundingClientRect();
-    let intersects = this.selector.pickAlt({x:event.clientX,y:event.clientY}, rect, this.width, this.height, this.dynamicInjector);
+    let rect = this.container.getBoundingClientRect()
+    let intersects = this.selector.pickAlt({x:event.clientX,y:event.clientY}, rect, this.width, this.height, this.dynamicInjector)
 
-    //let selectedMeshes = intersects.map( intersect => intersect.object );
-    //selectedMeshes.sort().filter( ( mesh, pos ) => { return (!pos || mesh != intersects[pos - 1]) } );
+    //let selectedMeshes = intersects.map( intersect => intersect.object )
+    //selectedMeshes.sort().filter( ( mesh, pos ) => { return (!pos || mesh != intersects[pos - 1]) } )
 
     //TODO: we are mutating details, is that ok ?
-    let event = Object.assign({}, event);
+    let event = Object.assign({}, event)
     event.detail = {}
-    event.detail.pickingInfos = intersects;
+    event.detail.pickingInfos = intersects
     return event
   }
 
@@ -394,33 +390,33 @@ for tap/toubleTaps etc*/
 
   _setupExtras(){
     //helpers: these should be in a layer above the base 3d view
-    this._zoomInOnObject = new ZoomInOnObject();
-    this._outlineObject  = new OutlineObject();
+    this._zoomInOnObject = new ZoomInOnObject()
+    this._outlineObject  = new OutlineObject()
 
-    this._zoomInOnObject.camera = this.camera;
+    this._zoomInOnObject.camera = this.camera
   }
 
   _makeTestStuff( ){
-    let scene = this.scene;
-    var geometry = new THREE.SphereGeometry( 30, 32, 16 );
-    var material = new THREE.MeshLambertMaterial( { color: 0x000088 } );
-    var mesh = new THREE.Mesh( geometry, material );
-    mesh.position.set(0,40,0);
-    //scene.add(mesh);
+    let scene = this.scene
+    var geometry = new THREE.SphereGeometry( 30, 32, 16 )
+    var material = new THREE.MeshLambertMaterial( { color: 0x000088 } )
+    var mesh = new THREE.Mesh( geometry, material )
+    mesh.position.set(0,40,0)
+    //scene.add(mesh)
 
-    var cubeGeometry = new THREE.BoxGeometry( 10, 10, 10, 1, 1, 1 );
-	  //var cube = new THREE.Mesh( cubeGeometry, new THREE.MeshNormalMaterial() );
-    var cube = new THREE.Mesh( cubeGeometry, new THREE.MeshBasicMaterial({color:0xff0000}) );
-    //scene.add(cube);
-    mesh.position.set(0,0,100);
+    var cubeGeometry = new THREE.BoxGeometry( 10, 10, 10, 1, 1, 1 )
+	  //var cube = new THREE.Mesh( cubeGeometry, new THREE.MeshNormalMaterial() )
+    var cube = new THREE.Mesh( cubeGeometry, new THREE.MeshBasicMaterial({color:0xff0000}) )
+    //scene.add(cube)
+    mesh.position.set(0,0,100)
     
     console.log("scene",this.scene)
-	  this.cube = cube;
+	  this.cube = cube
   }
   
   /*setup a camera instance from the provided data*/
   _makeCamera( cameraData ){
-    //let cameraData = cameraData;//TODO: merge with defaults using object.assign
+    //let cameraData = cameraData//TODO: merge with defaults using object.assign
     const DEFAULTS ={
       width:window.innerWidth,
       height:window.innerHeight,
@@ -432,8 +428,8 @@ for tap/toubleTaps etc*/
       aspect: window.innerWidth/window.innerHeight,
       up:[0,0,1],
       pos:[0,0,0]
-    };
-    let cameraData = Object.assign({}, DEFAULTS, cameraData);
+    }
+    let cameraData = Object.assign({}, DEFAULTS, cameraData)
 
   
     let camera = new CombinedCamera(
@@ -443,58 +439,58 @@ for tap/toubleTaps etc*/
           cameraData.lens.near,
           cameraData.lens.far,
           cameraData.lens.near,
-          cameraData.lens.far);
+          cameraData.lens.far)
 
-    camera.up.fromArray( cameraData.up );  
-    camera.position.fromArray( cameraData.pos );
-    return camera;
+    camera.up.fromArray( cameraData.up )  
+    camera.position.fromArray( cameraData.pos )
+    return camera
   }
   
   
    /*setup a controls instance from the provided data*/
   _makeControls( controlsData ){
-    let controlsData = controlsData;//TODO: merge with defaults using object.assign
-    let controls = new OrbitControls(this.camera, this.container,new THREE.Vector3(0,0,1));
-    controls.setDomElement( this.container );
-    controls.addObject( this.camera );
-    controls.upVector = new THREE.Vector3(0,0,1);
+    let controlsData = controlsData//TODO: merge with defaults using object.assign
+    let controls = new OrbitControls(this.camera, this.container,new THREE.Vector3(0,0,1))
+    controls.setDomElement( this.container )
+    controls.addObject( this.camera )
+    controls.upVector = new THREE.Vector3(0,0,1)
     
-    controls.userPanSpeed = controlsData.panSpeed;
-    controls.userZoomSpeed = controlsData.zoomSpeed;
-  	controls.userRotateSpeed = controlsData.rotateSpeed;
+    controls.userPanSpeed = controlsData.panSpeed
+    controls.userZoomSpeed = controlsData.zoomSpeed
+  	controls.userRotateSpeed = controlsData.rotateSpeed
 
-    controls.autoRotate = controlsData.autoRotate.enabled;
-    controls.autoRotateSpeed = controlsData.autoRotate.speed;
+    controls.autoRotate = controlsData.autoRotate.enabled
+    controls.autoRotateSpeed = controlsData.autoRotate.speed
     
-    this.controls = controls;
-    return controls;
+    this.controls = controls
+    return controls
   }
 
   _makeLight( lightData ){
-    let light = undefined;
+    let light = undefined
     const DEFAULTS ={
       color:"#FFF",
       intensity:1,
       pos: [0,0,0]
-    };
-    let lightData = Object.assign({}, DEFAULTS, lightData);
+    }
+    let lightData = Object.assign({}, DEFAULTS, lightData)
 
     switch(lightData.type){
       case "light":
-         light = new THREE.Light(lightData.color);
-         light.intensity = lightData.intensity;
-      break;
+         light = new THREE.Light(lightData.color)
+         light.intensity = lightData.intensity
+      break
       case "hemisphereLight":
-        light = new THREE.HemisphereLight(lightData.color, lightData.gndColor, lightData.intensity);
-      break;
+        light = new THREE.HemisphereLight(lightData.color, lightData.gndColor, lightData.intensity)
+      break
       case "ambientLight":
         // ambient light does not have intensity, only color
-        let newColor = new THREE.Color( lightData.color );
-        newColor.r *= lightData.intensity;
-        newColor.g *= lightData.intensity;
-        newColor.b *= lightData.intensity;
+        let newColor = new THREE.Color( lightData.color )
+        newColor.r *= lightData.intensity
+        newColor.g *= lightData.intensity
+        newColor.b *= lightData.intensity
         light = new THREE.AmbientLight( newColor )
-      break;
+      break
       case "directionalLight":
         const dirLightDefaults = {
           castShadow:false,
@@ -512,24 +508,24 @@ for tap/toubleTaps etc*/
           shadowBias:0.0001,
           shadowDarkness:0.3,
           shadowCameraVisible:false
-        };
-        lightData = Object.assign({}, dirLightDefaults, lightData);
-        light = new THREE.DirectionalLight( lightData.color, lightData.intensity );
+        }
+        lightData = Object.assign({}, dirLightDefaults, lightData)
+        light = new THREE.DirectionalLight( lightData.color, lightData.intensity )
         for(var key in lightData) {
           if(light.hasOwnProperty(key)) {
             light[key] = lightData[key]
           }
         }
 
-      break;
+      break
       default:
         throw new Error("could not create light")
       break
     }
 
-    light.position.fromArray( lightData.pos );
+    light.position.fromArray( lightData.pos )
 
-    this.scene.add( light );
+    this.scene.add( light )
 
     return light
   }
@@ -541,112 +537,112 @@ for tap/toubleTaps etc*/
         magFilter: THREE.LinearFilter,
         format: THREE.RGBAFormat,
         stencilBuffer: true
-    };
+    }
 
     
-    let camera = this.camera;
-    let renderer = this.renderer;
+    let camera = this.camera
+    let renderer = this.renderer
 
-    let scene = this.scene;
-    let outScene = new THREE.Scene();
-    let maskScene = new THREE.Scene();
+    let scene = this.scene
+    let outScene = new THREE.Scene()
+    let maskScene = new THREE.Scene()
 
-    let renderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, renderTargetParameters);
+    let renderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, renderTargetParameters)
 
     //setup composer
-    let composer    = new EffectComposer(renderer);
-    composer.renderTarget1.stencilBuffer = true;
-    composer.renderTarget2.stencilBuffer = true;
+    let composer    = new EffectComposer(renderer)
+    composer.renderTarget1.stencilBuffer = true
+    composer.renderTarget2.stencilBuffer = true
 
-    let normal      = new RenderPass(scene, camera);
-    let outline     = new RenderPass(outScene, camera);
-    let maskPass        = new THREE.MaskPass(maskScene, camera);
-    maskPass.inverse = true;
-    let clearMask   = new THREE.ClearMaskPass();
-    let copyPass     = new THREE.ShaderPass(THREE.CopyShader);
-    let fxaaPass     = new THREE.ShaderPass( THREE.FXAAShader );
-    let vignettePass = new THREE.ShaderPass( THREE.VignetteShader );
+    let normal      = new RenderPass(scene, camera)
+    let outline     = new RenderPass(outScene, camera)
+    let maskPass        = new THREE.MaskPass(maskScene, camera)
+    maskPass.inverse = true
+    let clearMask   = new THREE.ClearMaskPass()
+    let copyPass     = new THREE.ShaderPass(THREE.CopyShader)
+    let fxaaPass     = new THREE.ShaderPass( THREE.FXAAShader )
+    let vignettePass = new THREE.ShaderPass( THREE.VignetteShader )
 
-    fxaaPass.uniforms[ 'resolution' ].value.set( 1 / window.innerWidth*window.devicePixelRatio, 1 / window.innerHeight*window.devicePixelRatio );
-    vignettePass.uniforms[ "offset" ].value = 0.95;
-    vignettePass.uniforms[ "darkness" ].value = 0.9;
+    fxaaPass.uniforms[ 'resolution' ].value.set( 1 / window.innerWidth*window.devicePixelRatio, 1 / window.innerHeight*window.devicePixelRatio )
+    vignettePass.uniforms[ "offset" ].value = 0.95
+    vignettePass.uniforms[ "darkness" ].value = 0.9
 
-    renderer.autoClear = false;
-    //renderer.autoClearStencil = false;
+    renderer.autoClear = false
+    //renderer.autoClearStencil = false
     
-    outline.clear = false;  
-    //normal.clear = false;    
+    outline.clear = false  
+    //normal.clear = false    
 
-    composer.addPass(normal);
-    composer.addPass(maskPass);
-    composer.addPass(outline);
+    composer.addPass(normal)
+    composer.addPass(maskPass)
+    composer.addPass(outline)
     
-    composer.addPass(clearMask);
-    //composer.addPass(vignettePass);
-    //composer.addPass(fxaaPass);
-    composer.addPass(copyPass);
+    composer.addPass(clearMask)
+    //composer.addPass(vignettePass)
+    //composer.addPass(fxaaPass)
+    composer.addPass(copyPass)
 
-    let lastPass = composer.passes[composer.passes.length-1];
-    lastPass.renderToScreen = true;
+    let lastPass = composer.passes[composer.passes.length-1]
+    lastPass.renderToScreen = true
     
-    this.fxaaPass = fxaaPass;
-    this.composer = composer; 
-    this.outScene = outScene;
-    this.maskScene= maskScene;
+    this.fxaaPass = fxaaPass
+    this.composer = composer 
+    this.outScene = outScene
+    this.maskScene= maskScene
 
 
 
     ////just for testing
-    let self = this;
+    let self = this
 
     /*
     //THIS WORKS
-    let geometry =new THREE.TorusKnotGeometry( 50, 10, 128, 16);
-    let cMesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color:"#FFFF00"}));
+    let geometry =new THREE.TorusKnotGeometry( 50, 10, 128, 16)
+    let cMesh = new THREE.Mesh(geometry, new THREE.MeshPhongMaterial({color:"#FFFF00"}))
     self.scene.add(cMesh)
-    //let geometry = mesh.geometry;
+    //let geometry = mesh.geometry
 
-    let matFlat = new THREE.MeshBasicMaterial({color: 0xffffff});
-    let maskMesh = new THREE.Mesh( geometry, matFlat );
-    //maskMesh.quaternion = mesh.quaternion;
-    self.maskScene.add( maskMesh );
+    let matFlat = new THREE.MeshBasicMaterial({color: 0xffffff})
+    let maskMesh = new THREE.Mesh( geometry, matFlat )
+    //maskMesh.quaternion = mesh.quaternion
+    self.maskScene.add( maskMesh )
 
     let uniforms = {
       offset: {
         type: "f",
         value: 0.5
       }
-    };
+    }
 
-    let shader = require("./deps/post-process/OutlineShader");
-    let outShader = shader['outline'];
+    let shader = require("./deps/post-process/OutlineShader")
+    let outShader = shader['outline']
 
     let matShader = new THREE.ShaderMaterial({
       uniforms: uniforms,
       vertexShader: outShader.vertex_shader,
       fragmentShader: outShader.fragment_shader
-    });
+    })
 
-    let outlineMesh = new THREE.Mesh(geometry, matShader);
-    //outlineMesh.quaternion = mesh1.quaternion;
-    outlineMesh.material.depthTest = false;
+    let outlineMesh = new THREE.Mesh(geometry, matShader)
+    //outlineMesh.quaternion = mesh1.quaternion
+    outlineMesh.material.depthTest = false
 
-    self.outScene.add(outlineMesh);*/
+    self.outScene.add(outlineMesh)*/
   }
 
   selectMeshes(event){
-    let intersects = event.detail.pickingInfos;
-    let rect = this.container.getBoundingClientRect();
+    let intersects = event.detail.pickingInfos
+    let rect = this.container.getBoundingClientRect()
 
-    let selectedMeshes = intersects.map( intersect => intersect.object );
-    selectedMeshes.sort().filter( ( mesh, pos ) => { return (!pos || mesh != intersects[pos - 1]) } );
+    let selectedMeshes = intersects.map( intersect => intersect.object )
+    selectedMeshes.sort().filter( ( mesh, pos ) => { return (!pos || mesh != intersects[pos - 1]) } )
 
-    selectedMeshes = selectedMeshes.shift();//we actually only get the best match
-    if(selectedMeshes){ selectedMeshes = [selectedMeshes]; }
+    selectedMeshes = selectedMeshes.shift()//we actually only get the best match
+    if(selectedMeshes){ selectedMeshes = [selectedMeshes] }
     else{ selectedMeshes = []}
-    //console.log("selectedMeshes",selectedMeshes);
+    //console.log("selectedMeshes",selectedMeshes)
 
-    this.selectedMeshes = selectedMeshes;
+    this.selectedMeshes = selectedMeshes
     this.setState({
       selectedMeshes: selectedMeshes
     })
@@ -662,61 +658,61 @@ for tap/toubleTaps etc*/
     }
 
     /* function show(selectedMesh){
-      console.log("selectedMesh",selectedMesh);
+      console.log("selectedMesh",selectedMesh)
     }*/
-    this._prevSelectedMeshes = this.selectedMeshes;
+    this._prevSelectedMeshes = this.selectedMeshes
 
-    this.selectedMeshes$.onNext(selectedMeshes);
+    this.selectedMeshes$.onNext(selectedMeshes)
 
-    return event;
+    return event
   }
 
   //interactions : should these be in a "wrapper above the base 3d view ?"
   handleTap(event){
     //console.log("tapped in view")
-    this.selectMeshes(event);
+    this.selectMeshes(event)
   }
 
   handleDoubleTap( event ){
-    log.info("double tapped",event);
-    var pickingInfos = event.detail.pickingInfos;
-    if(!pickingInfos) return;
-    if(pickingInfos.length == 0) return;
-    var object = pickingInfos[0].object; 
-    //console.log("object double tapped", object);
-    this._zoomInOnObject.execute( object, {position:pickingInfos[0].point} );
+    log.info("double tapped",event)
+    var pickingInfos = event.detail.pickingInfos
+    if(!pickingInfos) return
+    if(pickingInfos.length == 0) return
+    var object = pickingInfos[0].object 
+    //console.log("object double tapped", object)
+    this._zoomInOnObject.execute( object, {position:pickingInfos[0].point} )
   }
 
   //"core" methods
   _animate(time) 
   {
-    requestAnimationFrame( this._animate.bind(this) );
+    requestAnimationFrame( this._animate.bind(this) )
 
 
-    TWEEN.update(time);
+    TWEEN.update(time)
 
-	  //this._render();		
-	  this._update();
+	  //this._render()		
+	  this._update()
   }
 
   _update()
   {
 	  // delta = change in time since last call (in seconds)
-	  //var delta = clock.getDelta(); 
-	  //controls.update();
-	  //stats.update();
-	  if(this.controls) this.controls.update();
-    if(this.camViewControls) this.camViewControls.update();
-    if(this.transformControls) this.transformControls.update();
+	  //var delta = clock.getDelta() 
+	  //controls.update()
+	  //stats.update()
+	  if(this.controls) this.controls.update()
+    if(this.camViewControls) this.camViewControls.update()
+    if(this.transformControls) this.transformControls.update()
 
   }
   
   _render() 
   {	
-	  //this.renderer.render( this.scene, this.camera );
-    this.camViewRenderer.render( this.camViewScene,this.camViewCam);
+	  //this.renderer.render( this.scene, this.camera )
+    this.camViewRenderer.render( this.camViewScene,this.camViewCam)
 
-    this.composer.render();
+    this.composer.render()
 
     //this.renderer.render( this.outScene, this.camera ) 
     //this.renderer.render( this.scene, this.camera ) 
@@ -734,22 +730,22 @@ for tap/toubleTaps etc*/
   
 
   */
-  forceUpdate( data , mapper, selectedEntities ){
-    let dynamicInjector = new THREE.Object3D();//all dynamic mapped objects reside here
-    let self = this;
+  forceUpdate( inputs ){
+    let {data, mapper, selectedEntities} = inputs
+    let dynamicInjector = new THREE.Object3D()//all dynamic mapped objects reside here
+    let self = this
 
-    let children = this.outScene.children;
+    let children = this.outScene.children
     for(let i = children.length-1;i>=0;i--){
-        let child = children[i];
-        this.outScene.remove(child);
-    };
+        let child = children[i]
+        this.outScene.remove(child)
+    }
 
-    children = this.maskScene.children;
+    children = this.maskScene.children
     for(let i = children.length-1;i>=0;i--){
-        let child = children[i];
-        this.maskScene.remove(child);
-    };
-
+        let child = children[i]
+        this.maskScene.remove(child)
+    }
 
 
     if(data && data.length>0){
@@ -759,18 +755,14 @@ for tap/toubleTaps etc*/
       }
     }
 
-
-    this._entries    =  JSON.parse(JSON.stringify(data)) || undefined;
-    this._mappings   = {};
-
-    //this._entries    = data;
-
+    this._entries    =  JSON.parse(JSON.stringify(data)) || undefined
+    this._mappings   = {}
 
     /*
     let jsondiffOptions ={
       objectHash: function(obj) {
         // this function is used only to when objects are not equal by ref
-        return obj.iuid;
+        return obj.iuid
       },
       arrays: {
         // default true, detect items moved inside the array (otherwise they will be registered as remove+add)
@@ -779,50 +771,50 @@ for tap/toubleTaps etc*/
         includeValueOnMove: false
       },
     }
-    let jsondiffpatch = require('jsondiffpatch').create(jsondiffOptions);
-    let delta = jsondiffpatch.diff(this._oldEntries, this._entries);
+    let jsondiffpatch = require('jsondiffpatch').create(jsondiffOptions)
+    let delta = jsondiffpatch.diff(this._oldEntries, this._entries)
     try{
 
 
     if(delta && delta && delta[0].pos){
 
       function noUnderscore( key ){
-        return key[0] !== "_";
+        return key[0] !== "_"
       }
-      let realChangesItems = Object.keys(delta[0].pos).filter(noUnderscore);
-      realChangesItems = realChangesItems.map(function(key){return delta[0].pos[key]});
+      let realChangesItems = Object.keys(delta[0].pos).filter(noUnderscore)
+      realChangesItems = realChangesItems.map(function(key){return delta[0].pos[key]})
       //delta[0].pos.map()
-      console.log("FOODELTA",delta[0].pos, realChangesItems);
+      console.log("FOODELTA",delta[0].pos, realChangesItems)
 
     }
     }
     catch(error){}*/
-    /*var diff = require('deep-diff').diff;
-    var delta = diff(this._oldEntries, this._entries);
+    /*var diff = require('deep-diff').diff
+    var delta = diff(this._oldEntries, this._entries)
 
     delta.map(function(change){
-      console.log("change",change);
+      console.log("change",change)
       switch(change.kind){
         case "A":
           console.log("ARRAY")
-        break;
+        break
         case "E":
           console.log("Edit")
-        break;
+        break
       }
-    });
+    })
     console.log("DELTA",delta)*/
     
 
 
     let xform = function( entity, mesh ){
-      self._render();
-      self.transformControls.update();
+      self._render()
+      self.transformControls.update()
 
-      self._mappings[entity.iuid] = mesh;
+      self._mappings[entity.iuid] = mesh
 
       /*if(entity._selected){
-        mesh.material.oldColor = mesh.material.color;
+        mesh.material.oldColor = mesh.material.color
         mesh.material.color.set("#FF0000")
       }else
       {
@@ -833,23 +825,23 @@ for tap/toubleTaps etc*/
       console.log(selectedEntities)
       if(selectedEntities.indexOf(entity.iuid) !== -1){
         
-        let geometry = mesh.geometry;
+        let geometry = mesh.geometry
 
         
         
-        /*let cMesh = new THREE.Mesh(new THREE.TorusKnotGeometry( 50, 10, 128, 16), new THREE.MeshPhongMaterial({color:"#FFFF00"}));
-        self.scene.add(cMesh);
-        geometry = cMesh.geometry;*/
+        /*let cMesh = new THREE.Mesh(new THREE.TorusKnotGeometry( 50, 10, 128, 16), new THREE.MeshPhongMaterial({color:"#FFFF00"}))
+        self.scene.add(cMesh)
+        geometry = cMesh.geometry*/
         
 
-         let matFlat = new THREE.MeshBasicMaterial({color: 0xffffff});
-          let maskMesh = new THREE.Mesh( geometry, matFlat );
-          //maskMesh.quaternion = mesh.quaternion;
-          maskMesh.position.fromArray( entity.pos );
-          maskMesh.rotation.fromArray( entity.rot);
-          maskMesh.scale.fromArray( entity.sca );
+         let matFlat = new THREE.MeshBasicMaterial({color: 0xffffff})
+          let maskMesh = new THREE.Mesh( geometry, matFlat )
+          //maskMesh.quaternion = mesh.quaternion
+          maskMesh.position.fromArray( entity.pos )
+          maskMesh.rotation.fromArray( entity.rot)
+          maskMesh.scale.fromArray( entity.sca )
 
-          self.maskScene.add( maskMesh );
+          self.maskScene.add( maskMesh )
 
           let uniforms = {
             offset: {
@@ -860,26 +852,26 @@ for tap/toubleTaps etc*/
               type: "c", 
               value: new THREE.Color("#ff2500")//[1.0,0.0,0.0] 
             }
-          };
+          }
 
-          let shader = require("./deps/post-process/OutlineShader");
-          let outShader = shader['outline'];
+          let shader = require("./deps/post-process/OutlineShader")
+          let outShader = shader['outline']
 
           let matShader = new THREE.ShaderMaterial({
             uniforms: uniforms,
             vertexShader: outShader.vertex_shader,
             fragmentShader: outShader.fragment_shader
-          });
+          })
 
-          let outlineMesh = new THREE.Mesh(geometry, matShader);
-          //outlineMesh.quaternion = mesh1.quaternion;
-          outlineMesh.material.depthTest = false;
+          let outlineMesh = new THREE.Mesh(geometry, matShader)
+          //outlineMesh.quaternion = mesh1.quaternion
+          outlineMesh.material.depthTest = false
 
-          outlineMesh.position.fromArray( entity.pos );
-          outlineMesh.rotation.fromArray( entity.rot);
-          outlineMesh.scale.fromArray( entity.sca );
+          outlineMesh.position.fromArray( entity.pos )
+          outlineMesh.rotation.fromArray( entity.rot)
+          outlineMesh.scale.fromArray( entity.sca )
 
-          self.outScene.add(outlineMesh);
+          self.outScene.add(outlineMesh)
 
       }
 
@@ -888,52 +880,52 @@ for tap/toubleTaps etc*/
 
    
     function renderItem (entry) {
-      mapper(entry, dynamicInjector, xform);
+      mapper(entry, dynamicInjector, xform)
 
     }
-    data.map( renderItem );//entry => { this.scene.add( mapper(entry) );} )
+    data.map( renderItem )//entry => { this.scene.add( mapper(entry) )} )
 
 
-    let oldDynamicInjector = this.dynamicInjector;
-    this.dynamicInjector = dynamicInjector;
-    this.scene.add( dynamicInjector );
+    let oldDynamicInjector = this.dynamicInjector
+    this.dynamicInjector = dynamicInjector
+    this.scene.add( dynamicInjector )
 
     //FIXME: GODawfull hack 
     setTimeout(function() {
-      self.scene.remove( oldDynamicInjector );
-      self._render();
-    }, 10);
+      self.scene.remove( oldDynamicInjector )
+      self._render()
+    }, 10)
     
 
     //also force render in case we do not have entities left to render
-    self._render();
+    self._render()
 
 
-    this._oldEntries = JSON.parse(JSON.stringify(data));// || undefined;
+    this._oldEntries = JSON.parse(JSON.stringify(data))// || undefined
     //console.log("MAPPINGS", this._mappings)
-    //this._oldMappings= {};
-    //this._oldEntries = data;
+    //this._oldMappings= {}
+    //this._oldEntries = data
 
   }
 
   render(){
-    let webglEnabled = Detector.webgl;
-    let renderContents = null;
+    let webglEnabled = Detector.webgl
+    let renderContents = null
     if(webglEnabled){
       renderContents = (
         <div>
           <div className="container" ref="container" />
           <div className="camViewControls" ref="camViewControls"/>
         </div>
-      );
+      )
     }
     else{
       renderContents = <div><span>Sorry, it seems you do not have a WebGL capable computer/browser!</span></div>
     }
-    return (renderContents);
+    return (renderContents)
   }
   
 }
 
-//document.registerReact('three-js', ThreeJs);
+//document.registerReact('three-js', ThreeJs)
 export default ThreeJs

@@ -749,9 +749,8 @@ export default class App extends React.Component {
       self.addEntityInstance(duplicate)
     })
 
-    return dupes;
+    return dupes
   }
-
 
   //API
   loadMesh( uriOrData, options ){
@@ -901,7 +900,7 @@ export default class App extends React.Component {
       });
     };
 
-    glview.forceUpdate(entries, mapper.bind(this), selectedEntitiesIds);
+    glview.forceUpdate({data:entries, mapper:mapper.bind(this), selectedEntities:selectedEntitiesIds});
   }
   
   render() {
