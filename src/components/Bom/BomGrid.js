@@ -1,7 +1,4 @@
-import RxReact from 'rx-react';
 import React from 'react';
-let StateStreamMixin = RxReact.StateStreamMixin;
-let FuncSubject      = RxReact.FuncSubject;
 
 import Rx from 'rx'
 let Observable= Rx.Observable;
