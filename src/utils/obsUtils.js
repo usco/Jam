@@ -31,3 +31,20 @@ export function logNext( next ){
 export function logError( err){
   log.error(err)
 }
+
+export function preventDefault(event) {
+  event.preventDefault()
+  return event
+}
+
+export function formatData(data, type){
+  return {data, type}
+}
+
+export function isTextNotEmpty(text){
+  return text !== ""
+}
+
+export function exists(input){
+  return input !== null && input !== undefined
+}

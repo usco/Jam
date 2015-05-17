@@ -30,11 +30,8 @@ Rx.config.longStackSupport = true
 let fromEvent = Rx.Observable.fromEvent
 let Observable = Rx.Observable
 
+import {observableDragAndDrop} from './interactions/interactions'
 
-import {partitionMin} from './coms/utils'
-
-
-import DndBehaviour             from './behaviours/dndBe'
 import ParseUrlParamsBehaviour  from './behaviours/urlParamsBe'
 
 
@@ -144,25 +141,21 @@ export default class App extends React.Component {
     },null,false)
     ////////////////
 
+    let self     = this
 
-    //add drag & drop behaviour 
-    let container = this.refs.wrapper.getDOMNode()
-    DndBehaviour.attach( container )
-    let dnds$ = new Rx.Subject()
-    function dnd(drops){
-      dnds$.onNext(drops)
-    }
-    DndBehaviour.dropHandler = dnd
     
+    let container = this.refs.wrapper.getDOMNode()
+
+    let dnds$ = observableDragAndDrop(container)
     dnds$
       .map( (drops) => {log.info("data was dropped into jam!", drops);return drops})
-      .map( (drops)=>drops.data)      //.pluck(".data")
+      .map( (drops)=>drops.data)//.pluck(".data")
       .flatMap( Rx.Observable.fromArray )
       .subscribe((entry)=>{ self.loadMesh.bind(self,entry,{display:true})() } ) 
 
 
     let glview   = this.refs.glview
-    let self     = this
+    
 
     //get entities 
     function entitiesOnly( x ){
