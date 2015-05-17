@@ -326,29 +326,10 @@ function pinches(touchstarts, touchmoves, touchEnds) {
  }
 ///////
 export function preventScroll(targetEl){
-
-  
+  fromEvent(targetEl, 'mousewheel').subscribe(preventDefault)
+  fromEvent(targetEl, 'DOMMouseScroll').subscribe(preventDefault)
+  fromEvent(targetEl, 'wheel').subscribe(preventDefault)
 }
-var PreventScrollBehaviour = {
-  attach:function( domNode ){
-    domNode.addEventListener("mousewheel"    , this.scrollHandler, false);
-    domNode.addEventListener("DOMMouseScroll", this.scrollHandler, false);
-    domNode.addEventListener("wheel"         , this.scrollHandler, false);
-    this.domNode = domNode;
-  },
-  detach:function(){
-    this.domNode.removeEventListener("mousewheel", this.scrollHandler);
-    this.domNode.removeEventListener("DOMMouseScroll"    , this.scrollHandler);
-  },
- 
-  scrollHandler:function (event)
-  {
-      event.preventDefault();
-      return false;
-  },
-
-}
-export default PreventScrollBehaviour;
 
 
 ///////

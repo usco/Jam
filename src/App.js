@@ -32,7 +32,7 @@ let Observable = Rx.Observable
 
 import {observableDragAndDrop} from './interactions/interactions'
 
-import ParseUrlParamsBehaviour  from './behaviours/urlParamsBe'
+import ParseUrlParams  from './utils/parseUrlParams'
 
 
 import keymaster from 'keymaster'
@@ -264,8 +264,8 @@ export default class App extends React.Component {
     ///////////
 
     //fetch & handle url parameters
-    let designUrls = ParseUrlParamsBehaviour.fetch("designUrl")
-    let meshUrls   = ParseUrlParamsBehaviour.fetch("modelUrl")
+    let designUrls = ParseUrlParams.fetch("designUrl")
+    let meshUrls   = ParseUrlParams.fetch("modelUrl")
     
     //only handle a single design url
     let singleDesign = designUrls.pop()

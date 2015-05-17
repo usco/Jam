@@ -24,8 +24,6 @@ import {ClearMaskPass, MaskPass} from './deps/post-process/MaskPass'
 import OrbitControls from './deps/OrbitControls'
 import CombinedCamera from './deps/CombinedCamera'
 
-import PreventScrollBehaviour from '../../behaviours/preventScrollBe'
-
 //TODO: import this at another level, should not be part of the base gl view
 import TransformControls from './transforms/TransformControls'
 import Selector from './deps/Selector'
@@ -39,7 +37,7 @@ let Observable= Rx.Observable
 let Subject   = Rx.Subject
 
 
-import {windowResizes,pointerInteractions} from '../../interactions/interactions'
+import {windowResizes,pointerInteractions,preventScroll} from '../../interactions/interactions'
 
 import logger from '../../utils/log'
 let log = logger("glView")
@@ -345,8 +343,8 @@ class ThreeJs extends React.Component{
     'mocha' : assetpath('creamMocha.png'),
     'pink' : assetpath('creamPink.png'),
     },*/
-
-    PreventScrollBehaviour.attach( container )
+    preventScroll(container)
+    
     this._setupExtras()
     this._render()
 
@@ -355,7 +353,6 @@ class ThreeJs extends React.Component{
   componentWillUnmount() {
       window.removeEventListener("resize", this.resizeHandler)
       //container.removeEventListener("click",this.projectClick)
-      PreventScrollBehaviour.detach( )
   }
   
   shouldComponentUpdate(){
