@@ -51,7 +51,7 @@ import ContextMenu from './components/ContextMenu'
 import * as blar from './core/fooYeah'
 import {addEntityInstances$, setEntityData$, deleteEntities$, duplicateEntities$ } from './actions/entityActions'
 import {setToTranslateMode, setToRotateMode, setToScaleMode} from './actions/transformActions'
-import {showContextMenu, hideContextMenu, undo, redo, setDesignAsPersistent$} from './actions/appActions'
+import {showContextMenu$, hideContextMenu$, undo, redo, setDesignAsPersistent$} from './actions/appActions'
 import {newDesign$, setDesignData$} from './actions/designActions'
 
 let commands = {
@@ -73,7 +73,7 @@ export default class App extends React.Component {
     this.state = state
     //TODO: store this elsewhere ? use stores system ?
     this.state._lastProjectName= localStorage.getItem("jam!-lastProjectName") 
-    this.state.design.name    = this.state._lastProjectName || "untitled design"
+    this.state.design.name    = this.state._lastProjectName || undefined
     
     let lastProjectUri  = localStorage.getItem("jam!-lastProjectUri") || undefined
     this.state.design._persistentUri = lastProjectUri
@@ -95,7 +95,7 @@ export default class App extends React.Component {
     this.kernel.assetManager  = this.assetManager
 
     if(this.state._persistent){
-      this.kernel.setDesignAsPersistent()
+      this.kernel.setDesignAsPersistent(true)
       this.kernel.dataApi.rootUri = lastProjectUri
     } 
     
@@ -261,20 +261,6 @@ export default class App extends React.Component {
     this.setupKeyboard()
     ///////////
 
-    //fetch & handle url parameters
-    let designUrls = ParseUrlParams.fetch("designUrl")
-    let meshUrls   = ParseUrlParams.fetch("modelUrl")
-    
-    //only handle a single design url
-    let singleDesign = designUrls.pop()
-    if(singleDesign) designUrls = [singleDesign]
-    
-    designUrls.map(function( designUrl ){ self.loadDesign(designUrl) })
-
-    //only load meshes if no designs need to be loaded 
-    if(!singleDesign)  meshUrls.map(function( meshUrl ){ self.loadMesh(meshUrl) })
-
-
     /////////
     //FIXME: horrible, this should not be here, all related to actions etc
     addEntityInstances$
@@ -314,7 +300,7 @@ export default class App extends React.Component {
       //seperation of "sinks" from the rest
       .subscribe(function(value){
         localStorage.setItem("jam!-persistent",value)
-        if(value) self.kernel.setDesignAsPersistent()
+        if(value) self.kernel.setDesignAsPersistent(true)
       })
       //.subscribe((value)=>localStorage.setItem("jam!-persistent",value))
 
@@ -342,8 +328,8 @@ export default class App extends React.Component {
       .subscribe(function(){
         //TODO : this needs to be elsewhere
         const defaultDesign = {
-          name:"untitled design",
-          description:"Some description",
+          name:undefined,
+          description:undefined,
           version: undefined,//"0.0.0",
           authors:[],
           tags:[],
@@ -352,6 +338,8 @@ export default class App extends React.Component {
         }
 
         self.setState({
+          _persistent:false,
+
           design:defaultDesign,
           selectedEntities:[],
           selectedEntitiesIds:[],
@@ -362,10 +350,17 @@ export default class App extends React.Component {
 
         localStorage.removeItem("jam!-lastProjectName")
         localStorage.removeItem("jam!-lastProjectUri")
+        localStorage.removeItem("jam!-persistent")
 
         //remove meshes, resources etc
         self.assetManager.clearResources()
         self.kernel.clearAll()
+
+        //clear url related stuff
+        let urlPath   = location.protocol + '//' + location.host + location.pathname
+        let pageTitle = "" 
+        document.title = pageTitle
+        window.history.pushState({"pageTitle":pageTitle},"", urlPath)
 
         self._tempForceDataUpdate()
       })
@@ -382,7 +377,6 @@ export default class App extends React.Component {
       //seperation of "sinks" from the rest
       .filter(()=>self.state._persistent)//only save when design is set to persistent
       .subscribe(function(){
-        //console.log("GNNNNA")
         self.kernel.saveBom()//TODO: should not be conflated with assembly
         self.kernel.saveAssemblyState(self.state.assemblies_main_children)
       })
@@ -423,7 +417,8 @@ export default class App extends React.Component {
     /////This is ok here ??
     ///////////
     
-    showContextMenu.subscribe(function(requestData){
+    showContextMenu$.subscribe(function(requestData){
+      console.log("requestData",requestData)
       let selectedEntities = self.state.selectedEntities
       let active = true//(selectedEntities && selectedEntities.length>0)
       let actions = []
@@ -464,7 +459,7 @@ export default class App extends React.Component {
       },null, false)
     })
 
-    hideContextMenu.subscribe(function(requestData){
+    hideContextMenu$.subscribe(function(requestData){
       self.setState({
         contextMenu:{
           active:false,
@@ -503,15 +498,37 @@ export default class App extends React.Component {
 
 
 
-    if(this.state.design._persistentUri)
+    //fetch & handle url parameters
+    let designUrls = ParseUrlParams.fetch("designUrl")
+    let meshUrls   = ParseUrlParams.fetch("modelUrl")
+    
+    //only handle a single design url
+    let singleDesign = designUrls.pop()
+    if(singleDesign){
+      designUrls = [singleDesign]
+      this.kernel.setDesignAsPersistent(true)
+      this.kernel.dataApi.rootUri = this.state.design._persistentUri
+    }
+    //if(designUrls) { newDesign$() }
+    designUrls.map(function( designUrl ){ self.loadDesign(designUrl) })
+
+    //only load meshes if no designs need to be loaded 
+    if(!singleDesign)meshUrls.map(function( meshUrl ){ self.loadMesh(meshUrl) })
+
+    let persistentUri = this.state.design._persistentUri
+    //from localstorage in case all else failed
+    if(!singleDesign && persistentUri)
     {
-      this.loadDesign(this.state.design._persistentUri)
+      this.loadDesign(persistentUri)
+
+      let urlPath   = window.location.href + "?designUrl="+ persistentUri
+      let pageTitle = "" 
+      document.title = pageTitle
+      window.history.pushState({"pageTitle":pageTitle},"", urlPath)
     }
 
-  }
+    
 
-  componentWillUnmount(){
-    DndBehaviour.detach( )
   }
 
   //event handlers
@@ -582,7 +599,7 @@ export default class App extends React.Component {
       //FIXME: hack
       self.setState({
         design:{
-          name: self.kernel.activeDesign.title,
+          name: self.kernel.activeDesign.name,
           description:self.kernel.activeDesign.description,
           authors:self.kernel.activeDesign.authors || [],
           tags:self.kernel.activeDesign.tags || [],
@@ -891,13 +908,14 @@ export default class App extends React.Component {
     //FIXME: hack / experiment
 
     let annotationsData = {
-      
+
     }
 
     glview.forceUpdate({
       data:entries, 
       mapper:mapper.bind(this), 
-      selectedEntities:selectedEntitiesIds})
+      selectedEntities:selectedEntitiesIds,
+      metadata:annotationsData})
   }
   
   render() {
