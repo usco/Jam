@@ -1,6 +1,7 @@
 import React from 'react'
+import {trim} from '../utils/utils'
 
-
+ 
 let EditableItem = React.createClass({
     getInitialState: function () {
       return {
@@ -11,6 +12,7 @@ let EditableItem = React.createClass({
         data: ""
       }
     },
+
     componentWillMount: function () {
       this.setState({
         isEditMode: this.props.isEditMode,
@@ -57,7 +59,13 @@ let EditableItem = React.createClass({
     componentWillReceiveProps:function(nextProps){
       //console.log(nextProps)
       let data = nextProps.data || ""
-      this.setState({data: data})
+      /*const defauts = {
+        data:undefined,
+        placeholder:""
+      }*/
+      let nextState = Object.assign({},this.state,nextProps)
+
+      this.setState(nextState);//{data: data, placeholder})
     },
 
     render: function () {
@@ -65,19 +73,35 @@ let EditableItem = React.createClass({
       let placeholder = this.state.placeholder
       if(this.state.data || this.state.data !== "" ) placeholder = ""
 
+      let value = this.state.data
+      if(!value || trim(value) === ""){
+        placeholder = this.state.placeholder
+        value = undefined
+      }
+
+      //console.log("value",value)
+      //console.log("placeholder",placeholder)
+
       if (this.state.isEditMode && this.state.editable) {
         if(this.state.multiline){
-          cellHtml = <textarea autoFocus value={this.state.data}
+          cellHtml = <textarea 
+          className="textInput"
+          autoFocus 
+          value={value}
           onKeyDown={this.handleKeyDown} onChange={this.handleChange} onBlur={this.handleBlur} /> 
         }else{
-          cellHtml = <input type='text' autoFocus 
-          value={this.state.data}
-          placeholder={this.state.placeholder}
+          cellHtml = <input type='text' 
+          className="textInput"
+          autoFocus 
+          value={value}
+          placeholder={placeholder}
           onKeyDown={this.handleKeyDown} onChange={this.handleChange} onBlur={this.handleBlur} />           
         }
       }
       else {
-        cellHtml = <span onClick={this.handleEditCell} onBlur={this.handleBlur} >{this.state.data} {placeholder}</span>
+        
+        cellHtml = <span className="textInput" 
+        onClick={this.handleEditCell} onBlur={this.handleBlur} >{value}{placeholder}</span>
       }
       return cellHtml
     }

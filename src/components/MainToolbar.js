@@ -14,7 +14,6 @@ import DesignCard   from './DesignCard'
 import {newDesign$, setDesignData$} from '../actions/designActions'
 import {undo,redo,setDesignAsPersistent$} from '../actions/appActions'
 
-
 class MainToolBar extends React.Component {
   constructor(props) {
     super(props)
@@ -35,7 +34,7 @@ class MainToolBar extends React.Component {
     console.log("state & props", this.state, this.props)
   }
 
-  setDesignName(value){
+  setDesignName(value){    
     setDesignData$({name:value})
   }
 
@@ -77,7 +76,11 @@ class MainToolBar extends React.Component {
     return (
       <div className="titleBar" style={titleStyle}>
         <h1>
-          <EditableItem data={this.props.design.name} changeCallback={ this.setDesignName } ref="title" className="designName"/> 
+          <EditableItem 
+            data={this.props.design.name} 
+            changeCallback={ this.setDesignName } 
+            placeholder="untitled design"
+            ref="title" className="designName"/> 
         </h1>
         <span ref="title" className="appInfos"> {fullTitle} </span>
         <span>

@@ -43,9 +43,8 @@ let state = {
   _persistent:false,//internal flag, do not serialize
 
   design:{
-    //title:"untitled design",
-    name:"untitled design",
-    description:"Some description",
+    name:undefined,
+    description:undefined,
     version: undefined,//"0.0.0",
     authors:[
       /*{name:"foo","email":"gna","url":"http://foo"}*/
