@@ -75,6 +75,7 @@ export default class ContextMenu extends React.Component {
   }
 
   render() {
+
     let style = {
       left: this.state.position.x,
       top: this.state.position.y,
@@ -89,6 +90,8 @@ export default class ContextMenu extends React.Component {
     
     let menuEntries = this.renderMenuEntries(this.state.actions);
     let content  = undefined;
+
+    //console.log("draw contextMenu",style)
 
     if(this.state && this.state.active){
       content = (
