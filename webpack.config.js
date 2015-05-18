@@ -11,7 +11,7 @@ var CompressionPlugin = require("compression-webpack-plugin");
 var host    = "localhost";
 var port    = 3000;
 var srcPath = "src"
-var xtraModulesWLoaders = ["js-csp/src"]//add any module names that you want loaders to apply to
+var xtraModulesWLoaders = ["js-csp/src","glView-helpers"]//add any module names that you want loaders to apply to
 
 var production = process.env.NODE_ENV == 'production';
 var dev        = process.env.NODE_ENV == 'dev';
