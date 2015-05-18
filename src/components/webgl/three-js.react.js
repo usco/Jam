@@ -3,11 +3,14 @@ import THREE from 'three'
 import TWEEN from 'tween.js'
 
 import Detector from './deps/Detector.js'
-
 import helpers from 'glView-helpers'
 let LabeledGrid = helpers.grids.LabeledGrid
 let ShadowPlane = helpers.planes.ShadowPlane
 let CamViewControls= helpers.CamViewControls
+let annotations = helpers.annotations
+let DiameterHelper = annotations.DiameterHelper
+
+console.log("annotations",annotations,helpers)
 
 import CopyShader     from './deps/post-process/CopyShader'
 import FXAAShader     from './deps/post-process/FXAAShader'
@@ -47,7 +50,7 @@ log.setLevel("info")
 //FIXME: hack for now, should not be set here
 import {setToTranslateMode, setToRotateMode, setToScaleMode} from "../../actions/transformActions"
 //NOT so sure about these
-import {showContextMenu, hideContextMenu} from '../../actions/appActions'
+import {showContextMenu$, hideContextMenu$} from '../../actions/appActions'
 
 
 class ThreeJs extends React.Component{
@@ -266,7 +269,7 @@ class ThreeJs extends React.Component{
     //setup INTERACTIONS
     let selectionAt = this._getSelectionsAt.bind(this)
     function coordsFromEvent(event){return {x:event.x, y:event.y}}
-    function positionFromCoords(coords){return{position:{x:coords.x,y:coords.y},event:coords}}
+    function positionFromCoords(coords){console.log("coords", coords.offsetX);return{position:{x:coords.x,y:coords.y},event:coords}}
     //function extractField(input, "fieldName")
     function getPickingObjectAndPoint(pickingInfo){
       
@@ -287,10 +290,11 @@ class ThreeJs extends React.Component{
     doubleTaps$.map( selectionAt ).subscribe( this.handleDoubleTap.bind(this) )
 
     //handle context menu type interactions
-    contextTaps$.map( selectionAt )
+    contextTaps$
+      .map( selectionAt )
       .map(this.selectMeshes.bind(this))
       .map( positionFromCoords )
-      .subscribe( showContextMenu )
+      .subscribe( showContextMenu$ )
 
 
     function extractObject(event){ return event.target.object}
@@ -323,10 +327,11 @@ class ThreeJs extends React.Component{
 
     //handle all the cases where events require removal of context menu
     //ie anything else but context
-    Observable.merge(singleTaps$, doubleTaps$, dragMoves$, zoomIntents$)
+    Observable.merge(singleTaps$, doubleTaps$, dragMoves$)//, zoomIntents$)
       .take(1)
       .repeat()
-      .subscribe(hideContextMenu)
+      
+      .subscribe(hideContextMenu$)
 
     //set handling of transform modes
 
@@ -369,6 +374,7 @@ class ThreeJs extends React.Component{
 for tap/toubleTaps etc*/
   _getSelectionsAt(event){
     log.debug("selection at",event)
+    
     let rect = this.container.getBoundingClientRect()
     let intersects = this.selector.pickAlt({x:event.clientX,y:event.clientY}, rect, this.width, this.height, this.dynamicInjector)
 
@@ -376,10 +382,20 @@ for tap/toubleTaps etc*/
     //selectedMeshes.sort().filter( ( mesh, pos ) => { return (!pos || mesh != intersects[pos - 1]) } )
 
     //TODO: we are mutating details, is that ok ?
-    let event = Object.assign({}, event)
-    event.detail = {}
-    event.detail.pickingInfos = intersects
-    return event
+    //not working in safari etc
+    let outEvent = {}//Object.assign({}, event)
+    outEvent.clientX = event.clientX
+    outEvent.clientY = event.clientY
+    outEvent.offsetX = event.offsetX
+    outEvent.offsetY = event.offsetY
+    outEvent.x = event.x || event.clientX
+    outEvent.y = event.y || event.clientY
+
+
+    outEvent.detail = {}
+    outEvent.detail.pickingInfos = intersects
+
+    return outEvent
   }
 
   mapDataToVisual( data, visualMapper ){
@@ -628,6 +644,7 @@ for tap/toubleTaps etc*/
   }
 
   selectMeshes(event){
+    console.log("selectMeshes",event)
     let intersects = event.detail.pickingInfos
     let rect = this.container.getBoundingClientRect()
 
@@ -728,7 +745,7 @@ for tap/toubleTaps etc*/
 
   */
   forceUpdate( inputs ){
-    let {data, mapper, selectedEntities} = inputs
+    let {data, mapper, selectedEntities, metadata} = inputs
     let dynamicInjector = new THREE.Object3D()//all dynamic mapped objects reside here
     let self = this
 
@@ -754,6 +771,14 @@ for tap/toubleTaps etc*/
 
     this._entries    =  JSON.parse(JSON.stringify(data)) || undefined
     this._mappings   = {}
+
+
+    //for annotations, overlays etc
+    function drawMeta(metadata){
+      console.log("drawing metadata")
+    }
+
+    drawMeta(metadata)
 
     /*
     let jsondiffOptions ={
@@ -819,7 +844,6 @@ for tap/toubleTaps etc*/
           mesh.material.color = mesh.material.oldColor
         }
       }*/
-      console.log(selectedEntities)
       if(selectedEntities.indexOf(entity.iuid) !== -1){
         
         let geometry = mesh.geometry
