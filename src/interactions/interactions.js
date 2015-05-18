@@ -234,7 +234,7 @@ function drags3(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
 
             // Calculate delta with mousemove until mouseup
             return mouseMoves.map(function (mm) {
-                (mm.preventDefault) ? mm.preventDefault() : event.returnValue = false 
+                (mm.preventDefault) ? mm.preventDefault() : mm.returnValue = false 
 
                 let delta = {
                     left: mm.clientX - startX,
@@ -299,17 +299,22 @@ function pinches(touchstarts, touchmoves, touchEnds) {
     let singleClicks$ = clickStreamBase.filter( x => x.nb == 1 ).flatMap(unpack)
     let doubleClicks$ = clickStreamBase.filter( x => x.nb == 2 ).flatMap(unpack).take(1).map(extractData).repeat()
     let contextTaps$  =  Observable.amb([
-      _holds.map(function(x){ console.log("HOLDS");return x}),
-      rightClicks2.map(function(x){ console.log("rightClicks2");return x}),
+      //_holds.map(function(x){ console.log("HOLDS");return x}),
+      //rightClicks2.map(function(x){ console.log("rightClicks2");return x}),
       // Skip if we get a movement
       mouseMoves
         .take(1).flatMap( x => Rx.Observable.empty() ),
       ]
     ).take(1).repeat()// contextTaps: either HELD leftmouse/pointer or right click
     
-    let dragMoves$   = drags3(mouseDowns, mouseUps, mouseMoves2, longPressDelay, deltaSqr)
 
+    let dragMoves$   = drags3(mouseDowns, mouseUps, mouseMoves2, longPressDelay, deltaSqr)
     let zoomIntents$ = zoomIntents 
+
+    /*dragMoves$.subscribe(function(){console.log("dragMoves")})
+    singleClicks$.subscribe(function(){console.log("singleTaps")})
+    doubleClicks$.subscribe(function(){console.log("doubleTaps")})
+    zoomIntents$.subscribe(function(){console.log("zoomIntents")})*/
 
     Observable.merge(singleClicks$, doubleClicks$, contextTaps$, dragMoves$, zoomIntents$)
         //.debounce(200)
