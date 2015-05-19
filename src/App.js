@@ -832,6 +832,7 @@ export default class App extends React.Component {
   _tempForceDataUpdate(){
     log.info("forcing re-render")
     let self     = this
+    let kernel   = this.kernel
     let glview   = this.refs.glview
     let assembly = this.kernel.activeAssembly
     let entries  = this.state.assemblies_main_children
@@ -851,71 +852,73 @@ export default class App extends React.Component {
       return mesh
     }
 
+    function applyEntityPropsToMesh( inputs ){
+      let {entity, mesh} = inputs
+      mesh.userData.entity = entity//FIXME : should we have this sort of backlink ?
+      //FIXME/ make a list of all operations needed to be applied on part meshes
+      //computeObject3DBoundingSphere( meshInstance, true )
+      //centerMesh( meshInstance ) //FIXME do not use the "global" centerMesh
+      mesh.position.fromArray( entity.pos )
+      mesh.rotation.fromArray( entity.rot )
+      mesh.scale.fromArray(  entity.sca )
+      mesh.material.color.set( entity.color )
+      return mesh
+    }
+
     /*function that provides a mapping between an entity and its visuals (in this case 
     // a 3d object/mesh)
       @param entity : the entity to get the mapping of
       @param addTo : item to add the visual to
       @param xform : any extra tranformation to apply to the entity
     */
-    let mapper = function( entity, addTo, xform ){
-      let self = this
+    function mapper( entity, addTo, xform, mappings){
+      let foo= Rx.spawn(function* (){
 
-      /*let getInstance  = self.kernel.getPartMeshInstance( entity )
-      return Rx.Observable.from( getInstance )
-        .map(function(meshInstance){
-          meshInstance.userData.entity = entity//FIXME : should we have this sort of backlink ?
-          //FIXME/ make a list of all operations needed to be applied on part meshes
-          //computeObject3DBoundingSphere( meshInstance, true )
-          //centerMesh( meshInstance ) //FIXME do not use the "global" centerMesh
-          
-          log.info("instance",meshInstance)
+        let mesh = yield kernel.getPartMeshInstance( entity ) 
 
-          meshInstance.position.fromArray( entity.pos )
-          meshInstance.rotation.fromArray( entity.rot )
-          meshInstance.scale.fromArray(  entity.sca )
-          if (addTo)addTo.add( meshInstance)
-          if (xform) xform(entity,meshInstance)
-          return meshInstance
-        })
-        .map(self._meshInjectPostProcess)*/
+        log.debug("meshInstanceRXJS",mesh, entity)
 
-      co(function* (){
-        let meshInstance = yield self.kernel.getPartMeshInstance( entity ) 
-        if( meshInstance){
-          meshInstance.userData.entity = entity//FIXME : should we have this sort of backlink ?
-          //FIXME/ make a list of all operations needed to be applied on part meshes
-          //computeObject3DBoundingSphere( meshInstance, true )
-          //centerMesh( meshInstance ) //FIXME do not use the "global" centerMesh
-          
-          //log.info("instance",meshInstance, meshInstance.userData.entity)
+        mappings[entity.iuid] = mesh
 
-          meshInstance.position.fromArray( entity.pos )
-          meshInstance.rotation.fromArray( entity.rot )
-          meshInstance.scale.fromArray(  entity.sca )
+        Observable.just({mesh,entity})//stupid hack
+          .map(applyEntityPropsToMesh)
+          .map(meshInjectPostProcess)        
+          .map(function(mesh){
+            //log.info("instance",mesh)
+            if (addTo)addTo.add( mesh)
+            if (xform) xform(entity,mesh)
+            return mesh
+          })
+          .subscribe(()=>{})
 
-          meshInstance.material.color.set( entity.color )
-
-          meshInjectPostProcess( meshInstance )
-          
-          if(addTo) addTo.add( meshInstance)
-          if(xform) xform(entity, meshInstance)
-          
-          return meshInstance
-        }
-      })
+      })()
     }
 
     //FIXME: hack / experiment
-
-    let annotationsData = {
-
-    }
+    let annotationsData = [
+        {
+          iuid:"dfsdfsdf",
+          type:"distance",
+          distance : 150,
+          start:{
+            point :[0,1,0],
+            entity: "A41A9D9E-E371-439B-A83B-A387DDD51FC1"
+          },
+          end:{
+            point: [2,5,7],
+            entity: "E83B5655-8B70-498D-B082-E502B8728CC6"
+          }
+        }
+    ]
+  
 
     glview.forceUpdate({
       data:entries, 
       mapper:mapper.bind(this), 
       selectedEntities:selectedEntitiesIds,
       metadata:annotationsData})
+
+
   }
   
   render() {
