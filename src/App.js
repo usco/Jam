@@ -1,7 +1,5 @@
 require("./app.css")
 import React from 'react'
-import co from "co"
-
 
 import ThreeJs     from './components/webgl/three-js.react'
 import MainToolbar from './components/MainToolbar'
@@ -32,7 +30,7 @@ let Observable = Rx.Observable
 
 import {observableDragAndDrop} from './interactions/interactions'
 
-import ParseUrlParams  from './utils/parseUrlParams'
+import {fetchUriParams,getUriQuery}  from './utils/urlUtils'
 
 
 import keymaster from 'keymaster'
@@ -497,11 +495,15 @@ export default class App extends React.Component {
     })
 
 
+    
 
     //fetch & handle url parameters
-    let designUrls = ParseUrlParams.fetch("designUrl")
-    let meshUrls   = ParseUrlParams.fetch("modelUrl")
+    let mainUri    = window.location.href 
+    let uriQuery   = getUriQuery(mainUri)
+    let designUrls = fetchUriParams(mainUri, "designUrl")
+    let meshUrls   = fetchUriParams(mainUri, "modelUrl")
     
+    //TODO , refactor all these
     //only handle a single design url
     let singleDesign = designUrls.pop()
     if(singleDesign){
@@ -527,7 +529,15 @@ export default class App extends React.Component {
       window.history.pushState({"pageTitle":pageTitle},"", urlPath)
     }
 
-    
+    //last but not least, trie to load if anything is in the query (shorthand for design uuids)
+    if(!singleDesign && !persistentUri && uriQuery)
+    {
+      //FIXME: this does not seem right ...
+      let apiDesignsUri = "https://jamapi.youmagine.com/api/v1/designs/"//self.kernel.dataApi.designsUri
+      let designUri = apiDesignsUri+uriQuery 
+      self.loadDesign(designUri)
+    }
+
 
   }
 
@@ -885,7 +895,7 @@ export default class App extends React.Component {
           .map(meshInjectPostProcess)        
           .map(function(mesh){
             //log.info("instance",mesh)
-            if (addTo)addTo.add( mesh)
+            if (addTo) addTo.add( mesh)
             if (xform) xform(entity,mesh)
             return mesh
           })
