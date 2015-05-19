@@ -772,14 +772,6 @@ for tap/toubleTaps etc*/
     this._entries    =  JSON.parse(JSON.stringify(data)) || undefined
     this._mappings   = {}
 
-
-    //for annotations, overlays etc
-    function drawMeta(metadata){
-      console.log("drawing metadata")
-    }
-
-    drawMeta(metadata)
-
     /*
     let jsondiffOptions ={
       objectHash: function(obj) {
@@ -827,84 +819,106 @@ for tap/toubleTaps etc*/
     })
     console.log("DELTA",delta)*/
     
+    let mappings = {}    
+    function addToMappings(mappings, entity, mesh){
+      console.log("add to mappings")
+      mappings[entity.iuid] = mesh
+      return mappings
+    }
 
-
-    let xform = function( entity, mesh ){
+    function xform( entity, mesh ){
+      //console.log(mappings)
+      addToMappings(mappings,entity,mesh)
       self._render()
       self.transformControls.update()
+      
 
-      self._mappings[entity.iuid] = mesh
-
-      /*if(entity._selected){
-        mesh.material.oldColor = mesh.material.color
-        mesh.material.color.set("#FF0000")
-      }else
-      {
-        if(mesh.material.oldColor){
-          mesh.material.color = mesh.material.oldColor
-        }
-      }*/
       if(selectedEntities.indexOf(entity.iuid) !== -1){
         
         let geometry = mesh.geometry
+        let matFlat = new THREE.MeshBasicMaterial({color: 0xffffff})
+        let maskMesh = new THREE.Mesh( geometry, matFlat )
+        //maskMesh.quaternion = mesh.quaternion
+        maskMesh.position.fromArray( entity.pos )
+        maskMesh.rotation.fromArray( entity.rot)
+        maskMesh.scale.fromArray( entity.sca )
 
-        
-        
-        /*let cMesh = new THREE.Mesh(new THREE.TorusKnotGeometry( 50, 10, 128, 16), new THREE.MeshPhongMaterial({color:"#FFFF00"}))
-        self.scene.add(cMesh)
-        geometry = cMesh.geometry*/
-        
+        self.maskScene.add( maskMesh )
 
-         let matFlat = new THREE.MeshBasicMaterial({color: 0xffffff})
-          let maskMesh = new THREE.Mesh( geometry, matFlat )
-          //maskMesh.quaternion = mesh.quaternion
-          maskMesh.position.fromArray( entity.pos )
-          maskMesh.rotation.fromArray( entity.rot)
-          maskMesh.scale.fromArray( entity.sca )
-
-          self.maskScene.add( maskMesh )
-
-          let uniforms = {
-            offset: {
-              type: "f",
-              value: 0.5
-            },
-            color:{ 
-              type: "c", 
-              value: new THREE.Color("#ff2500")//[1.0,0.0,0.0] 
-            }
+        let uniforms = {
+          offset: {
+            type: "f",
+            value: 0.5
+          },
+          color:{ 
+            type: "c", 
+            value: new THREE.Color("#ff2500")//[1.0,0.0,0.0] 
           }
+        }
 
-          let shader = require("./deps/post-process/OutlineShader")
-          let outShader = shader['outline']
+        let shader = require("./deps/post-process/OutlineShader")
+        let outShader = shader['outline']
 
-          let matShader = new THREE.ShaderMaterial({
-            uniforms: uniforms,
-            vertexShader: outShader.vertex_shader,
-            fragmentShader: outShader.fragment_shader
-          })
+        let matShader = new THREE.ShaderMaterial({
+          uniforms: uniforms,
+          vertexShader: outShader.vertex_shader,
+          fragmentShader: outShader.fragment_shader
+        })
 
-          let outlineMesh = new THREE.Mesh(geometry, matShader)
-          //outlineMesh.quaternion = mesh1.quaternion
-          outlineMesh.material.depthTest = false
+        let outlineMesh = new THREE.Mesh(geometry, matShader)
+        //outlineMesh.quaternion = mesh1.quaternion
+        outlineMesh.material.depthTest = false
 
-          outlineMesh.position.fromArray( entity.pos )
-          outlineMesh.rotation.fromArray( entity.rot)
-          outlineMesh.scale.fromArray( entity.sca )
+        outlineMesh.position.fromArray( entity.pos )
+        outlineMesh.rotation.fromArray( entity.rot)
+        outlineMesh.scale.fromArray( entity.sca )
 
-          self.outScene.add(outlineMesh)
-
+        self.outScene.add(outlineMesh)
       }
 
       //console.log("MAPPINGS", self, self._mappings)
     }
 
-   
+    
     function renderItem (entry) {
-      mapper(entry, dynamicInjector, xform)
+      console.log("mappings",mappings)
+      mapper(entry, dynamicInjector, xform, mappings)
+      console.log("mappings2",mappings)
+    }
+
+    data
+      .map( renderItem )
+
+    console.log("mappings3", mappings)
+
+
+    //for annotations, overlays etc
+    function renderMeta(metadata){
+      console.log("drawing metadata",metadata)
+      metadata
+        .map(function(entry){
+          if(entry.type === "distance"){
+            console.log("distance annot",entry)
+
+            let start = entry.start
+            let startEntity = data.filter(function(data){return data.iuid === start.entity})
+            startEntity = startEntity.pop()
+
+            let end = entry.end
+            let endEntity = data.filter(function(data){return data.iuid === end.entity})
+            endEntity = endEntity.pop()
+
+            console.log("start & end",startEntity,endEntity)
+
+
+          }
+
+          return entry
+        })
 
     }
-    data.map( renderItem )//entry => { this.scene.add( mapper(entry) )} )
+    renderMeta(metadata)
+
 
 
     let oldDynamicInjector = this.dynamicInjector
