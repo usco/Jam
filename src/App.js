@@ -850,6 +850,8 @@ export default class App extends React.Component {
     let selectedEntities = this.state.selectedEntitiesIds.map(entityId => self.state._entitiesById[entityId])
     let selectedEntitiesIds = this.state.selectedEntitiesIds
 
+    let meshCache = {}
+
     //mesh insertion post process
     function meshInjectPostProcess( mesh ){
       //FIXME: not sure about these, they are used for selection levels
@@ -888,7 +890,7 @@ export default class App extends React.Component {
 
         log.debug("meshInstanceRXJS",mesh, entity)
 
-        mappings[entity.iuid] = mesh
+        //meshCache[entity.iuid] = mesh
 
         Observable.just({mesh,entity})//stupid hack
           .map(applyEntityPropsToMesh)
@@ -900,9 +902,26 @@ export default class App extends React.Component {
             return mesh
           })
           .subscribe(()=>{})
-
       })()
     }
+
+    function mapper2( entity , stream){
+      let foo= Rx.spawn(function* (){
+        let mesh = yield kernel.getPartMeshInstance( entity ) 
+        Observable.just({mesh,entity})//stupid hack
+          .map(applyEntityPropsToMesh)
+          .map(meshInjectPostProcess)        
+          .map(function(mesh){          
+            return mesh
+          })
+          .subscribe(()=>{})
+      })()
+    }
+
+    let fooStreams = []
+    entries.map(function(entity){
+      //let stream = new Rx.Subject()
+    })
 
     //FIXME: hack / experiment
     let annotationsData = [
@@ -927,7 +946,6 @@ export default class App extends React.Component {
       mapper:mapper.bind(this), 
       selectedEntities:selectedEntitiesIds,
       metadata:annotationsData})
-
 
   }
   
