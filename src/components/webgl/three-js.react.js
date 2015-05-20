@@ -10,7 +10,6 @@ let CamViewControls= helpers.CamViewControls
 let annotations = helpers.annotations
 let DiameterHelper = annotations.DiameterHelper
 
-console.log("annotations",annotations,helpers)
 
 import CopyShader     from './deps/post-process/CopyShader'
 import FXAAShader     from './deps/post-process/FXAAShader'
@@ -32,7 +31,6 @@ import TransformControls from './transforms/TransformControls'
 import Selector from './deps/Selector'
 let OutlineObject = helpers.objectEffects.OutlineObject
 let ZoomInOnObject= helpers.objectEffects.ZoomInOnObject
-
 
 
 import Rx from 'rx'
@@ -772,6 +770,9 @@ for tap/toubleTaps etc*/
     this._entries    =  JSON.parse(JSON.stringify(data)) || undefined
     this._mappings   = {}
 
+
+    if(!this.__localCache) this.__localCache = {}
+    let __localCache = this.__localCache
     /*
     let jsondiffOptions ={
       objectHash: function(obj) {
@@ -823,6 +824,7 @@ for tap/toubleTaps etc*/
     function addToMappings(mappings, entity, mesh){
       console.log("add to mappings")
       mappings[entity.iuid] = mesh
+      __localCache[entity.iuid] = mesh
       return mappings
     }
 
@@ -832,6 +834,7 @@ for tap/toubleTaps etc*/
       self._render()
       self.transformControls.update()
       
+
 
       if(selectedEntities.indexOf(entity.iuid) !== -1){
         
@@ -875,22 +878,15 @@ for tap/toubleTaps etc*/
 
         self.outScene.add(outlineMesh)
       }
-
       //console.log("MAPPINGS", self, self._mappings)
     }
 
     
     function renderItem (entry) {
-      console.log("mappings",mappings)
       mapper(entry, dynamicInjector, xform, mappings)
-      console.log("mappings2",mappings)
     }
-
     data
       .map( renderItem )
-
-    console.log("mappings3", mappings)
-
 
     //for annotations, overlays etc
     function renderMeta(metadata){
@@ -910,16 +906,35 @@ for tap/toubleTaps etc*/
 
             console.log("start & end",startEntity,endEntity)
 
+            if(!startEntity || !endEntity) return
+            //mapper(startEntity)
+            //mapper()
+            let startMesh = __localCache[startEntity.iuid]
+            let endMesh   = __localCache[endEntity.iuid]
+            if( startMesh && endMesh ){
+              let startPt = new THREE.Vector3().fromArray(start.point)
+              let endPt   = new THREE.Vector3().fromArray(end.point)
 
+              let annotationVisual = new annotations.DistanceHelper({
+                start:startPt,
+                startObject:startMesh,
+                end: endPt,
+                endObject: endMesh
+              })
+              annotationVisual.setStart(startPt, startMesh)
+              annotationVisual.setEnd(endPt, endMesh)
+
+              annotationVisual.update()
+              dynamicInjector.add(annotationVisual)
+            }
+            /*l*/
+            
           }
 
           return entry
         })
-
     }
     renderMeta(metadata)
-
-
 
     let oldDynamicInjector = this.dynamicInjector
     this.dynamicInjector = dynamicInjector
@@ -940,6 +955,8 @@ for tap/toubleTaps etc*/
     //console.log("MAPPINGS", this._mappings)
     //this._oldMappings= {}
     //this._oldEntries = data
+
+    console.log("FOOOO",this.__localCache)
 
   }
 
