@@ -12,8 +12,6 @@ export function fetchUriParams(uri, paramName){
 export function getUriQuery(uri){
   let uriData = url.parse(uri)
   let query   = uriData.query
-
-  console.log(uriData, query)
   return query
 }
   

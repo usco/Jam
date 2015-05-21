@@ -4,7 +4,7 @@ import THREE from "three"
 let postProcess = function( resource ){
 
   //geometry
-  var shape = resource.data;
+  var shape = resource.data
   if( !(shape instanceof THREE.Object3D) )
   {
     var material = new THREE.MeshPhongMaterial( { color: 0x17a9f5, specular: 0xffffff, shininess: 5, shading: THREE.FlatShading} )
