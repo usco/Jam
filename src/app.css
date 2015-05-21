@@ -179,6 +179,11 @@
   -webkit-transition: opacity 0.4s ease-out;
 }
 
+.active{
+  background: rgb(255, 223, 0);
+}
+
+
 /*//////////////*/
 /*design card wrapper overlay*/
 .designCardWrapper{
