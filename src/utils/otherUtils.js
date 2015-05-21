@@ -1,18 +1,18 @@
 /////////////////////////////////
 //generic utils
-function getFirst(input){
+export function first(input){
   return input[0]
 }
 
 /////////////////////////////////
 //app utils
-function toolSelected(){
+function isToolSelected(){
   return self.state.activeTool
 }
 
 //annoying
-function noToolSelected(){
-  return !toolSelected()
+export function isNoToolSelected(activeTool){
+  return !activeTool
 }
 
 function toggleTool(toolName){
@@ -28,16 +28,15 @@ function toggleTool(toolName){
 
 /////////////////////////////////
 //entity utils
-function entitiesOnly( input ){
+export function hasEntity( input ){
   return (input.userData && input.userData.entity)
 }
 
-function getEntity( input ){
+export function getEntity( input ){
   return input.userData.entity
 }
 
-
-function extractAttributes(mesh){
+export function extractMeshTransforms(mesh){
   let attrs = {
     pos:mesh.position,
     rot:mesh.rotation,
@@ -71,7 +70,7 @@ function setEntityT(attrsAndEntity){
 }
 /////////////////////////////////
 //ui utils
-function toggleCursor(toggle, cursorName){
+export function toggleCursor(toggle, cursorName){
   if(toggle)
   {
     document.body.style.cursor = cursorName
