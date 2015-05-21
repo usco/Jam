@@ -12,7 +12,9 @@ import EditableItem from './EditableItem'
 import DesignCard   from './DesignCard'
 
 import {newDesign$, setDesignData$} from '../actions/designActions'
-import {undo,redo,setDesignAsPersistent$} from '../actions/appActions'
+import {undo$,redo$,setDesignAsPersistent$} from '../actions/appActions'
+import {addNote$,addThicknessAnnot$,addDistanceAnnot$, addDiameterAnnot$} from '../actions/annotActions'
+
 
 class MainToolBar extends React.Component {
   constructor(props) {
@@ -73,6 +75,58 @@ class MainToolBar extends React.Component {
 
     let persistent    = this.props.persistent || false
 
+
+    let social = (
+      <span className="social"> 
+        <span>
+          <button onClick={this.handleClick.bind(this)} className="fork" disabled={true}> Fork </button>
+        </span>
+        <span>
+          <button onClick={this.handleClick.bind(this)} className="download" disabled={true}> Download </button>
+        </span>
+        <div style={fooStyle}>
+          <button onClick={this.handleClick.bind(this)} className="viewOnYm" disabled={true}> View on YM </button>
+        </div>
+        <span>
+          <button onClick={this.handleClick.bind(this)} className="share" disabled={true}> Share </button>
+        </span>
+        <span>
+          <button onClick={this.handleClick.bind(this)} className="like" disabled={true}> Like </button>
+        </span>
+      </span>
+    )
+    social = null
+
+    let tools = (
+      <span className="tools">
+        <button onClick={this.handleClick.bind(this)} className="bom" disabled={true}> Bom </button>
+        <button onClick={this.handleClick.bind(this)} className="networkGraph" disabled={true}> NetworkGraph </button>
+        <button onClick={this.handleClick.bind(this)} className="commit" disabled={true}> Commit (named save) </button>
+      </span>
+    )
+    tools = null
+
+
+     /*var cx = React.addons.classSet
+        var classes = cx({
+          'message-important': this.props.isImportant,
+          'message-read': this.props.isRead
+        })*/
+        /*let noteClasses = cx({
+          'note':true
+          'active':true
+        })*/
+    let annotations = (
+      <span className="annotations">
+        <button onClick={addNote$} className="note" disabled={false}> Add note </button>
+        <button onClick={addThicknessAnnot$} className="thickness" disabled={false}> thickness </button>
+        <button onClick={addDiameterAnnot$} className="diameter" disabled={false}> Diameter </button>
+        <button onClick={addDistanceAnnot$} className="distance" disabled={false}> Distance </button>
+      </span>
+    )
+
+    
+
     return (
       <div className="titleBar" style={titleStyle}>
         <h1>
@@ -84,6 +138,9 @@ class MainToolBar extends React.Component {
         </h1>
         <span ref="title" className="appInfos"> {fullTitle} </span>
         <span>
+          Active Tool : {this.props.activeTool}
+        </span>
+        <span>
           <button onClick={this.toggleDesignCard.bind(this)} className="details"> Details </button>
           <button onClick={newDesign$} className="new"> New design</button>
         </span>
@@ -94,40 +151,21 @@ class MainToolBar extends React.Component {
         </span>
 
         <span className="history">
-          <button disabled={undosDisabled} onClick={undo} className="undo"> Undo </button> 
-          <button disabled={redosDisabled} onClick={redo} className="redo"> Redo </button> 
+          <button disabled={undosDisabled} onClick={undo$} className="undo"> Undo </button> 
+          <button disabled={redosDisabled} onClick={redo$} className="redo"> Redo </button> 
         </span>
 
-        <span className="social"> 
-          <span>
-            <button onClick={this.handleClick.bind(this)} className="fork" disabled={true}> Fork </button>
-          </span>
-          <span>
-            <button onClick={this.handleClick.bind(this)} className="download" disabled={true}> Download </button>
-          </span>
-          <div style={fooStyle}>
-            <button onClick={this.handleClick.bind(this)} className="viewOnYm" disabled={true}> View on YM </button>
-          </div>
-          <span>
-            <button onClick={this.handleClick.bind(this)} className="share" disabled={true}> Share </button>
-          </span>
-          <span>
-            <button onClick={this.handleClick.bind(this)} className="like" disabled={true}> Like </button>
-          </span>
-        </span>
+        {social}
 
         <span className="otherStuff">
           <button onClick={this.handleClick.bind(this)} className="options" disabled={true}> options </button>
         </span>
 
-        <span className="tools">
-          <button onClick={this.handleClick.bind(this)} className="bom" disabled={true}> Bom </button>
-          <button onClick={this.handleClick.bind(this)} className="networkGraph" disabled={true}> NetworkGraph </button>
-          <button onClick={this.handleClick.bind(this)} className="commit" disabled={true}> Commit (named save) </button>
-        </span>
-
         {designCardWrapper}
+        
+        {tools}
 
+        {annotations}
       </div>
     )
   }
