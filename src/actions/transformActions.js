@@ -3,9 +3,9 @@ import {createAction} from '../utils/obsUtils'
 /*set transforms mode to given mode*/
 //export let setTransformMode = createAction();
 //FIXME: we should only have one for all of these, see above
-export let setToTranslateMode = createAction();
-export let setToRotateMode   = createAction();
-export let setToScaleMode  = createAction();
+export let setToTranslateMode$ = createAction();
+export let setToRotateMode$   = createAction();
+export let setToScaleMode$  = createAction();
 
 /*
 export function setTransformMode(mode) {
