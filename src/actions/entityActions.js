@@ -63,6 +63,9 @@ export let addEntityType$ = createAction()
 /*delete given entities*/
 export let deleteEntities$ = createAction()
 
+/*delete all entities in assembly*/
+export let deleteAllEntities$ = createAction()
+
 /*duplicate given entitites*/
 export let duplicateEntities$ = createAction()
 

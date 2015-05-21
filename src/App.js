@@ -45,7 +45,7 @@ import ContextMenu from './components/ContextMenu'
 
 ////TESTING
 import * as blar from './core/fooYeah'
-import {addEntityInstances$, setEntityData$, deleteEntities$, duplicateEntities$ } from './actions/entityActions'
+import {addEntityInstances$, setEntityData$, deleteEntities$, duplicateEntities$, deleteAllEntities$ } from './actions/entityActions'
 import {setToTranslateMode$, setToRotateMode$, setToScaleMode$} from './actions/transformActions'
 import {showContextMenu$, hideContextMenu$, undo$, redo$, setDesignAsPersistent$, clearActiveTool$} from './actions/appActions'
 import {newDesign$, setDesignData$} from './actions/designActions'
@@ -270,6 +270,12 @@ export default class App extends React.Component {
 
       .subscribe(self._tempForceDataUpdate.bind(self))
 
+    deleteAllEntities$
+      .map(self.removeAllEntities.bind(self))
+      .map(self.selectEntities.bind(self))
+
+      .subscribe(self._tempForceDataUpdate.bind(self))
+
     duplicateEntities$
       .map(self.duplicateEntities.bind(self))
       .map(self.selectEntities.bind(self))//set selection to new ones
@@ -374,12 +380,6 @@ export default class App extends React.Component {
       let activeTool = self.state.activeTool
       let val = toolName
       activeTool = (activeTool === val ? undefined: val)
-      /*if(activeTool)
-      {
-        document.body.style.cursor = 'crosshair'
-      }else{
-        document.body.style.cursor = 'default'
-      }*/
       self.setState({
         activeTool: activeTool
       },null,false)
@@ -388,8 +388,6 @@ export default class App extends React.Component {
     }
 
     function toggleCursor(toggle, cursorName){
-      //default
-      console.log("toggling cursor")
       if(toggle)
       {
         document.body.style.cursor = cursorName
@@ -410,8 +408,6 @@ export default class App extends React.Component {
       if (elem.style) elem.style.cursor=cursorStyle
      }
     }*/
-    let toggleNote = 
-
     addNote$
       .map(()=>"addNote")
       .map(toggleTool)
@@ -424,30 +420,31 @@ export default class App extends React.Component {
       })
 
     addDistanceAnnot$
-      .subscribe(function(){
-        toggleTool("addDistance")
-      })
+      .map(()=>"addDistance")
+      .map(toggleTool)
+      .map((toggled)=>toggleCursor(toggled,"crosshair"))
+      .subscribe(()=>{})
 
     addDiameterAnnot$
-      .subscribe(function(){
-        toggleTool("addDiameter")
-      })
+      .map(()=>"addDiameter")
+      .map(toggleTool)
+      .map((toggled)=>toggleCursor(toggled,"crosshair"))
+      .subscribe(()=>{})
 
     setToTranslateMode$
-
-      .subscribe(function(){
-        toggleTool("translate")
-      })
+      .map(()=>"translate")
+      .map(toggleTool)
+      .subscribe(()=>{})
 
     setToRotateMode$
-      .subscribe(function(){
-        toggleTool("rotate")
-      })
+      .map(()=>"rotate")
+      .map(toggleTool)
+      .subscribe(()=>{})
 
     setToScaleMode$
-      .subscribe(function(){
-        toggleTool("scale")
-      })
+      .map(()=>"scale")
+      .map(toggleTool)
+      .subscribe(()=>{})
 
 
     let notesCreation$ = glview.singleTaps$
@@ -458,6 +455,7 @@ export default class App extends React.Component {
       .map(getFirst)
       .subscribe(
         function(pickingInfos){
+          clearActiveTool$()
           console.log("hey yo, add a note",pickingInfos)
           
           let point = pickingInfos.point//closest point
@@ -469,9 +467,7 @@ export default class App extends React.Component {
           //FIXME: are we sure about this?
           object.worldToLocal( point )
           //helper final instance will become attached to "object", do the same here
-          //this.helper.position.setFromMatrixPosition( object.matrixWorld );
-          
-          //this.helper.setPoint( point, object );
+          //this.helper.position.setFromMatrixPosition( object.matrixWorld );          
           let annotation = {
             type:"note",
             typeUid:"-1",
@@ -484,18 +480,14 @@ export default class App extends React.Component {
               typeUid:undefined,
               instUid:object.userData.entity.iuid//here we could toggle, instance vs type
             }
-            
           }
-          console.log("POINT",annotation.point)
-
           let currentAnnotations = self.state.annotationsData
           currentAnnotations.push(annotation)
           self.setState({
             annotationsData:currentAnnotations
           })
 
-          //toggleTool("addNote")
-          clearActiveTool$()
+          
           //HACK HACK HACK
           self._tempForceDataUpdate()
         }
@@ -524,7 +516,8 @@ export default class App extends React.Component {
       //default actions ?
       actions = [
         {name:"Import file (NA)",action:undefined},
-        {name:"Export design (NA)",action:undefined}
+        {name:"Export design (NA)",action:undefined},
+        {name:"Delete all",action:deleteAllEntities$}
       ]
 
       if(selectedEntities && selectedEntities.length>0)
@@ -848,6 +841,19 @@ export default class App extends React.Component {
     this.setState({
       assemblies_main_children:outNEntities
     })   
+
+    return []
+  }
+
+  removeAllEntities(){
+    log.info("removing all entitites from assembly")
+
+    //let nEntities  = this.state.assemblies_main_children
+    this.setState({
+      assemblies_main_children:[]
+    })  
+
+    return []
   }
 
   /*duplicate all given instances of entities*/
