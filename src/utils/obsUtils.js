@@ -31,6 +31,9 @@ export function logNext( next ){
 export function logError( err){
   log.error(err)
 }
+export function onDone( data) {
+      log.info("DONE",data)
+}
 
 export function preventDefault(event) {
   event.preventDefault()
