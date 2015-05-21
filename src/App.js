@@ -29,7 +29,7 @@ let Observable = Rx.Observable
 import {observableDragAndDrop} from './interactions/interactions'
 
 import {fetchUriParams,getUriQuery}  from './utils/urlUtils'
-
+import {getEntryExitThickness} from './components/webgl/utils'
 
 import keymaster from 'keymaster'
 
@@ -415,9 +415,10 @@ export default class App extends React.Component {
       .subscribe(()=>{})
 
     addThicknessAnnot$
-      .subscribe(function(){
-        toggleTool("addThickess")
-      })
+      .map(()=>"addThickess")
+      .map(toggleTool)
+      .map((toggled)=>toggleCursor(toggled,"crosshair"))
+      .subscribe(()=>{})
 
     addDistanceAnnot$
       .map(()=>"addDistance")
@@ -478,7 +479,7 @@ export default class App extends React.Component {
               point:point.toArray(), 
               normal:normal.toArray(),
               typeUid:undefined,
-              instUid:object.userData.entity.iuid//here we could toggle, instance vs type
+              iuid:object.userData.entity.iuid//here we could toggle, instance vs type
             }
           }
           let currentAnnotations = self.state.annotationsData
@@ -486,12 +487,59 @@ export default class App extends React.Component {
           self.setState({
             annotationsData:currentAnnotations
           })
+          //HACK HACK HACK
+          self._tempForceDataUpdate()
+        }
+      )
 
+    let thickessMCreation$ = glview.singleTaps$
+      .filter(()=>self.state.activeTool === "addThickess" )
+      .map( (event)=>event.detail.pickingInfos)
+      .map(function(pickingInfos){console.log(pickingInfos);return pickingInfos})
+      .filter( (pickingInfos)=>pickingInfos.length>0)
+      .map(getFirst)
+      .subscribe(
+        function(pickingInfos){
+          clearActiveTool$()
+          console.log("hey yo, add a thickness",pickingInfos)
+          
+          function convert(annotRawData){
+            let {object, entryPoint, exitPoint, thickness} = annotRawData
+
+            let iuid       = object.userData.entity.iuid
+            entryPoint = entryPoint.toArray()
+            exitPoint  = exitPoint.toArray()
+
+            return annotation = {
+              type:"thickness",
+              typeUid:"0",
+              iuid:"",
+              value:thickness,
+              name:"thicknessxx", 
+              target:{
+                entryPoint:entryPoint, 
+                exitPoint: exitPoint,
+                normal:undefined,
+                typeUid:undefined,
+                iuid:object.userData.entity.iuid//here we could toggle, instance vs type
+              }
+            }
+          }
+
+          let annotation = convert(getEntryExitThickness(pickingInfos))
+
+          let currentAnnotations = self.state.annotationsData
+          currentAnnotations.push(annotation)
+          self.setState({
+            annotationsData:currentAnnotations
+          })
           
           //HACK HACK HACK
           self._tempForceDataUpdate()
         }
       )
+
+
     /*glview.singleTaps$.subscribe(function(event){
       if(self.state.activeTool === "addNote"){
         console.log(" i want to add a note",event)
@@ -588,8 +636,7 @@ export default class App extends React.Component {
     })
 
 
-    
-
+  
     //fetch & handle url parameters
     let mainUri    = window.location.href 
     let uriQuery   = getUriQuery(mainUri)

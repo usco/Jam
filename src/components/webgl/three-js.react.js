@@ -916,7 +916,7 @@ for tap/toubleTaps etc*/
             console.log("note annot",entry)
 
             let point = entry.target.point
-            let entity = data.filter(function(data){return data.iuid === entry.target.instUid})
+            let entity = data.filter(function(data){return data.iuid === entry.target.iuid})
             entity = entity.pop()
 
             if(!entity) return
@@ -925,7 +925,6 @@ for tap/toubleTaps etc*/
 
             //mesh.updateMatrix()
             //mesh.updateMatrixWorld()
-
             let pt = new THREE.Vector3().fromArray(point)//.add(mesh.position)
             let annotationVisual = new annotations.NoteHelper({
               point:pt,
@@ -937,7 +936,27 @@ for tap/toubleTaps etc*/
             let matrixWorldInverse = new THREE.Matrix4()
             matrixWorldInverse.getInverse( mesh.matrixWorld )
             annotationVisual.applyMatrix( matrixWorldInverse )*/
+          }
+          if(entry.type ==="thickness"){
+            let entity = data.filter(function(data){return data.iuid === entry.target.iuid})
+            entity = entity.pop()
 
+            if(!entity) return
+            let mesh = __localCache[entity.iuid]
+            if(!mesh) return
+
+            let entryPoint = entry.target.entryPoint
+            let exitPoint  = entry.target.exitPoint
+                          
+            entryPoint= new THREE.Vector3().fromArray(entryPoint)//.add(mesh.position)
+            exitPoint = new THREE.Vector3().fromArray(exitPoint)
+            let annotationVisual = new annotations.ThicknessHelper({
+              entryPoint,
+              exitPoint,
+              object:mesh
+            })
+
+            mesh.add(annotationVisual)
           }
           if(entry.type === "distance"){
             //console.log("distance annot",entry)
