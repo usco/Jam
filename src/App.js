@@ -18,8 +18,6 @@ import CtmParser    from 'usco-ctm-parser'
 import PlyParser    from 'usco-ply-parser'
 /*import AMfParser    from 'usco-amf-parser'
 import ObjParser    from 'usco-obj-parser'*/
-//import registerReact from 'reactive-elements'
-
 import Kernel       from 'usco-kernel2'
 
 
@@ -48,19 +46,21 @@ import ContextMenu from './components/ContextMenu'
 ////TESTING
 import * as blar from './core/fooYeah'
 import {addEntityInstances$, setEntityData$, deleteEntities$, duplicateEntities$ } from './actions/entityActions'
-import {setToTranslateMode, setToRotateMode, setToScaleMode} from './actions/transformActions'
-import {showContextMenu$, hideContextMenu$, undo, redo, setDesignAsPersistent$} from './actions/appActions'
+import {setToTranslateMode$, setToRotateMode$, setToScaleMode$} from './actions/transformActions'
+import {showContextMenu$, hideContextMenu$, undo$, redo$, setDesignAsPersistent$, clearActiveTool$} from './actions/appActions'
 import {newDesign$, setDesignData$} from './actions/designActions'
+import {addNote$,addThicknessAnnot$,addDistanceAnnot$, addDiameterAnnot$} from './actions/annotActions'
+
 
 let commands = {
-  "undo":undo,
-  "redo":redo,
+  "undo":undo$,
+  "redo":redo$,
 
   "removeEntities":deleteEntities$,
   "duplicateEntities":duplicateEntities$,
-  "toTranslateMode":setToTranslateMode, 
-  "toRotateMode": setToRotateMode, 
-  "toScaleMode":setToScaleMode
+  "toTranslateMode":setToTranslateMode$, 
+  "toRotateMode": setToRotateMode$, 
+  "toScaleMode":setToScaleMode$
 }
 
 
@@ -149,7 +149,6 @@ export default class App extends React.Component {
       .flatMap( Rx.Observable.fromArray )
       .subscribe((entry)=>{ self.loadMesh.bind(self,entry,{display:true})() } ) 
 
-
     let glview   = this.refs.glview
     
 
@@ -159,12 +158,22 @@ export default class App extends React.Component {
     }
 
     function getEntity( x ){
-      console.log(x)
       return x.userData.entity
+    }
+
+    function toolSelected(){
+      return self.state.activeTool
+      //return (self.state.activeTool !== null || self.state.activeTool !== undefined)
+    }
+
+    //annoying
+    function noToolSelected(){
+      return !toolSelected()
     }
 
     let selectedMeshes$ = glview.selectedMeshes$
       .defaultIfEmpty([])
+      .filter(noToolSelected)
       .subscribe(
         function(selections){
           let res= selections.filter(entitiesOnly).map(getEntity)
@@ -182,7 +191,6 @@ export default class App extends React.Component {
     }
 
     function attributesToArrays(attrs){
-      console.log("here")
       let output= {}
       for(let key in attrs){
         output[key] = attrs[key].toArray()
@@ -192,12 +200,10 @@ export default class App extends React.Component {
       {
         output["rot"] = output["rot"].slice(0,3)
       }
-
       return output
     }
 
     function setEntityT(attrsAndEntity){
-      console.log("bla")
       let [transforms, entity] = attrsAndEntity      
       setEntityData$({entity:entity,
         pos:transforms.pos,
@@ -235,25 +241,7 @@ export default class App extends React.Component {
     .repeat()
     .subscribe( setEntityT )
 
-    /*var bla = objectsTransform
-    .debounce(16)
-    .filter(entitiesOnly)
- 
-    var eId = bla.map(getEntity).map('.iuid').toProperty(-1)
-    var pos = bla.map('.position').map(toArray).toProperty([0,0,0])
-    var rot = bla.map('.rotation').map(toArray).toProperty([0,0,0])
-    var sca = bla.map('.scale').map(toArray).toProperty([0,0,0])
-     
-    var endTranforms = Bacon.combineTemplate(
-      {entityId:eId, 
-       pos:pos,
-       rot:rot,
-       sca:sca}
-    ).onValue(function(value){
-      console.log("transforms value",JSON.stringify(value))
-    })*/
     
-
     ///////////
     //setup key bindings
     this.setupKeyboard()
@@ -379,41 +367,153 @@ export default class App extends React.Component {
         self.kernel.saveAssemblyState(self.state.assemblies_main_children)
       })
 
-    /*
-    let foo$ = Rx.Observable.combineLatest(
-      setEntityTransforms,
-      setEntityColor,
-      //deleteEntities,
-      //duplicateEntities$,
-      function(transforms, color){
-        console.log("here")
-        let key = transforms.entity.iuid
-
-        let entities = {
-        }
-
-        entities[key] = {
-          name:transforms.entity.name,
-          t:transforms.transforms,
-          c:color.color
-        }
-
-        return entities
-      }
-    )
-   
-    foo$.subscribe(
-      function(data){
-        console.log("hi there, the model changed!",data)
-      },
-      function(bla){console.log("heredsf")},
-      function(bla){console.log("error")}
-      )*/
-
-
-
-    /////This is ok here ??
+    
+    /////REMOVE ALL THIS!, it should not be here
     ///////////
+    function toggleTool(toolName){
+      let activeTool = self.state.activeTool
+      let val = toolName
+      activeTool = (activeTool === val ? undefined: val)
+      /*if(activeTool)
+      {
+        document.body.style.cursor = 'crosshair'
+      }else{
+        document.body.style.cursor = 'default'
+      }*/
+      self.setState({
+        activeTool: activeTool
+      },null,false)
+
+      return activeTool === val
+    }
+
+    function toggleCursor(toggle, cursorName){
+      //default
+      console.log("toggling cursor")
+      if(toggle)
+      {
+        document.body.style.cursor = cursorName
+      }else{
+        document.body.style.cursor = 'default'
+      }
+      return toggle
+    }
+
+    function getFirst(input){
+      return input[0]
+    }
+
+    /*function setCursorByID(id,cursorStyle) {
+     let elem
+     if (document.getElementById &&
+        (elem=document.getElementById(id)) ) {
+      if (elem.style) elem.style.cursor=cursorStyle
+     }
+    }*/
+    let toggleNote = 
+
+    addNote$
+      .map(()=>"addNote")
+      .map(toggleTool)
+      .map((toggled)=>toggleCursor(toggled,"crosshair"))
+      .subscribe(()=>{})
+
+    addThicknessAnnot$
+      .subscribe(function(){
+        toggleTool("addThickess")
+      })
+
+    addDistanceAnnot$
+      .subscribe(function(){
+        toggleTool("addDistance")
+      })
+
+    addDiameterAnnot$
+      .subscribe(function(){
+        toggleTool("addDiameter")
+      })
+
+    setToTranslateMode$
+
+      .subscribe(function(){
+        toggleTool("translate")
+      })
+
+    setToRotateMode$
+      .subscribe(function(){
+        toggleTool("rotate")
+      })
+
+    setToScaleMode$
+      .subscribe(function(){
+        toggleTool("scale")
+      })
+
+
+    let notesCreation$ = glview.singleTaps$
+      .filter(()=>self.state.activeTool === "addNote" )
+      .map( (event)=>event.detail.pickingInfos)
+      .map(function(pickingInfos){console.log(pickingInfos);return pickingInfos})
+      .filter( (pickingInfos)=>pickingInfos.length>0)
+      .map(getFirst)
+      .subscribe(
+        function(pickingInfos){
+          console.log("hey yo, add a note",pickingInfos)
+          
+          let point = pickingInfos.point//closest point
+          let object= pickingInfos.object//closest point
+          let face  = pickingInfos.face//closes face
+          let normal= face.normal
+          
+          //set point coordinates to be local , not global
+          //FIXME: are we sure about this?
+          object.worldToLocal( point )
+          //helper final instance will become attached to "object", do the same here
+          //this.helper.position.setFromMatrixPosition( object.matrixWorld );
+          
+          //this.helper.setPoint( point, object );
+          let annotation = {
+            type:"note",
+            typeUid:"-1",
+            iuid:"",
+            value:undefined,
+            name:"notexx", 
+            target:{
+              point:point.toArray(), 
+              normal:normal.toArray(),
+              typeUid:undefined,
+              instUid:object.userData.entity.iuid//here we could toggle, instance vs type
+            }
+            
+          }
+          console.log("POINT",annotation.point)
+
+          let currentAnnotations = self.state.annotationsData
+          currentAnnotations.push(annotation)
+          self.setState({
+            annotationsData:currentAnnotations
+          })
+
+          //toggleTool("addNote")
+          clearActiveTool$()
+          //HACK HACK HACK
+          self._tempForceDataUpdate()
+        }
+      )
+    /*glview.singleTaps$.subscribe(function(event){
+      if(self.state.activeTool === "addNote"){
+        console.log(" i want to add a note",event)
+      }
+    })*/
+    //glview.doubleTaps$
+
+    clearActiveTool$
+      .subscribe(function(){
+        self.setState({
+        activeTool: undefined
+        },null,false)
+      document.body.style.cursor = 'default'
+    })
     
     showContextMenu$.subscribe(function(requestData){
       console.log("requestData",requestData)
@@ -466,7 +566,7 @@ export default class App extends React.Component {
     })
 
 
-    undo.subscribe(function(){
+    undo$.subscribe(function(){
       console.log("UNDO")
       function afterSetState(){
         self._tempForceDataUpdate()
@@ -481,7 +581,7 @@ export default class App extends React.Component {
       
     })
 
-    redo.subscribe(function(){
+    redo$.subscribe(function(){
       console.log("REDO")
 
       function afterSetState(){
@@ -515,7 +615,7 @@ export default class App extends React.Component {
     designUrls.map(function( designUrl ){ self.loadDesign(designUrl) })
 
     //only load meshes if no designs need to be loaded 
-    if(!singleDesign)meshUrls.map(function( meshUrl ){ self.loadMesh(meshUrl) })
+    if(!singleDesign) meshUrls.map(function( meshUrl ){ self.loadMesh(meshUrl) })
 
     let persistentUri = this.state.design._persistentUri
     //from localstorage in case all else failed
@@ -530,7 +630,7 @@ export default class App extends React.Component {
     }
 
     //last but not least, trie to load if anything is in the query (shorthand for design uuids)
-    if(!singleDesign && !persistentUri && uriQuery)
+    if(!singleDesign &&! meshUrls && !persistentUri && uriQuery)
     {
       //FIXME: this does not seem right ...
       let apiDesignsUri = "https://jamapi.youmagine.com/api/v1/designs/"//self.kernel.dataApi.designsUri
@@ -846,6 +946,8 @@ export default class App extends React.Component {
     let glview   = this.refs.glview
     let assembly = this.kernel.activeAssembly
     let entries  = this.state.assemblies_main_children
+
+    let annotationsData = this.state.annotationsData //FIXME : HACK obviously
     
     let selectedEntities = this.state.selectedEntitiesIds.map(entityId => self.state._entitiesById[entityId])
     let selectedEntitiesIds = this.state.selectedEntitiesIds
@@ -888,7 +990,7 @@ export default class App extends React.Component {
 
         let mesh = yield kernel.getPartMeshInstance( entity ) 
 
-        log.debug("meshInstanceRXJS",mesh, entity)
+        //log.debug("meshInstanceRXJS",mesh, entity)
 
         //meshCache[entity.iuid] = mesh
 
@@ -923,22 +1025,6 @@ export default class App extends React.Component {
       //let stream = new Rx.Subject()
     })
 
-    //FIXME: hack / experiment
-    let annotationsData = [
-        {
-          iuid:"dfsdfsdf",
-          type:"distance",
-          distance : 150,
-          start:{
-            point :[0,1,0],
-            entity: "A41A9D9E-E371-439B-A83B-A387DDD51FC1"
-          },
-          end:{
-            point: [2,5,7],
-            entity: "E83B5655-8B70-498D-B082-E502B8728CC6"
-          }
-        }
-    ]
   
 
     glview.forceUpdate({
@@ -1005,11 +1091,12 @@ export default class App extends React.Component {
             design={this.state.design} 
             appInfos={this.state.appInfos} 
             persistent={this.state._persistent}
+            activeTool={this.state.activeTool}
             undos = {this._undos}
             redos = {this._redos}
             style={toolbarStyle}> </MainToolbar>
 
-          <ThreeJs ref="glview"/>
+          <ThreeJs ref="glview" activeTool={this.state.activeTool}/>
 
           <div ref="testArea" style={testAreaStyle} className="toolBarBottom">
             <EntityInfos entities={selectedEntities} debug={false}/>
