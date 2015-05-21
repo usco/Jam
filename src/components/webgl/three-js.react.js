@@ -29,6 +29,7 @@ import CombinedCamera from './deps/CombinedCamera'
 //TODO: import this at another level, should not be part of the base gl view
 import TransformControls from './transforms/TransformControls'
 import Selector from './deps/Selector'
+import {findSelectionRoot} from './deps/Selector'
 let OutlineObject = helpers.objectEffects.OutlineObject
 let ZoomInOnObject= helpers.objectEffects.ZoomInOnObject
 
@@ -46,7 +47,7 @@ log.setLevel("info")
 
 
 //FIXME: hack for now, should not be set here
-import {setToTranslateMode, setToRotateMode, setToScaleMode} from "../../actions/transformActions"
+import {setToTranslateMode$, setToRotateMode$, setToScaleMode$} from "../../actions/transformActions"
 //NOT so sure about these
 import {showContextMenu$, hideContextMenu$} from '../../actions/appActions'
 
@@ -267,7 +268,7 @@ class ThreeJs extends React.Component{
     //setup INTERACTIONS
     let selectionAt = this._getSelectionsAt.bind(this)
     function coordsFromEvent(event){return {x:event.x, y:event.y}}
-    function positionFromCoords(coords){console.log("coords", coords.offsetX);return{position:{x:coords.x,y:coords.y},event:coords}}
+    function positionFromCoords(coords){return{position:{x:coords.x,y:coords.y},event:coords}}
     //function extractField(input, "fieldName")
     function getPickingObjectAndPoint(pickingInfo){
       
@@ -328,16 +329,15 @@ class ThreeJs extends React.Component{
     Observable.merge(singleTaps$, doubleTaps$, dragMoves$)//, zoomIntents$)
       .take(1)
       .repeat()
-      
       .subscribe(hideContextMenu$)
 
     //set handling of transform modes
 
     function areThereSelections(){ return (self.selectedMeshes && self.selectedMeshes.length>0) }
 
-    setToTranslateMode.filter(areThereSelections).subscribe( this.transformControls.setMode.bind(this.transformControls,"translate") )
-    setToRotateMode.filter(areThereSelections).subscribe( this.transformControls.setMode.bind(this.transformControls,"rotate") )
-    setToScaleMode.filter(areThereSelections).subscribe( this.transformControls.setMode.bind(this.transformControls,"scale") )
+    setToTranslateMode$.filter(areThereSelections).subscribe( this.transformControls.setMode.bind(this.transformControls,"translate") )
+    setToRotateMode$.filter(areThereSelections).subscribe( this.transformControls.setMode.bind(this.transformControls,"rotate") )
+    setToScaleMode$.filter(areThereSelections).subscribe( this.transformControls.setMode.bind(this.transformControls,"scale") )
 
     /* idea of mappings , from react-pixi
      spritemapping : {
@@ -347,6 +347,9 @@ class ThreeJs extends React.Component{
     'pink' : assetpath('creamPink.png'),
     },*/
     preventScroll(container)
+
+    this.singleTaps$ = singleTaps$.map( selectionAt )
+    this.doubleTaps$ = doubleTaps$.map( selectionAt )
     
     this._setupExtras()
     this._render()
@@ -358,7 +361,8 @@ class ThreeJs extends React.Component{
       //container.removeEventListener("click",this.projectClick)
   }
   
-  shouldComponentUpdate(){
+  shouldComponentUpdate(nextProps){
+    console.log("nextProps",nextProps)
     //console.log("gne",this.props.cubeRot)
     //this.cube.rotation.z = this.props.cubeRot.rot.z
     return false
@@ -394,9 +398,6 @@ for tap/toubleTaps etc*/
     outEvent.detail.pickingInfos = intersects
 
     return outEvent
-  }
-
-  mapDataToVisual( data, visualMapper ){
   }
 
   _setupExtras(){
@@ -642,7 +643,6 @@ for tap/toubleTaps etc*/
   }
 
   selectMeshes(event){
-    console.log("selectMeshes",event)
     let intersects = event.detail.pickingInfos
     let rect = this.container.getBoundingClientRect()
 
@@ -650,30 +650,35 @@ for tap/toubleTaps etc*/
     selectedMeshes.sort().filter( ( mesh, pos ) => { return (!pos || mesh != intersects[pos - 1]) } )
 
     selectedMeshes = selectedMeshes.shift()//we actually only get the best match
+    selectedMeshes = findSelectionRoot(selectedMeshes)//now we make sure that what we have is actually selectable
+
     if(selectedMeshes){ selectedMeshes = [selectedMeshes] }
     else{ selectedMeshes = []}
-    //console.log("selectedMeshes",selectedMeshes)
 
     this.selectedMeshes = selectedMeshes
-    this.setState({
-      selectedMeshes: selectedMeshes
-    })
 
-
-    if(this._prevSelectedMeshes && this._prevSelectedMeshes.length>0){
-      console.log(this._prevSelectedMeshes)
-      this.transformControls.detach(this._prevSelectedMeshes[0])
+    /*if(this._prevSelectedMeshes && this._prevSelectedMeshes.length>0){
+        this.transformControls.detach(this._prevSelectedMeshes[0])
     }
-
     if(selectedMeshes.length>0){
-      this.transformControls.attach(selectedMeshes[0])
-    }
+        this.transformControls.attach(selectedMeshes[0])
+      }
 
-    /* function show(selectedMesh){
-      console.log("selectedMesh",selectedMesh)
+
+    if(this.props.activeTool && ["translate","rotate","scale"].indexOf(this.props.activeTool) > -1 )
+    {
+      if(selectedMeshes.length>0){
+        this.transformControls.attach(selectedMeshes[0])
+      }
+    }else{
+
+      if(this._prevSelectedMeshes && this._prevSelectedMeshes.length>0){
+        this.transformControls.detach(this._prevSelectedMeshes[0])
+      }
     }*/
-    this._prevSelectedMeshes = this.selectedMeshes
+  
 
+    this._prevSelectedMeshes = this.selectedMeshes
     this.selectedMeshes$.onNext(selectedMeshes)
 
     return event
@@ -822,7 +827,7 @@ for tap/toubleTaps etc*/
     
     let mappings = {}    
     function addToMappings(mappings, entity, mesh){
-      console.log("add to mappings")
+      //console.log("add to mappings")
       mappings[entity.iuid] = mesh
       __localCache[entity.iuid] = mesh
       return mappings
@@ -834,10 +839,23 @@ for tap/toubleTaps etc*/
       self._render()
       self.transformControls.update()
       
-
+      
+      if(self._prevSelectedMeshes && self._prevSelectedMeshes.length>0){
+        self.transformControls.detach(self._prevSelectedMeshes[0])
+      }
+      if(self.transformControls.object)
+      {
+        self.transformControls.detach(self.transformControls.object)
+      }
 
       if(selectedEntities.indexOf(entity.iuid) !== -1){
         
+        if(self.props.activeTool && ["translate","rotate","scale"].indexOf(self.props.activeTool) > -1 ){
+          self.transformControls.attach(mesh)
+        }
+        
+
+
         let geometry = mesh.geometry
         let matFlat = new THREE.MeshBasicMaterial({color: 0xffffff})
         let maskMesh = new THREE.Mesh( geometry, matFlat )
@@ -880,21 +898,49 @@ for tap/toubleTaps etc*/
       }
       //console.log("MAPPINGS", self, self._mappings)
     }
-
     
     function renderItem (entry) {
       mapper(entry, dynamicInjector, xform, mappings)
     }
+
     data
       .map( renderItem )
 
     //for annotations, overlays etc
     function renderMeta(metadata){
+      
       console.log("drawing metadata",metadata)
       metadata
         .map(function(entry){
+          if(entry.type === "note"){
+            console.log("note annot",entry)
+
+            let point = entry.target.point
+            let entity = data.filter(function(data){return data.iuid === entry.target.instUid})
+            entity = entity.pop()
+
+            if(!entity) return
+            let mesh = __localCache[entity.iuid]
+            if(!mesh) return
+
+            //mesh.updateMatrix()
+            //mesh.updateMatrixWorld()
+
+            let pt = new THREE.Vector3().fromArray(point)//.add(mesh.position)
+            let annotationVisual = new annotations.NoteHelper({
+              point:pt,
+              object:mesh})
+
+            mesh.add(annotationVisual)
+            //dynamicInjector.add(annotationVisual)
+            /*annotationVisual.applyMatrix( dynamicInjector.matrixWorld )
+            let matrixWorldInverse = new THREE.Matrix4()
+            matrixWorldInverse.getInverse( mesh.matrixWorld )
+            annotationVisual.applyMatrix( matrixWorldInverse )*/
+
+          }
           if(entry.type === "distance"){
-            console.log("distance annot",entry)
+            //console.log("distance annot",entry)
 
             let start = entry.start
             let startEntity = data.filter(function(data){return data.iuid === start.entity})
@@ -904,16 +950,18 @@ for tap/toubleTaps etc*/
             let endEntity = data.filter(function(data){return data.iuid === end.entity})
             endEntity = endEntity.pop()
 
-            console.log("start & end",startEntity,endEntity)
+            //console.log("start & end entities",startEntity,endEntity)
+            //console.log("start & end points of annot",start,end)
 
             if(!startEntity || !endEntity) return
-            //mapper(startEntity)
-            //mapper()
+
             let startMesh = __localCache[startEntity.iuid]
             let endMesh   = __localCache[endEntity.iuid]
             if( startMesh && endMesh ){
               let startPt = new THREE.Vector3().fromArray(start.point)
               let endPt   = new THREE.Vector3().fromArray(end.point)
+              startMesh.worldToLocal(startPt)
+              endMesh.worldToLocal(endPt)
 
               let annotationVisual = new annotations.DistanceHelper({
                 start:startPt,
@@ -921,14 +969,16 @@ for tap/toubleTaps etc*/
                 end: endPt,
                 endObject: endMesh
               })
-              annotationVisual.setStart(startPt, startMesh)
-              annotationVisual.setEnd(endPt, endMesh)
 
-              annotationVisual.update()
+              var midPoint = endPt.clone().divideScalar( 2 ).add( startPt )
+              annotationVisual.userData.entity = entry
+              //annotationVisual.position.copy(midPoint)
+              //annotationVisual.setStart(startPt, startMesh)
+              //annotationVisual.setEnd(endPt, endMesh)
+
+              //annotationVisual.update()
               dynamicInjector.add(annotationVisual)
-            }
-            /*l*/
-            
+            }            
           }
 
           return entry
@@ -946,18 +996,9 @@ for tap/toubleTaps etc*/
       self._render()
     }, 10)
     
-
     //also force render in case we do not have entities left to render
     self._render()
-
-
     this._oldEntries = JSON.parse(JSON.stringify(data))// || undefined
-    //console.log("MAPPINGS", this._mappings)
-    //this._oldMappings= {}
-    //this._oldEntries = data
-
-    console.log("FOOOO",this.__localCache)
-
   }
 
   render(){
@@ -979,5 +1020,4 @@ for tap/toubleTaps etc*/
   
 }
 
-//document.registerReact('three-js', ThreeJs)
 export default ThreeJs
