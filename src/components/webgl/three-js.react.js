@@ -658,15 +658,15 @@ for tap/toubleTaps etc*/
 
   console.log("selectedMeshes",selectedMeshes)
 
-    /*if(this._prevSelectedMeshes && this._prevSelectedMeshes.length>0){
+    if(this._prevSelectedMeshes && this._prevSelectedMeshes.length>0){
         this.transformControls.detach(this._prevSelectedMeshes[0])
     }
     if(selectedMeshes.length>0){
         this.transformControls.attach(selectedMeshes[0])
-      }
+    }
 
 
-    if(this.props.activeTool && ["translate","rotate","scale"].indexOf(this.props.activeTool) > -1 )
+    /*if(this.props.activeTool && ["translate","rotate","scale"].indexOf(this.props.activeTool) > -1 )
     {
       if(selectedMeshes.length>0){
         this.transformControls.attach(selectedMeshes[0])
@@ -841,18 +841,18 @@ for tap/toubleTaps etc*/
       self.transformControls.update()
       
       
-      if(self._prevSelectedMeshes && self._prevSelectedMeshes.length>0){
+      /*if(self._prevSelectedMeshes && self._prevSelectedMeshes.length>0){
         self.transformControls.detach(self._prevSelectedMeshes[0])
       }
       if(self.transformControls.object)
       {
         self.transformControls.detach(self.transformControls.object)
-      }
+      }*/
 
       if(selectedEntities.indexOf(entity.iuid) !== -1){
         
         if(self.props.activeTool && ["translate","rotate","scale"].indexOf(self.props.activeTool) > -1 ){
-          self.transformControls.attach(mesh)
+         // self.transformControls.attach(mesh)
         }
         
 
