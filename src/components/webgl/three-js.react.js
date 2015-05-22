@@ -8,7 +8,6 @@ let LabeledGrid = helpers.grids.LabeledGrid
 let ShadowPlane = helpers.planes.ShadowPlane
 let CamViewControls= helpers.CamViewControls
 let annotations = helpers.annotations
-let DiameterHelper = annotations.DiameterHelper
 
 
 import CopyShader     from './deps/post-process/CopyShader'
@@ -657,6 +656,8 @@ for tap/toubleTaps etc*/
 
     this.selectedMeshes = selectedMeshes
 
+  console.log("selectedMeshes",selectedMeshes)
+
     /*if(this._prevSelectedMeshes && this._prevSelectedMeshes.length>0){
         this.transformControls.detach(this._prevSelectedMeshes[0])
     }
@@ -908,10 +909,20 @@ for tap/toubleTaps etc*/
 
     //for annotations, overlays etc
     function renderMeta(metadata){
-      
       console.log("drawing metadata",metadata)
+ 
+      //dynamicInjector.children = []
+
+      /*dynamicInjector.children.map(function(child){
+      console.log("gne",child)
+      for(var i = child.children.length -1; i >= 0 ; i--){
+          child.remove(child.children[i])
+        }
+      })*/
+
       metadata
         .map(function(entry){
+          let visual = undefined
           if(entry.typeUid === "0"){
             console.log("note annot",entry)
 
@@ -926,18 +937,18 @@ for tap/toubleTaps etc*/
             //mesh.updateMatrix()
             //mesh.updateMatrixWorld()
             let pt = new THREE.Vector3().fromArray(point)//.add(mesh.position)
-            let annotationVisual = new annotations.NoteHelper({
+            visual = new annotations.NoteHelper({
               point:pt,
               object:mesh})
 
-            annotationVisual.userData.entity = entity
+            visual.userData.entity = entry
 
-            mesh.add(annotationVisual)
-            //dynamicInjector.add(annotationVisual)
-            /*annotationVisual.applyMatrix( dynamicInjector.matrixWorld )
+            mesh.add(visual)
+            //dynamicInjector.add(visual)
+            /*visual.applyMatrix( dynamicInjector.matrixWorld )
             let matrixWorldInverse = new THREE.Matrix4()
             matrixWorldInverse.getInverse( mesh.matrixWorld )
-            annotationVisual.applyMatrix( matrixWorldInverse )*/
+            visual.applyMatrix( matrixWorldInverse )*/
           }
           if(entry.typeUid === "1"){
             let entity = data.filter(function(data){return data.iuid === entry.target.iuid})
@@ -952,15 +963,14 @@ for tap/toubleTaps etc*/
                           
             entryPoint= new THREE.Vector3().fromArray(entryPoint)//.add(mesh.position)
             exitPoint = new THREE.Vector3().fromArray(exitPoint)
-            let annotationVisual = new annotations.ThicknessHelper({
+            visual = new annotations.ThicknessVisual({
               entryPoint,
               exitPoint,
               object:mesh
             })
 
-            annotationVisual.userData.entity = entity
-
-            mesh.add(annotationVisual)
+            visual.userData.entity = entry
+            mesh.add(visual)
           }
 
           if(entry.typeUid === "2"){
@@ -974,9 +984,6 @@ for tap/toubleTaps etc*/
             let endEntity = data.filter(function(data){return data.iuid === end.iuid})
             endEntity = endEntity.pop()
 
-            //console.log("start & end entities",startEntity,endEntity)
-            //console.log("start & end points of annot",start,end)
-
             if(!startEntity || !endEntity) return
 
             let startMesh = __localCache[startEntity.iuid]
@@ -987,32 +994,99 @@ for tap/toubleTaps etc*/
               startMesh.worldToLocal(startPt)
               endMesh.worldToLocal(endPt)
 
-              let annotationVisual = new annotations.DistanceHelper({
+              visual = new annotations.DistanceVisual({
                 start:startPt,
                 startObject:startMesh,
                 end: endPt,
                 endObject: endMesh
               })
 
-              var midPoint = endPt.clone().divideScalar( 2 ).add( startPt )
-              annotationVisual.userData.entity = entry
-              //annotationVisual.position.copy(midPoint)
-              //annotationVisual.setStart(startPt, startMesh)
-              //annotationVisual.setEnd(endPt, endMesh)
+              let midPoint = endPt.clone().divideScalar( 2 ).add( startPt )
+              visual.userData.entity = entry
 
-              //annotationVisual.update()
-              dynamicInjector.add(annotationVisual)
+              //visual.update()
+              dynamicInjector.add(visual)
             }            
           }
 
+
+          if(entry.typeUid === "3"){
+            console.log("diameter annot",entry)
+
+            let point = entry.target.point
+            let entity = data.filter(function(data){return data.iuid === entry.target.iuid})
+            entity = entity.pop()
+
+            if(!entity) return
+            let mesh = __localCache[entity.iuid]
+            if(!mesh) return
+
+            //mesh.updateMatrix()
+            //mesh.updateMatrixWorld()
+            point        = new THREE.Vector3().fromArray(point)
+            let normal   = new THREE.Vector3().fromArray(entry.target.normal)
+            let diameter = entry.value
+           
+            if(!entity) return
+
+            visual = new annotations.DiameterVisual({
+               center:point,
+               diameter,
+               orientation:normal
+            })
+
+            visual.userData.entity = entry
+
+            mesh.add(visual)            
+        
+
+            
+
+            /*let matrixWorldInverse = new THREE.Matrix4()
+            matrixWorldInverse.getInverse( mesh.matrixWorld )
+            visual.applyMatrix( matrixWorldInverse )*/
+
+            //mesh.updateMatrix()
+            //mesh.updateMatrixWorld()
+            //dynamicInjector.add( visual )
+
+            //let matrixWorldInverse = new THREE.Matrix4()
+            //matrixWorldInverse.getInverse( dynamicInjector.matrixWorld )
+
+            //visual.applyMatrix( matrixWorldInverse )
+
+
+            //this.matrix.multiplyMatrices( matrix, this.matrix );
+            //this.matrix.decompose( this.position, this.quaternion, this.scale );
+
+            /*let m = new THREE.Matrix4()
+            m.multiplyMatrices( mesh.matrixWorld, visual.matrix)
+            visual.applyMatrix(m)
+            visual.matrixWorld.multiplyMatrices( mesh.matrixWorld, visual.matrix )*/
+
+            //visual.matrixWorld.multiplyMatrices( mesh.matrixWorld, visual.matrix )//WORKS
+            //visual.applyMatrix( mesh.matrixWorld )
+
+            console.log(mesh)
+
+          }
+
+          if(visual && selectedEntities.indexOf(entry.iuid)>-1){
+            visual.highlight(true)
+          }
           return entry
         })
+
+     
     }
     renderMeta(metadata)
 
     let oldDynamicInjector = this.dynamicInjector
     this.dynamicInjector = dynamicInjector
     this.scene.add( dynamicInjector )
+
+    //horrible hack : FIXME
+    
 
     //FIXME: GODawfull hack 
     setTimeout(function() {
