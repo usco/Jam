@@ -156,7 +156,7 @@ class EntityInfos extends React.Component {
     let numberPrecision = 2
     let controlsStep = 0.1
 
-    var entityName = this.state && this.state.entityName || []
+    let entityName = this.state && this.state.entityName || []
 
 
     if(canDisplay){
@@ -165,54 +165,103 @@ class EntityInfos extends React.Component {
 
       let self  = this//workaround for babel + jsx "this" issue
 
-      let positionInputs = []
-      entity.pos.forEach(function(entry, index){
-        let entry = formatNumberTo(entry, numberPrecision)
-        positionInputs.push(<input type="number" 
-          value={entry} 
-          step= {controlsStep}
-          style={styles.numbers} 
-          onChange={self.handleChange.bind(self,"pos",index)} />
+      let entityColor = null
+      if(entity.color){
+        entityColor = (
+           <span>
+            <input type="color" value={entity.color} onChange={this.handleColorChange.bind(this)}/> 
+          </span>
         )
-      })
+      }  
+
+      let positionInputs = []
+      if(entity.pos){
+        entity.pos.forEach(function(entry, index){
+          let entry = formatNumberTo(entry, numberPrecision)
+          positionInputs.push(<input type="number" 
+            value={entry} 
+            step= {controlsStep}
+            style={styles.numbers} 
+            onChange={self.handleChange.bind(self,"pos",index)} />
+          )
+        })
+
+        positionInputs = (
+          <span>
+            <span>P:</span> {positionInputs})
+          </span>
+        )
+      }
 
       let rotationInputs = []
-      entity.rot.forEach(function(entry, index){
-        let entry = formatNumberTo(entry, numberPrecision)
-        rotationInputs.push(<input type="number"
-          value={entry} 
-          step = {controlsStep}
-          style={styles.numbers}
-          onChange={self.handleChange.bind(self,"rot",index)} />
+      if(entity.rot){
+        entity.rot.forEach(function(entry, index){
+          let entry = formatNumberTo(entry, numberPrecision)
+          rotationInputs.push(<input type="number"
+            value={entry} 
+            step = {controlsStep}
+            style={styles.numbers}
+            onChange={self.handleChange.bind(self,"rot",index)} />
+          )
+        })
+
+        rotationInputs = (
+          <span>
+            <span>R:</span> {rotationInputs}
+          </span>
         )
-      })
+      }
 
       let scaleInputs = []
-      entity.sca.forEach(function(entry, index){
-        let entry = formatNumberTo(entry, numberPrecision)
-        scaleInputs.push(
-          <input type="number" 
-          value={entry} 
-          step={controlsStep}
-          style={styles.numbers}
-          onChange={self.handleChange.bind(self,"sca",index)} />
+      if(entity.sca){
+        entity.sca.forEach(function(entry, index){
+          let entry = formatNumberTo(entry, numberPrecision)
+          scaleInputs.push(
+            <input type="number" 
+            value={entry} 
+            step={controlsStep}
+            style={styles.numbers}
+            onChange={self.handleChange.bind(self,"sca",index)} />
+          )
+        })
+
+        scaleInputs = (
+          <span>
+            <span>S:</span> {scaleInputs}
+          </span>
         )
-      })
+      }
 
       let absSizeInputs = []
-      let absSize = absSizeFromBBox(entity.bbox)
-      absSize = absSize || {w:0,l:0,h:0}
-      //convert to array to keep logic the same for all fields
-      absSize = [absSize.w,absSize.l,absSize.h]
-      absSize.forEach(function(entry, index){
-        let entry = formatNumberTo(entry, numberPrecision)
-        absSizeInputs.push(
-          <input type="number" 
-          value={entry} 
-          step={controlsStep}
-          style={styles.numbers} onChange={self.handleSizeChange.bind(self,index)}/>
+      if(entity.bbox){
+        let absSize = absSizeFromBBox(entity.bbox)
+        absSize = absSize || {w:0,l:0,h:0}
+        //convert to array to keep logic the same for all fields
+        absSize = [absSize.w,absSize.l,absSize.h]
+        absSize.forEach(function(entry, index){
+          let entry = formatNumberTo(entry, numberPrecision)
+          absSizeInputs.push(
+            <input type="number" 
+            value={entry} 
+            step={controlsStep}
+            style={styles.numbers} onChange={self.handleSizeChange.bind(self,index)}/>
+          )
+        })
+
+        absSizeInputs = (
+          <span>
+            <span>D:</span> {absSizeInputs}
+          </span>
         )
-      })
+      }
+
+      //this is used only for annotations I guess?
+      let extraFields =null
+      if(entity.value){
+        extraFields = (
+          <span> value:{ formatNumberTo(entity.value, numberPrecision) }</span>
+        )
+      }
 
       let debugFields = undefined
 
@@ -226,25 +275,24 @@ class EntityInfos extends React.Component {
 
       entityInfo = (
         <div>
-          <span>
-            <input type="color" value={entity.color} onChange={this.handleColorChange.bind(this)}/> 
-          </span>
+
+          {entityColor}
+
           <span>
             <span>N:</span>
             <EditableItem data={entityName} changeCallback={ this.handleEntityDataChange.bind(this,"name",entity) }/> 
           </span>
-          <span>
-            <span>P:</span> {positionInputs}
-          </span>
-          <span>
-            <span>R:</span> {rotationInputs}
-          </span>
-          <span>
-            <span>S:</span> {scaleInputs}
-          </span>
-          <span>
-            <span>D:</span> {absSizeInputs}
-          </span>
+          
+          {positionInputs}
+
+          {rotationInputs}
+
+          {scaleInputs}
+        
+          {absSizeInputs}
+
+          {extraFields}
+
           {debugFields}
         </div>)
     }
