@@ -29,7 +29,8 @@ let Observable = Rx.Observable
 import {observableDragAndDrop} from './interactions/interactions'
 
 import {fetchUriParams,getUriQuery}  from './utils/urlUtils'
-import {getEntryExitThickness} from './components/webgl/utils'
+import {first,toggleCursor,getEntity,hasEntity,extractMeshTransforms} from './utils/otherUtils'
+import {getEntryExitThickness,getObjectPointNormal} from './components/webgl/utils'
 
 import keymaster from 'keymaster'
 
@@ -49,7 +50,7 @@ import {addEntityInstances$, setEntityData$, deleteEntities$, duplicateEntities$
 import {setToTranslateMode$, setToRotateMode$, setToScaleMode$} from './actions/transformActions'
 import {showContextMenu$, hideContextMenu$, undo$, redo$, setDesignAsPersistent$, clearActiveTool$} from './actions/appActions'
 import {newDesign$, setDesignData$} from './actions/designActions'
-import {addNote$,addThicknessAnnot$,addDistanceAnnot$, addDiameterAnnot$} from './actions/annotActions'
+import {toggleNote$,toggleThicknessAnnot$,toggleDistanceAnnot$, toggleDiameterAnnot$, toggleAngleAnnot$} from './actions/annotActions'
 
 
 let commands = {
@@ -91,6 +92,10 @@ export default class App extends React.Component {
     //temporary
     this.kernel.dataApi.store = this.assetManager.stores["xhr"]
     this.kernel.assetManager  = this.assetManager
+
+    //test
+    //this.kernel.testStuff()
+    //throw new Error("AAAI")
 
     if(this.state._persistent){
       this.kernel.setDesignAsPersistent(true)
@@ -151,24 +156,13 @@ export default class App extends React.Component {
 
     let glview   = this.refs.glview
     
-
-    //get entities 
-    function entitiesOnly( x ){
-      return (x.userData && x.userData.entity)
-    }
-
-    function getEntity( x ){
-      return x.userData.entity
-    }
-
     function toolSelected(){
       return self.state.activeTool
-      //return (self.state.activeTool !== null || self.state.activeTool !== undefined)
     }
 
     //annoying
     function noToolSelected(){
-      return !toolSelected()
+      return !self.state.activeTool
     }
 
     let selectedMeshes$ = glview.selectedMeshes$
@@ -176,19 +170,10 @@ export default class App extends React.Component {
       .filter(noToolSelected)
       .subscribe(
         function(selections){
-          let res= selections.filter(entitiesOnly).map(getEntity)
+          let res= selections.filter(hasEntity).map(getEntity)
           self.selectEntities(res)
         }
       )
-
-    function extractAttributes(mesh){
-      let attrs = {
-        pos:mesh.position,
-        rot:mesh.rotation,
-        sca:mesh.scale
-      }
-      return attrs
-    }
 
     function attributesToArrays(attrs){
       let output= {}
@@ -218,15 +203,15 @@ export default class App extends React.Component {
 
     let rawTranforms     =  glview.objectsTransform$
       .debounce(16.6666)
-      .filter(entitiesOnly)
+      .filter(hasEntity)
       .share()
       /*.map(getEntity)
-      .map(extractAttributes)
+      .map(extractMeshTransforms)
       .map(attributesToArrays)
       .subscribe( setEntityT )*/
 
     let objectTransforms = rawTranforms 
-      .map(extractAttributes)
+      .map(extractMeshTransforms)
       .map(attributesToArrays)
       .take(1)
 
@@ -387,47 +372,32 @@ export default class App extends React.Component {
       return activeTool === val
     }
 
-    function toggleCursor(toggle, cursorName){
-      if(toggle)
-      {
-        document.body.style.cursor = cursorName
-      }else{
-        document.body.style.cursor = 'default'
-      }
-      return toggle
-    }
-
-    function getFirst(input){
-      return input[0]
-    }
-
-    /*function setCursorByID(id,cursorStyle) {
-     let elem
-     if (document.getElementById &&
-        (elem=document.getElementById(id)) ) {
-      if (elem.style) elem.style.cursor=cursorStyle
-     }
-    }*/
-    addNote$
+    toggleNote$
       .map(()=>"addNote")
       .map(toggleTool)
       .map((toggled)=>toggleCursor(toggled,"crosshair"))
       .subscribe(()=>{})
 
-    addThicknessAnnot$
+    toggleThicknessAnnot$
       .map(()=>"addThickess")
       .map(toggleTool)
       .map((toggled)=>toggleCursor(toggled,"crosshair"))
       .subscribe(()=>{})
 
-    addDistanceAnnot$
+    toggleDistanceAnnot$
       .map(()=>"addDistance")
       .map(toggleTool)
       .map((toggled)=>toggleCursor(toggled,"crosshair"))
       .subscribe(()=>{})
 
-    addDiameterAnnot$
+    toggleDiameterAnnot$
       .map(()=>"addDiameter")
+      .map(toggleTool)
+      .map((toggled)=>toggleCursor(toggled,"crosshair"))
+      .subscribe(()=>{})
+
+    toggleAngleAnnot$ 
+      .map(()=>"addAngle")
       .map(toggleTool)
       .map((toggled)=>toggleCursor(toggled,"crosshair"))
       .subscribe(()=>{})
@@ -448,30 +418,73 @@ export default class App extends React.Component {
       .subscribe(()=>{})
 
 
-    let notesCreation$ = glview.singleTaps$
-      .filter(()=>self.state.activeTool === "addNote" )
+    function addAnnotation(annotation){
+      let currentAnnotations = self.state.annotationsData
+      currentAnnotations.push(annotation)
+      self.setState({
+        annotationsData:currentAnnotations
+      })
+      console.log(JSON.stringify(self.state.annotationsData))
+      //HACK HACK HACK
+      self._tempForceDataUpdate()
+
+      //MORE HACK !!
+      //self.kernel.saveAnnotations(self.state.annotationsData)
+    }
+
+    let thickessMCreation$ = glview.singleTaps$
+      .filter(()=>self.state.activeTool === "addThickess" )
       .map( (event)=>event.detail.pickingInfos)
-      .map(function(pickingInfos){console.log(pickingInfos);return pickingInfos})
       .filter( (pickingInfos)=>pickingInfos.length>0)
-      .map(getFirst)
+      .map(first)
+      .map(getEntryExitThickness)
       .subscribe(
-        function(pickingInfos){
+        function(data){
           clearActiveTool$()
-          console.log("hey yo, add a note",pickingInfos)
+          console.log("hey yo, add a thickness",data)
           
-          let point = pickingInfos.point//closest point
-          let object= pickingInfos.object//closest point
-          let face  = pickingInfos.face//closes face
-          let normal= face.normal
-          
-          //set point coordinates to be local , not global
-          //FIXME: are we sure about this?
-          object.worldToLocal( point )
-          //helper final instance will become attached to "object", do the same here
-          //this.helper.position.setFromMatrixPosition( object.matrixWorld );          
+          let {object, entryPoint, exitPoint, thickness} = data
+
+          let iuid   = object.userData.entity.iuid
+          entryPoint = entryPoint.toArray()
+          exitPoint  = exitPoint.toArray()
+
           let annotation = {
-            type:"note",
-            typeUid:"-1",
+            typeUid:"1",
+            iuid:"",
+            name:"thicknessxx", 
+            value:thickness,
+            target:{
+              entryPoint:entryPoint, 
+              exitPoint: exitPoint,
+              normal:undefined,
+              typeUid:undefined,
+              iuid:object.userData.entity.iuid//here we could toggle, instance vs type
+            }
+          }
+          addAnnotation(annotation)
+        }
+      )
+
+    let baseStream$ = glview.singleTaps$
+      .map( (event)=>event.detail.pickingInfos)
+      .filter( (pickingInfos)=>pickingInfos.length>0)
+      .map(first)
+      .share()
+      //.map(getObjectPointNormal)
+
+
+    let notesCreation$ = baseStream$
+      .filter(()=>self.state.activeTool === "addNote" )
+      .map(getObjectPointNormal)
+      .subscribe(
+        function(data){
+          clearActiveTool$()
+          console.log("hey yo, add a note",data)
+          let {object, point, normal} = data
+          
+          let annotation = {
+            typeUid:"0",
             iuid:"",
             value:undefined,
             name:"notexx", 
@@ -482,70 +495,68 @@ export default class App extends React.Component {
               iuid:object.userData.entity.iuid//here we could toggle, instance vs type
             }
           }
-          let currentAnnotations = self.state.annotationsData
-          currentAnnotations.push(annotation)
-          self.setState({
-            annotationsData:currentAnnotations
-          })
-          //HACK HACK HACK
-          self._tempForceDataUpdate()
+
+          addAnnotation(annotation)
         }
       )
 
-    let thickessMCreation$ = glview.singleTaps$
-      .filter(()=>self.state.activeTool === "addThickess" )
-      .map( (event)=>event.detail.pickingInfos)
-      .map(function(pickingInfos){console.log(pickingInfos);return pickingInfos})
-      .filter( (pickingInfos)=>pickingInfos.length>0)
-      .map(getFirst)
-      .subscribe(
-        function(pickingInfos){
-          clearActiveTool$()
-          console.log("hey yo, add a thickness",pickingInfos)
-          
-          function convert(annotRawData){
-            let {object, entryPoint, exitPoint, thickness} = annotRawData
+    baseStream$
+      .filter(()=>self.state.activeTool === "addDistance" )
+      .map(getObjectPointNormal)
+      .bufferWithCount(2)
+      .subscribe(function(data){
+        clearActiveTool$()
+        console.log("hey yo, add a distance",data)
+        let [start,end] = data
 
-            let iuid       = object.userData.entity.iuid
-            entryPoint = entryPoint.toArray()
-            exitPoint  = exitPoint.toArray()
-
-            return annotation = {
-              type:"thickness",
-              typeUid:"0",
-              iuid:"",
-              value:thickness,
-              name:"thicknessxx", 
-              target:{
-                entryPoint:entryPoint, 
-                exitPoint: exitPoint,
-                normal:undefined,
-                typeUid:undefined,
-                iuid:object.userData.entity.iuid//here we could toggle, instance vs type
-              }
+        let annotation = {
+          typeUid:"2",
+          iuid:"",
+          name:"thicknessxx", 
+          value:0,
+          target:{
+            start:{
+              point  : start.point.toArray(), 
+              typeUid:undefined,
+              iuid:start.object.userData.entity.iuid
+            }, 
+            end: {
+              point  : end.point.toArray(), 
+              typeUid:undefined,
+              iuid:end.object.userData.entity.iuid
             }
           }
-
-          let annotation = convert(getEntryExitThickness(pickingInfos))
-
-          let currentAnnotations = self.state.annotationsData
-          currentAnnotations.push(annotation)
-          self.setState({
-            annotationsData:currentAnnotations
-          })
-          
-          //HACK HACK HACK
-          self._tempForceDataUpdate()
         }
-      )
 
+        addAnnotation(annotation) 
+
+      })
+
+    baseStream$
+      .filter(()=>self.state.activeTool === "addDiameter" )
+      .map(getObjectPointNormal)
+      .bufferWithCount(3)
+      .subscribe(function(data){
+        clearActiveTool$()
+        console.log("hey yo, add a diameter",data)
+        let [start,mid,end] = data
+      })
+
+    baseStream$
+      .filter(()=>self.state.activeTool === "addAngle" )
+      .map(getObjectPointNormal)
+      .bufferWithCount(3)
+      .subscribe(function(data){
+        clearActiveTool$()
+        console.log("hey yo, add an angle",data)
+        let [start,mid,end] = data
+      })
 
     /*glview.singleTaps$.subscribe(function(event){
       if(self.state.activeTool === "addNote"){
         console.log(" i want to add a note",event)
       }
     })*/
-    //glview.doubleTaps$
 
     clearActiveTool$
       .subscribe(function(){
@@ -971,7 +982,6 @@ export default class App extends React.Component {
         //self.addEntityInstance(partInstance)
         addEntityInstances$(partInstance)
       }
-
       return partInstance
     }
 

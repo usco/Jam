@@ -13,7 +13,7 @@ import DesignCard   from './DesignCard'
 
 import {newDesign$, setDesignData$} from '../actions/designActions'
 import {undo$,redo$,setDesignAsPersistent$} from '../actions/appActions'
-import {addNote$,addThicknessAnnot$,addDistanceAnnot$, addDiameterAnnot$} from '../actions/annotActions'
+import {toggleNote$,toggleThicknessAnnot$,toggleDistanceAnnot$, toggleDiameterAnnot$, toggleAngleAnnot$} from '../actions/annotActions'
 
 
 class MainToolBar extends React.Component {
@@ -118,10 +118,11 @@ class MainToolBar extends React.Component {
         })*/
     let annotations = (
       <span className="annotations">
-        <button onClick={addNote$} className="note" disabled={false}> Add note </button>
-        <button onClick={addThicknessAnnot$} className="thickness" disabled={false}> thickness </button>
-        <button onClick={addDiameterAnnot$} className="diameter" disabled={false}> Diameter </button>
-        <button onClick={addDistanceAnnot$} className="distance" disabled={false}> Distance </button>
+        <button onClick={toggleNote$} className="note" disabled={false}> Note </button>
+        <button onClick={toggleThicknessAnnot$} className="thickness" disabled={false}> thickness </button>
+        <button onClick={toggleDistanceAnnot$} className="distance" disabled={false}> Distance </button>
+        <button onClick={toggleDiameterAnnot$} className="diameter" disabled={false}> Diameter </button>
+        <button onClick={toggleAngleAnnot$} className="angle" disabled={false}> Angle </button>
       </span>
     )
 

@@ -912,7 +912,7 @@ for tap/toubleTaps etc*/
       console.log("drawing metadata",metadata)
       metadata
         .map(function(entry){
-          if(entry.type === "note"){
+          if(entry.typeUid === "0"){
             console.log("note annot",entry)
 
             let point = entry.target.point
@@ -930,6 +930,8 @@ for tap/toubleTaps etc*/
               point:pt,
               object:mesh})
 
+            annotationVisual.userData.entity = entity
+
             mesh.add(annotationVisual)
             //dynamicInjector.add(annotationVisual)
             /*annotationVisual.applyMatrix( dynamicInjector.matrixWorld )
@@ -937,7 +939,7 @@ for tap/toubleTaps etc*/
             matrixWorldInverse.getInverse( mesh.matrixWorld )
             annotationVisual.applyMatrix( matrixWorldInverse )*/
           }
-          if(entry.type ==="thickness"){
+          if(entry.typeUid === "1"){
             let entity = data.filter(function(data){return data.iuid === entry.target.iuid})
             entity = entity.pop()
 
@@ -956,17 +958,20 @@ for tap/toubleTaps etc*/
               object:mesh
             })
 
+            annotationVisual.userData.entity = entity
+
             mesh.add(annotationVisual)
           }
-          if(entry.type === "distance"){
+
+          if(entry.typeUid === "2"){
             //console.log("distance annot",entry)
 
-            let start = entry.start
-            let startEntity = data.filter(function(data){return data.iuid === start.entity})
+            let start = entry.target.start
+            let startEntity = data.filter(function(data){return data.iuid === start.iuid})
             startEntity = startEntity.pop()
 
-            let end = entry.end
-            let endEntity = data.filter(function(data){return data.iuid === end.entity})
+            let end = entry.target.end
+            let endEntity = data.filter(function(data){return data.iuid === end.iuid})
             endEntity = endEntity.pop()
 
             //console.log("start & end entities",startEntity,endEntity)

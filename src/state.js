@@ -58,22 +58,6 @@ let state = {
 
   //FIXME: hack / experiment
   annotationsData : [
-      {
-        iuid:"5E3B5655-8B70-498D-C093-E502B8728CCB",
-        name:"fooAnnot",
-        transformable:false,
-        typeUid:"-1",
-        type:"distance",
-        distance : 150,
-        start:{
-          point :[0,0,0],
-          entity: "A41A9D9E-E371-439B-A83B-A387DDD51FC1"
-        },
-        end:{
-          point: [0,0,0],
-          entity: "E83B5655-8B70-498D-B082-E502B8728CC6"
-        }
-      }
   ],
 
   selectedEntities:[],
