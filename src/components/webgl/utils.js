@@ -67,3 +67,45 @@ export function getObjectPointNormal(pickingInfos){
   return {object, point, normal}
 }
 
+export function getDistanceFromStartEnd(start, end){
+  let endToStart = end.clone().sub( start )
+  let distance = endToStart.length()
+  return distance
+}
+
+//compute center , dia/radius from three 3d points
+export function computeCenterDiaNormalFromThreePoints(pointA,pointB,pointC){
+
+  let plane = new THREE.Plane().setFromCoplanarPoints( pointA, pointB, pointC )
+  let center = new THREE.Vector3()
+
+  //see http://en.wikipedia.org/wiki/Circumscribed_circle
+  // triangle "edges"
+  let t = pointA.clone().sub( pointB )
+  let u = pointB.clone().sub( pointC )
+  let v = pointC.clone().sub( pointA )
+  let m = pointA.clone().sub( pointC )
+  let x = pointB.clone().sub( pointA )
+  let z = pointC.clone().sub( pointB )
+
+  let foo = t.clone().cross( u ).length()
+  let bar = 2 * foo
+  let baz = foo * foo
+  let buu = 2 * baz
+
+  let radius = ( t.length()*u.length()*v.length() )/ bar
+
+  let alpha = ( u.lengthSq() * t.clone().dot( m ) ) / buu
+  let beta  = ( m.lengthSq() * x.clone().dot( u ) ) / buu
+  let gamma = ( t.lengthSq() * v.clone().dot( z ) ) / buu
+
+  center = pointA.clone().multiplyScalar( alpha ).add( 
+   pointB.clone().multiplyScalar( beta ) ) .add(
+   pointC.clone().multiplyScalar( gamma ) )
+
+  let diameter = radius * 2
+  let normal   = plane.normal
+
+  return {center,diameter,normal}
+}
+
