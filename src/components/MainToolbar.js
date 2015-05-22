@@ -122,7 +122,7 @@ class MainToolBar extends React.Component {
         <button onClick={toggleThicknessAnnot$} className="thickness" disabled={false}> thickness </button>
         <button onClick={toggleDistanceAnnot$} className="distance" disabled={false}> Distance </button>
         <button onClick={toggleDiameterAnnot$} className="diameter" disabled={false}> Diameter </button>
-        <button onClick={toggleAngleAnnot$} className="angle" disabled={false}> Angle </button>
+        <button onClick={toggleAngleAnnot$} className="angle" disabled={true}> Angle </button>
       </span>
     )
 
