@@ -30,7 +30,13 @@ import {observableDragAndDrop} from './interactions/interactions'
 
 import {fetchUriParams,getUriQuery}  from './utils/urlUtils'
 import {first,toggleCursor,getEntity,hasEntity,extractMeshTransforms} from './utils/otherUtils'
-import {getEntryExitThickness,getObjectPointNormal} from './components/webgl/utils'
+import {getEntryExitThickness,
+  getObjectPointNormal,
+  computeCenterDiaNormalFromThreePoints,
+  getDistanceFromStartEnd
+} from './components/webgl/utils'
+
+import {generateUUID} from 'usco-kernel2/src/utils'
 
 import keymaster from 'keymaster'
 
@@ -170,6 +176,7 @@ export default class App extends React.Component {
       .filter(noToolSelected)
       .subscribe(
         function(selections){
+          console.log("GNA selections",selections)
           let res= selections.filter(hasEntity).map(getEntity)
           self.selectEntities(res)
         }
@@ -253,7 +260,7 @@ export default class App extends React.Component {
       .map(self.removeEntityInstances.bind(self))
       .map(self.selectEntities.bind(self))//reset selection
 
-      .subscribe(self._tempForceDataUpdate.bind(self))
+      .subscribe( ()=>{ setTimeout(self._tempForceDataUpdate.bind(self), 10)} )
 
     deleteAllEntities$
       .map(self.removeAllEntities.bind(self))
@@ -451,7 +458,7 @@ export default class App extends React.Component {
 
           let annotation = {
             typeUid:"1",
-            iuid:"",
+            iuid:generateUUID(),
             name:"thicknessxx", 
             value:thickness,
             target:{
@@ -485,7 +492,7 @@ export default class App extends React.Component {
           
           let annotation = {
             typeUid:"0",
-            iuid:"",
+            iuid:generateUUID(),
             value:undefined,
             name:"notexx", 
             target:{
@@ -509,11 +516,13 @@ export default class App extends React.Component {
         console.log("hey yo, add a distance",data)
         let [start,end] = data
 
+        let distance = getDistanceFromStartEnd(start.point,end.point)
+
         let annotation = {
           typeUid:"2",
-          iuid:"",
-          name:"thicknessxx", 
-          value:0,
+          iuid:generateUUID(),
+          name:"distance", 
+          value:distance,
           target:{
             start:{
               point  : start.point.toArray(), 
@@ -540,6 +549,22 @@ export default class App extends React.Component {
         clearActiveTool$()
         console.log("hey yo, add a diameter",data)
         let [start,mid,end] = data
+        let {center,diameter,normal} = computeCenterDiaNormalFromThreePoints(start.point,mid.point,end.point)
+
+        let annotation = {
+          typeUid:"3",
+          iuid:generateUUID(),
+          name:"diameter", 
+          value:diameter,
+          target:{
+            normal:normal.toArray(),
+            point:center.toArray(),
+            typeUid:undefined,
+            iuid:start.object.userData.entity.iuid
+          }
+        }
+
+        addAnnotation(annotation) 
       })
 
     baseStream$
@@ -550,6 +575,32 @@ export default class App extends React.Component {
         clearActiveTool$()
         console.log("hey yo, add an angle",data)
         let [start,mid,end] = data
+
+        let annotation = {
+          typeUid:"4",
+          iuid:generateUUID(),
+          name:"angle", 
+          value:0,
+          target:{
+            start:{
+              point  : start.point.toArray(), 
+              typeUid:undefined,
+              iuid:start.object.userData.entity.iuid
+            }, 
+            mid:{
+              point  : mid.point.toArray(), 
+              typeUid:undefined,
+              iuid:mid.object.userData.entity.iuid
+            },
+            end: {
+              point  : end.point.toArray(), 
+              typeUid:undefined,
+              iuid:end.object.userData.entity.iuid
+            }
+          }
+        }
+
+        addAnnotation(annotation) 
       })
 
     /*glview.singleTaps$.subscribe(function(event){
@@ -887,17 +938,28 @@ export default class App extends React.Component {
   removeEntityInstances( instances ){
     log.info("removing entity instances", instances)
     let self = this
-    instances.map(function(instance){
-      self.kernel.removeEntity(instance)
-    })
+
+    try{
+      instances.map(function(instance){
+        self.kernel.removeEntity(instance)
+      })
+    }
+    catch(error){}
 
     //FIXME: not sure...., duplication of the above again
     let nEntities  = this.state.assemblies_main_children
     let _tmp = instances.map(entity=>entity.iuid)
-    let outNEntities = nEntities.map(entity=>entity.iuid).filter(function(iuid){ return _tmp.indexOf(iuid)===-1})
+    let outNEntities = nEntities.filter(function(entity){ return _tmp.indexOf(entity.iuid)===-1})
+
+    //TODO improve : remove from annotationsData
+    let nAnnots  = this.state.annotationsData
+    let _tmp2 = instances.map(entity=>entity.iuid)
+    let outAnnotations = nAnnots.filter(function(entity){ return _tmp2.indexOf(entity.iuid)===-1})
+
 
     this.setState({
-      assemblies_main_children:outNEntities
+      assemblies_main_children:outNEntities,
+      annotationsData : outAnnotations
     })   
 
     return []
@@ -1014,6 +1076,8 @@ export default class App extends React.Component {
     
     let selectedEntities = this.state.selectedEntitiesIds.map(entityId => self.state._entitiesById[entityId])
     let selectedEntitiesIds = this.state.selectedEntitiesIds
+
+    //let bla = annotationsData.filter((annot)=>annot.uid.indexOf(this.state.selectedEntitiesIds))
 
     let meshCache = {}
 
@@ -1147,7 +1211,14 @@ export default class App extends React.Component {
       .map(entityId => self.state._entitiesById[entityId])
       .filter(id => id!==undefined)
 
-    //console.log("persistent",this.state._persistent)
+    let selectIds = this.state.selectedEntitiesIds
+    let selectedAnnots = this.state.annotationsData
+      .filter( (annot) => { return selectIds.indexOf(annot.iuid) > -1} )
+    
+    selectedEntities = selectedEntities.concat(selectedAnnots)
+    console.log("selectedEntities",selectedEntities)
+
+    //console.log("selectedAnnots",selectedAnnots )//,selectIds,this.state.annotationsData)
     return (
         <div ref="wrapper" style={wrapperStyle} className="Jam">
           <MainToolbar 
