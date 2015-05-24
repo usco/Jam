@@ -8,37 +8,8 @@ var stateTree = new Baobab({
   products: []
 });*/
 
-var Baobab = require('baobab');
+let Baobab = require('baobab')
 
-
-/*var stateTree = new Baobab({
-  admin: {
-    notifications: {
-      list: []
-    }
-  },
-  home: {
-    feeds: []
-  },
-  user:{
-    job:"unemployed",
-    age:25
-  }
-});*/
-
-var stateTree = new Baobab({
-  admin: {
-    notifications: {
-      list: []
-    }
-  },
-  home: {
-    feeds: []
-  },
-  user:{
-     job:"unemployed",
-      age:25,
-  }
-});
+let stateTree = new Baobab({})
 
 module.exports = stateTree;
