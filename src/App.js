@@ -636,16 +636,21 @@ export default class App extends React.Component {
           {name:"Delete",action: deleteEntities$},
           {name:"Duplicate",action:duplicateEntities$},
 
-          {
+{name:"Note",action:toggleNote$},
+              {name:"Distance",action:toggleDistanceAnnot$},
+              {name:"Thickness",action:toggleThicknessAnnot$},
+              {name:"Diameter",action:toggleDiameterAnnot$},
+              {name:"Angle",action:toggleAngleAnnot$}
+          /*{
             name:"Annotations", 
             items:[
-              {name:"Note",action:undefined},
-              {name:"Distance",action:undefined},
-              {name:"Thickness",action:undefined},
-              {name:"Diameter",action:undefined},
-              {name:"Angle",action:undefined}
+              {name:"Note",action:toggleNote$},
+              {name:"Distance",action:toggleDistanceAnnot$},
+              {name:"Thickness",action:toggleThicknessAnnot$},
+              {name:"Diameter",action:toggleDiameterAnnot$},
+              {name:"Angle",action:toggleAngleAnnot$}
             ]
-          }
+          }*/
          ]
       }
       //TODO: this is ui state, not logic state

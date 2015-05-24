@@ -941,7 +941,7 @@ for tap/toubleTaps etc*/
             //mesh.updateMatrix()
             //mesh.updateMatrixWorld()
             let pt = new THREE.Vector3().fromArray(point)//.add(mesh.position)
-            visual = new annotations.NoteHelper({
+            visual = new annotations.NoteVisual({
               point:pt,
               object:mesh})
 
