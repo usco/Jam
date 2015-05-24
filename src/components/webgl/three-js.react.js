@@ -662,7 +662,11 @@ for tap/toubleTaps etc*/
         this.transformControls.detach(this._prevSelectedMeshes[0])
     }
     if(selectedMeshes.length>0){
+      //if(["0","1","2","3"].indexOf(selectedMeshes[0].typeUid) === -1 )
+      if(this.props.activeTool && ["translate","rotate","scale"].indexOf(this.props.activeTool) > -1 )
+      {
         this.transformControls.attach(selectedMeshes[0])
+      }
     }
 
 
