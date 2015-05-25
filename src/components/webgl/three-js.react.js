@@ -923,6 +923,13 @@ for tap/toubleTaps etc*/
           child.remove(child.children[i])
         }
       })*/
+      let annotStyle = {
+        crossColor:"#F00",
+        textColor:"#F00",
+        lineColor:"#00F",
+        arrowColor:"#F00",
+        lineWidth:1.5
+      }
 
       metadata
         .map(function(entry){
@@ -941,13 +948,16 @@ for tap/toubleTaps etc*/
             //mesh.updateMatrix()
             //mesh.updateMatrixWorld()
             let pt = new THREE.Vector3().fromArray(point)//.add(mesh.position)
-            visual = new annotations.NoteVisual({
+            pt = mesh.localToWorld(pt)
+
+            let params = {
               point:pt,
-              object:mesh})
+              object:mesh}
+            params = Object.assign(params,annotStyle)
+            console.log("PARAMS",params)
+            
+            visual = new annotations.NoteVisual(params)
 
-            visual.userData.entity = entry
-
-            mesh.add(visual)
             //dynamicInjector.add(visual)
             /*visual.applyMatrix( dynamicInjector.matrixWorld )
             let matrixWorldInverse = new THREE.Matrix4()
@@ -955,6 +965,7 @@ for tap/toubleTaps etc*/
             visual.applyMatrix( matrixWorldInverse )*/
           }
           if(entry.typeUid === "1"){
+            //Thickness
             let entity = data.filter(function(data){return data.iuid === entry.target.iuid})
             entity = entity.pop()
 
@@ -967,19 +978,22 @@ for tap/toubleTaps etc*/
                           
             entryPoint= new THREE.Vector3().fromArray(entryPoint)//.add(mesh.position)
             exitPoint = new THREE.Vector3().fromArray(exitPoint)
-            visual = new annotations.ThicknessVisual({
+
+            entryPoint = mesh.localToWorld(entryPoint)
+            exitPoint = mesh.localToWorld(exitPoint)
+
+            let params = {
               entryPoint,
               exitPoint,
               object:mesh
-            })
+            }
+            params = Object.assign(params,annotStyle)
+            visual = new annotations.ThicknessVisual(params)
 
-            visual.userData.entity = entry
-            mesh.add(visual)
           }
 
           if(entry.typeUid === "2"){
-            //console.log("distance annot",entry)
-
+            //distance
             let start = entry.target.start
             let startEntity = data.filter(function(data){return data.iuid === start.iuid})
             startEntity = startEntity.pop()
@@ -995,26 +1009,27 @@ for tap/toubleTaps etc*/
             if( startMesh && endMesh ){
               let startPt = new THREE.Vector3().fromArray(start.point)
               let endPt   = new THREE.Vector3().fromArray(end.point)
-              startMesh.worldToLocal(startPt)
-              endMesh.worldToLocal(endPt)
+              
+              startMesh.localToWorld(startPt)
+              endMesh.localToWorld(endPt)
+              //startMesh.worldToLocal(startPt)
+              //endMesh.worldToLocal(endPt)
 
-              visual = new annotations.DistanceVisual({
+              let params = {
                 start:startPt,
                 startObject:startMesh,
                 end: endPt,
                 endObject: endMesh
-              })
+              }
+              params = Object.assign(params, annotStyle)
 
-              let midPoint = endPt.clone().divideScalar( 2 ).add( startPt )
-              visual.userData.entity = entry
-
-              //visual.update()
-              dynamicInjector.add(visual)
+              visual = new annotations.DistanceVisual(params)
             }            
           }
 
 
           if(entry.typeUid === "3"){
+            //diameter
             console.log("diameter annot",entry)
 
             let point = entry.target.point
@@ -1033,26 +1048,25 @@ for tap/toubleTaps etc*/
            
             if(!entity) return
 
-            visual = new annotations.DiameterVisual({
+            point = mesh.localToWorld(point)
+
+
+            let params = {
                center:point,
                diameter,
                orientation:normal
-            })
+            }
+            params = Object.assign(params,annotStyle)
 
-            visual.userData.entity = entry
-
-            mesh.add(visual)            
+            visual = new annotations.DiameterVisual(params)
         
-
-            
-
             /*let matrixWorldInverse = new THREE.Matrix4()
             matrixWorldInverse.getInverse( mesh.matrixWorld )
             visual.applyMatrix( matrixWorldInverse )*/
 
             //mesh.updateMatrix()
             //mesh.updateMatrixWorld()
-            //dynamicInjector.add( visual )
+            //
 
             //let matrixWorldInverse = new THREE.Matrix4()
             //matrixWorldInverse.getInverse( dynamicInjector.matrixWorld )
@@ -1071,8 +1085,12 @@ for tap/toubleTaps etc*/
             //visual.matrixWorld.multiplyMatrices( mesh.matrixWorld, visual.matrix )//WORKS
             //visual.applyMatrix( mesh.matrixWorld )
 
-            console.log(mesh)
+            
+          }
 
+          if(visual){
+            visual.userData.entity = entry
+            dynamicInjector.add( visual )
           }
 
           if(visual && selectedEntities.indexOf(entry.iuid)>-1){
