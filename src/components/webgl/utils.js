@@ -79,6 +79,7 @@ export function computeCenterDiaNormalFromThreePoints(pointA,pointB,pointC){
   let plane = new THREE.Plane().setFromCoplanarPoints( pointA, pointB, pointC )
   let center = new THREE.Vector3()
 
+
   //see http://en.wikipedia.org/wiki/Circumscribed_circle
   // triangle "edges"
   let t = pointA.clone().sub( pointB )

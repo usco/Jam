@@ -19,3 +19,6 @@ export let setDesignAsPersistent$ = createAction()
 
 /*clear any active tool*/
 export let clearActiveTool$ = createAction()
+
+/*set a setting*/
+export let setSetting$ = createAction()

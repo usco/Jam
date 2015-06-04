@@ -54,7 +54,7 @@ import ContextMenu from './components/ContextMenu'
 import * as blar from './core/fooYeah'
 import {addEntityInstances$, setEntityData$, deleteEntities$, duplicateEntities$, deleteAllEntities$ } from './actions/entityActions'
 import {setToTranslateMode$, setToRotateMode$, setToScaleMode$} from './actions/transformActions'
-import {showContextMenu$, hideContextMenu$, undo$, redo$, setDesignAsPersistent$, clearActiveTool$} from './actions/appActions'
+import {showContextMenu$, hideContextMenu$, undo$, redo$, setDesignAsPersistent$, clearActiveTool$,setSetting$} from './actions/appActions'
 import {newDesign$, setDesignData$} from './actions/designActions'
 import {toggleNote$,toggleThicknessAnnot$,toggleDistanceAnnot$, toggleDiameterAnnot$, toggleAngleAnnot$} from './actions/annotActions'
 
@@ -349,6 +349,26 @@ export default class App extends React.Component {
         self._tempForceDataUpdate()
       })
 
+    
+    //updating 
+    setSetting$.subscribe(function(data){
+      console.log("setting data",data)
+      let path = data.path.split(".")
+
+      /*let pItem = null
+      while( (pItem = path.pop()) != null ) {
+        console.log("pItem",pItem)
+      }*/
+      self.setState({
+        settings:{annotations:{show:data.value}}
+      },function(){
+         //HACK HACK HACK
+        self._tempForceDataUpdate()
+      },false)
+     
+    })
+
+
     //////handle overall change pertinent to assemblies
     let modelChanges$ = Observable.merge([
       addEntityInstances$,
@@ -434,45 +454,11 @@ export default class App extends React.Component {
       console.log(JSON.stringify(self.state.annotationsData))
       //HACK HACK HACK
       self._tempForceDataUpdate()
-
       //MORE HACK !!
       //self.kernel.saveAnnotations(self.state.annotationsData)
     }
 
-    let thickessMCreation$ = glview.singleTaps$
-      .filter(()=>self.state.activeTool === "addThickess" )
-      .map( (event)=>event.detail.pickingInfos)
-      .filter( (pickingInfos)=>pickingInfos.length>0)
-      .map(first)
-      .map(getEntryExitThickness)
-      .subscribe(
-        function(data){
-          clearActiveTool$()
-          console.log("hey yo, add a thickness",data)
-          
-          let {object, entryPoint, exitPoint, thickness} = data
-
-          let iuid   = object.userData.entity.iuid
-          entryPoint = entryPoint.toArray()
-          exitPoint  = exitPoint.toArray()
-
-          let annotation = {
-            typeUid:"1",
-            iuid:generateUUID(),
-            name:"thicknessxx", 
-            value:thickness,
-            target:{
-              entryPoint:entryPoint, 
-              exitPoint: exitPoint,
-              normal:undefined,
-              typeUid:undefined,
-              iuid:object.userData.entity.iuid//here we could toggle, instance vs type
-            }
-          }
-          addAnnotation(annotation)
-        }
-      )
-
+    
     let baseStream$ = glview.singleTaps$
       .map( (event)=>event.detail.pickingInfos)
       .filter( (pickingInfos)=>pickingInfos.length>0)
@@ -503,6 +489,37 @@ export default class App extends React.Component {
             }
           }
 
+          addAnnotation(annotation)
+        }
+      )
+
+    baseStream$
+      .filter(()=>self.state.activeTool === "addThickess" )
+      .map(getEntryExitThickness)
+      .subscribe(
+        function(data){
+          clearActiveTool$()
+          console.log("hey yo, add a thickness",data)
+          
+          let {object, entryPoint, exitPoint, thickness} = data
+
+          let iuid   = object.userData.entity.iuid
+          entryPoint = entryPoint.toArray()
+          exitPoint  = exitPoint.toArray()
+
+          let annotation = {
+            typeUid:"1",
+            iuid:generateUUID(),
+            name:"thicknessxx", 
+            value:thickness,
+            target:{
+              entryPoint:entryPoint, 
+              exitPoint: exitPoint,
+              normal:undefined,
+              typeUid:undefined,
+              iuid:object.userData.entity.iuid//here we could toggle, instance vs type
+            }
+          }
           addAnnotation(annotation)
         }
       )
@@ -565,7 +582,7 @@ export default class App extends React.Component {
         }
 
         addAnnotation(annotation) 
-      })
+      },()=>{},()=>{} )
 
     baseStream$
       .filter(()=>self.state.activeTool === "addAngle" )
@@ -627,7 +644,10 @@ export default class App extends React.Component {
       actions = [
         {name:"Import file (NA)",action:undefined},
         {name:"Export design (NA)",action:undefined},
-        {name:"Delete all",action:deleteAllEntities$}
+        {name:"Delete all",action:deleteAllEntities$},
+
+          {name:"Distance",action:toggleDistanceAnnot$},
+          {name:"Angle",action:toggleAngleAnnot$},
       ]
 
       if(selectedEntities && selectedEntities.length>0)
@@ -636,7 +656,9 @@ export default class App extends React.Component {
           {name:"Delete",action: deleteEntities$},
           {name:"Duplicate",action:duplicateEntities$},
 
-{name:"Note",action:toggleNote$},
+        
+
+              {name:"Note",action:toggleNote$},
               {name:"Distance",action:toggleDistanceAnnot$},
               {name:"Thickness",action:toggleThicknessAnnot$},
               {name:"Diameter",action:toggleDiameterAnnot$},
@@ -1221,7 +1243,7 @@ export default class App extends React.Component {
       .filter( (annot) => { return selectIds.indexOf(annot.iuid) > -1} )
     
     selectedEntities = selectedEntities.concat(selectedAnnots)
-    console.log("selectedEntities",selectedEntities)
+    //console.log("settings", this.state.settings)
 
     //console.log("selectedAnnots",selectedAnnots )//,selectIds,this.state.annotationsData)
     return (
@@ -1231,11 +1253,13 @@ export default class App extends React.Component {
             appInfos={this.state.appInfos} 
             persistent={this.state._persistent}
             activeTool={this.state.activeTool}
+            settings={this.state.settings}
+
             undos = {this._undos}
             redos = {this._redos}
             style={toolbarStyle}> </MainToolbar>
 
-          <ThreeJs ref="glview" activeTool={this.state.activeTool}/>
+          <ThreeJs ref="glview" activeTool={this.state.activeTool} showAnnotations={this.state.settings.annotations.show}/>
 
           <div ref="testArea" style={testAreaStyle} className="toolBarBottom">
             <EntityInfos entities={selectedEntities} debug={false}/>

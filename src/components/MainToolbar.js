@@ -12,7 +12,7 @@ import EditableItem from './EditableItem'
 import DesignCard   from './DesignCard'
 
 import {newDesign$, setDesignData$} from '../actions/designActions'
-import {undo$,redo$,setDesignAsPersistent$} from '../actions/appActions'
+import {undo$,redo$,setDesignAsPersistent$,setSetting$} from '../actions/appActions'
 import {toggleNote$,toggleThicknessAnnot$,toggleDistanceAnnot$, toggleDiameterAnnot$, toggleAngleAnnot$} from '../actions/annotActions'
 
 
@@ -116,6 +116,11 @@ class MainToolBar extends React.Component {
           'note':true
           'active':true
         })*/
+
+    console.log("props",this.props)
+    function transform(e){
+      setSetting$({path:"annotations.show",value:e.target.checked})
+    }
     let annotations = (
       <span className="annotations">
         <button onClick={toggleNote$} className="note" disabled={false}> Note </button>
@@ -123,11 +128,15 @@ class MainToolBar extends React.Component {
         <button onClick={toggleDistanceAnnot$} className="distance" disabled={false}> Distance </button>
         <button onClick={toggleDiameterAnnot$} className="diameter" disabled={false}> Diameter </button>
         <button onClick={toggleAngleAnnot$} className="angle" disabled={true}> Angle </button>
+
+        <span>Show annotations</span>
+        <input type="checkbox" defaultChecked ={false} 
+          checked={this.props.settings.annotations.show} 
+          onChange={ transform }/>
       </span>
     )
 
     
-
     return (
       <div className="titleBar" style={titleStyle}>
         <h1>

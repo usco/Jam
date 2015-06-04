@@ -14,7 +14,7 @@ let state = {
       show:false,//this belongs in the bom system
     },
     annotations:{
-      show:false,
+      show:true,
     }
   },
   shortcuts:[

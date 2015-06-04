@@ -924,11 +924,14 @@ for tap/toubleTaps etc*/
         }
       })*/
       let annotStyle = {
-        crossColor:"#F00",
-        textColor:"#F00",
-        lineColor:"#00F",
-        arrowColor:"#F00",
-        lineWidth:1.5
+        crossColor:"#000",
+        textColor:"#000",
+        lineColor:"#000",
+        arrowColor:"#000",
+        lineWidth:2.2,
+
+        highlightColor:"#00F",
+        fontFace:"Open Sans"
       }
 
       metadata
@@ -954,7 +957,6 @@ for tap/toubleTaps etc*/
               point:pt,
               object:mesh}
             params = Object.assign(params,annotStyle)
-            console.log("PARAMS",params)
             
             visual = new annotations.NoteVisual(params)
 
@@ -1101,7 +1103,8 @@ for tap/toubleTaps etc*/
 
      
     }
-    renderMeta(metadata)
+    //only draw annotations if asked to
+    if(self.props.showAnnotations) renderMeta(metadata)
 
     let oldDynamicInjector = this.dynamicInjector
     this.dynamicInjector = dynamicInjector
