@@ -17,6 +17,8 @@ export let addDiameterAnnot$ = createAction()
 export let addAngleAnnot$ = createAction()
 
 //
+export let toggleAnnotation$ = createAction()
+
 /*toggle note */
 export let toggleNote$ = createAction()
 

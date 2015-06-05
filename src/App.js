@@ -458,174 +458,22 @@ export default class App extends React.Component {
       //self.kernel.saveAnnotations(self.state.annotationsData)
     }
 
-    
-    let baseStream$ = glview.singleTaps$
-      .map( (event)=>event.detail.pickingInfos)
-      .filter( (pickingInfos)=>pickingInfos.length>0)
-      .map(first)
-      .share()
-      //.map(getObjectPointNormal)
+    let annotationModel = require("./core/annotationModel")
+    /*let activeTool = toggleNote$
+      .map(()=>"addNote")
+      .map(toggleTool)*/
 
+    let activeTool = new Rx.BehaviorSubject("addThickess")
 
-    let notesCreation$ = baseStream$
-      .filter(()=>self.state.activeTool === "addNote" )
-      .map(getObjectPointNormal)
-      .subscribe(
-        function(data){
-          clearActiveTool$()
-          console.log("hey yo, add a note",data)
-          let {object, point, normal} = data
-          
-          let annotation = {
-            typeUid:"0",
-            iuid:generateUUID(),
-            value:undefined,
-            name:"notexx", 
-            target:{
-              point:point.toArray(), 
-              normal:normal.toArray(),
-              typeUid:undefined,
-              iuid:object.userData.entity.iuid//here we could toggle, instance vs type
-            }
-          }
-
-          addAnnotation(annotation)
-        }
-      )
-
-    baseStream$
-      .filter(()=>self.state.activeTool === "addThickess" )
-      .map(getEntryExitThickness)
-      .subscribe(
-        function(data){
-          clearActiveTool$()
-          console.log("hey yo, add a thickness",data)
-          
-          let {object, entryPoint, exitPoint, thickness} = data
-
-          let iuid   = object.userData.entity.iuid
-          entryPoint = entryPoint.toArray()
-          exitPoint  = exitPoint.toArray()
-
-          let annotation = {
-            typeUid:"1",
-            iuid:generateUUID(),
-            name:"thicknessxx", 
-            value:thickness,
-            target:{
-              entryPoint:entryPoint, 
-              exitPoint: exitPoint,
-              normal:undefined,
-              typeUid:undefined,
-              iuid:object.userData.entity.iuid//here we could toggle, instance vs type
-            }
-          }
-          addAnnotation(annotation)
-        }
-      )
-
-    baseStream$
-      .filter(()=>self.state.activeTool === "addDistance" )
-      .map(getObjectPointNormal)
-      .bufferWithCount(2)
-      .subscribe(function(data){
-        clearActiveTool$()
-        console.log("hey yo, add a distance",data)
-        let [start,end] = data
-
-        let distance = getDistanceFromStartEnd(start.point,end.point)
-
-        let annotation = {
-          typeUid:"2",
-          iuid:generateUUID(),
-          name:"distance", 
-          value:distance,
-          target:{
-            start:{
-              point  : start.point.toArray(), 
-              typeUid:undefined,
-              iuid:start.object.userData.entity.iuid
-            }, 
-            end: {
-              point  : end.point.toArray(), 
-              typeUid:undefined,
-              iuid:end.object.userData.entity.iuid
-            }
-          }
-        }
-
-        addAnnotation(annotation) 
-
+    annotationModel({
+      singleTaps$:glview.singleTaps$, 
+      activeTool:activeTool
       })
-
-    baseStream$
-      .filter(()=>self.state.activeTool === "addDiameter" )
-      .map(getObjectPointNormal)
-      .bufferWithCount(3)
-      .subscribe(function(data){
+    .subscribe(function(data){
         clearActiveTool$()
-        console.log("hey yo, add a diameter",data)
-        let [start,mid,end] = data
-        let {center,diameter,normal} = computeCenterDiaNormalFromThreePoints(start.point,mid.point,end.point)
-
-        let annotation = {
-          typeUid:"3",
-          iuid:generateUUID(),
-          name:"diameter", 
-          value:diameter,
-          target:{
-            normal:normal.toArray(),
-            point:center.toArray(),
-            typeUid:undefined,
-            iuid:start.object.userData.entity.iuid
-          }
-        }
-
-        addAnnotation(annotation) 
-      },()=>{},()=>{} )
-
-    baseStream$
-      .filter(()=>self.state.activeTool === "addAngle" )
-      .map(getObjectPointNormal)
-      .bufferWithCount(3)
-      .subscribe(function(data){
-        clearActiveTool$()
-        console.log("hey yo, add an angle",data)
-        let [start,mid,end] = data
-
-        let annotation = {
-          typeUid:"4",
-          iuid:generateUUID(),
-          name:"angle", 
-          value:0,
-          target:{
-            start:{
-              point  : start.point.toArray(), 
-              typeUid:undefined,
-              iuid:start.object.userData.entity.iuid
-            }, 
-            mid:{
-              point  : mid.point.toArray(), 
-              typeUid:undefined,
-              iuid:mid.object.userData.entity.iuid
-            },
-            end: {
-              point  : end.point.toArray(), 
-              typeUid:undefined,
-              iuid:end.object.userData.entity.iuid
-            }
-          }
-        }
-
-        addAnnotation(annotation) 
+        addAnnotation(data)
       })
-
-    /*glview.singleTaps$.subscribe(function(event){
-      if(self.state.activeTool === "addNote"){
-        console.log(" i want to add a note",event)
-      }
-    })*/
-
+   
     clearActiveTool$
       .subscribe(function(){
         self.setState({
