@@ -386,101 +386,60 @@ export default class App extends React.Component {
       })
 
     
-    /////REMOVE ALL THIS!, it should not be here
     ///////////
-    function toggleTool(toolName){
-      let activeTool = self.state.activeTool
-      let val = toolName
-      activeTool = (activeTool === val ? undefined: val)
+
+    function updateAnnotations(annotations){
       self.setState({
-        activeTool: activeTool
-      },null,false)
-
-      return activeTool === val
-    }
-
-    toggleNote$
-      .map(()=>"addNote")
-      .map(toggleTool)
-      .map((toggled)=>toggleCursor(toggled,"crosshair"))
-      .subscribe(()=>{})
-
-    toggleThicknessAnnot$
-      .map(()=>"addThickess")
-      .map(toggleTool)
-      .map((toggled)=>toggleCursor(toggled,"crosshair"))
-      .subscribe(()=>{})
-
-    toggleDistanceAnnot$
-      .map(()=>"addDistance")
-      .map(toggleTool)
-      .map((toggled)=>toggleCursor(toggled,"crosshair"))
-      .subscribe(()=>{})
-
-    toggleDiameterAnnot$
-      .map(()=>"addDiameter")
-      .map(toggleTool)
-      .map((toggled)=>toggleCursor(toggled,"crosshair"))
-      .subscribe(()=>{})
-
-    toggleAngleAnnot$ 
-      .map(()=>"addAngle")
-      .map(toggleTool)
-      .map((toggled)=>toggleCursor(toggled,"crosshair"))
-      .subscribe(()=>{})
-
-    setToTranslateMode$
-      .map(()=>"translate")
-      .map(toggleTool)
-      .subscribe(()=>{})
-
-    setToRotateMode$
-      .map(()=>"rotate")
-      .map(toggleTool)
-      .subscribe(()=>{})
-
-    setToScaleMode$
-      .map(()=>"scale")
-      .map(toggleTool)
-      .subscribe(()=>{})
-
-
-    function addAnnotation(annotation){
-      let currentAnnotations = self.state.annotationsData
-      currentAnnotations.push(annotation)
-      self.setState({
-        annotationsData:currentAnnotations
+        annotationsData:annotations
       })
-      console.log(JSON.stringify(self.state.annotationsData))
       //HACK HACK HACK
       self._tempForceDataUpdate()
       //MORE HACK !!
-      //self.kernel.saveAnnotations(self.state.annotationsData)
+      //self.kernel.saveAnnotations(annotations)
     }
 
-    let annotationModel = require("./core/annotationModel")
-    /*let activeTool = toggleNote$
-      .map(()=>"addNote")
-      .map(toggleTool)*/
+    function toggleTool(tool){
+      self.setState({
+        activeTool: tool
+      },null,false)
+    }
 
-    let activeTool = new Rx.BehaviorSubject("addThickess")
+    function clearCursor(){
+      document.body.style.cursor = 'default' 
+    }
+
+
+    let activeTool = require("./core/activeTool.js")
+    let annotationModel = require("./core/annotationModel")
+
+    let activeTool$ = activeTool({})
 
     annotationModel({
-      singleTaps$:glview.singleTaps$, 
-      activeTool:activeTool
-      })
-    .subscribe(function(data){
+        singleTaps$:glview.singleTaps$, 
+        activeTool$:activeTool$,
+        deleteAnnots$:deleteEntities$
+      },
+      self.state.annotationsData
+    )
+      .subscribe(function(data){
         clearActiveTool$()
-        addAnnotation(data)
+        updateAnnotations(data)
+      })
+
+    activeTool$
+      .subscribe(function(data){
+        console.log("setting active tool",data)
+        toggleTool(data)
       })
    
     clearActiveTool$
+      .map(clearCursor)
       .subscribe(function(){
         self.setState({
         activeTool: undefined
         },null,false)
-      document.body.style.cursor = 'default'
     })
+
     
     showContextMenu$.subscribe(function(requestData){
       console.log("requestData",requestData)
@@ -826,15 +785,8 @@ export default class App extends React.Component {
     let _tmp = instances.map(entity=>entity.iuid)
     let outNEntities = nEntities.filter(function(entity){ return _tmp.indexOf(entity.iuid)===-1})
 
-    //TODO improve : remove from annotationsData
-    let nAnnots  = this.state.annotationsData
-    let _tmp2 = instances.map(entity=>entity.iuid)
-    let outAnnotations = nAnnots.filter(function(entity){ return _tmp2.indexOf(entity.iuid)===-1})
-
-
     this.setState({
       assemblies_main_children:outNEntities,
-      annotationsData : outAnnotations
     })   
 
     return []

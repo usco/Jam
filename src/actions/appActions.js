@@ -17,6 +17,9 @@ export let redo$ = createAction()
 /*not sure if this belongs here or in design actions*/
 export let setDesignAsPersistent$ = createAction()
 
+/*set current active tool*/
+export let setActiveTool$ = createAction()
+
 /*clear any active tool*/
 export let clearActiveTool$ = createAction()
 

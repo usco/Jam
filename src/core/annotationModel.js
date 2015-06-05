@@ -6,6 +6,8 @@ import {getEntryExitThickness,
 
 import {addNote$, addThicknessAnnot$, addDistanceAnnot$, addDiameterAnnot$,
 toggleNote$,toggleThicknessAnnot$,toggleDistanceAnnot$, toggleDiameterAnnot$, toggleAngleAnnot$} from '../actions/annotActions'
+import {setActiveTool$,clearActiveTool$} from '../actions/appActions'
+
 
 import {first,toggleCursor} from '../utils/otherUtils'
 import {generateUUID} from 'usco-kernel2/src/utils'
@@ -152,23 +154,38 @@ function generateAngleData(data){
 }
 
 ///////////////
-let annotationsSource = []
+//FIXME: where do these belong ? they are not really model side, so intent ?
+//also, they are indepdendant from other aspects, but they are "sinks"
+//also, perhaps each tool type shouls specify what cursor it wants ?
+toggleNote$
+  .subscribe((toggled)=>toggleCursor(toggled,"crosshair"))
 
+toggleThicknessAnnot$
+  .subscribe((toggled)=>toggleCursor(toggled,"crosshair"))
 
-function makeMods(intent){
+toggleDistanceAnnot$
+  .subscribe((toggled)=>toggleCursor(toggled,"crosshair"))
 
-console.log("makeMods")
-  let activeTool = intent.activeTool
+toggleDiameterAnnot$
+  .subscribe((toggled)=>toggleCursor(toggled,"crosshair"))
+
+toggleAngleAnnot$
+  .subscribe((toggled)=>toggleCursor(toggled,"crosshair"))
+
+///////////////
+//FIXME: is this more of an intent ??
+function addAnnotationMod$(intent){
+
+  let activeTool$ = intent.activeTool$
   let baseStream$ = intent.singleTaps$
       .map( (event)=>event.detail.pickingInfos)
       .filter( (pickingInfos)=>pickingInfos.length>0)
       .map(first)
       .share()
 
-  baseStream$ = Observable.combineLatest(
-        baseStream$,
-        activeTool,
-        function (s1, s2) { /*console.log("data",s1,s2);*/return {data:s1,activeTool:s2} }
+  baseStream$ = baseStream$.withLatestFrom(
+    activeTool$,
+    (s1, s2)=> { return {data:s1, activeTool:s2} }
   )
 
   function dataOnly(entry){ return entry.data }
@@ -189,42 +206,74 @@ console.log("makeMods")
     .filter((data)=>data.activeTool === "addDistance" )
     .map(dataOnly)
     .map(getObjectPointNormal)
-    .bufferWithCount(2)
+    .bufferWithCount(2)//we need 2 data points to generate a distance
     .map(generateDistanceData)
 
   let diameterAnnot$ = baseStream$
     .filter((data)=>data.activeTool === "addDiameter" )
     .map(dataOnly)
     .map(getObjectPointNormal)
-    .bufferWithCount(3)
+    .bufferWithCount(3)//we need 3 data points to generate a diameter
     .map(generateDiameterData)
 
   let angleAnnot$ = baseStream$
     .filter((data)=>data.activeTool === "addAngle" )
     .map(dataOnly)
     .map(getObjectPointNormal)
-    .bufferWithCount(3)
+    .bufferWithCount(3)//we need 3 data points to generate an angle
     .map(generateAngleData)
 
-  return merge(
+  let additions$ = merge(
     noteAnnot$,
     thickessAnnot$,
     distanceAnnot$,
     diameterAnnot$,
     angleAnnot$
-    )
+    ).share()
+
+  //clear currently active tool : is this a hack?
+  additions$.subscribe(clearActiveTool$)
+
+  return additions$
+}
+
+
+function makeModification$(intent){
+
+  let addAnnot$ = intent.addAnnotation$
+    .map((annotData) => (annotList) => {
+      annotList.push(annotData)
+      return annotList
+    })
+
+  let deleteAnnots$ = intent.deleteAnnots$
+    .map((annotData) => (annotList) => {
+      //let annotIndex = searchTodoIndex(todosData.list, todoid);
+      //annotList.splice(todoIndex, 1);
+      let nAnnots  = annotList
+      let _tmp2 = annotData.map(entity=>entity.iuid)
+      let outAnnotations = nAnnots.filter(function(entity){ return _tmp2.indexOf(entity.iuid)===-1})
+
+      return outAnnotations
+    })
+
+  return merge(
+    addAnnot$,
+    deleteAnnots$
+  )
 }
 
 
 function model(intent, source) {
-  /*let modification$ = makeMods$(intent);
-  return modification$
-    .merge(source.todosData$)
-    .scan((todosData, modFn) => modFn(todosData))
-    .combineLatest(route$, determineFilter)
-    .shareReplay(1);*/
+  let source$ = source.annotData$ || Observable.just([])
+  //hack
+  intent.addAnnotation$ = addAnnotationMod$(intent)
+  let modification$ = makeModification$(intent)
 
-  return makeMods(intent)
+  return modification$
+    .merge(source$)
+    .scan((annotData, modFn) => modFn(annotData))//combine existing data with new one
+    .shareReplay(1)
 }
 
 export default model
