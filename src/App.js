@@ -688,7 +688,7 @@ export default class App extends React.Component {
       let duplicate = self.kernel.duplicateEntity(instance)
       dupes.push( duplicate )
       //FIXME: this is redundant  
-      self.addEntityInstance(duplicate)
+      $addEntityInstance(duplicate)
     })
 
     return dupes
