@@ -52,7 +52,7 @@ import ContextMenu from './components/ContextMenu'
 
 ////TESTING
 import * as blar from './core/fooYeah'
-import {addEntityInstances$, setEntityData$, deleteEntities$, duplicateEntities$, deleteAllEntities$ } from './actions/entityActions'
+import {selectEntities$,addEntityType$,addEntityInstances$, setEntityData$, deleteEntities$, duplicateEntities$, deleteAllEntities$ } from './actions/entityActions'
 import {setToTranslateMode$, setToRotateMode$, setToScaleMode$} from './actions/transformActions'
 import {showContextMenu$, hideContextMenu$, undo$, redo$, setDesignAsPersistent$, clearActiveTool$,setSetting$} from './actions/appActions'
 import {newDesign$, setDesignData$} from './actions/designActions'
@@ -176,9 +176,8 @@ export default class App extends React.Component {
       .filter(noToolSelected)
       .subscribe(
         function(selections){
-          console.log("GNA selections",selections)
           let res= selections.filter(hasEntity).map(getEntity)
-          self.selectEntities(res)
+          selectEntities$(res)
         }
       )
 
@@ -241,38 +240,6 @@ export default class App extends React.Component {
 
     /////////
     //FIXME: horrible, this should not be here, all related to actions etc
-    addEntityInstances$
-      .map(self.addEntityInstance.bind(self))
-      .subscribe(self._tempForceDataUpdate.bind(self))
-
-    setEntityData$
-      .debounce(3)
-      .map(self.setEntityData.bind(self))
-      .subscribe(self._tempForceDataUpdate.bind(self))
-
-    /*setEntityTransforms
-      .subscribe(function(val){
-        self.setEntityTransforms(val.entity, val.transforms)
-        self._tempForceDataUpdate()
-      })*/
-
-    deleteEntities$
-      .map(self.removeEntityInstances.bind(self))
-      .map(self.selectEntities.bind(self))//reset selection
-
-      .subscribe( ()=>{ setTimeout(self._tempForceDataUpdate.bind(self), 10)} )
-
-    deleteAllEntities$
-      .map(self.removeAllEntities.bind(self))
-      .map(self.selectEntities.bind(self))
-
-      .subscribe(self._tempForceDataUpdate.bind(self))
-
-    duplicateEntities$
-      .map(self.duplicateEntities.bind(self))
-      .map(self.selectEntities.bind(self))//set selection to new ones
-
-      .subscribe(self._tempForceDataUpdate.bind(self))
 
     setDesignAsPersistent$
       .map(function(){
@@ -369,23 +336,44 @@ export default class App extends React.Component {
     })
 
 
-    //////handle overall change pertinent to assemblies
-    let modelChanges$ = Observable.merge([
-      addEntityInstances$,
-      deleteEntities$,
-      duplicateEntities$,
-      setEntityData$,
-    ])
-      .debounce(500)//don't save too often
+    ///////////
 
+    function updateEntities(entities){
+      console.log("updating entities state")
+      self.setState({
+        entities:entities
+      })
+    }
+
+    let entities$ = require("./core/entityModel")
+
+    entities$ = entities$({
+        addEntityType$,
+        addEntities$:addEntityInstances$,
+        setEntityData$, 
+        deleteEntities$, 
+        duplicateEntities$, 
+        deleteAllEntities$,
+        selectEntities$
+      },
+      Observable.just(self.state.entities)
+    ).share()
+
+    entities$.subscribe(function(data){    
+        updateEntities(data)
+        //self._tempForceDataUpdate.bind(self)()
+        setTimeout(self._tempForceDataUpdate.bind(self), 10)
+      })
+    
+    //////save change to assemblies
+    entities$
+      .debounce(500)//don't save too often
       //seperation of "sinks" from the rest
       .filter(()=>self.state._persistent)//only save when design is set to persistent
       .subscribe(function(){
         self.kernel.saveBom()//TODO: should not be conflated with assembly
-        self.kernel.saveAssemblyState(self.state.assemblies_main_children)
+        self.kernel.saveAssemblyState(self.state.entities.instances)
       })
-
-    
     ///////////
 
     function updateAnnotations(annotations){
@@ -412,7 +400,7 @@ export default class App extends React.Component {
     let activeTool = require("./core/activeTool.js")
     let annotationModel = require("./core/annotationModel")
 
-    let activeTool$ = activeTool({})
+    let activeTool$ = activeTool()
 
     annotationModel({
         singleTaps$:glview.singleTaps$, 
@@ -440,10 +428,24 @@ export default class App extends React.Component {
         },null,false)
     })
 
-    
+
     showContextMenu$.subscribe(function(requestData){
       console.log("requestData",requestData)
-      let selectedEntities = self.state.selectedEntities
+      //let selectedEntities = self.state.selectedEntities
+
+      //TODO: refactor
+      let selectedEntities = self.state.entities.selectedEntitiesIds
+        .map(entityId => self.state.entities.entitiesById[entityId])
+        .filter(id => id!==undefined)
+
+      let selectIds = self.state.selectedEntitiesIds
+      let selectedAnnots = self.state.annotationsData
+        .filter( (annot) => { return selectIds.indexOf(annot.iuid) > -1} )
+
+      selectedEntities = selectedEntities.concat(selectedAnnots)
+
+      console.log()
+
       let active = true//(selectedEntities && selectedEntities.length>0)
       let actions = []
 
@@ -462,9 +464,6 @@ export default class App extends React.Component {
          actions=[
           {name:"Delete",action: deleteEntities$},
           {name:"Duplicate",action:duplicateEntities$},
-
-        
-
               {name:"Note",action:toggleNote$},
               {name:"Distance",action:toggleDistanceAnnot$},
               {name:"Thickness",action:toggleThicknessAnnot$},
@@ -488,7 +487,7 @@ export default class App extends React.Component {
           active:active,
           position:requestData.position,
           //not sure about all these
-          selectedEntities:self.state.selectedEntities,
+          selectedEntities:selectedEntities,
           actions,
         }
       },null, false)
@@ -531,8 +530,6 @@ export default class App extends React.Component {
       self.setState(lastState,afterSetState,false)
     })
 
-
-  
     //fetch & handle url parameters
     let mainUri    = window.location.href 
     let uriQuery   = getUriQuery(mainUri)
@@ -681,128 +678,6 @@ export default class App extends React.Component {
     return design
   }
 
-  setEntityData(data){
-    log.info("setting entity data", data)
-
-    if(!data) return
-
-    let entity = data.entity
-    let _entitiesById = this.state._entitiesById
-    let tgtEntity     = _entitiesById[entity.iuid]
-    delete data.entity
-
-    for(let key in data){
-      console.log("change", key)
-      tgtEntity[key] = data[key]
-    }
-   
-
-    if(!tgtEntity) return
-    //tgtEntity. = color
-
-    //FIXME : not sure
-    let assemblyChildren = []
-    for(let key in _entitiesById) {
-      let value = _entitiesById[key]
-      assemblyChildren.push( value )
-    }
-    this.setState({
-      assemblies_main_children:assemblyChildren,
-      _entitiesById:_entitiesById
-    })
-
-  }
-
-  //FIXME this should be a command or something
-  selectEntities(entities){
-    log.info("selecting entitites",entities)
-    let entities = entities || []
-    if(entities.constructor !== Array) entities = [entities]
-
-    let ids = entities.map( entity => entity.iuid)
-
-    //if(ids !== this.state.selectedEntitiesIds){
-    //TODO: should it be serialized in history ?
-      this.setState({
-        selectedEntities:entities,
-        selectedEntitiesIds:ids
-      }, null, false) 
-    
-    this._tempForceDataUpdate()
-    return entities
-  }
-
-  
-  //FIXME this should be a command or something
-
-  /*register a new entity type*/
-  addEntityType( type, typeUid ){
-    log.info("adding entity type", type)
-    let nKlasses  = this.state._entityKlasses
-    nKlasses[typeUid] = type
-    //nKlasses.push( type )
-
-    //TODO: should it be part of the app's history 
-    this.setState({_entityKlasses:nKlasses}, null, false)
-  }
-
-  //FIXME this should be a command or something
-  /*save a new entity instance*/
-  addEntityInstance( instance ){
-    log.info("adding entity instance", instance)
-    let nEntities  = this.state.assemblies_main_children
-    nEntities.push( instance )
-
-    let _entitiesById = this.state._entitiesById
-    _entitiesById[instance.iuid] = instance
-
-    this.setState({
-      _entitiesById:_entitiesById,
-      assemblies_main_children:nEntities
-    })
-  }
-
-  addEntityInstanceTo( instance , parent){
-    let parent = parent || null
-
-  }
-
-  /*remove an entity : it actually only 
-  removes it from the active assembly*/
-  removeEntityInstances( instances ){
-    log.info("removing entity instances", instances)
-    let self = this
-
-    try{
-      instances.map(function(instance){
-        self.kernel.removeEntity(instance)
-      })
-    }
-    catch(error){}
-
-    //FIXME: not sure...., duplication of the above again
-    let nEntities  = this.state.assemblies_main_children
-    let _tmp = instances.map(entity=>entity.iuid)
-    let outNEntities = nEntities.filter(function(entity){ return _tmp.indexOf(entity.iuid)===-1})
-
-    this.setState({
-      assemblies_main_children:outNEntities,
-    })   
-
-    return []
-  }
-
-  removeAllEntities(){
-    log.info("removing all entitites from assembly")
-
-    //let nEntities  = this.state.assemblies_main_children
-    this.setState({
-      assemblies_main_children:[]
-    })  
-
-    return []
-  }
-
   /*duplicate all given instances of entities*/
   duplicateEntities( instances ){
     log.info("duplicating entity instances", instances)
@@ -850,7 +725,7 @@ export default class App extends React.Component {
       //part type registration etc
       //we are registering a yet-uknown Part's type, getting back an instance of that type
       let {partKlass,typeUid}    = self.kernel.registerPartType( null, null, mesh, {name:resource.name, resource:resource} )
-      self.addEntityType( partKlass, typeUid )
+      addEntityType$( {type:partKlass,typeUid} )
 
       //we do not return the shape since that becomes the "reference shape/mesh", not the
       //one that will be shown
@@ -897,12 +772,12 @@ export default class App extends React.Component {
     let kernel   = this.kernel
     let glview   = this.refs.glview
     let assembly = this.kernel.activeAssembly
-    let entries  = this.state.assemblies_main_children
+    let entries  = this.state.entities.instances// assemblies_main_children
 
     let annotationsData = this.state.annotationsData //FIXME : HACK obviously
     
-    let selectedEntities = this.state.selectedEntitiesIds.map(entityId => self.state._entitiesById[entityId])
-    let selectedEntitiesIds = this.state.selectedEntitiesIds
+    //let selectedEntities = this.state.selectedEntitiesIds.map(entityId => self.state._entitiesById[entityId])
+    let selectedEntitiesIds = this.state.entities.selectedEntitiesIds
 
     //let bla = annotationsData.filter((annot)=>annot.uid.indexOf(this.state.selectedEntitiesIds))
 
@@ -979,8 +854,6 @@ export default class App extends React.Component {
       //let stream = new Rx.Subject()
     })
 
-  
-
     glview.forceUpdate({
       data:entries, 
       mapper:mapper.bind(this), 
@@ -1034,8 +907,8 @@ export default class App extends React.Component {
 
     let self=this
     let contextmenuSettings = this.state.contextMenu
-    let selectedEntities = this.state.selectedEntitiesIds
-      .map(entityId => self.state._entitiesById[entityId])
+    let selectedEntities = this.state.entities.selectedEntitiesIds
+      .map(entityId => self.state.entities.entitiesById[entityId])
       .filter(id => id!==undefined)
 
     let selectIds = this.state.selectedEntitiesIds
@@ -1043,7 +916,6 @@ export default class App extends React.Component {
       .filter( (annot) => { return selectIds.indexOf(annot.iuid) > -1} )
     
     selectedEntities = selectedEntities.concat(selectedAnnots)
-    //console.log("settings", this.state.settings)
 
     //console.log("selectedAnnots",selectedAnnots )//,selectIds,this.state.annotationsData)
     return (

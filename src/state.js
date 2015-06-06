@@ -60,19 +60,14 @@ let state = {
   annotationsData : [
   ],
 
-  selectedEntities:[],
-  selectedEntitiesIds:[],
-  //special, for testing
-  /*assemblies:{
-    main:{
-      children:[
-      ]
-    }
-  },*/
-  //temporary hack for the above
-  assemblies_main_children:[],
-  _entityKlasses:{},
-  _entitiesById: {}
+  entities:{
+    instances:[],
+    types:{},
+    selectedEntitiesIds:[],
+
+    //secondary storage of instances, for faster/simpler access
+    entitiesById:{}
+  }
 };
 
 export default state;
