@@ -117,6 +117,8 @@ function generateDiameterData(data){
       iuid:start.object.userData.entity.iuid
     }
   }
+
+  return annotation
 }
 
 /*generate angle annotation data from input*/

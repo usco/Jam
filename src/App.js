@@ -51,7 +51,6 @@ import BomView from './components/Bom/BomView'
 import ContextMenu from './components/ContextMenu'
 
 ////TESTING
-import * as blar from './core/fooYeah'
 import {selectEntities$,addEntityType$,addEntityInstances$, setEntityData$, deleteEntities$, duplicateEntities$, deleteAllEntities$ } from './actions/entityActions'
 import {setToTranslateMode$, setToRotateMode$, setToScaleMode$} from './actions/transformActions'
 import {showContextMenu$, hideContextMenu$, undo$, redo$, setDesignAsPersistent$, clearActiveTool$,setSetting$} from './actions/appActions'
@@ -232,7 +231,6 @@ export default class App extends React.Component {
     .repeat()
     .subscribe( setEntityT )
 
-    
     ///////////
     //setup key bindings
     this.setupKeyboard()
@@ -240,7 +238,6 @@ export default class App extends React.Component {
 
     /////////
     //FIXME: horrible, this should not be here, all related to actions etc
-
     setDesignAsPersistent$
       .map(function(){
         let value = !self.state._persistent
@@ -255,48 +252,11 @@ export default class App extends React.Component {
       })
       //.subscribe((value)=>localStorage.setItem("jam!-persistent",value))
 
-    setDesignData$
-      .map(self.setDesignData.bind(self))
-
-      //seperation of "sinks" from the rest
-      .filter(()=>self.state._persistent)//only save when design is set to persistent
-      .debounce(1000)
-      .map(self.kernel.saveDesignMeta.bind(self.kernel))
-      .subscribe(function(def){
-        def.promise.then(function(result){
-          //FIXME: hack for now
-          console.log("save result",result)
-          let serverResp =  JSON.parse(result)
-          let persistentUri = self.kernel.dataApi.designsUri+"/"+serverResp.slug
-
-          localStorage.setItem("jam!-lastProjectUri",persistentUri)
-        })
-        localStorage.setItem("jam!-lastProjectName",self.state.design.name)
-
-      })
-
     newDesign$
       .subscribe(function(){
-        //TODO : this needs to be elsewhere
-        const defaultDesign = {
-          name:undefined,
-          description:undefined,
-          version: undefined,//"0.0.0",
-          authors:[],
-          tags:[],
-          licenses:[],
-          meta:undefined,
-        }
-
+        
         self.setState({
           _persistent:false,
-
-          design:defaultDesign,
-          selectedEntities:[],
-          selectedEntitiesIds:[],
-          assemblies_main_children:[],
-          _entityKlasses:{},
-          _entitiesById: {}
         },null,false)
 
         localStorage.removeItem("jam!-lastProjectName")
@@ -335,6 +295,47 @@ export default class App extends React.Component {
      
     })
 
+    ///////////
+    function updateDesign(design){
+      console.log("updating design state")
+      self.setState({
+        design:design
+      })
+    }
+
+    let design$ = require("./core/designModel")
+
+    design$ = design$({
+        newDesign$,
+        setDesignData$
+      },
+      Observable.just(self.state.design)
+    ).share()
+
+    design$
+      .subscribe(function(data){    
+        updateDesign(data)
+        //self._tempForceDataUpdate.bind(self)()
+        setTimeout(self._tempForceDataUpdate.bind(self), 10)
+      })
+
+    //////SINK!!! save changes to design
+    design$
+      //seperation of "sinks" from the rest
+      .filter(()=>self.state._persistent)//only save when design is set to persistent
+      .debounce(1000)
+      .map(self.kernel.saveDesignMeta.bind(self.kernel))
+      .subscribe(function(def){
+        def.promise.then(function(result){
+          //FIXME: hack for now
+          console.log("save result",result)
+          let serverResp =  JSON.parse(result)
+          let persistentUri = self.kernel.dataApi.designsUri+"/"+serverResp.slug
+
+          localStorage.setItem("jam!-lastProjectUri",persistentUri)
+        })
+        localStorage.setItem("jam!-lastProjectName",self.state.design.name)
+      })
 
     ///////////
 
@@ -354,18 +355,21 @@ export default class App extends React.Component {
         deleteEntities$, 
         duplicateEntities$, 
         deleteAllEntities$,
-        selectEntities$
+        selectEntities$,
+
+        newDesign$
       },
       Observable.just(self.state.entities)
     ).share()
 
-    entities$.subscribe(function(data){    
+    entities$
+      .subscribe(function(data){    
         updateEntities(data)
         //self._tempForceDataUpdate.bind(self)()
         setTimeout(self._tempForceDataUpdate.bind(self), 10)
       })
     
-    //////save change to assemblies
+    //////SINK!!! save change to assemblies
     entities$
       .debounce(500)//don't save too often
       //seperation of "sinks" from the rest
@@ -375,17 +379,6 @@ export default class App extends React.Component {
         self.kernel.saveAssemblyState(self.state.entities.instances)
       })
     ///////////
-
-    function updateAnnotations(annotations){
-      self.setState({
-        annotationsData:annotations
-      })
-      //HACK HACK HACK
-      self._tempForceDataUpdate()
-      //MORE HACK !!
-      //self.kernel.saveAnnotations(annotations)
-    }
-
     function toggleTool(tool){
       self.setState({
         activeTool: tool
@@ -396,24 +389,8 @@ export default class App extends React.Component {
       document.body.style.cursor = 'default' 
     }
 
-
-    let activeTool = require("./core/activeTool.js")
-    let annotationModel = require("./core/annotationModel")
-
-    let activeTool$ = activeTool()
-
-    annotationModel({
-        singleTaps$:glview.singleTaps$, 
-        activeTool$:activeTool$,
-        deleteAnnots$:deleteEntities$
-      },
-      self.state.annotationsData
-    )
-      .subscribe(function(data){
-        clearActiveTool$()
-        updateAnnotations(data)
-      })
-
+    let activeTool = require("./core/appModel.js")
+    let activeTool$ = activeTool({})
     activeTool$
       .subscribe(function(data){
         console.log("setting active tool",data)
@@ -427,7 +404,38 @@ export default class App extends React.Component {
         activeTool: undefined
         },null,false)
     })
+    //////////////
+    function updateAnnotations(annotations){
+      console.log("updating annotations")
+      self.setState({
+        annotationsData:annotations
+      })
+    }
 
+    let annotations$ = require("./core/annotationModel")
+
+    annotations$ = annotations$({
+        singleTaps$:glview.singleTaps$, 
+        activeTool$:activeTool$,
+        deleteAnnots$:deleteEntities$
+      },
+      self.state.annotationsData
+    ).share()
+
+    annotations$
+      .subscribe(function(data){
+        clearActiveTool$()
+        updateAnnotations(data)
+
+        setTimeout(self._tempForceDataUpdate.bind(self), 10)
+      })
+    //////SINK!!! save change to assemblies
+    annotations$
+      .debounce(500)//don't save too often
+      .subscribe(function(annotations){
+        //self.kernel.saveAnnotations(annotations)
+      })
+    /////////////
 
     showContextMenu$.subscribe(function(requestData){
       console.log("requestData",requestData)
@@ -438,13 +446,11 @@ export default class App extends React.Component {
         .map(entityId => self.state.entities.entitiesById[entityId])
         .filter(id => id!==undefined)
 
-      let selectIds = self.state.selectedEntitiesIds
+      let selectIds = self.state.entities.selectedEntitiesIds
       let selectedAnnots = self.state.annotationsData
         .filter( (annot) => { return selectIds.indexOf(annot.iuid) > -1} )
 
       selectedEntities = selectedEntities.concat(selectedAnnots)
-
-      console.log()
 
       let active = true//(selectedEntities && selectedEntities.length>0)
       let actions = []
@@ -639,25 +645,23 @@ export default class App extends React.Component {
     function onDone( data) {
       log.info("DONE",data)
       
-      //FIXME: hack
-      self.setState({
-        design:{
-          name: self.kernel.activeDesign.name,
-          description:self.kernel.activeDesign.description,
-          authors:self.kernel.activeDesign.authors || [],
-          tags:self.kernel.activeDesign.tags || [],
-          licenses:self.kernel.activeDesign.licenses || [],
-          _persistentUri:self.state.design._persistentUri
-        }
+      $newDesign({
+        name: self.kernel.activeDesign.name,
+        description:self.kernel.activeDesign.description,
+        authors:self.kernel.activeDesign.authors || [],
+        tags:self.kernel.activeDesign.tags || [],
+        licenses:self.kernel.activeDesign.licenses || [],
+        _persistentUri:self.state.design._persistentUri
       })
-
+      
       //FIXME: godawful hack because we have multiple "central states" for now
       self.kernel.activeAssembly.children.map(
         function(entityInstance){
-          self.addEntityInstance(entityInstance)
+          $addEntityInstance(entityInstance)
+          //self.addEntityInstance(entityInstance)
         }
       )
-      self._tempForceDataUpdate()
+      //self._tempForceDataUpdate()
     }
 
     this.kernel.loadDesign(uri,options)
@@ -667,16 +671,6 @@ export default class App extends React.Component {
 
   
   //-------COMMANDS OR SOMETHING LIKE THEM -----
-
-  setDesignData(data){
-    log.info("setting design data", data)
-
-    let design = Object.assign({}, this.state.design, data)
-    this.setState({
-      design:design
-    })
-    return design
-  }
 
   /*duplicate all given instances of entities*/
   duplicateEntities( instances ){
@@ -911,7 +905,7 @@ export default class App extends React.Component {
       .map(entityId => self.state.entities.entitiesById[entityId])
       .filter(id => id!==undefined)
 
-    let selectIds = this.state.selectedEntitiesIds
+    let selectIds = this.state.entities.selectedEntitiesIds
     let selectedAnnots = this.state.annotationsData
       .filter( (annot) => { return selectIds.indexOf(annot.iuid) > -1} )
     

@@ -53,7 +53,7 @@ let state = {
     licenses:[],
     meta:undefined,
 
-    _persistentUri:undefined,
+    uri:undefined,
   },
 
   //FIXME: hack / experiment

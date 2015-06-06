@@ -166,6 +166,21 @@ function makeModification$(intent){
       return entitiesData
     })
 
+  /*technically same as deleteAll , but kept seperate for clarity*/
+  let resetEntities$ = intent.newDesign$
+    .map((sentities) => (entitiesData) => {
+      entitiesData.instances = []
+      entitiesData.entitiesById = {}
+      //set selections
+      entitiesData.selectedEntitiesIds = []
+      return entitiesData
+    })
+
+  /*let bla$ = intent.loadDesign$
+    .map((sentities) => (entitiesData) => {
+      console.log("testing")
+      return entitiesData
+    })*/
 
   return merge(
     addEntityType$,
@@ -174,7 +189,9 @@ function makeModification$(intent){
     deleteEntities$,
     deleteAllEntities$,
     duplicateEntities$,
-    selectEntities$
+    selectEntities$,
+
+    resetEntities$
   )
 }
 
