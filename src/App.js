@@ -420,7 +420,9 @@ export default class App extends React.Component {
       })
     /////////////
 
-    showContextMenu$.subscribe(function(requestData){
+    showContextMenu$
+      .skipUntil(appState$.filter(appState=>appState.mode !=="viewer"))//no context menu in viewer mode
+      .subscribe(function(requestData){
       console.log("requestData",requestData)
       //let selectedEntities = self.state.selectedEntities
 
