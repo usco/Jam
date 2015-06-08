@@ -56,9 +56,7 @@ pathsToInclude.push( path.join(__dirname, "node_modules", "usco-stl-parser")   )
 pathsToInclude.push( path.join(__dirname, "node_modules", "usco-ctm-parser")   )
 pathsToInclude.push( path.join(__dirname, "node_modules", "usco-ply-parser")   )
 
-
-
-console.log("will user loaders on",pathsToInclude)
+//console.log("will user loaders on",pathsToInclude)
 
 var config= {
   host:host,
@@ -73,7 +71,7 @@ var config= {
     publicPath: '/'+'dist'+'/'
   },
   plugins: [
-    new webpack.NoErrorsPlugin(),
+    //new webpack.NoErrorsPlugin(),
     //new webpack.optimize.DedupePlugin()
   ],
   module: {
@@ -93,26 +91,32 @@ var config= {
     /*alias: {                                                                                    
         "q$":path.join(__dirname, "node_modules","usco-kernel2/src/kernel.js"),//needed only FOR DEV
     }*/
+    alias: {                                                                                    
+      "three$":path.join(__dirname, "node_modules","three/three.min.js")
+    }
   },
   resolveLoader:{
     root : path.join(__dirname, "node_modules")
   }
 };
 
-console.log("production",production,"dev",dev)
+//console.log("production",production,"dev",dev)
 
 if (production) {
-  config.bail = true;
-  config.debug = false;
-  config.profile = false;
-  config.output.pathInfo = false;
+  config.bail = true
+  config.debug = false
+  config.profile = false
+  config.output.pathInfo = false
   //config.devtool = "#source-map";
-  //config.output.filename = "[name].[hash].min.js";
-  //config.output.chunkFilename = '[id].js';
+  //config.output.filename = "[name].min.js"//"[name].[hash].min.js"
+  //config.output.chunkFilename = '[id].js'
   config.plugins = config.plugins.concat([
-    new webpack.DefinePlugin({'process.env': {'NODE_ENV': JSON.stringify('production') } }),
+    new webpack.DefinePlugin({'process.env': {NODE_ENV: JSON.stringify('production') } }),
     new webpack.optimize.DedupePlugin(),
-    /*new webpack.optimize.UglifyJsPlugin({
+    new webpack.NoErrorsPlugin(),
+    new webpack.optimize.UglifyJsPlugin({minimize: true})
+    /*
+    new webpack.optimize.UglifyJsPlugin({
       mangle: {
         except: ['require', 'export', '$super', 'import']
       },
@@ -127,7 +131,8 @@ if (production) {
         join_vars: true,
         drop_console: true
       }
-    }),
+    })*/
+    /*,
     new CompressionPlugin({
       asset: "{file}.gz",
       algorithm: "gzip",
