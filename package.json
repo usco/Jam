@@ -1,6 +1,6 @@
 {
   "name": "exp",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "jam! experimental version",
   "main": "index.js",
   "scripts": {
@@ -28,7 +28,7 @@
     "babel-runtime": "^4.7.16",
     "classnames": "^1.2.0",
     "deep-diff": "^0.3.2",
-    "glView-helpers": "usco/glView-helpers#dev",
+    "glView-helpers": "usco/glView-helpers",
     "immutable": "^3.7.0",
     "install": "^0.1.8",
     "jsondiffpatch": "^0.1.31",
