@@ -298,11 +298,12 @@ export default class App extends React.Component {
 
     //when creating a new design
     design$
-      .withLatestFrom(
+      .combineLatest(
         newDesign$,
         (x)=>x
       )
       .subscribe(function(data){
+        console.log("newDesign, reseting data")
         localStorage.removeItem("jam!-lastDesignUri")
         localStorage.removeItem("jam!-persistent")
 
