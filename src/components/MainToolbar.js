@@ -13,7 +13,7 @@ import DesignCard   from './DesignCard'
 
 import {newDesign$, setDesignData$} from '../actions/designActions'
 import {undo$,redo$,setDesignAsPersistent$,setSetting$} from '../actions/appActions'
-import {toggleNote$,toggleThicknessAnnot$,toggleDistanceAnnot$, toggleDiameterAnnot$, toggleAngleAnnot$} from '../actions/annotActions'
+import {toggleNote$,toggleThicknessAnnot$,toggleDistanceAnnot$, toggleDiameterAnnot$, toggleAngleAnnot$,toggleAnnotation$} from '../actions/annotActions'
 
 
 class MainToolBar extends React.Component {
@@ -26,10 +26,6 @@ class MainToolBar extends React.Component {
       },
       designCardVisible:false,
     }
-  }
-
-  getStateStream() {
-    return Observable.empty()
   }
 
   handleClick(event){
@@ -117,10 +113,15 @@ class MainToolBar extends React.Component {
           'active':true
         })*/
 
-    console.log("props",this.props)
     function transform(e){
+      console.log(e.target.checked)
       setSetting$({path:"annotations.show",value:e.target.checked})
     }
+    let annotationTypes = [
+      "note",
+      "thickness",
+      "distance"
+    ]
     let annotations = (
       <span className="annotations">
         <button onClick={toggleNote$} className="note" disabled={false}> Note </button>
@@ -136,9 +137,19 @@ class MainToolBar extends React.Component {
       </span>
     )
 
-    
-    return (
-      <div className="titleBar" style={titleStyle}>
+    let commonElements = null
+    /*commonElements = (
+      <span className="otherStuff">
+        <button onClick={this.handleClick.bind(this)} className="options" disabled={true}> options </button>
+      </span>
+    )*/
+
+    let editorElements = null
+    if(this.props.mode !== "viewer"){
+
+      editorElements = (
+        <span>
+
         <h1>
           <EditableItem 
             data={this.props.design.name} 
@@ -152,12 +163,12 @@ class MainToolBar extends React.Component {
         </span>
         <span>
           <button onClick={this.toggleDesignCard.bind(this)} className="details"> Details </button>
-          <button onClick={newDesign$} className="new"> New design</button>
+          <button onClick={newDesign$.bind(null,null)} className="new"> New design</button>
         </span>
 
         <span>
           <span>AutoSave online(temp btn?)</span>
-          <input type="checkbox" checked={persistent} onChange={setDesignAsPersistent$}> </input>
+          <input type="checkbox" checked={persistent} onChange={setDesignAsPersistent$.bind(null,null)}> </input>
         </span>
 
         <span className="history">
@@ -167,15 +178,21 @@ class MainToolBar extends React.Component {
 
         {social}
 
-        <span className="otherStuff">
-          <button onClick={this.handleClick.bind(this)} className="options" disabled={true}> options </button>
-        </span>
-
+      
         {designCardWrapper}
         
         {tools}
 
         {annotations}
+
+      </span>)
+    }
+
+    
+    return (
+      <div className="titleBar" style={titleStyle}>
+        {commonElements}
+        {editorElements}
       </div>
     )
   }

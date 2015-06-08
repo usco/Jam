@@ -16,6 +16,9 @@ const defaults = {
   tags:        [],
   licenses:    [],
   meta:        undefined,
+
+  uri:undefined,
+  _persistent:false
 }
 
 function makeModification$(intent){
@@ -38,7 +41,22 @@ function makeModification$(intent){
       return design
     })
 
-  //let setAsPersistent$ = 
+
+  let setAsPersistent$ = intent.setAsPersistent$
+    .map((flag) => (designData) => {
+      log.info("setting design as persistent", flag)
+      let output = designData._persistent
+      if(flag === undefined || flag === null){
+        output = !output
+      }else{
+        output = flag
+      }
+
+      let design = Object.assign({}, designData)
+      design._persistent = output
+
+      return design
+    })
 /*
       //seperation of "sinks" from the rest
       .filter(()=>self.state._persistent)//only save when design is set to persistent
@@ -51,15 +69,16 @@ function makeModification$(intent){
           let serverResp =  JSON.parse(result)
           let persistentUri = self.kernel.dataApi.designsUri+"/"+serverResp.slug
 
-          localStorage.setItem("jam!-lastProjectUri",persistentUri)
+          localStorage.setItem("jam!-lastDesignUri",persistentUri)
         })
-        localStorage.setItem("jam!-lastProjectName",self.state.design.name)
+        localStorage.setItem("jam!-lastDesignName",self.state.design.name)
 
       })*/
 
     return merge(
       newDesign$,
-      updateDesign$
+      updateDesign$,
+      setAsPersistent$
 
     )
 }

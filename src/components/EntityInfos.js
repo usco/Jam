@@ -273,7 +273,11 @@ class EntityInfos extends React.Component {
       }
 
 
-      entityInfo = (
+      entityInfo = null
+
+      if(this.props.mode !== "viewer")
+      {
+        entityInfo = (
         <div>
 
           {entityColor}
@@ -295,6 +299,7 @@ class EntityInfos extends React.Component {
 
           {debugFields}
         </div>)
+      }
     }
     
     return (

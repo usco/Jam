@@ -34,9 +34,24 @@ let state = {
   activeTool: null,
 
   //generate data, stored to ensure "RWYLO" (rgiht where you left off)
-  _lastProjectUri: undefined,
-  _lastProjectName: undefined,
+  _lastDesignUri: undefined,
 
+
+  appState:{
+    mode:"viewer",
+
+    camActive : false,//is a camera movement taking place ?
+    activeTool: null,
+
+    fullScreen: false,
+
+    //generate data, stored to ensure "RWYLO" (rgiht where you left off)
+    _lastDesignUri: undefined,
+
+    annotations:{
+      show:true,
+    }
+  },
 
   //////////////////
   //after this point, actual design & sub elements state

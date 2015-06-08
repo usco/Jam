@@ -16,8 +16,7 @@ import XhrStore     from 'usco-xhr-store'
 import StlParser    from 'usco-stl-parser'
 import CtmParser    from 'usco-ctm-parser'
 import PlyParser    from 'usco-ply-parser'
-/*import AMfParser    from 'usco-amf-parser'
-import ObjParser    from 'usco-obj-parser'*/
+
 import Kernel       from 'usco-kernel2'
 
 
@@ -28,7 +27,7 @@ let Observable = Rx.Observable
 
 import {observableDragAndDrop} from './interactions/interactions'
 
-import {fetchUriParams,getUriQuery}  from './utils/urlUtils'
+import {fetchUriParams,getUriQuery,setWindowPathAndTitle}  from './utils/urlUtils'
 import {first,toggleCursor,getEntity,hasEntity,extractMeshTransforms} from './utils/otherUtils'
 import {getEntryExitThickness,
   getObjectPointNormal,
@@ -75,12 +74,21 @@ export default class App extends React.Component {
     super(props)
 
     this.state = state
+
     //TODO: store this elsewhere ? use stores system ?
-    this.state._lastProjectName= localStorage.getItem("jam!-lastProjectName") 
-    this.state.design.name    = this.state._lastProjectName || undefined
+    function getSourceData(){
+      //let lastDesignName = localStorage.getItem("jam!-lastDesignName") || undefined
+      let lastDesignUri  = localStorage.getItem("jam!-lastDesignUri") || undefined
+      let persistent     = JSON.parse( localStorage.getItem("jam!-persistent") ) || false
+
+      return {lastDesignUri, persistent} 
+    }
     
-    let lastProjectUri  = localStorage.getItem("jam!-lastProjectUri") || undefined
-    this.state.design._persistentUri = lastProjectUri
+    //this.state._lastDesignName= localStorage.getItem("jam!-lastDesignName") 
+    //this.state.design.name    = this.state._lastDesignName || undefined
+    
+    let lastDesignUri  = localStorage.getItem("jam!-lastDesignUri") || undefined
+    this.state.design.uri = lastDesignUri
     this.state._persistent     = JSON.parse( localStorage.getItem("jam!-persistent") ) || false
 
 
@@ -104,7 +112,7 @@ export default class App extends React.Component {
 
     if(this.state._persistent){
       this.kernel.setDesignAsPersistent(true)
-      this.kernel.dataApi.rootUri = lastProjectUri
+      this.kernel.dataApi.rootUri = lastDesignUri
     } 
     
     let self = this
@@ -154,8 +162,7 @@ export default class App extends React.Component {
 
     let dnds$ = observableDragAndDrop(container)
     dnds$
-      .map( (drops) => {log.info("data was dropped into jam!", drops);return drops})
-      .map( (drops)=>drops.data)//.pluck(".data")
+      .map( drops=>drops.data)//.pluck(".data")
       .flatMap( Rx.Observable.fromArray )
       .subscribe((entry)=>{ self.loadMesh.bind(self,entry,{display:true})() } ) 
 
@@ -237,65 +244,8 @@ export default class App extends React.Component {
     ///////////
 
     /////////
-    //FIXME: horrible, this should not be here, all related to actions etc
-    setDesignAsPersistent$
-      .map(function(){
-        let value = !self.state._persistent
-        self.setState({_persistent:value},null,false)
-        return value
-      })
-
-      //seperation of "sinks" from the rest
-      .subscribe(function(value){
-        localStorage.setItem("jam!-persistent",value)
-        if(value) self.kernel.setDesignAsPersistent(true)
-      })
-      //.subscribe((value)=>localStorage.setItem("jam!-persistent",value))
-
-    newDesign$
-      .subscribe(function(){
+    //FIXME: not so great, this should not be here
         
-        self.setState({
-          _persistent:false,
-        },null,false)
-
-        localStorage.removeItem("jam!-lastProjectName")
-        localStorage.removeItem("jam!-lastProjectUri")
-        localStorage.removeItem("jam!-persistent")
-
-        //remove meshes, resources etc
-        self.assetManager.clearResources()
-        self.kernel.clearAll()
-
-        //clear url related stuff
-        let urlPath   = location.protocol + '//' + location.host + location.pathname
-        let pageTitle = "" 
-        document.title = pageTitle
-        window.history.pushState({"pageTitle":pageTitle},"", urlPath)
-
-        self._tempForceDataUpdate()
-      })
-
-    
-    //updating 
-    setSetting$.subscribe(function(data){
-      console.log("setting data",data)
-      let path = data.path.split(".")
-
-      /*let pItem = null
-      while( (pItem = path.pop()) != null ) {
-        console.log("pItem",pItem)
-      }*/
-      self.setState({
-        settings:{annotations:{show:data.value}}
-      },function(){
-         //HACK HACK HACK
-        self._tempForceDataUpdate()
-      },false)
-     
-    })
-
-    ///////////
     function updateDesign(design){
       console.log("updating design state")
       self.setState({
@@ -307,7 +257,8 @@ export default class App extends React.Component {
 
     design$ = design$({
         newDesign$,
-        setDesignData$
+        setDesignData$,
+        setAsPersistent$:setDesignAsPersistent$
       },
       Observable.just(self.state.design)
     ).share()
@@ -332,9 +283,36 @@ export default class App extends React.Component {
           let serverResp =  JSON.parse(result)
           let persistentUri = self.kernel.dataApi.designsUri+"/"+serverResp.slug
 
-          localStorage.setItem("jam!-lastProjectUri",persistentUri)
+          localStorage.setItem("jam!-lastDesignUri",persistentUri)
         })
-        localStorage.setItem("jam!-lastProjectName",self.state.design.name)
+      })
+
+    design$
+      .pluck("_persistent")
+
+      //seperation of "sinks" from the rest
+      .subscribe(function(value){
+        localStorage.setItem("jam!-persistent",value)
+        if(value) self.kernel.setDesignAsPersistent(true)
+      })
+
+    //when creating a new design
+    design$
+      .withLatestFrom(
+        newDesign$,
+        (x)=>x
+      )
+      .subscribe(function(data){
+        localStorage.removeItem("jam!-lastDesignUri")
+        localStorage.removeItem("jam!-persistent")
+
+        //remove meshes, resources etc
+        self.assetManager.clearResources()
+        self.kernel.clearAll()
+
+        //clear window url etc
+        setWindowPathAndTitle()
+
       })
 
     ///////////
@@ -379,6 +357,7 @@ export default class App extends React.Component {
         self.kernel.saveAssemblyState(self.state.entities.instances)
       })
     ///////////
+   
     function toggleTool(tool){
       self.setState({
         activeTool: tool
@@ -389,21 +368,26 @@ export default class App extends React.Component {
       document.body.style.cursor = 'default' 
     }
 
-    let activeTool = require("./core/appModel.js")
-    let activeTool$ = activeTool({})
-    activeTool$
+    let appState$ = require("./core/appModel.js")
+    appState$ = appState$({
+      setSetting$
+    })
+      .share()
+
+    appState$
       .subscribe(function(data){
-        console.log("setting active tool",data)
-        toggleTool(data)
+        console.log("setting active tool etc",data)
+        //toggleTool(data.activeTool)
+        self.setState({
+          appState:data
+        },null,false)
       })
    
-    clearActiveTool$
-      .map(clearCursor)
-      .subscribe(function(){
-        self.setState({
-        activeTool: undefined
-        },null,false)
-    })
+    appState$
+      .pluck("activeTool")
+      .filter((x)=> x === undefined)
+      .subscribe(clearCursor)
+
     //////////////
     function updateAnnotations(annotations){
       console.log("updating annotations")
@@ -416,7 +400,7 @@ export default class App extends React.Component {
 
     annotations$ = annotations$({
         singleTaps$:glview.singleTaps$, 
-        activeTool$:activeTool$,
+        activeTool$:appState$.map(aS=>aS.activeTool),
         deleteAnnots$:deleteEntities$
       },
       self.state.annotationsData
@@ -426,7 +410,6 @@ export default class App extends React.Component {
       .subscribe(function(data){
         clearActiveTool$()
         updateAnnotations(data)
-
         setTimeout(self._tempForceDataUpdate.bind(self), 10)
       })
     //////SINK!!! save change to assemblies
@@ -541,6 +524,12 @@ export default class App extends React.Component {
     let uriQuery   = getUriQuery(mainUri)
     let designUrls = fetchUriParams(mainUri, "designUrl")
     let meshUrls   = fetchUriParams(mainUri, "modelUrl")
+    let appMode    = fetchUriParams(mainUri, "appMode")
+
+    if(appMode.length > 0){
+      setSetting$({path:"mode",value:appMode.pop()})
+    }
+    
     
     //TODO , refactor all these
     //only handle a single design url
@@ -548,7 +537,7 @@ export default class App extends React.Component {
     if(singleDesign){
       designUrls = [singleDesign]
       this.kernel.setDesignAsPersistent(true)
-      this.kernel.dataApi.rootUri = this.state.design._persistentUri
+      this.kernel.dataApi.rootUri = this.state.design.uri
     }
     //if(designUrls) { newDesign$() }
     designUrls.map(function( designUrl ){ self.loadDesign(designUrl) })
@@ -556,19 +545,16 @@ export default class App extends React.Component {
     //only load meshes if no designs need to be loaded 
     if(!singleDesign) meshUrls.map(function( meshUrl ){ self.loadMesh(meshUrl) })
 
-    let persistentUri = this.state.design._persistentUri
+    let persistentUri = this.state.design.uri
     //from localstorage in case all else failed
     if(!singleDesign && persistentUri)
     {
       this.loadDesign(persistentUri)
 
-      let urlPath   = window.location.href + "?designUrl="+ persistentUri
-      let pageTitle = "" 
-      document.title = pageTitle
-      window.history.pushState({"pageTitle":pageTitle},"", urlPath)
+      setWindowPathAndTitle(window.location.href + "?designUrl="+ persistentUri)
     }
 
-    //last but not least, trie to load if anything is in the query (shorthand for design uuids)
+    //last but not least, try to load if anything is in the query (shorthand for design uuids)
     if(!singleDesign &&! meshUrls && !persistentUri && uriQuery)
     {
       //FIXME: this does not seem right ...
@@ -651,7 +637,7 @@ export default class App extends React.Component {
         authors:self.kernel.activeDesign.authors || [],
         tags:self.kernel.activeDesign.tags || [],
         licenses:self.kernel.activeDesign.licenses || [],
-        _persistentUri:self.state.design._persistentUri
+        uri:self.state.design.uri
       })
       
       //FIXME: godawful hack because we have multiple "central states" for now
@@ -918,17 +904,24 @@ export default class App extends React.Component {
             design={this.state.design} 
             appInfos={this.state.appInfos} 
             persistent={this.state._persistent}
-            activeTool={this.state.activeTool}
-            settings={this.state.settings}
+            activeTool={this.state.appState.activeTool}
+            settings={this.state.appState}
+            mode={this.state.appState.mode}
 
             undos = {this._undos}
             redos = {this._redos}
             style={toolbarStyle}> </MainToolbar>
 
-          <ThreeJs ref="glview" activeTool={this.state.activeTool} showAnnotations={this.state.settings.annotations.show}/>
+          <ThreeJs ref="glview" 
+            activeTool={this.state.appState.activeTool} 
+            showAnnotations={this.state.appState.annotations.show}/>
 
           <div ref="testArea" style={testAreaStyle} className="toolBarBottom">
-            <EntityInfos entities={selectedEntities} debug={false}/>
+            <EntityInfos 
+              entities={selectedEntities} 
+              mode={this.state.appState.mode}
+              debug={false}
+            />
           </div>
 
           <ContextMenu settings={contextmenuSettings} />
