@@ -1,4 +1,12 @@
-//import {addEntityInstances$, setEntityData$, deleteEntities$, duplicateEntities$, deleteAllEntities$ } from '../actions/entityActions'
+import {
+  addEntityInstances$, 
+  setEntityData$, 
+  deleteEntities$, 
+  duplicateEntities$, 
+  deleteAllEntities$,
+  selectEntities$
+   } from '../actions/entityActions'
+
 import logger from '../utils/log'
 let log = logger("entities")
 log.setLevel("info")
@@ -9,43 +17,23 @@ let Observable = Rx.Observable
 let merge = Rx.Observable.merge
 
 
-/*setEntityData(data){
-    log.info("setting entity data", data)
+///defaults, what else ?
+const defaults = {
+  instances:[],
+  types:{},
+  selectedEntitiesIds:[],
 
-    if(!data) return
+  //secondary storage of instances, for faster/simpler access
+  entitiesById:{}
+}
 
-    let entity = data.entity
-    let _entitiesById = this.state._entitiesById
-    let tgtEntity     = _entitiesById[entity.iuid]
-    delete data.entity
 
-    for(let key in data){
-      console.log("change", key)
-      tgtEntity[key] = data[key]
-    }
-   
-
-    if(!tgtEntity) return
-    //tgtEntity. = color
-
-    //FIXME : not sure
-    let assemblyChildren = []
-    for(let key in _entitiesById) {
-      let value = _entitiesById[key]
-      assemblyChildren.push( value )
-    }
-    this.setState({
-      assemblies_main_children:assemblyChildren,
-      _entitiesById:_entitiesById
-    })
-
-  }*/
-
+//////
 
 function makeModification$(intent){
 
   /*register a new entity type*/
-  let addEntityType$ = intent.addEntityType$ 
+  let _addEntityType$ = intent.addEntityType$ 
     .map((typeData) => (entitiesData) => {
       //log.info("adding entity type", type)
       let {type,typeUid} = typeData
@@ -65,7 +53,7 @@ function makeModification$(intent){
   }*/
 
   /*save a new entity instance*/
-  let addEntities$ = intent.addEntities$
+  let _addEntities$ = intent.addEntities$
     .map((nentities) => (entitiesData) => {
       //log.info("adding entity instance", instance)
 
@@ -76,12 +64,13 @@ function makeModification$(intent){
       entities.map(entity=>{entitiesData.entitiesById[entity.iuid] = entity})
 
       //set selections
-      entitiesData.selectedEntitiesIds = entities.map((entity)=>entity.iuid)
+      selectEntities$( entities )//entities.map((entity)=>entity.iuid))
+      //entitiesData.selectedEntitiesIds = entities.map((entity)=>entity.iuid)
       return entitiesData
     })
 
   /*set entites properties*/
-  let updateEntities$ = intent.setEntityData$
+  let _updateEntities$ = intent.setEntityData$
     .debounce(3)
     .map((data) => (entitiesData) => {
       //log.info("setting entity data", data)
@@ -99,13 +88,13 @@ function makeModification$(intent){
         tgtEntity[key] = data[key]
       }
 
-      entitiesById[entity.uid] = tgtEntity
+      entitiesById[entity.iuid] = tgtEntity
       return entitiesData
     })
 
   /*remove an entity : it actually only 
   removes it from the active assembly*/
-  let deleteEntities$ = intent.deleteEntities$
+  let _deleteEntities$ = intent.deleteEntities$
     .map((remEntitites) => (entitiesData) => {
       //log.info("removing entity instances", instances)
       //self.kernel.removeEntity(instance)
@@ -126,7 +115,7 @@ function makeModification$(intent){
     })
 
   /*delete all entities from current entities*/
-  let deleteAllEntities$ = intent.deleteAllEntities$
+  let _deleteAllEntities$ = intent.deleteAllEntities$
     .map(() => (entitiesData) => {
       entitiesData.instances = []
       entitiesData.entitiesById = {}
@@ -136,7 +125,7 @@ function makeModification$(intent){
     })
 
   /*create duplicates of given entities*/
-  let duplicateEntities$  = intent.duplicateEntities$
+  let _duplicateEntities$  = intent.duplicateEntities$
     .map((sources) => (entitiesData) => {
 
       let dupes = []
@@ -152,7 +141,8 @@ function makeModification$(intent){
     })
 
   /*select given entities*/
-  let selectEntities$ = intent.selectEntities$ 
+  let _selectEntities$ = intent.selectEntities$ 
+    .distinctUntilChanged()//we do not want to be notified multiple times in a row for the same selections
     .map((sentities) => (entitiesData) => {
 
       log.info("selecting entitites",sentities)
@@ -167,7 +157,7 @@ function makeModification$(intent){
     })
 
   /*technically same as deleteAll , but kept seperate for clarity*/
-  let resetEntities$ = intent.newDesign$
+  let _resetEntities$ = intent.newDesign$
     .map((sentities) => (entitiesData) => {
       entitiesData.instances = []
       entitiesData.entitiesById = {}
@@ -183,26 +173,27 @@ function makeModification$(intent){
     })*/
 
   return merge(
-    addEntityType$,
-    addEntities$,
-    updateEntities$,
-    deleteEntities$,
-    deleteAllEntities$,
-    duplicateEntities$,
-    selectEntities$,
+    _addEntityType$,
+    _addEntities$,
+    _updateEntities$,
+    _deleteEntities$,
+    _deleteAllEntities$,
+    _duplicateEntities$,
+    _selectEntities$,
 
-    resetEntities$
+    _resetEntities$
   )
 }
 
 function model(intent, source) {
-  let source$ = source || Observable.just({instances:[],types:[]})
+  let source$ = source || Observable.just(defaults)
 
   let modification$ = makeModification$(intent)
 
   return modification$
     .merge(source$)
     .scan((entityData, modFn) => modFn(entityData))//combine existing data with new one
+    //.distinctUntilChanged()
     .shareReplay(1)
 }
 
