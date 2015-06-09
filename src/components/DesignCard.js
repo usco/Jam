@@ -106,7 +106,7 @@ export default class DesignCard extends React.Component{
     let self     = this
     let design   = this.props.design
 
-    let persistentUrl = design._persistentUri
+    let persistentUrl = design.uri
     let persistent    = (persistentUrl !== undefined)
     let editable      = design.editable || true 
 

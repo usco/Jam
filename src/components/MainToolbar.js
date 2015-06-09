@@ -57,6 +57,7 @@ class MainToolBar extends React.Component {
     }
 
     let designCardWrapper = <div className="designCardWrapper fadesIn" />
+    
     if(this.state.designCardVisible){
       designCardWrapper = (
       <div className="designCardWrapper fadesOut">
@@ -69,7 +70,7 @@ class MainToolBar extends React.Component {
     let undosDisabled = this.props.undos.length<=1
     let redosDisabled = this.props.redos.length===0
 
-    let persistent    = this.props.persistent || false
+    let persistent    = this.props.design._persistent
 
 
     let social = (
