@@ -361,7 +361,7 @@ class ThreeJs extends React.Component{
   }
   
   shouldComponentUpdate(nextProps){
-    console.log("nextProps",nextProps)
+    //console.log("nextProps",nextProps)
     //console.log("gne",this.props.cubeRot)
     //this.cube.rotation.z = this.props.cubeRot.rot.z
     return false

@@ -93,6 +93,7 @@ function model(intent, source) {
   return modification$
     .merge(source$)
     .scan((designData, modFn) => modFn(designData))//combine existing data with new one
+    //.distinctUntilChanged()
     .shareReplay(1)
 }
 
