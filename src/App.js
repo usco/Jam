@@ -89,7 +89,7 @@ export default class App extends React.Component {
     
     let lastDesignUri  = localStorage.getItem("jam!-lastDesignUri") || undefined
     this.state.design.uri = lastDesignUri
-    this.state._persistent     = JSON.parse( localStorage.getItem("jam!-persistent") ) || false
+    this.state.design._persistent = JSON.parse( localStorage.getItem("jam!-persistent") ) || false
 
 
     this.assetManager = new AssetManager()
@@ -110,11 +110,11 @@ export default class App extends React.Component {
     //this.kernel.testStuff()
     //throw new Error("AAAI")
 
-    if(this.state._persistent){
-      this.kernel.setDesignAsPersistent(true)
-      this.kernel.dataApi.rootUri = lastDesignUri
+    //FIXME: horrible
+    if(this.state.design._persistent){
+      this.kernel.setDesignAsPersistent(true,this.state.design.uri)
     } 
-    
+
     let self = this
     let oldSetState = this.setState.bind(this)
 
@@ -261,29 +261,32 @@ export default class App extends React.Component {
         setAsPersistent$:setDesignAsPersistent$
       },
       Observable.just(self.state.design)
-    ).share()
+    )
 
     design$
+      .distinctUntilChanged()//only do anything if there were changes
       .subscribe(function(data){    
+        console.log("design change AA")
         updateDesign(data)
-        //self._tempForceDataUpdate.bind(self)()
         setTimeout(self._tempForceDataUpdate.bind(self), 10)
       })
-
     //////SINK!!! save changes to design
     design$
-      //seperation of "sinks" from the rest
-      .filter(()=>self.state._persistent)//only save when design is set to persistent
+      .distinctUntilChanged()//only save if something ACTUALLY changed
+      //.skip(1) // we don't care about the "initial" state
       .debounce(1000)
+      //seperation of "sinks" from the rest
+      .filter(design=>design._persistent && (design.uri|| design.name))//only save when design is set to persistent
       .map(self.kernel.saveDesignMeta.bind(self.kernel))
       .subscribe(function(def){
         def.promise.then(function(result){
           //FIXME: hack for now
           console.log("save result",result)
           let serverResp =  JSON.parse(result)
-          let persistentUri = self.kernel.dataApi.designsUri+"/"+serverResp.slug
+          let persistentUri = self.kernel.dataApi.designsUri+"/"+serverResp.uuid
 
           localStorage.setItem("jam!-lastDesignUri",persistentUri)
+          setDesignData$({uri:persistentUri})
         })
       })
 
@@ -300,8 +303,9 @@ export default class App extends React.Component {
     design$
       .combineLatest(
         newDesign$,
-        (x)=>x
+        x=>x
       )
+      //.skipUntil(newDesign$)
       .subscribe(function(data){
         console.log("newDesign, reseting data")
         localStorage.removeItem("jam!-lastDesignUri")
@@ -313,7 +317,6 @@ export default class App extends React.Component {
 
         //clear window url etc
         setWindowPathAndTitle()
-
       })
 
     ///////////
@@ -339,7 +342,7 @@ export default class App extends React.Component {
         newDesign$
       },
       Observable.just(self.state.entities)
-    ).share()
+    )
 
     entities$
       .subscribe(function(data){    
@@ -347,15 +350,24 @@ export default class App extends React.Component {
         //self._tempForceDataUpdate.bind(self)()
         setTimeout(self._tempForceDataUpdate.bind(self), 10)
       })
+
     
     //////SINK!!! save change to assemblies
     entities$
       .debounce(500)//don't save too often
       //seperation of "sinks" from the rest
-      .filter(()=>self.state._persistent)//only save when design is set to persistent
-      .subscribe(function(){
+      //.skipUntil(design$.filter(design=>design._persistent))//no saving when design is not persistent
+      
+      //FIXME !clunky as heck !!
+      .combineLatest(design$,//no saving when design is not persistent
+        (e,d)=> { return {e,d} })
+      .filter((data) => data.d._persistent)
+      .map((data)=>data.e)
+
+      .subscribe(function(entities){
+        console.log("GNO")
         self.kernel.saveBom()//TODO: should not be conflated with assembly
-        self.kernel.saveAssemblyState(self.state.entities.instances)
+        self.kernel.saveAssemblyState(entities.instances)
       })
     ///////////
    
@@ -373,7 +385,6 @@ export default class App extends React.Component {
     appState$ = appState$({
       setSetting$
     })
-      .share()
 
     appState$
       .subscribe(function(data){
@@ -417,7 +428,7 @@ export default class App extends React.Component {
     annotations$
       .debounce(500)//don't save too often
       .subscribe(function(annotations){
-        //self.kernel.saveAnnotations(annotations)
+        self.kernel.saveAnnotations(annotations)
       })
     /////////////
 
@@ -539,11 +550,13 @@ export default class App extends React.Component {
     let singleDesign = designUrls.pop()
     if(singleDesign){
       designUrls = [singleDesign]
-      this.kernel.setDesignAsPersistent(true)
-      this.kernel.dataApi.rootUri = this.state.design.uri
+
+      setDesignData$({uri:singleDesign})
+      this.kernel.setDesignAsPersistent(true, this.state.design.uri)
     }
     //if(designUrls) { newDesign$() }
     designUrls.map(function( designUrl ){ self.loadDesign(designUrl) })
+
 
     //only load meshes if no designs need to be loaded 
     if(!singleDesign) meshUrls.map(function( meshUrl ){ self.loadMesh(meshUrl) })
@@ -632,9 +645,10 @@ export default class App extends React.Component {
       log.error(err)
     }
     function onDone( data) {
-      log.info("DONE",data)
+      log.info("DONE loading design",data)
       
-      $newDesign({
+      setDesignData$({
+      //newDesign$({
         name: self.kernel.activeDesign.name,
         description:self.kernel.activeDesign.description,
         authors:self.kernel.activeDesign.authors || [],
@@ -646,12 +660,13 @@ export default class App extends React.Component {
       //FIXME: godawful hack because we have multiple "central states" for now
       self.kernel.activeAssembly.children.map(
         function(entityInstance){
-          $addEntityInstance(entityInstance)
-          //self.addEntityInstance(entityInstance)
+          addEntityInstance$(entityInstance)
         }
       )
       //self._tempForceDataUpdate()
     }
+    //FIXME : hack hack hack
+    this.kernel.dataApi.rootUri = this.state.design.uri
 
     this.kernel.loadDesign(uri,options)
       .subscribe( logNext, logError, onDone)
@@ -751,6 +766,8 @@ export default class App extends React.Component {
   /*temporary method to force 3d view updates*/
   _tempForceDataUpdate(){
     log.info("forcing re-render")
+    if(!this.state.entities) return
+
     let self     = this
     let kernel   = this.kernel
     let glview   = this.refs.glview
@@ -890,15 +907,19 @@ export default class App extends React.Component {
 
     let self=this
     let contextmenuSettings = this.state.contextMenu
-    let selectedEntities = this.state.entities.selectedEntitiesIds
+    let selectedEntities = []
+    if(this.state.entities.selectedEntitiesIds)
+    {
+      selectedEntities= this.state.entities.selectedEntitiesIds
       .map(entityId => self.state.entities.entitiesById[entityId])
       .filter(id => id!==undefined)
 
-    let selectIds = this.state.entities.selectedEntitiesIds
-    let selectedAnnots = this.state.annotationsData
-      .filter( (annot) => { return selectIds.indexOf(annot.iuid) > -1} )
-    
-    selectedEntities = selectedEntities.concat(selectedAnnots)
+      let selectIds = this.state.entities.selectedEntitiesIds
+      let selectedAnnots = this.state.annotationsData
+        .filter( (annot) => { return selectIds.indexOf(annot.iuid) > -1} )
+      
+      selectedEntities = selectedEntities.concat(selectedAnnots)
+  }
 
     //console.log("selectedAnnots",selectedAnnots )//,selectIds,this.state.annotationsData)
     return (
@@ -906,7 +927,7 @@ export default class App extends React.Component {
           <MainToolbar 
             design={this.state.design} 
             appInfos={this.state.appInfos} 
-            persistent={this.state._persistent}
+
             activeTool={this.state.appState.activeTool}
             settings={this.state.appState}
             mode={this.state.appState.mode}
