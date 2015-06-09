@@ -29,9 +29,6 @@ let state = {
   ],
 
   //real state 
-  camActive : false,//is a camera movement taking place ?
-  fullScreen: false,
-  activeTool: null,
 
   //generate data, stored to ensure "RWYLO" (rgiht where you left off)
   _lastDesignUri: undefined,
@@ -55,20 +52,19 @@ let state = {
 
   //////////////////
   //after this point, actual design & sub elements state
-  _persistent:false,//internal flag, do not serialize
 
+  //redundant with design observable
   design:{
-    name:undefined,
-    description:undefined,
-    version: undefined,//"0.0.0",
-    authors:[
-      /*{name:"foo","email":"gna","url":"http://foo"}*/
-    ],
-    tags:[],
-    licenses:[],
-    meta:undefined,
+    name:        undefined,
+    description: undefined,
+    version:     undefined,//"0.0.0",
+    authors:     [],
+    tags:        [],
+    licenses:    [],
+    meta:        undefined,
 
     uri:undefined,
+    _persistent:false
   },
 
   //FIXME: hack / experiment
