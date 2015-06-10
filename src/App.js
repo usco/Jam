@@ -351,19 +351,29 @@ export default class App extends React.Component {
         setTimeout(self._tempForceDataUpdate.bind(self), 10)
       })
 
-    
-    //////SINK!!! save change to assemblies
-    entities$
-      .debounce(500)//don't save too often
-      //seperation of "sinks" from the rest
-      //.skipUntil(design$.filter(design=>design._persistent))//no saving when design is not persistent
-      
+     /*
       //FIXME !clunky as heck !!
       .combineLatest(design$,//no saving when design is not persistent
         (e,d)=> { return {e,d} })
       .filter((data) => data.d._persistent)
       .map((data)=>data.e)
 
+       //.skipUntil(design$.filter(design=>design._persistent))//no saving when design is not persistent
+    */
+    Observable.prototype.onlyWhen = function (observable, selector) {
+      return this.combineLatest(observable,
+        (self,other)=> { console.log("here");return [self,other] })
+      .filter(function(args) {
+        return selector(args[1])
+      })
+      .map((data)=>data[0])
+    }
+
+    //////SINK!!! save change to assemblies
+    entities$
+      .debounce(500)//don't save too often
+      //seperation of "sinks" from the rest
+      .onlyWhen(design$, design=>design._persistent)
       .subscribe(function(entities){
         console.log("GNO")
         self.kernel.saveBom()//TODO: should not be conflated with assembly
@@ -427,6 +437,7 @@ export default class App extends React.Component {
     //////SINK!!! save change to assemblies
     annotations$
       .debounce(500)//don't save too often
+      .onlyWhen(design$, design=>design._persistent)
       .subscribe(function(annotations){
         self.kernel.saveAnnotations(annotations)
       })
