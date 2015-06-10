@@ -188,7 +188,7 @@ class EntityInfos extends React.Component {
 
         positionInputs = (
           <span>
-            <span>P:</span> {positionInputs})
+            <span>P:</span> {positionInputs}
           </span>
         )
       }
