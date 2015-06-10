@@ -158,7 +158,11 @@ function generateAngleData(data){
 //FIXME: where do these belong ? they are not really model side, so intent ?
 //also, they are indepdendant from other aspects, but they are "sinks"
 //also, perhaps each tool type shouls specify what cursor it wants ?
-toggleNote$
+/*toggleNote$
+  .map(function(val){
+    console.log("cursor",val)
+    return val
+  })
   .subscribe((toggled)=>toggleCursor(toggled,"crosshair"))
 
 toggleThicknessAnnot$
@@ -171,7 +175,20 @@ toggleDiameterAnnot$
   .subscribe((toggled)=>toggleCursor(toggled,"crosshair"))
 
 toggleAngleAnnot$
-  .subscribe((toggled)=>toggleCursor(toggled,"crosshair"))
+  .subscribe((toggled)=>toggleCursor(toggled,"crosshair"))*/
+//temporary hack for cursor 
+function handleCursor(input){
+  input
+    .pluck("activeTool")
+    .subscribe(function (activeTool) {
+      /*switch(activeTool){
+        case :
+      }*/
+      if(activeTool !== undefined){
+        toggleCursor(true,"crosshair")
+      }
+    })
+}
 
 ///////////////
 //FIXME: is this more of an intent ??
