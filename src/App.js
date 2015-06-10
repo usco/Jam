@@ -181,21 +181,6 @@ export default class App extends React.Component {
     //setup key bindings
     this.setupKeyboard()
     ///////////
-    //data sources
-    let dataSources$ = new Rx.Subject()
-    let meshExtensions = ["stl","amf","obj","ctm","ply"]
-
-    let dnds$ = observableDragAndDrop(container)
-    dnds$
-      .pluck("data")
-      .flatMap( Rx.Observable.fromArray )
-      .subscribe(function(data){
-        dataSources$.onNext(data)
-      })
-
-    dataSources$
-      .filter(entry=> { return meshExtensions.indexOf(getExtension(entry.name)) > -1 } ) //only load meshes for resources that are ...mesh files
-      .subscribe((entry)=>{ self.loadMesh.bind(self,entry,{display:true})() } ) 
 
     /////////
     //FIXME: not so great, this should not be here
@@ -207,8 +192,8 @@ export default class App extends React.Component {
       })
     }
 
-    let designLData$ = require("./core/designLocalSource")//local storage etc
-    let design$ = require("./core/designModel")
+    let designLData$ = require('./core/designLocalSource')//local storage etc
+    let design$ = require('./core/designModel')
 
     design$ = design$({
         newDesign$,
@@ -281,7 +266,7 @@ export default class App extends React.Component {
       .distinctUntilChanged()
       .subscribe(function(designsUri){
         console.log("designsUri changed",designsUri)
-        setWindowPathAndTitle("?designUrl="+ designsUri)
+        //setWindowPathAndTitle("?designUrl="+ designsUri)
       })
 
     ///////////
@@ -413,6 +398,27 @@ export default class App extends React.Component {
           selectEntities$(res)
         }
       )
+
+    //data sources
+    let dataSources$ = new Rx.Subject()
+    let meshExtensions = ["stl","amf","obj","ctm","ply"]
+
+    dataSources$
+      .filter(entry=> { return meshExtensions.indexOf(getExtension(entry.name)) > -1 } ) //only load meshes for resources that are ...mesh files
+      .subscribe((entry)=>{ self.loadMesh.bind(self,entry,{display:true})() } ) 
+
+
+    //drag & drop 
+    let dnds$ = observableDragAndDrop(container)
+    dnds$
+      .pluck("data")
+      .flatMap( Rx.Observable.fromArray )
+      .subscribe(function(data){
+        dataSources$.onNext(data)
+      })
+
+    let urlSources = require('./core/urlSources')
+
 
     //////////////////////////////
 
