@@ -4,15 +4,8 @@ let state = {
     name:"Jam!",
     version:"0.0.0"
   },
-  settings:{//TODO: each component should "register its settings"
-    activeMode: true,//if not, disable 3d view ,replace with some static content
-    grid:{
-      show:false,
-      size:"",
-    },
-    bom:{
-      show:false,//this belongs in the bom system
-    },
+  settings:{
+    
   },
   shortcuts:[
     {keys:'⌘+z,ctrl+z', "command":'undo'},
