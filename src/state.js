@@ -13,9 +13,6 @@ let state = {
     bom:{
       show:false,//this belongs in the bom system
     },
-    annotations:{
-      show:true,
-    }
   },
   shortcuts:[
     {keys:'⌘+z,ctrl+z', "command":'undo'},

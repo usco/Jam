@@ -8,8 +8,10 @@ import {setActiveTool$,clearActiveTool$} from '../actions/appActions'
 import {setToTranslateMode$, setToRotateMode$, setToScaleMode$} from '../actions/transformActions'
 import {getPropertyByPath,setPropertyByPath} from '../utils/otherUtils'
 
-//all of these are purely ui side/ visuals related
-const defaults = {
+//all of these are purely ui side/ visuals related ???
+const defaults = {//TODO: each component should "register its settings"
+  activeMode: true,//if not, disable 3d view ,replace with some static content
+
   activeTool:undefined,
   lastDesignUri:undefined,
 
@@ -19,6 +21,13 @@ const defaults = {
 
   annotations:{
     show:true,
+  },
+  grid:{
+    show:false,
+    size:""
+  },
+  bom:{
+    show:false,//this belongs in the bom system
   }
 }
 
