@@ -8,18 +8,8 @@ let fromEvent = Rx.Observable.fromEvent
 let Observable = Rx.Observable
 let merge = Rx.Observable.merge
 
-const defaults = {
-  name:        undefined,
-  description: undefined,
-  version:     undefined,//"0.0.0",
-  authors:     [],
-  tags:        [],
-  licenses:    [],
-  meta:        undefined,
+import defaults from "./designDefaults"
 
-  uri:undefined,
-  _persistent:false
-}
 
 function makeModification$(intent){
 
