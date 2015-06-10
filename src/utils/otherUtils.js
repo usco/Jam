@@ -4,13 +4,20 @@ export function first(input){
   return input[0]
 }
 
-
 export function flipValue__(newValue, oldValue){
   let val = newValue
   let outValue = (oldValue === newValue ? undefined: newValue)
 
   return outValue 
 }
+
+//file utils ??
+
+export function getExtension(fname){
+  return fname.substr((~-fname.lastIndexOf(".") >>> 0) + 2).toLowerCase()
+}
+
+/////
 
 /*returns an object's (deep) property, given a path as string
 taken from : http://stackoverflow.com/questions/6491463/accessing-nested-javascript-objects-with-string-key
@@ -64,17 +71,6 @@ export function isNoToolSelected(activeTool){
   return !activeTool
 }
 
-function toggleTool(toolName){
-  let activeTool = self.state.activeTool
-  let val = toolName
-  activeTool = (activeTool === val ? undefined: val)
-  self.setState({
-    activeTool: activeTool
-  },null,false)
-
-  return activeTool === val
-}
-
 /////////////////////////////////
 //entity utils
 export function hasEntity( input ){
@@ -119,12 +115,12 @@ function setEntityT(attrsAndEntity){
 }
 /////////////////////////////////
 //ui utils
-export function toggleCursor(toggle, cursorName){
+export function toggleCursor(toggle, cursorName, element=document.body){
   if(toggle)
   {
-    document.body.style.cursor = cursorName
+    element.style.cursor = cursorName
   }else{
-    document.body.style.cursor = 'default'
+    element.style.cursor = 'default'
   }
   return toggle
 }

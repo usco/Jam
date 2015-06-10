@@ -51,3 +51,22 @@ export function isTextNotEmpty(text){
 export function exists(input){
   return input !== null && input !== undefined
 }
+
+
+/*
+  //FIXME !clunky as heck !!
+  .combineLatest(design$,//no saving when design is not persistent
+    (e,d)=> { return {e,d} })
+  .filter((data) => data.d._persistent)
+  .map((data)=>data.e)
+
+   //.skipUntil(design$.filter(design=>design._persistent))//no saving when design is not persistent
+*/
+/*Observable.prototype.onlyWhen = function (observable, selector) {
+  return this.combineLatest(observable,
+    (self,other)=> { console.log("here");return [self,other] })
+  .filter(function(args) {
+    return selector(args[1])
+  })
+  .map((data)=>data[0])
+}*/
