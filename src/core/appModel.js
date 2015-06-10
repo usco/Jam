@@ -3,6 +3,10 @@ let fromEvent = Rx.Observable.fromEvent
 let Observable = Rx.Observable
 let merge = Rx.Observable.merge
 
+import logger from 'log-minim'
+let log = logger("app")
+log.setLevel("debug")
+
 import {toggleNote$,toggleThicknessAnnot$,toggleDistanceAnnot$, toggleDiameterAnnot$, toggleAngleAnnot$} from '../actions/annotActions'
 import {setActiveTool$,clearActiveTool$} from '../actions/appActions'
 import {setToTranslateMode$, setToRotateMode$, setToScaleMode$} from '../actions/transformActions'
@@ -51,6 +55,8 @@ function makeModifications(intent){
 
     let setSetting$ = intent.setSetting$
       .map((data) => (appData) => {
+        log.info("updating app",appData)
+        
         let {path,value} = data
         //FIXME:should be more immutable friendly
         let curValue = getPropertyByPath(appData,path)
