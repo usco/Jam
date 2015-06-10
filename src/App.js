@@ -28,17 +28,15 @@ let Observable = Rx.Observable
 import {observableDragAndDrop} from './interactions/interactions'
 
 import {fetchUriParams,getUriQuery,setWindowPathAndTitle}  from './utils/urlUtils'
-import {first,toggleCursor,getEntity,hasEntity,extractMeshTransforms} from './utils/otherUtils'
-import {getEntryExitThickness,
-  getObjectPointNormal,
-  computeCenterDiaNormalFromThreePoints,
-  getDistanceFromStartEnd
-} from './components/webgl/utils'
+import {first,toggleCursor,getEntity,hasEntity,extractMeshTransforms, getExtension} from './utils/otherUtils'
+
+import {clearCursor} from './utils/uiUtils'
 
 import {generateUUID} from 'usco-kernel2/src/utils'
 
-import keymaster from 'keymaster'
 
+
+import keymaster from 'keymaster'
 
 import logger from './utils/log'
 let log = logger("Jam-Root")
@@ -48,6 +46,7 @@ import state from './state'
 
 import BomView from './components/Bom/BomView'
 import ContextMenu from './components/ContextMenu'
+
 
 ////TESTING
 import {selectEntities$,addEntityType$,addEntityInstances$, setEntityData$, deleteEntities$, duplicateEntities$, deleteAllEntities$ } from './actions/entityActions'
@@ -75,23 +74,6 @@ export default class App extends React.Component {
 
     this.state = state
 
-    //TODO: store this elsewhere ? use stores system ?
-    function getSourceData(){
-      //let lastDesignName = localStorage.getItem("jam!-lastDesignName") || undefined
-      let lastDesignUri  = localStorage.getItem("jam!-lastDesignUri") || undefined
-      let persistent     = JSON.parse( localStorage.getItem("jam!-persistent") ) || false
-
-      return {lastDesignUri, persistent} 
-    }
-    
-    //this.state._lastDesignName= localStorage.getItem("jam!-lastDesignName") 
-    //this.state.design.name    = this.state._lastDesignName || undefined
-    
-    let lastDesignUri  = localStorage.getItem("jam!-lastDesignUri") || undefined
-    this.state.design.uri = lastDesignUri
-    this.state.design._persistent = JSON.parse( localStorage.getItem("jam!-persistent") ) || false
-
-
     this.assetManager = new AssetManager()
     this.assetManager.addParser("stl", new StlParser())
     this.assetManager.addParser("ctm", new CtmParser())
@@ -110,11 +92,6 @@ export default class App extends React.Component {
     //this.kernel.testStuff()
     //throw new Error("AAAI")
 
-    //FIXME: horrible
-    if(this.state.design._persistent){
-      this.kernel.setDesignAsPersistent(true,this.state.design.uri)
-    } 
-
     let self = this
     let oldSetState = this.setState.bind(this)
 
@@ -131,17 +108,11 @@ export default class App extends React.Component {
         let oldState = JSON.parse(JSON.stringify(self.state))//,function(key,val){
         console.log("adding history", self._undos)
         //})//Object.assign({},self.state)
-
         self._undos.push( oldState)
         self._redos = []
       }
     } 
 
-  }
-
-  componentWillUpdate(){
-    //console.log("component will update")
-    //this._tempForceDataUpdate()
   }
 
   componentDidMount(){
@@ -156,37 +127,10 @@ export default class App extends React.Component {
     },null,false)
     ////////////////
 
-    let self     = this
-    
+    let self     = this   
     let container = this.refs.wrapper.getDOMNode()
-
-    let dnds$ = observableDragAndDrop(container)
-    dnds$
-      .map( drops=>drops.data)//.pluck(".data")
-      .flatMap( Rx.Observable.fromArray )
-      .subscribe((entry)=>{ self.loadMesh.bind(self,entry,{display:true})() } ) 
-
     let glview   = this.refs.glview
     
-    function toolSelected(){
-      return self.state.activeTool
-    }
-
-    //annoying
-    function noToolSelected(){
-      return !self.state.activeTool
-    }
-
-    let selectedMeshes$ = glview.selectedMeshes$
-      .defaultIfEmpty([])
-      .filter(noToolSelected)
-      .subscribe(
-        function(selections){
-          let res= selections.filter(hasEntity).map(getEntity)
-          selectEntities$(res)
-        }
-      )
-
     function attributesToArrays(attrs){
       let output= {}
       for(let key in attrs){
@@ -212,15 +156,10 @@ export default class App extends React.Component {
     }
 
     //debounce 16.666 ie 60 fps ?
-
     let rawTranforms     =  glview.objectsTransform$
       .debounce(16.6666)
       .filter(hasEntity)
       .share()
-      /*.map(getEntity)
-      .map(extractMeshTransforms)
-      .map(attributesToArrays)
-      .subscribe( setEntityT )*/
 
     let objectTransforms = rawTranforms 
       .map(extractMeshTransforms)
@@ -242,6 +181,21 @@ export default class App extends React.Component {
     //setup key bindings
     this.setupKeyboard()
     ///////////
+    //data sources
+    let dataSources$ = new Rx.Subject()
+    let meshExtensions = ["stl","amf","obj","ctm","ply"]
+
+    let dnds$ = observableDragAndDrop(container)
+    dnds$
+      .pluck("data")
+      .flatMap( Rx.Observable.fromArray )
+      .subscribe(function(data){
+        dataSources$.onNext(data)
+      })
+
+    dataSources$
+      .filter(entry=> { return meshExtensions.indexOf(getExtension(entry.name)) > -1 } ) //only load meshes for resources that are ...mesh files
+      .subscribe((entry)=>{ self.loadMesh.bind(self,entry,{display:true})() } ) 
 
     /////////
     //FIXME: not so great, this should not be here
@@ -253,6 +207,7 @@ export default class App extends React.Component {
       })
     }
 
+    let designLData$ = require("./core/designLocalSource")//local storage etc
     let design$ = require("./core/designModel")
 
     design$ = design$({
@@ -260,7 +215,7 @@ export default class App extends React.Component {
         setDesignData$,
         setAsPersistent$:setDesignAsPersistent$
       },
-      Observable.just(self.state.design)
+      designLData$
     )
 
     design$
@@ -270,6 +225,8 @@ export default class App extends React.Component {
         updateDesign(data)
         setTimeout(self._tempForceDataUpdate.bind(self), 10)
       })
+
+
     //////SINK!!! save changes to design
     design$
       .distinctUntilChanged()//only save if something ACTUALLY changed
@@ -319,6 +276,14 @@ export default class App extends React.Component {
         setWindowPathAndTitle()
       })
 
+     design$
+      .pluck("uri")
+      .distinctUntilChanged()
+      .subscribe(function(designsUri){
+        console.log("designsUri changed",designsUri)
+        setWindowPathAndTitle("?designUrl="+ designsUri)
+      })
+
     ///////////
 
     function updateEntities(entities){
@@ -351,18 +316,9 @@ export default class App extends React.Component {
         setTimeout(self._tempForceDataUpdate.bind(self), 10)
       })
 
-     /*
-      //FIXME !clunky as heck !!
-      .combineLatest(design$,//no saving when design is not persistent
-        (e,d)=> { return {e,d} })
-      .filter((data) => data.d._persistent)
-      .map((data)=>data.e)
-
-       //.skipUntil(design$.filter(design=>design._persistent))//no saving when design is not persistent
-    */
     Observable.prototype.onlyWhen = function (observable, selector) {
-      return this.combineLatest(observable,
-        (self,other)=> { console.log("here");return [self,other] })
+      return this.withLatestFrom(observable,
+        (self,other)=> { /*console.log("here in onlyWhen",self,other);*/return [self,other] })
       .filter(function(args) {
         return selector(args[1])
       })
@@ -372,7 +328,7 @@ export default class App extends React.Component {
     //////SINK!!! save change to assemblies
     entities$
       .debounce(500)//don't save too often
-      //seperation of "sinks" from the rest
+      //only save when design is _persistent
       .onlyWhen(design$, design=>design._persistent)
       .subscribe(function(entities){
         console.log("GNO")
@@ -381,14 +337,11 @@ export default class App extends React.Component {
       })
     ///////////
    
-    function toggleTool(tool){
-      self.setState({
-        activeTool: tool
+    function updateAppState(data){
+      console.log("updating app state",data)
+        self.setState({
+          appState:data
       },null,false)
-    }
-
-    function clearCursor(){
-      document.body.style.cursor = 'default' 
     }
 
     let appState$ = require("./core/appModel.js")
@@ -398,17 +351,22 @@ export default class App extends React.Component {
 
     appState$
       .subscribe(function(data){
-        console.log("setting active tool etc",data)
-        //toggleTool(data.activeTool)
-        self.setState({
-          appState:data
-        },null,false)
+        updateAppState(data)
       })
    
     appState$
       .pluck("activeTool")
       .filter((x)=> x === undefined)
       .subscribe(clearCursor)
+
+    //temp hack
+    appState$
+      .pluck("activeTool")
+      .subscribe(function (activeTool) {
+        if(activeTool !== undefined){
+          toggleCursor(true,"crosshair")
+        }
+      })
 
     //////////////
     function updateAnnotations(annotations){
@@ -429,25 +387,39 @@ export default class App extends React.Component {
     ).share()
 
     annotations$
-      .subscribe(function(data){
+      .subscribe(function (data){
         clearActiveTool$()
         updateAnnotations(data)
         setTimeout(self._tempForceDataUpdate.bind(self), 10)
       })
+
     //////SINK!!! save change to assemblies
     annotations$
       .debounce(500)//don't save too often
+      //only save when design is _persistent
       .onlyWhen(design$, design=>design._persistent)
-      .subscribe(function(annotations){
+      .subscribe(function (annotations){
         self.kernel.saveAnnotations(annotations)
       })
-    /////////////
+
+    ///////////////
+    let selectedMeshes$ = glview.selectedMeshes$
+      .defaultIfEmpty([])
+      //only select entities when no tool is selected 
+      .onlyWhen(appState$, appState => appState.activeTool === undefined)
+      .subscribe(
+        function (selections){
+          let res= selections.filter(hasEntity).map(getEntity)
+          selectEntities$(res)
+        }
+      )
+
+    //////////////////////////////
 
     showContextMenu$
       .skipUntil(appState$.filter(appState=>appState.mode !=="viewer"))//no context menu in viewer mode
       .subscribe(function(requestData){
       console.log("requestData",requestData)
-      //let selectedEntities = self.state.selectedEntities
 
       //TODO: refactor
       let selectedEntities = self.state.entities.selectedEntitiesIds
@@ -545,52 +517,6 @@ export default class App extends React.Component {
     })
 
     //fetch & handle url parameters
-    let mainUri    = window.location.href 
-    let uriQuery   = getUriQuery(mainUri)
-    let designUrls = fetchUriParams(mainUri, "designUrl")
-    let meshUrls   = fetchUriParams(mainUri, "modelUrl")
-    let appMode    = fetchUriParams(mainUri, "appMode")
-
-    if(appMode.length > 0){
-      setSetting$({path:"mode",value:appMode.pop()})
-    }
-    
-    
-    //TODO , refactor all these
-    //only handle a single design url
-    let singleDesign = designUrls.pop()
-    if(singleDesign){
-      designUrls = [singleDesign]
-
-      setDesignData$({uri:singleDesign})
-      this.kernel.setDesignAsPersistent(true, this.state.design.uri)
-    }
-    //if(designUrls) { newDesign$() }
-    designUrls.map(function( designUrl ){ self.loadDesign(designUrl) })
-
-
-    //only load meshes if no designs need to be loaded 
-    if(!singleDesign) meshUrls.map(function( meshUrl ){ self.loadMesh(meshUrl) })
-
-    let persistentUri = this.state.design.uri
-    //from localstorage in case all else failed
-    if(!singleDesign && persistentUri)
-    {
-      this.loadDesign(persistentUri)
-
-      setWindowPathAndTitle(window.location.href + "?designUrl="+ persistentUri)
-    }
-
-    //last but not least, try to load if anything is in the query (shorthand for design uuids)
-    if(!singleDesign &&! meshUrls && !persistentUri && uriQuery)
-    {
-      //FIXME: this does not seem right ...
-      let apiDesignsUri = "https://jamapi.youmagine.com/api/v1/designs/"//self.kernel.dataApi.designsUri
-      let designUri = apiDesignsUri+uriQuery 
-      self.loadDesign(designUri)
-    }
-
-
   }
 
   //event handlers
@@ -785,12 +711,8 @@ export default class App extends React.Component {
     let assembly = this.kernel.activeAssembly
     let entries  = this.state.entities.instances// assemblies_main_children
 
-    let annotationsData = this.state.annotationsData //FIXME : HACK obviously
-    
-    //let selectedEntities = this.state.selectedEntitiesIds.map(entityId => self.state._entitiesById[entityId])
+    let annotationsData = this.state.annotationsData //FIXME : HACK obviously    
     let selectedEntitiesIds = this.state.entities.selectedEntitiesIds
-
-    //let bla = annotationsData.filter((annot)=>annot.uid.indexOf(this.state.selectedEntitiesIds))
 
     let meshCache = {}
 
