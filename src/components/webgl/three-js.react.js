@@ -913,7 +913,7 @@ for tap/toubleTaps etc*/
 
     //for annotations, overlays etc
     function renderMeta(metadata){
-      console.log("drawing metadata",metadata)
+      //console.log("drawing metadata",metadata)
  
       //dynamicInjector.children = []
 

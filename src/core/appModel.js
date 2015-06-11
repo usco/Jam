@@ -55,8 +55,8 @@ function makeModifications(intent){
 
     let setSetting$ = intent.setSetting$
       .map((data) => (appData) => {
-        log.info("updating app",appData)
-        
+        //log.info("updating app",appData)
+
         let {path,value} = data
         //FIXME:should be more immutable friendly
         let curValue = getPropertyByPath(appData,path)

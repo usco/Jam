@@ -144,8 +144,8 @@ function makeModification$(intent){
   let _selectEntities$ = intent.selectEntities$ 
     .distinctUntilChanged()//we do not want to be notified multiple times in a row for the same selections
     .map((sentities) => (entitiesData) => {
+      //log.info("selecting entitites",sentities)
 
-      log.info("selecting entitites",sentities)
       let entities = sentities || []
       if(entities.constructor !== Array) entities = [entities]
 
