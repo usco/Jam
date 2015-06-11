@@ -16,6 +16,14 @@ import {undo$,redo$,setDesignAsPersistent$,setSetting$} from '../actions/appActi
 import {toggleNote$,toggleThicknessAnnot$,toggleDistanceAnnot$, toggleDiameterAnnot$, toggleAngleAnnot$,toggleAnnotation$} from '../actions/annotActions'
 
 
+//for future use
+let designNameInteraction$ = new Rx.Subject()
+designNameInteraction$
+  .debounce(800)
+  .subscribe(
+    setDesignData$
+  )
+
 class MainToolBar extends React.Component {
   constructor(props) {
     super(props)
@@ -33,7 +41,8 @@ class MainToolBar extends React.Component {
   }
 
   setDesignName(value){    
-    setDesignData$({name:value})
+    designNameInteraction$.onNext({name:value})
+    
   }
 
   toggleDesignCard(){
@@ -45,13 +54,9 @@ class MainToolBar extends React.Component {
   render() {
     let fullTitle = `(${this.props.appInfos.name} v  ${this.props.appInfos.version})`
     let history   = this.props.history
-    //disabled={!disabled}
-
 
     let titleStyle = {}
-    /*  width:"100%",
-      padding: "5 0 0 10"
-    }*/
+
     let fooStyle  = {
       display: "inline-block"
     }
