@@ -8,7 +8,7 @@ import {newDesign$, setDesignData$} from '../actions/designActions'
 let mainUri    = window.location.href 
 let uriQuery   = getUriQuery(mainUri)
 let designUri = fetchUriParams(mainUri, "designUrl").pop()
-let meshUri   = fetchUriParams(mainUri, "modelUrl").pop()
+let meshUris   = fetchUriParams(mainUri, "modelUrl")
 let appMode    = fetchUriParams(mainUri, "appMode").pop()
 
 //let designUri$ = new Rx.Observable()
@@ -30,20 +30,21 @@ Rx.Observable
 
 //load from localstorage in case all else failed
 
-//last but not least, try to load if anything is in the query (shorthand for design uuids)
-/*if(!designUri && ! meshUri && uriQuery)
-{
-  //FIXME: this does not seem right ...
-  let apiDesignsUri = "https://jamapi.youmagine.com/api/v1/designs/"
-  designUri = apiDesignsUri+uriQuery 
+
+
+//utility to run multiple ones in parallel, see here :
+//https://github.com/Reactive-Extensions/RxJS/blob/master/doc/mapping/async/comparing.md#asyncparallel
+function wrapArrayParallel (items) {
+  //let __items = Rx.Observable.from()
+  return Rx.Observable.forkJoin.apply(null, items);
 }
-
-setDesignData$({uri:designUri})*/
-//loadDesign$(designUri)
-
-//only load meshes if no designs need to be loaded 
-//meshUri$(meshUrls) //self.loadMesh(meshUrl) })
-
+//on second thought, that does not fit, as it merges the results back together
+function inParallel (items){
+  return Rx.Observable
+    .for(items, function (item) {
+        return Rx.Observable.just(item)
+    })
+}
 
 
 function getShortDesignUri (uriQuery){
@@ -56,27 +57,38 @@ function getShortDesignUri (uriQuery){
 let urDesignUri$ = Rx.Observable
   .just( designUri )
   .filter(exists)
+  .shareReplay(1)
 
 let lsDesignUri$  = Rx.Observable
   .just(  localStorage.getItem("jam!-lastDesignUri") )
   .filter(exists)
+  .shareReplay(1)
 
+//only load meshes if no designs need to be loaded 
+
+let meshUris$ = Rx.Observable.just(meshUris.pop()) //inParallel(meshUris)
+  .takeUntil(urDesignUri$.merge(lsDesignUri$))
+  .filter(exists)
+
+//only attempt to load from short uid as last resort
+//last but not least, try to load if anything is in the query (shorthand for design uuids)
 let stDesignUri$ = Rx.Observable.merge(
   urDesignUri$,
   getShortDesignUri(uriQuery)
 )
+  .takeUntil(meshUris$)
   .shareReplay(1)
-  //.filter(exists)
+  .filter(exists)
 
-let foo$ = Rx.Observable.merge(
+
+
+let designUri$ = Rx.Observable.merge(
   urDesignUri$,//ORDER MATTERS !!!
-  lsDesignUri$,
-  stDesignUri$
+  lsDesignUri$
+  //stDesignUri$
   )
   .take(1)
-  .subscribe(
-  function(data){
-    console.log("HI THERE : mixed data source",data)
-  })
+ 
 
 
+export {designUri$,meshUris$}
