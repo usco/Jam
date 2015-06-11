@@ -8,8 +8,9 @@ const defaults = {
   meta:        undefined,
 
   uri:undefined,
-  _persistent:false
 
+  _persistent:false,
+  _doSave:true
 }
 
 export default defaults

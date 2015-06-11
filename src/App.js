@@ -106,8 +106,7 @@ export default class App extends React.Component {
       oldSetState(value, callback)
       if(alterHistory){
         let oldState = JSON.parse(JSON.stringify(self.state))//,function(key,val){
-        console.log("adding history", self._undos)
-        //})//Object.assign({},self.state)
+        //console.log("adding history", self._undos)
         self._undos.push( oldState)
         self._redos = []
       }
@@ -184,13 +183,34 @@ export default class App extends React.Component {
 
     /////////
     //FIXME: not so great, this should not be here
-        
+    //forced react state updaters
     function updateDesign(design){
-      console.log("updating design state")
+      //console.log("updating design state")
       self.setState({
         design:design
       })
     }
+    function updateEntities(entities){
+      //console.log("updating entities state")
+      self.setState({
+        entities:entities
+      })
+    }
+
+    function updateAppState(data){
+      //console.log("updating app state",data)
+        self.setState({
+          appState:data
+      },null,false)
+    }
+
+    function updateAnnotations(annotations){
+      //console.log("updating annotations")
+      self.setState({
+        annotationsData:annotations
+      })
+    }
+    ////////
 
     let designLData$ = require('./core/designLocalSource')//local storage etc
     let design$ = require('./core/designModel')
@@ -206,19 +226,21 @@ export default class App extends React.Component {
     design$
       .distinctUntilChanged()//only do anything if there were changes
       .subscribe(function(data){    
-        console.log("design change AA")
         updateDesign(data)
         setTimeout(self._tempForceDataUpdate.bind(self), 10)
       })
 
 
-    //////SINK!!! save changes to design
+    let prev = {}
     design$
       .distinctUntilChanged()//only save if something ACTUALLY changed
       //.skip(1) // we don't care about the "initial" state
       .debounce(1000)
-      //seperation of "sinks" from the rest
-      .filter(design=>design._persistent && (design.uri|| design.name))//only save when design is set to persistent
+      //only save when design is set to persistent
+      .filter(design=>design._persistent && (design.uri || design.name) && design._doSave)
+      //staggered approach , do not save the first times
+      .bufferWithCount(2,1)
+      .map(value => value[1])
       .map(self.kernel.saveDesignMeta.bind(self.kernel))
       .subscribe(function(def){
         def.promise.then(function(result){
@@ -231,6 +253,19 @@ export default class App extends React.Component {
           setDesignData$({uri:persistentUri})
         })
       })
+      /*.subscribe(function(res){
+        console.log("experimental save result",res)
+      })*/
+
+
+    //////SINK!!! save changes to design
+    design$
+      .distinctUntilChanged()//only save if something ACTUALLY changed
+      //.skip(1) // we don't care about the "initial" state
+      .debounce(1000)
+      //only save when design is set to persistent
+      .filter(design=>design._persistent && (design.uri || design.name) && design._doSave)
+      
 
     design$
       .pluck("_persistent")
@@ -265,18 +300,13 @@ export default class App extends React.Component {
       .pluck("uri")
       .distinctUntilChanged()
       .subscribe(function(designsUri){
-        console.log("designsUri changed",designsUri)
+        //console.log("designsUri changed",designsUri)
         //setWindowPathAndTitle("?designUrl="+ designsUri)
       })
 
     ///////////
 
-    function updateEntities(entities){
-      console.log("updating entities state")
-      self.setState({
-        entities:entities
-      })
-    }
+   
 
     let entities$ = require("./core/entityModel")
 
@@ -314,7 +344,7 @@ export default class App extends React.Component {
     entities$
       .debounce(500)//don't save too often
       //only save when design is _persistent
-      .onlyWhen(design$, design=>design._persistent)
+      .onlyWhen(design$, design=>design._persistent && (design.uri || design.name) && design._doSave)
       .subscribe(function(entities){
         console.log("GNO")
         self.kernel.saveBom()//TODO: should not be conflated with assembly
@@ -322,12 +352,7 @@ export default class App extends React.Component {
       })
     ///////////
    
-    function updateAppState(data){
-      console.log("updating app state",data)
-        self.setState({
-          appState:data
-      },null,false)
-    }
+   
 
     let appState$ = require("./core/appModel.js")
     appState$ = appState$({
@@ -354,12 +379,7 @@ export default class App extends React.Component {
       })
 
     //////////////
-    function updateAnnotations(annotations){
-      console.log("updating annotations")
-      self.setState({
-        annotationsData:annotations
-      })
-    }
+   
 
     let annotations$ = require("./core/annotationModel")
 
@@ -404,9 +424,8 @@ export default class App extends React.Component {
     let meshExtensions = ["stl","amf","obj","ctm","ply"]
 
     dataSources$
-      .filter(entry=> { return meshExtensions.indexOf(getExtension(entry.name)) > -1 } ) //only load meshes for resources that are ...mesh files
+      //.filter(entry=> { return meshExtensions.indexOf(getExtension(entry.name)) > -1 } ) //only load meshes for resources that are ...mesh files
       .subscribe((entry)=>{ self.loadMesh.bind(self,entry,{display:true})() } ) 
-
 
     //drag & drop 
     let dnds$ = observableDragAndDrop(container)
@@ -417,7 +436,19 @@ export default class App extends React.Component {
         dataSources$.onNext(data)
       })
 
-    let urlSources = require('./core/urlSources')
+    let foo = require('./core/urlSources')
+    let designsUri$ = foo.designUri$
+      .subscribe(
+        function(data){
+          console.log("HI THERE : mixed data source",data)
+          setDesignData$({uri:data})
+          self.loadDesign(data)
+      })
+    let meshUris$ = foo.meshUris$
+      .subscribe(function(meshUri){
+        console.log("meshUri", meshUri)
+        dataSources$.onNext(meshUri)
+      })
 
 
     //////////////////////////////
@@ -603,19 +634,22 @@ export default class App extends React.Component {
       //FIXME: godawful hack because we have multiple "central states" for now
       self.kernel.activeAssembly.children.map(
         function(entityInstance){
-          addEntityInstance$(entityInstance)
+          addEntityInstances$(entityInstance)
         }
       )
-      //self._tempForceDataUpdate()
+
+      self._tempForceDataUpdate()
+      setDesignData$({_doSave:true})
     }
     //FIXME : hack hack hack
     this.kernel.dataApi.rootUri = this.state.design.uri
 
+    //FIXME: hack to prevent save during load
+    setDesignData$({_doSave:false})
+    
     this.kernel.loadDesign(uri,options)
       .subscribe( logNext, logError, onDone)
   }
-
-
   
   //-------COMMANDS OR SOMETHING LIKE THEM -----
 
@@ -629,7 +663,7 @@ export default class App extends React.Component {
       let duplicate = self.kernel.duplicateEntity(instance)
       dupes.push( duplicate )
       //FIXME: this is redundant  
-      $addEntityInstance(duplicate)
+      addEntityInstances$(duplicate)
     })
 
     return dupes
