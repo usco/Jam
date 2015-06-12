@@ -461,21 +461,23 @@ export default class App extends React.Component {
       .skip(1)
       .withLatestFrom(entities$,function(partTypes,entities){
         console.log("BAR",partTypes,entities)
+
         let idx = Object.keys(entities.entitiesById).length
         let typeUid = partTypes.latest
         let name = partTypes.typeUidToMeshName[typeUid]+idx
+        let bbox = partTypes.typeData[typeUid].bbox
         
-        return {name,typeUid}
+        return {name,typeUid, bbox}
       })
       .subscribe(
         function(data){
-        console.log("updated mesh registry",data)
+        console.log("updated mesh registry, adding instance",data)
 
         let partInstance =
         {
             name: data.name,
             iuid: generateUUID(),
-            typeUid: data.typeUid
+            typeUid: data.typeUid,
             color: "#07a9ff",
             pos: [
                 0,
@@ -491,7 +493,8 @@ export default class App extends React.Component {
                 1,
                 1,
                 1
-            ]
+            ],
+            bbox:data.bbox
         }
         addEntityInstances$(partInstance)
       })

@@ -9,11 +9,14 @@ log.setLevel("debug")
 
 import {generateUUID} from 'usco-kernel2/src/utils'
 
+import {computeBoundingBox,computeBoundingSphere} from 'glView-helpers/src/meshTools/computeBounds'
+
 
 const defaults = {
   partTypes:[],
   meshNameToPartTypeUId:{},
   typeUidToMeshName:{},
+  typeData:{},
   latest:undefined
 }
 
@@ -32,27 +35,42 @@ function makeModifications(intent){
       let partTypes = regData.partTypes || []
       let meshNameToPartTypeUId = regData.meshNameToPartTypeUId || {}
       let typeUidToMeshName = regData.typeUidToMeshName || {}
+      let typeData = regData.typeData || {}
 
       let meshName = data.resource.name || ""
       let typeUid = meshNameToPartTypeUId[ meshName ]
+
       //no typeUid was given, it means we have a mesh with no part (yet !)
       if( !typeUid ) {
         typeUid = generateUUID()
+
+        //extract usefull information
+        let mesh = data.mesh
+        computeBoundingSphere(mesh)
+        computeBoundingBox(mesh)
+        typeData[typeUid]={
+          bbox:{
+            min: mesh.boundingBox.min.toArray(),
+            max: mesh.boundingBox.max.toArray()
+          }
+        }
+        //console.log("mesh bb",mesh.boundingBox)
         
         //create ...
         //partKlass = this.makeNamedPartKlass( cName, typeUid )
         //& register class
-        //this.registerPartType( partKlass, cName, typeUid )
-        //this.partTypes[ typeUid ]     = partKlass
-        //this.partTypesByName[ cName ] = partKlass
         
-        //TODO: move this to a visual specific part of the code
         partTypes.push(typeUid)
         meshNameToPartTypeUId[meshName] = typeUid
         typeUidToMeshName[typeUid] = meshName
       } 
 
-      return {partTypes, meshNameToPartTypeUId,typeUidToMeshName, latest:typeUid}
+      return {
+        partTypes, 
+        meshNameToPartTypeUId,
+        typeUidToMeshName, 
+        typeData,
+        latest:typeUid}
   })
 
   return merge(
