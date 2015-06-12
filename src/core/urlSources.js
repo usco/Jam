@@ -66,8 +66,8 @@ let lsDesignUri$  = Rx.Observable
 
 //only load meshes if no designs need to be loaded 
 
-let meshUris$ = Rx.Observable.just(meshUris.pop()) //inParallel(meshUris)
-  .takeUntil(urDesignUri$.merge(lsDesignUri$))
+let meshUris$ = inParallel(meshUris)//Rx.Observable.just(meshUris.pop()) //
+  //.takeUntil(urDesignUri$.merge(lsDesignUri$))
   .filter(exists)
 
 //only attempt to load from short uid as last resort

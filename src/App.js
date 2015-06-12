@@ -327,7 +327,6 @@ export default class App extends React.Component {
     entities$
       .subscribe(function(data){    
         updateEntities(data)
-        //self._tempForceDataUpdate.bind(self)()
         setTimeout(self._tempForceDataUpdate.bind(self), 10)
       })
 
@@ -423,10 +422,82 @@ export default class App extends React.Component {
     let dataSources$ = new Rx.Subject()
     let meshExtensions = ["stl","amf","obj","ctm","ply"]
 
-    dataSources$
+    //dataSources$
       //.filter(entry=> { return meshExtensions.indexOf(getExtension(entry.name)) > -1 } ) //only load meshes for resources that are ...mesh files
-      .subscribe((entry)=>{ self.loadMesh.bind(self,entry,{display:true})() } ) 
+      //.subscribe((entry)=>{ self.loadMesh.bind(self,entry,{display:true})() } ) 
 
+
+    //experimental 
+    let res$ = dataSources$
+      .flatMap(function(dataSource){
+        let resource = self.assetManager.load( dataSource, {keepRawData:true, parsing:{useWorker:true,useBuffers:true} } )
+        return Rx.Observable.fromPromise(resource.deferred.promise)
+      })
+      .shareReplay(1)
+
+    let meshes$ = res$
+      .map( postProcessMesh )
+      .map( centerMesh )
+
+    let combos$ = meshes$
+      .zip(res$,function(mesh,resource){
+        return {mesh,resource}
+      })
+    
+    let partTypes$ = require('./core/partReg')
+    partTypes$ = partTypes$({combos$:combos$})
+
+    //this one takes care of adding templatemeshes
+    combos$
+      .zip(partTypes$.skip(1).map( x=>x.latest ),function(cb, typeUid){
+        self.kernel.partRegistry.addTemplateMeshForPartType( cb.mesh.clone(), typeUid )
+      })
+      .subscribe(function(data){
+        console.log("templatemeshes",data)
+      })
+
+    //we observe changes to partTypes to add new instances
+    partTypes$
+      .skip(1)
+      .withLatestFrom(entities$,function(partTypes,entities){
+        console.log("BAR",partTypes,entities)
+        let idx = Object.keys(entities.entitiesById).length
+        let typeUid = partTypes.latest
+        let name = partTypes.typeUidToMeshName[typeUid]+idx
+        
+        return {name,typeUid}
+      })
+      .subscribe(
+        function(data){
+        console.log("updated mesh registry",data)
+
+        let partInstance =
+        {
+            name: data.name,
+            iuid: generateUUID(),
+            typeUid: data.typeUid
+            color: "#07a9ff",
+            pos: [
+                0,
+                0,
+                0
+            ],
+            rot: [
+                0,
+                0,
+                0
+            ],
+            sca: [
+                1,
+                1,
+                1
+            ]
+        }
+        addEntityInstances$(partInstance)
+      })
+    
+    /////////////
+    //deal with data sources
     //drag & drop 
     let dnds$ = observableDragAndDrop(container)
     dnds$
@@ -436,19 +507,20 @@ export default class App extends React.Component {
         dataSources$.onNext(data)
       })
 
-    let foo = require('./core/urlSources')
-    let designsUri$ = foo.designUri$
+    //other sources (url, localstorage)
+    let urlSources = require('./core/urlSources')
+    let designsUri$ = urlSources.designUri$
       .subscribe(
         function(data){
           console.log("HI THERE : mixed data source",data)
           setDesignData$({uri:data})
           self.loadDesign(data)
       })
-    let meshUris$ = foo.meshUris$
+    let meshUris$ = urlSources.meshUris$
       .subscribe(function(meshUri){
         console.log("meshUri", meshUri)
         dataSources$.onNext(meshUri)
-      })
+      })  
 
 
     //////////////////////////////
@@ -714,13 +786,17 @@ export default class App extends React.Component {
         partInstance = self.kernel.makePartTypeInstance( partKlass )
         self.kernel.registerPartInstance( partInstance )
       
-        //this needs to be added somewhere
-        //partInstance.bbox.min = shape.boundingBox.min.toArray()
-        //partInstance.bbox.max = shape.boundingBox.max.toArray()  
-    
         //self.addEntityInstance(partInstance)
         addEntityInstances$(partInstance)
+
       }
+      return partInstance
+    }
+
+    function extractBounds( partInstance ){
+      //this needs to be added somewhere
+      //partInstance.bbox.min = shape.boundingBox.min.toArray()
+      //partInstance.bbox.max = shape.boundingBox.max.toArray() 
       return partInstance
     }
 
@@ -729,6 +805,7 @@ export default class App extends React.Component {
       .map( centerMesh )
       .map( registerMeshOfPart )
       .map( showEntity )
+      .map( extractBounds )
       .map( function(instance){
         //klassAndInstance.instance.pos[2]+=20
         return instance
