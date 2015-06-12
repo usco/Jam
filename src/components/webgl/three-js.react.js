@@ -137,7 +137,7 @@ class ThreeJs extends React.Component{
     } else {
       renderer = new THREE.WebGLRenderer( {antialias:false} )
     }
-    renderer.setClearColor( "#f5f5f5" )
+    renderer.setClearColor( "#fff" /*#f5f5f5*/ )
     renderer.shadowMapEnabled = this.config.renderer.shadowMapEnabled
     renderer.shadowMapAutoUpdate = this.config.renderer.shadowMapAutoUpdate
     renderer.shadowMapSoft = this.config.renderer.shadowMapSoft
@@ -184,9 +184,9 @@ class ThreeJs extends React.Component{
 
     ////////camera view controls
     let camViewRenderer = new THREE.WebGLRenderer( {antialias:true, alpha: true} )
-    camViewRenderer.setSize( 256, 128 )
+    //camViewRenderer.setSize( 512, 256 )
     camViewRenderer.setClearColor( 0x000000,0 )
-    camViewRenderer.setPixelRatio( pixelRatio )
+    //camViewRenderer.setPixelRatio( pixelRatio )
      
     let camViewContainer = this.refs.camViewControls.getDOMNode()
     camViewContainer.appendChild( camViewRenderer.domElement )
@@ -212,7 +212,21 @@ class ThreeJs extends React.Component{
     camViewCam.updateProjectionMatrix()
     camViewCam.lookAt(this.camViewScene.position) 
 
-    let camViewControls = new CamViewControls({size:9, cornerWidth:1.5,highlightColor:"#ffd200",opacity:0.95},[this.camera,camViewCam])
+    let camViewControls = new CamViewControls({
+      size:9, 
+      cornerWidth:1.5,
+      highlightColor:"#F89406",
+      planesColor:"#60c4f8",
+      edgesColor:"#60c4f8",
+      cornersColor:"#60c4f8",
+      xColor:"#d8cac7",
+      yColor:"#d3d6c7",
+      zColor:"#c4cbd3",
+      textColor:"#dfdfdf",
+      arrowSize:1,
+      fontSize:7.5,
+      fontFace:"Open Sans",
+      opacity:0.95},[this.camera,camViewCam])
     camViewControls.init( camViewCam, camViewContainer )
     this.camViewScene.add(camViewControls)
 
