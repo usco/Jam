@@ -7,10 +7,8 @@ import logger from 'log-minim'
 let log = logger("app")
 log.setLevel("debug")
 
-import {generateUUID} from 'usco-kernel2/src/utils'
-
+import {generateUUID, nameCleanup} from 'usco-kernel2/src/utils'
 import {computeBoundingBox,computeBoundingSphere} from 'glView-helpers/src/meshTools/computeBounds'
-
 
 const defaults = {
   partTypes:[],
@@ -38,6 +36,7 @@ function makeModifications(intent){
       let typeData = regData.typeData || {}
 
       let meshName = data.resource.name || ""
+      let cName   = nameCleanup(meshName)
       let typeUid = meshNameToPartTypeUId[ meshName ]
 
       //no typeUid was given, it means we have a mesh with no part (yet !)
@@ -49,6 +48,7 @@ function makeModifications(intent){
         computeBoundingSphere(mesh)
         computeBoundingBox(mesh)
         typeData[typeUid]={
+          name:cName,
           bbox:{
             min: mesh.boundingBox.min.toArray(),
             max: mesh.boundingBox.max.toArray()
@@ -72,6 +72,8 @@ function makeModifications(intent){
         typeData,
         latest:typeUid}
   })
+
+  
 
   return merge(
     bla$
