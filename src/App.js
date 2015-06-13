@@ -1,5 +1,6 @@
 require("./app.css")
 import React from 'react'
+import Class from "classnames"
 
 import ThreeJs     from './components/webgl/three-js.react'
 import MainToolbar from './components/MainToolbar'
@@ -54,7 +55,7 @@ import {setToTranslateMode$, setToRotateMode$, setToScaleMode$} from './actions/
 import {showContextMenu$, hideContextMenu$, undo$, redo$, setDesignAsPersistent$, clearActiveTool$,setSetting$} from './actions/appActions'
 import {newDesign$, setDesignData$} from './actions/designActions'
 import {toggleNote$,toggleThicknessAnnot$,toggleDistanceAnnot$, toggleDiameterAnnot$, toggleAngleAnnot$} from './actions/annotActions'
-
+import {selectBomEntries$} from './actions/bomActions'
 
 let commands = {
   "undo":undo$,
@@ -418,34 +419,75 @@ export default class App extends React.Component {
         }
       )
 
+    ///////////////////
     //data sources
-    let dataSources$ = new Rx.Subject()
+    let meshSources$ = new Rx.Subject()
     let meshExtensions = ["stl","amf","obj","ctm","ply"]
 
-    //dataSources$
+    //meshSources$
       //.filter(entry=> { return meshExtensions.indexOf(getExtension(entry.name)) > -1 } ) //only load meshes for resources that are ...mesh files
       //.subscribe((entry)=>{ self.loadMesh.bind(self,entry,{display:true})() } ) 
 
-
     //experimental 
-    let res$ = dataSources$
+    let res$ = meshSources$
       .flatMap(function(dataSource){
         let resource = self.assetManager.load( dataSource, {keepRawData:true, parsing:{useWorker:true,useBuffers:true} } )
         return Rx.Observable.fromPromise(resource.deferred.promise)
       })
       .shareReplay(1)
 
+    //stream of processed meshes
     let meshes$ = res$
       .map( postProcessMesh )
       .map( centerMesh )
 
+    //mesh + resource data together
     let combos$ = meshes$
       .zip(res$,function(mesh,resource){
         return {mesh,resource}
       })
+      .shareReplay(1)
     
+    //register meshes <=> types
     let partTypes$ = require('./core/partReg')
     partTypes$ = partTypes$({combos$:combos$})
+
+    //register meshes <=> bom entries
+    let bom$ = require('./core/bomReg')
+    bom$ = bom$({
+      combos$:combos$,
+      partTypes$:partTypes$,
+      entities$:entities$,
+      selectBomEntries$:selectBomEntries$
+    })
+
+    Array.prototype.flatMap = function(lambda) { 
+      return Array.prototype.concat.apply([], this.map(lambda)) 
+    }
+
+    bom$
+      .map( bom => bom.selectedEntries)
+      .withLatestFrom(entities$,function(typeUids,entities){
+
+        //fixme use flat data structure (instances will not be)
+        let selections = typeUids.flatMap(function(typeUid){
+          return entities.instances.filter( i => i.typeUid === typeUid )//.map( i => i.iuid )
+        })
+        
+        console.log("selecting entities from bom", selections)
+        return selections
+      })
+      .subscribe(function(data){
+        selectEntities$(data)
+      })
+
+    bom$.subscribe(function(bom){
+      console.log("updated bom ",bom)
+      //hack, obviously
+      self.setState({
+        bom:bom
+      })
+    })
 
     //this one takes care of adding templatemeshes
     combos$
@@ -456,18 +498,31 @@ export default class App extends React.Component {
         console.log("templatemeshes",data)
       })
 
+
+    //sink, for saving meshes
+    combos$
+      .skip(1)
+      .distinctUntilChanged()
+      .onlyWhen(design$, design=>design._persistent && (design.uri || design.name) && design._doSave)
+      .subscribe(function(cb){
+        console.log("saving mesh")
+        self.kernel.dataApi.saveFile( cb.resource.name, cb.resource._file )
+      })
+
     //we observe changes to partTypes to add new instances
+    //note : this should only be the case if we have either
+    //draged meshed, or got meshes from urls
+    //OR we must use data from our entities "model"
     partTypes$
       .skip(1)
-      .withLatestFrom(entities$,function(partTypes,entities){
-        console.log("BAR",partTypes,entities)
+      .withLatestFrom(entities$,function(partTypes, entities){
 
         let idx = Object.keys(entities.entitiesById).length
         let typeUid = partTypes.latest
         let name = partTypes.typeUidToMeshName[typeUid]+idx
         let bbox = partTypes.typeData[typeUid].bbox
         
-        return {name,typeUid, bbox}
+        return {name, typeUid, bbox}
       })
       .subscribe(
         function(data){
@@ -498,7 +553,7 @@ export default class App extends React.Component {
         }
         addEntityInstances$(partInstance)
       })
-    
+
     /////////////
     //deal with data sources
     //drag & drop 
@@ -507,22 +562,34 @@ export default class App extends React.Component {
       .pluck("data")
       .flatMap( Rx.Observable.fromArray )
       .subscribe(function(data){
-        dataSources$.onNext(data)
+        meshSources$.onNext(data)
+        //TODO : distinguish mesh vs design vs other
       })
 
     //other sources (url, localstorage)
     let urlSources = require('./core/urlSources')
     let designsUri$ = urlSources.designUri$
       .subscribe(
-        function(data){
-          console.log("HI THERE : mixed data source",data)
-          setDesignData$({uri:data})
-          self.loadDesign(data)
+        function(uri){
+          console.log("HI THERE : design uri data source",uri)
+          setDesignData$({uri})
+
+          let data = self.kernel.loadDesign(uri)
+          data.subscribe(function(bla){
+            console.log("gnn",bla)
+            setDesignData$(bla.design)
+            bla.meshSources$.subscribe(function(entry){
+              console.log("mesh entry",entry)
+              meshSources$.onNext(entry.uri)
+            })
+          })
+          //self.loadDesign(data)
       })
+
     let meshUris$ = urlSources.meshUris$
       .subscribe(function(meshUri){
         console.log("meshUri", meshUri)
-        dataSources$.onNext(meshUri)
+        meshSources$.onNext(meshUri)
       })  
 
 
@@ -974,6 +1041,39 @@ export default class App extends React.Component {
       selectedEntities = selectedEntities.concat(selectedAnnots)
   }
 
+    //FIMXE  : move out to bom  
+    function clickedFoo(i,e){
+      console.log("clicked on bom entry", i,e)//e.target.parentElement)
+      selectBomEntries$([i])
+    }
+
+    let fieldNames = ["id","name","qty","unit","version"]
+    let headers = fieldNames.map( name => <th>{name}</th> )
+    let entries = this.state.bom.entries//[{unit:"EA",id:0, version:"2.0.1",qty:4,name:"foo"},{id:2,name:"bar",qty:1, unit:"EA", version:"0.0.1"}]
+    let rows    = entries.map( function(row, index){
+      let cells = fieldNames.map(function(name){         
+        return(<td>{row[name]}</td>)
+      })
+      let selected = self.state.bom.selectedEntries.indexOf(row.uuid) > -1
+      return(
+        <tr
+          className={Class("bomEntry", {selected: selected},"active")} //hack since data-name does not work
+          attributes={{"data-name": row.name}} key={row.name}
+          onClick={clickedFoo.bind(null, row.uuid)}
+          >
+          {cells}
+        </tr>
+      )
+    })
+
+    /*let sources = document.querySelectorAll('.bomEntry')
+    let source = Rx.Observable.fromEvent(sources, 'click')
+    source.subscribe(function(e){
+      console.log("clicked on bom entry",e.target.parentElement)
+    })*/
+
+
+
     //console.log("selectedAnnots",selectedAnnots )//,selectIds,this.state.annotationsData)
     return (
         <div ref="wrapper" style={wrapperStyle} className="Jam">
@@ -999,6 +1099,20 @@ export default class App extends React.Component {
               mode={this.state.appState.mode}
               debug={false}
             />
+          </div>
+
+
+          <div ref="bomTest" className="bom">
+            <table>
+              <thead>
+                  <tr>
+                    {headers}
+                  </tr>
+              </thead>
+              <tbody>
+                {rows}
+              </tbody>
+            </table>
           </div>
 
           <ContextMenu settings={contextmenuSettings} />
