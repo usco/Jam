@@ -215,3 +215,26 @@
   font-size: 0.8em;
   padding: 10px;
 }
+
+/*//////////////*/
+/*bom view*/
+
+.bom{
+  position: absolute;
+  right: 0px;
+  top:40px;
+}
+
+.bom tr:hover
+{
+   background-color: white;
+   color: black;
+   font-weight: bold;
+}
+
+.bom tr.selected
+{
+   background-color: white;
+   color: red;
+   font-weight: bold;
+}

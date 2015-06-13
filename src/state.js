@@ -68,7 +68,13 @@ let state = {
 
     //secondary storage of instances, for faster/simpler access
     entitiesById:{}
+  },
+
+  bom: {
+    entries:[],
+    selectedEntries:[]
   }
+  
 };
 
 export default state;
