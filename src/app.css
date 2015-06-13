@@ -227,14 +227,14 @@
 
 .bom tr:hover
 {
-   background-color: white;
+   background-color: #F4F4F4;
    color: black;
-   font-weight: bold;
+   /*font-weight: bold;*/
 }
 
 .bom tr.selected
 {
-   background-color: white;
+   background-color: #F4F4F4;
    color: red;
    font-weight: bold;
 }

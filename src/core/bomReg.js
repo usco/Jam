@@ -61,6 +61,7 @@ function makeModifications(intent){
     })
 
   let select$ = intent.selectBomEntries$
+    .merge(intent.selectBomEntries2$)
     .map((data) => (bomData) => {
       console.log("select",data)
       bomData.selectedEntries = data

@@ -30,9 +30,7 @@ import {observableDragAndDrop} from './interactions/interactions'
 
 import {fetchUriParams,getUriQuery,setWindowPathAndTitle}  from './utils/urlUtils'
 import {first,toggleCursor,getEntity,hasEntity,extractMeshTransforms, getExtension} from './utils/otherUtils'
-
 import {clearCursor} from './utils/uiUtils'
-
 import {generateUUID} from 'usco-kernel2/src/utils'
 
 
@@ -55,7 +53,7 @@ import {setToTranslateMode$, setToRotateMode$, setToScaleMode$} from './actions/
 import {showContextMenu$, hideContextMenu$, undo$, redo$, setDesignAsPersistent$, clearActiveTool$,setSetting$} from './actions/appActions'
 import {newDesign$, setDesignData$} from './actions/designActions'
 import {toggleNote$,toggleThicknessAnnot$,toggleDistanceAnnot$, toggleDiameterAnnot$, toggleAngleAnnot$} from './actions/annotActions'
-import {selectBomEntries$} from './actions/bomActions'
+import {selectBomEntries$, selectBomEntries2$} from './actions/bomActions'
 
 let commands = {
   "undo":undo$,
@@ -458,17 +456,20 @@ export default class App extends React.Component {
       combos$:combos$,
       partTypes$:partTypes$,
       entities$:entities$,
-      selectBomEntries$:selectBomEntries$
+      selectBomEntries$:selectBomEntries$,
+      selectBomEntries2$:selectBomEntries2$
     })
 
     Array.prototype.flatMap = function(lambda) { 
       return Array.prototype.concat.apply([], this.map(lambda)) 
     }
 
-    bom$
+    //selection bomentry => instances
+    let selectInstsFromBom$ = 
+      selectBomEntries$
+      .withLatestFrom(bom$,(e,bom)=>bom)
       .map( bom => bom.selectedEntries)
       .withLatestFrom(entities$,function(typeUids,entities){
-
         //fixme use flat data structure (instances will not be)
         let selections = typeUids.flatMap(function(typeUid){
           return entities.instances.filter( i => i.typeUid === typeUid )//.map( i => i.iuid )
@@ -476,9 +477,32 @@ export default class App extends React.Component {
         
         console.log("selecting entities from bom", selections)
         return selections
-      })
+      })   
       .subscribe(function(data){
         selectEntities$(data)
+      })
+
+    //selection instances => bom entry
+    let selectsBomFromInsts$ = 
+      selectEntities$
+      .withLatestFrom(entities$,(e,entities)=>entities)
+      //entities$
+      //.map( entities => entities.selectedEntitiesIds)
+      .withLatestFrom(bom$,function(entities,bom){
+
+        let iuids = entities.selectedEntitiesIds
+        let selections = iuids.map(function(iuid){
+          let typeUid = entities.entitiesById[iuid].typeUid
+          return typeUid//bom.byId[typeUid]
+        })
+        //.filter( bom.selectedEntries.indexOf(typeUid)  )
+        //GUARD !!
+        //if(selections.sort() === )
+        console.log("selecting bom entries from entities", selections)
+        return selections
+      })
+      .subscribe(function(data){
+        selectBomEntries2$(data)
       })
 
     bom$.subscribe(function(bom){
@@ -1057,7 +1081,7 @@ export default class App extends React.Component {
       let selected = self.state.bom.selectedEntries.indexOf(row.uuid) > -1
       return(
         <tr
-          className={Class("bomEntry", {selected: selected},"active")} //hack since data-name does not work
+          className={Class("bomEntry", {selected: selected})} //hack since data-name does not work
           attributes={{"data-name": row.name}} key={row.name}
           onClick={clickedFoo.bind(null, row.uuid)}
           >
