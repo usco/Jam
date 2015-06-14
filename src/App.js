@@ -43,7 +43,7 @@ log.setLevel("info")
 
 import state from './state'
 
-import BomView from './components/Bom/BomView'
+import BomView from './components/Bom/BomView2'
 import ContextMenu from './components/ContextMenu'
 
 
@@ -1044,7 +1044,6 @@ export default class App extends React.Component {
       height:'100%',
     }
     
-    let bomData = this.kernel.bom.bom
 
     //TODO: do this elsewhere
     window.document.title = `${this.state.design.name} -- Jam!`
@@ -1069,86 +1068,7 @@ export default class App extends React.Component {
 
     let fieldNames = ["id","name","qty","unit","version"]
     let sortableFields = ["id","name","qty","unit"]
-    let sortOrder = {id:false,name:false, qty:false,unit:false}//this should be auto computed
-    let entries = this.state.bom.entries//[{unit:"EA",id:0, version:"2.0.1",qty:4,name:"foo"},{id:2,name:"bar",qty:1, unit:"EA", version:"0.0.1"}]
-
-    function bomEntryTaped(i,e){
-      console.log("clicked on bom entry", i,e)//e.target.parentElement)
-      selectBomEntries$([i])
-    }
-
-    function headerTapped(i,e){
-      console.log("header tapped",i,e)
-      entries = entries.sort(function(a,b){
-        if (a.name > b.name) {
-          return 1
-        }
-        if (a.name < b.name) {
-          return -1
-        }
-        // a must be equal to b
-        return 0
-      })
-
-      self.setState({
-        bom:{
-          entries:entries,
-          selectedEntries:self.state.bom.selectedEntries
-        }
-
-      })
-    }
-
-    function getSorter(){
-
-    }
-
-    /*function compare(a, b) {
-      if (a is less than b by some ordering criterion) {
-        return -1;
-      }
-      if (a is greater than b by the ordering criterion) {
-        return 1;
-      }
-      // a must be equal to b
-      return 0;
-    }
-
-    headerTaps$ = headerTaps$
-      .filter( name => sortableFields.indexOf(name)>1 )
-
-    entries$ = Observable
-      .just(entries)
-      .startWith([])
-      .map( x => x.sort )*/
-
-   
-    let headers = fieldNames.map( name => <th onClick={headerTapped.bind(null, name)}>{name}</th> )
-
-
-    let rows    = entries.map( function(row, index){
-      let cells = fieldNames.map(function(name){         
-        return(<td>{row[name]}</td>)
-      })
-      let selected = self.state.bom.selectedEntries.indexOf(row.uuid) > -1
-      return(
-        <tr
-          className={Class("bomEntry", {selected: selected})} //hack since data-name does not work
-          attributes={{"data-name": row.name}} key={row.name}
-          onClick={bomEntryTaped.bind(null, row.uuid)}
-          >
-          {cells}
-        </tr>
-      )
-    })
-
-    /*let sources = document.querySelectorAll('.bomEntry')
-    let source = Rx.Observable.fromEvent(sources, 'click')
-    source.subscribe(function(e){
-      console.log("clicked on bom entry",e.target.parentElement)
-    })*/
-
-
+    let entries = this.state.bom.entries
 
     //console.log("selectedAnnots",selectedAnnots )//,selectIds,this.state.annotationsData)
     return (
@@ -1178,18 +1098,13 @@ export default class App extends React.Component {
           </div>
 
 
-          <div ref="bomTest" className="bom">
-            <table>
-              <thead>
-                  <tr>
-                    {headers}
-                  </tr>
-              </thead>
-              <tbody>
-                {rows}
-              </tbody>
-            </table>
-          </div>
+          <BomView 
+            fieldNames={fieldNames} 
+            sortableFields={sortableFields}
+            entries={entries} 
+            selectedEntries={self.state.bom.selectedEntries}
+            selectBomEntries$={selectBomEntries$}
+            > </BomView> 
 
           <ContextMenu settings={contextmenuSettings} />
 

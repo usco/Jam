@@ -238,3 +238,9 @@
    color: red;
    font-weight: bold;
 }
+
+.foo{
+    position: absolute;
+  right: 0px;
+  top:240px;
+}
