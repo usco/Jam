@@ -1066,14 +1066,66 @@ export default class App extends React.Component {
   }
 
     //FIMXE  : move out to bom  
-    function clickedFoo(i,e){
+
+    let fieldNames = ["id","name","qty","unit","version"]
+    let sortableFields = ["id","name","qty","unit"]
+    let sortOrder = {id:false,name:false, qty:false,unit:false}//this should be auto computed
+    let entries = this.state.bom.entries//[{unit:"EA",id:0, version:"2.0.1",qty:4,name:"foo"},{id:2,name:"bar",qty:1, unit:"EA", version:"0.0.1"}]
+
+    function bomEntryTaped(i,e){
       console.log("clicked on bom entry", i,e)//e.target.parentElement)
       selectBomEntries$([i])
     }
 
-    let fieldNames = ["id","name","qty","unit","version"]
-    let headers = fieldNames.map( name => <th>{name}</th> )
-    let entries = this.state.bom.entries//[{unit:"EA",id:0, version:"2.0.1",qty:4,name:"foo"},{id:2,name:"bar",qty:1, unit:"EA", version:"0.0.1"}]
+    function headerTapped(i,e){
+      console.log("header tapped",i,e)
+      entries = entries.sort(function(a,b){
+        if (a.name > b.name) {
+          return 1
+        }
+        if (a.name < b.name) {
+          return -1
+        }
+        // a must be equal to b
+        return 0
+      })
+
+      self.setState({
+        bom:{
+          entries:entries,
+          selectedEntries:self.state.bom.selectedEntries
+        }
+
+      })
+    }
+
+    function getSorter(){
+
+    }
+
+    /*function compare(a, b) {
+      if (a is less than b by some ordering criterion) {
+        return -1;
+      }
+      if (a is greater than b by the ordering criterion) {
+        return 1;
+      }
+      // a must be equal to b
+      return 0;
+    }
+
+    headerTaps$ = headerTaps$
+      .filter( name => sortableFields.indexOf(name)>1 )
+
+    entries$ = Observable
+      .just(entries)
+      .startWith([])
+      .map( x => x.sort )*/
+
+   
+    let headers = fieldNames.map( name => <th onClick={headerTapped.bind(null, name)}>{name}</th> )
+
+
     let rows    = entries.map( function(row, index){
       let cells = fieldNames.map(function(name){         
         return(<td>{row[name]}</td>)
@@ -1083,7 +1135,7 @@ export default class App extends React.Component {
         <tr
           className={Class("bomEntry", {selected: selected})} //hack since data-name does not work
           attributes={{"data-name": row.name}} key={row.name}
-          onClick={clickedFoo.bind(null, row.uuid)}
+          onClick={bomEntryTaped.bind(null, row.uuid)}
           >
           {cells}
         </tr>
