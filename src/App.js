@@ -43,7 +43,8 @@ log.setLevel("info")
 
 import state from './state'
 
-import BomView from './components/Bom/BomView2'
+import BomView from './components/Bom/BomView'
+import SettingsView from './components/SettingsView'
 import ContextMenu from './components/ContextMenu'
 
 
@@ -303,6 +304,13 @@ export default class App extends React.Component {
         //setWindowPathAndTitle("?designUrl="+ designsUri)
       })
 
+    design$
+      .pluck("name")
+      .distinctUntilChanged()
+      .subscribe(function(designName){
+        window.document.title = `${designName} -- Jam!`
+      })
+    
     ///////////
 
    
@@ -359,7 +367,9 @@ export default class App extends React.Component {
 
     appState$
       .subscribe(function(data){
+        console.log("setting app state")
         updateAppState(data)
+        setTimeout(self._tempForceDataUpdate.bind(self), 10)
       })
    
     appState$
@@ -1043,11 +1053,7 @@ export default class App extends React.Component {
       width:'100%',
       height:'100%',
     }
-    
-
-    //TODO: do this elsewhere
-    window.document.title = `${this.state.design.name} -- Jam!`
-
+  
     let self=this
     let contextmenuSettings = this.state.contextMenu
     let selectedEntities = []
@@ -1064,11 +1070,25 @@ export default class App extends React.Component {
       selectedEntities = selectedEntities.concat(selectedAnnots)
   }
 
-    //FIMXE  : move out to bom  
-
+    //BOM stuff
     let fieldNames = ["id","name","qty","unit","version"]
     let sortableFields = ["id","name","qty","unit"]
     let entries = this.state.bom.entries
+
+    let bom = undefined
+    if(this.state.appState.mode !== "viewer"){
+      console.log("bom stuff")
+      bom=  (
+        <BomView 
+          fieldNames={fieldNames} 
+          sortableFields={sortableFields}
+          entries={entries} 
+          selectedEntries={self.state.bom.selectedEntries}
+          selectBomEntries$={selectBomEntries$}
+          > 
+        </BomView> 
+      )
+    }
 
     //console.log("selectedAnnots",selectedAnnots )//,selectIds,this.state.annotationsData)
     return (
@@ -1087,7 +1107,9 @@ export default class App extends React.Component {
 
           <ThreeJs ref="glview" 
             activeTool={this.state.appState.activeTool} 
-            showAnnotations={this.state.appState.annotations.show}/>
+            showAnnotations={this.state.appState.annotations.show}
+            gridSettings={this.state.appState.grid}
+            cameraSettings={this.state.appState.camera}/> 
 
           <div ref="testArea" style={testAreaStyle} className="toolBarBottom">
             <EntityInfos 
@@ -1097,14 +1119,11 @@ export default class App extends React.Component {
             />
           </div>
 
+          <SettingsView settings={this.state.appState}>
 
-          <BomView 
-            fieldNames={fieldNames} 
-            sortableFields={sortableFields}
-            entries={entries} 
-            selectedEntries={self.state.bom.selectedEntries}
-            selectBomEntries$={selectBomEntries$}
-            > </BomView> 
+          </SettingsView>
+
+            {bom}
 
           <ContextMenu settings={contextmenuSettings} />
 

@@ -37,6 +37,12 @@ let state = {
 
     annotations:{
       show:true,
+    },
+    grid:{
+      show:false,
+    },
+    camera:{
+      autoRotate:false
     }
   },
 

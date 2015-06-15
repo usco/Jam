@@ -248,3 +248,32 @@
   right: 0px;
   top:240px;
 }
+
+
+/*//////////////////*/
+.settings{
+  position: absolute;
+  right: 20px;
+  top:30px;
+  background: rgb(247, 247, 247); /*white;*/
+}
+
+.settings .settingEntry{
+  padding: 6px;
+}
+
+.icon{
+  width: 24px;
+  height: 24px;
+  padding: 4px;
+  /*stroke: #60C4F8;
+  stroke-width: 2;*/
+}
+
+.icon path{
+  fill:#dddddd;
+}
+
+.icon:hover path{
+  fill:#60C4F8;
+}

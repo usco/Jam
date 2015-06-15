@@ -23,11 +23,15 @@ const defaults = {//TODO: each component should "register its settings"
   camActive:false,
   fullscreen:false,
 
+  camera:{
+    autorotate:false,
+  },
+
   annotations:{
     show:true,
   },
   grid:{
-    show:false,
+    show:true,
     size:""
   },
   bom:{
@@ -55,7 +59,7 @@ function makeModifications(intent){
 
     let setSetting$ = intent.setSetting$
       .map((data) => (appData) => {
-        //log.info("updating app",appData)
+        //log.info("updating app",appData,"with",data)
 
         let {path,value} = data
         //FIXME:should be more immutable friendly
@@ -101,6 +105,7 @@ function model(intent, source) {
   return modification$
     .merge(source$)
     .scan((appData, modFn) => modFn(appData))//combine existing data with new one
+    .startWith(defaults)
     .shareReplay(1)
 
 }
