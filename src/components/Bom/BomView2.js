@@ -17,14 +17,57 @@ function BomView(drivers, props) {
   //let fieldNames$ = drivers.get('props', 'fieldNames').startWith([])
   //let entries$    = drivers.get('props', 'entries').startWith([])
 
+  //interactions
+  let headerTaps$ = drivers.getEventSubject('onClickHeader')
+
   let fieldNames$      = props.get('fieldNames').startWith([])
   let entries$         = props.get('entries').startWith([])
   let selectedEntries$ = props.get('selectedEntries').startWith([])
   let sortableFields$  = props.get('sortableFields').startWith([])
 
+  //observable of current sorting field (what field do we sort by)
+  let sortFieldName$ = headerTaps$
+    .map(e => e.currentTarget.dataset.name)
+    .startWith(undefined)
+    //.filter( name => sortableFields.indexOf(name)>1 )
 
-  entries$ = entries$.map( x => x.sort() )
+  //ascending, descending, neutral 
+  let sortablesDirection$ = headerTaps$
+    .map( e => undefined)
+    .scan(function (acc, x) { 
+      if(!acc) return true
+      return !acc
+    })
+    .startWith(undefined)
 
+  function sortBy(fieldName){
+    return function(a,b){
+      if (a[fieldName] > b[fieldName]) {
+        return 1
+      }
+      if (a[fieldName] < b[fieldName]) {
+        return -1
+      }
+      // a must be equal to b
+      return 0
+    }
+  }
+
+  entries$ = entries$
+    .combineLatest(sortFieldName$, sortablesDirection$, function(entries, sortFieldName, direction){
+      console.log("here", entries, sortFieldName)
+      if(!sortFieldName) return entries 
+
+      let output = entries.sort( sortBy(sortFieldName) )
+      if(direction!==undefined && direction === false ) {
+        output = output.reverse()
+      }
+
+      return output
+    })
+    //.map( x => x.sort(sortBy( ) ) )
+
+    
   /*
   //does not work for tr/ th ??
   let entryTaps$ = drivers.get(".bomEntry", "click").subscribe(function(data){
@@ -33,24 +76,11 @@ function BomView(drivers, props) {
   let headerTaps$ = drivers.get(".headerCell", "click").subscribe(function(data){
       console.log("headerCell",data.currentTarget.dataset.name)
     })
-
   //this works
    let bla$ = drivers.get(".btn.pause", "click").subscribe(function(data){
     console.log("oooh interactions",data)
   })
   */
-
-  /*
-  entries = entries.sort(function(a,b){
-        if (a.name > b.name) {
-          return 1
-        }
-        if (a.name < b.name) {
-          return -1
-        }
-        // a must be equal to b
-        return 0
-      })*/
 
   let entryTaps$ = drivers.getEventSubject('onClickEntry')
     .map( e => e.currentTarget.dataset.uuid )
@@ -58,30 +88,36 @@ function BomView(drivers, props) {
       console.log("cell",data)
       selectBomEntries$([data])
     })
-  let headerTaps$ = drivers.getEventSubject('onClickHeader').subscribe(function(data){
-      console.log("header",data.currentTarget.dataset.name)
-    })
-  let activeSorter$ = null
-
-  /* headerTaps$ = headerTaps$
-      .filter( name => sortableFields.indexOf(name)>1 )
-
-    entries$ = Observable
-      .just(entries)
-      .startWith([])
-      .map( x => x.sort )*/
 
   let vtree$ = 
     Rx.Observable.combineLatest(
       fieldNames$,
       entries$,
       selectedEntries$,
-      function(fieldNames, entries, selectedEntries){
-        console.log("here in BomView", fieldNames, entries)
+      sortFieldName$,
+      sortablesDirection$,
 
-        let headers = fieldNames.map( name => <th className="headerCell" data-name={name} onClick={drivers.getEventSubject('onClickHeader').onEvent} > {name} </th> )
+      function(fieldNames, entries, selectedEntries, sortFieldName, direction){
+
+        let headers = fieldNames.map( function(name){
+          let sortArrow = undefined
+
+          if( direction !== undefined && sortFieldName === name)
+          {
+            if(direction){
+              sortArrow = <span className="directionArrow"> &#x25B2;</span>
+            }else{
+              sortArrow = <span className="directionArrow"> &#x25BC;</span>
+            }
+          }
+          return (
+            <th className="headerCell" data-name={name} onClick={drivers.getEventSubject('onClickHeader').onEvent} > 
+              {name} {sortArrow} 
+            </th> 
+          )
+        })
+
         let rows    = entries.map( function(row, index){
-
           let cells = fieldNames.map(function(name){         
             return(<td className="bomEntry cell">{row[name]}</td>)
           })
@@ -101,38 +137,28 @@ function BomView(drivers, props) {
           )
         })
 
-
         return (
           <div className="bom">
-            <div>
-            <button className="btn btn-default pause" >Pause</button>
-            </div>
-          <table >
-            
-            <thead>
-              <tr>
-                {headers}
-              </tr>
-            </thead>
-            <tbody>
-              {rows}
-            </tbody>
-          </table> 
+            <table >
+              <thead>
+                <tr>
+                  {headers}
+                </tr>
+              </thead>
+              <tbody>
+                {rows}
+              </tbody>
+            </table> 
           </div>
         )
       }
     )
     
-  
   return {
     view: vtree$,
     events: {
-      /*destroy: destroy$,
-      changeColor: changeColor$,
-      changeWidth: changeWidth$*/
     }
   }
-  
 }
 
 BomView = Cycle.createReactClass('CounterText',BomView)

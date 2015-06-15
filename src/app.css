@@ -239,6 +239,10 @@
    font-weight: bold;
 }
 
+.bom .directionArrow{
+  font-size: 0.6em;
+}
+
 .foo{
     position: absolute;
   right: 0px;
