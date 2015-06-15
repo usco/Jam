@@ -93,7 +93,7 @@ class ThreeJs extends React.Component{
           zoomSpeed:2.0,
           autoRotate:{
             enabled:false,
-            speed:4.0
+            speed:0.2
           },
           _enabled:true,
           _active:true,
@@ -171,6 +171,7 @@ class ThreeJs extends React.Component{
     //TODO: for testing, remove
     //this._makeTestStuff()
     let grid = new LabeledGrid(200,200,10,this.config.cameras[0].up)
+    this.grid = grid
     //this.scene.add(grid)
 
     let shadowPlane = new ShadowPlane(2000,2000,null,this.config.cameras[0].up)
@@ -375,9 +376,14 @@ class ThreeJs extends React.Component{
   }
   
   shouldComponentUpdate(nextProps){
-    //console.log("nextProps",nextProps)
-    //console.log("gne",this.props.cubeRot)
-    //this.cube.rotation.z = this.props.cubeRot.rot.z
+    console.log("nextProps",nextProps)
+
+    this.scene.remove(this.grid)
+    if(nextProps.gridSettings.show){
+      this.scene.add(this.grid)
+    }
+
+    this.controls.autoRotate = nextProps.cameraSettings.autoRotate
     return false
   }
 
