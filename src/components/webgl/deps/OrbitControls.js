@@ -259,7 +259,7 @@ var OrbitControls = function ( object, domElement, upVector ) {
 
           if ( this.autoRotate ) {
               this.rotateLeft( getAutoRotationAngle() );
-              curThetaDelta = thetaDelta;
+              //curThetaDelta = thetaDelta;
           }
 
           theta += curThetaDelta;
