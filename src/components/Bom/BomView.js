@@ -1,18 +1,13 @@
-//import Cycle from "cyclejs"
-//let {Rx} = Cycle
-//let Observable = Rx.Observable
-
-
-let Cycle = require('cycle-react')
+import Cycle from 'cycle-react'
 let React = Cycle.React
-let Rx = Cycle.Rx
+let {Rx} = Cycle
+
 import Class from "classnames"
 import {selectBomEntries$, selectBomEntries2$} from '../../actions/bomActions'
 //stop-gap, not sure this is needed
 
 
 function BomView(drivers, props) {
-  console.log("drivers",drivers,"props",props)
   //let removeEntry$ = drivers.get('DOM', '.remove-btn', 'click')
   //let fieldNames$ = drivers.get('props', 'fieldNames').startWith([])
   //let entries$    = drivers.get('props', 'entries').startWith([])
@@ -55,7 +50,6 @@ function BomView(drivers, props) {
 
   entries$ = entries$
     .combineLatest(sortFieldName$, sortablesDirection$, function(entries, sortFieldName, direction){
-      console.log("here", entries, sortFieldName)
       if(!sortFieldName) return entries 
 
       let output = entries.sort( sortBy(sortFieldName) )
@@ -85,7 +79,6 @@ function BomView(drivers, props) {
   let entryTaps$ = drivers.getEventSubject('onClickEntry')
     .map( e => e.currentTarget.dataset.uuid )
     .subscribe(function(data){
-      console.log("cell",data)
       selectBomEntries$([data])
     })
 
@@ -161,5 +154,5 @@ function BomView(drivers, props) {
   }
 }
 
-BomView = Cycle.createReactClass('CounterText',BomView)
+BomView = Cycle.createReactClass('BomView',BomView)
 export default BomView
