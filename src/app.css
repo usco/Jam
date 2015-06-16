@@ -222,7 +222,7 @@
 .bom{
   position: absolute;
   right: 0px;
-  top:40px;
+  top:140px;
 }
 
 .bom tr:hover
@@ -269,7 +269,10 @@
   border: 1px solid #dddddd;
 
   font-size: 0.8em;
-  display: inline-flex;
+  position: absolute;
+  right: 0px;
+  top: 30px;
+  width: 200px;
 }
 
 .icon{
@@ -303,12 +306,12 @@
 
 
 
-button{
+.settings button{
   background: white;
   border: none;
   margin: 0;
   padding: 0;
 }
 
-button:focus {outline:0;}
-button:focus path{fill:#60C4F8;}
+.settings button:focus {outline:0;}
+.settings button:focus path{fill:#60C4F8;}
