@@ -266,14 +266,20 @@
 
 .settings .content{
   background:  white;/*rgb(247, 247, 247); */
-  border: 1px solid #dddddd;
-
   font-size: 0.8em;
   position: absolute;
   right: 0px;
   top: 30px;
   width: 200px;
+
+      border: 1px solid white;
+
 }
+
+.settings .toggled{
+  border: 1px solid #dddddd !important;
+}
+
 
 .icon{
   width: 24px;
@@ -288,13 +294,18 @@
   display: block;
 }
 
-.settings #toggler>.icon{
+.settings .toggler{
+
+      border: 1px solid white;
+
+}
+
+/*.settings .toggler .toggled .icon{
   border-left: 1px solid #dddddd;
   border-top: 1px solid #dddddd;
   border-right: 1px solid #dddddd;
-
   border-bottom: 1px solid #dddddd;
-}
+}*/
 
 .icon path{
   fill:#dddddd;

@@ -70,6 +70,18 @@ function SettingsView(interactions, props) {
       return (!acc)
     })
     .startWith(false)
+
+
+  interactions.get(".settings","click")
+    //.do(e => e.preventDefault)
+    .subscribe(function(){
+      console.log("click inside settings")
+  })
+
+  Rx.Observable.fromEvent(document,'click')
+    .subscribe(function(){
+      console.log("clicked document")
+    })
     
   let vtree$ = Rx.Observable
     .combineLatest(
@@ -108,7 +120,7 @@ function SettingsView(interactions, props) {
 
         return(
          <div className="settings">
-          <button id="toggler" className="toggler">
+          <button id="toggler" className={Class("toggler", {toggled: toggled})} >
             <svg version="1.1" id="Cog" xmlns="http://www.w3.org/2000/svg"  x="0px" y="0px"
                  viewBox="0 0 20 20" enable-background="new 0 0 20 20" className="icon toggler">
               <path fill="#FFFFFF" d="M16.783,10c0-1.049,0.646-1.875,1.617-2.443c-0.176-0.584-0.407-1.145-0.692-1.672
@@ -123,7 +135,7 @@ function SettingsView(interactions, props) {
                 c2.018,0,3.652,1.637,3.652,3.654C13.652,12.018,12.018,13.652,10,13.652z"/>
               </svg>
           </button>
-          <section className="content">
+          <section className={Class("content", {toggled: toggled})}>
           {fields}
           </section>
         </div>)
