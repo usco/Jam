@@ -562,6 +562,10 @@ export default class App extends React.Component {
         function(data){
         console.log("updated mesh registry, adding instance",data)
 
+        //FIXME: hack "centerMesh" like method, as centerMesh centers a mesh that gets "discarded" in a way
+        let h = data.bbox.max[2]  - data.bbox.min[2]
+        console.log("Z OFFSET ", h)
+
         let partInstance =
         {
             name: data.name,
@@ -571,7 +575,7 @@ export default class App extends React.Component {
             pos: [
                 0,
                 0,
-                0
+                h/2
             ],
             rot: [
                 0,
@@ -585,6 +589,7 @@ export default class App extends React.Component {
             ],
             bbox:data.bbox
         }
+
         addEntityInstances$(partInstance)
       })
 
