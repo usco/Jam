@@ -346,8 +346,7 @@ export function observableDragAndDrop(targetEl){
   dragOvers$.subscribe(preventDefault)
 
   drops$
-    .map((event)=>{ event.dataTransfer.dropEffect = 'copy'
-      return event})
+    .map(function(event){ console.log("here in drag & drop");return event})
     .share()
 
   let urls$ = drops$
@@ -364,7 +363,7 @@ export function observableDragAndDrop(targetEl){
     .map( (event)=>event.dataTransfer.files )
     .filter(exists)
     .map( (data)=>[].slice.call(data))
-    .map( (data) => formatData(data,"files") )
+    .map( (data) => formatData(data,"file") )
 
   return Observable.merge(
     urls$,
