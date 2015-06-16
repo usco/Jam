@@ -5,7 +5,34 @@ design$
   .debounce(1000)
   //only save when design is set to persistent
   .filter(design=>design._persistent && (design.uri || design.name) && design._doSave)
-  
+
+
+design$
+  .distinctUntilChanged()//only save if something ACTUALLY changed
+  //.skip(1) // we don't care about the "initial" state
+  .debounce(1000)
+  //only save when design is set to persistent
+  .filter(design=>design._persistent && (design.uri || design.name) && design._doSave)
+  //staggered approach , do not save the first times
+  .bufferWithCount(2,1)
+  .map(value => value[1])
+  .map(self.kernel.saveDesignMeta.bind(self.kernel))
+  .subscribe(function(def){
+    def.promise.then(function(result){
+      //FIXME: hack for now
+      console.log("save result",result)
+      let serverResp =  JSON.parse(result)
+      let persistentUri = self.kernel.dataApi.designsUri+"/"+serverResp.uuid
+
+      localStorage.setItem("jam!-lastDesignUri",persistentUri)
+      setDesignData$({uri:persistentUri})
+    })
+  })
+  /*.subscribe(function(res){
+    console.log("experimental save result",res)
+  })*/      
+
+
 
 design$
   .pluck("_persistent")
