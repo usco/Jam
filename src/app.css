@@ -244,7 +244,7 @@
 }
 
 .foo{
-    position: absolute;
+  position: absolute;
   right: 0px;
   top:240px;
 }
@@ -254,12 +254,22 @@
 .settings{
   position: absolute;
   right: 20px;
-  top:30px;
-  background: rgb(247, 247, 247); /*white;*/
+  top:10px;
+  background: white;
 }
+
 
 .settings .settingEntry{
   padding: 6px;
+  /*border-bottom: 1px solid #e0e0e0;*/
+}
+
+.settings .content{
+  background:  white;/*rgb(247, 247, 247); */
+  border: 1px solid #dddddd;
+
+  font-size: 0.8em;
+  display: inline-flex;
 }
 
 .icon{
@@ -270,6 +280,19 @@
   stroke-width: 2;*/
 }
 
+.settings #toggler{
+  float: right;
+  display: block;
+}
+
+.settings #toggler>.icon{
+  border-left: 1px solid #dddddd;
+  border-top: 1px solid #dddddd;
+  border-right: 1px solid #dddddd;
+
+  border-bottom: 1px solid #dddddd;
+}
+
 .icon path{
   fill:#dddddd;
 }
@@ -277,3 +300,15 @@
 .icon:hover path{
   fill:#60C4F8;
 }
+
+
+
+button{
+  background: white;
+  border: none;
+  margin: 0;
+  padding: 0;
+}
+
+button:focus {outline:0;}
+button:focus path{fill:#60C4F8;}

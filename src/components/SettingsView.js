@@ -64,15 +64,21 @@ function SettingsView(interactions, props) {
     })
 
 
-  //input
-
+  let toggled$ = interactions.get(".toggler", "click")
+    .map(e => true)
+    .scan(function(acc,n){
+      return (!acc)
+    })
+    .startWith(false)
+    
   let vtree$ = Rx.Observable
     .combineLatest(
       settings$,
       showGrid$,
       showAnnot$,
       autoRotate$,
-      function(settings ,showGrid, showAnnot, autoRotate){
+      toggled$,
+      function(settings ,showGrid, showAnnot, autoRotate, toggled){
         let fields = undefined
         //console.log("settings",settings)
         
@@ -80,26 +86,31 @@ function SettingsView(interactions, props) {
           .map(function(){
             <input type="checkbox" >Foo </input> 
           })*/
-        fields = (
-          <div>
-            <section className="settingEntry">
-              <input className="showGrid" type="checkbox" checked={showGrid}> </input> <span> Show grid </span> 
-            </section>
-            <section className="settingEntry">
-              <input className="showAnnot" type="checkbox" checked={showAnnot}> </input> <span> Show annotations </span> 
-            </section>
-            <section className="settingEntry">
-              <input className="autoRotate" type="checkbox" checked={autoRotate}> </input> <span> Auto rotate camera </span> 
-            </section>
-          </div>
-        )
+        if(toggled)
+        {
+          fields = (
+            <div>
+              <section className="settingEntry">
+                <input className="showGrid" type="checkbox" id="showGrid" checked={showGrid}> </input> 
+                <label for="showGrid"> Show grid </label>
+              </section>
+              <section className="settingEntry">
+                <input className="showAnnot" type="checkbox" id="showAnnot" checked={showAnnot}> </input> 
+                <label for="showAnnot"> Show annotations </label>
+              </section>
+              <section className="settingEntry">
+                <input className="autoRotate" type="checkbox" id="autoRotate" checked={autoRotate}> </input>
+                <label for="autoRotate"> Auto rotate camera </label>
+              </section>
+            </div>
+          )
+        }
 
         return(
          <div className="settings">
-          <div>
-
+          <button id="toggler" className="toggler">
             <svg version="1.1" id="Cog" xmlns="http://www.w3.org/2000/svg"  x="0px" y="0px"
-                 viewBox="0 0 20 20" enable-background="new 0 0 20 20" className="icon">
+                 viewBox="0 0 20 20" enable-background="new 0 0 20 20" className="icon toggler">
               <path fill="#FFFFFF" d="M16.783,10c0-1.049,0.646-1.875,1.617-2.443c-0.176-0.584-0.407-1.145-0.692-1.672
                 c-1.089,0.285-1.97-0.141-2.711-0.883c-0.741-0.74-0.968-1.621-0.683-2.711c-0.527-0.285-1.088-0.518-1.672-0.691
                 C12.074,2.57,11.047,3.215,10,3.215c-1.048,0-2.074-0.645-2.643-1.615C6.772,1.773,6.213,2.006,5.686,2.291
@@ -111,8 +122,10 @@ function SettingsView(interactions, props) {
                 C17.429,11.873,16.783,11.047,16.783,10z M10,13.652c-2.018,0-3.653-1.635-3.653-3.652c0-2.018,1.636-3.654,3.653-3.654
                 c2.018,0,3.652,1.637,3.652,3.654C13.652,12.018,12.018,13.652,10,13.652z"/>
               </svg>
-          </div>
+          </button>
+          <section className="content">
           {fields}
+          </section>
         </div>)
       } 
     )
