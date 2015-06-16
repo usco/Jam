@@ -26,6 +26,59 @@ const defaults = {
   entitiesById:{}
 }
 
+/*
+const partTemplate = {
+      name: data.name,
+      iuid: generateUUID(),
+      typeUid: undefined,
+      color: "#07a9ff",
+      pos: [
+          0,
+          0,
+          0,
+      ],
+      rot: [
+          0,
+          0,
+          0
+      ],
+      sca: [
+          1,
+          1,
+          1
+      ],
+      bbox:{
+        min:[0,0,0],
+        max:[0,0,0]
+      }
+  }
+*/
+
+
+///helper methods
+
+function duplicateEntity( originalEntity ){
+  log.info("duplicating entity", originalEntity)
+
+  //let entityType = this.partRegistry.partTypes[ originalEntity.typeUid ]
+  //let dupe       = this.partRegistry.createTypeInstance( entityType )
+
+  //FIXME: do this correctly
+  let doNotCopy = ["iuid","name"]
+  let onlyCopy = ["pos","rot","sca","color"]
+
+  for(let key in originalEntity ){
+    if( onlyCopy.indexOf( key ) > -1 ){
+      dupe[key] = JSON.parse(JSON.stringify(originalEntity[key])) //Object.assign([], originalEntity[key] )
+    }
+  }
+  //FIXME : needs to work with all entity types
+  //dupe.typeName + "" + ( this.partRegistry.partTypeInstances[ dupe.typeUid ].length - 1)
+  dupe.name = originalEntity.name + "" //+ ( this.partRegistry.partTypeInstances[ dupe.typeUid ].length - 1)
+  
+  return dupe
+}
+
 
 //////
 
@@ -113,8 +166,23 @@ function makeModification$(intent){
   /*create duplicates of given entities*/
   let _duplicateEntities$  = intent.duplicateEntities$
     .map((sources) => (entitiesData) => {
-
+      log.info("duplicating entity instances", sources)
       let dupes = []
+
+      /*duplicateEntities( instances ){
+    log.info("duplicating entity instances", instances)
+    let self  = this
+    let dupes = []
+
+        instances.map(function(instance){
+          let duplicate = self.kernel.duplicateEntity(instance)
+          dupes.push( duplicate )
+          //FIXME: this is redundant  
+          addEntityInstances$(duplicate)
+        })
+
+        return dupes
+      }*/
 
       sources.map(function(instance){
         let duplicate = self.kernel.duplicateEntity(instance)
