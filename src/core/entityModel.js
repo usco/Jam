@@ -20,10 +20,9 @@ let merge = Rx.Observable.merge
 ///defaults, what else ?
 const defaults = {
   instances:[],
-  types:{},
   selectedEntitiesIds:[],
 
-  //secondary storage of instances, for faster/simpler access
+  //secondary storage of instances, for (flat) faster/simpler access
   entitiesById:{}
 }
 
@@ -31,19 +30,6 @@ const defaults = {
 //////
 
 function makeModification$(intent){
-
-  /*register a new entity type*/
-  let _addEntityType$ = intent.addEntityType$ 
-    .map((typeData) => (entitiesData) => {
-      //log.info("adding entity type", type)
-      let {type,typeUid} = typeData
-
-      let entityTypes = entitiesData.types
-      entityTypes[typeUid] = type
-
-      //TODO: should it be part of the app's history 
-      return entitiesData
-    })
 
   /*TODO: implement*/
   /*let addEntityInstanceTo$ = intent.addEntityInstanceTo$
@@ -173,7 +159,6 @@ function makeModification$(intent){
     })*/
 
   return merge(
-    _addEntityType$,
     _addEntities$,
     _updateEntities$,
     _deleteEntities$,

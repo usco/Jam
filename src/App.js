@@ -49,7 +49,7 @@ import ContextMenu from './components/ContextMenu'
 
 
 ////TESTING
-import {selectEntities$,addEntityType$,addEntityInstances$, setEntityData$, deleteEntities$, duplicateEntities$, deleteAllEntities$ } from './actions/entityActions'
+import {selectEntities$,addEntityInstances$, setEntityData$, deleteEntities$, duplicateEntities$, deleteAllEntities$ } from './actions/entityActions'
 import {setToTranslateMode$, setToRotateMode$, setToScaleMode$} from './actions/transformActions'
 import {showContextMenu$, hideContextMenu$, undo$, redo$, setDesignAsPersistent$, clearActiveTool$,setSetting$} from './actions/appActions'
 import {newDesign$, setDesignData$} from './actions/designActions'
@@ -318,7 +318,6 @@ export default class App extends React.Component {
     let entities$ = require("./core/entityModel")
 
     entities$ = entities$({
-        addEntityType$,
         addEntities$:addEntityInstances$,
         setEntityData$, 
         deleteEntities$, 
@@ -502,7 +501,9 @@ export default class App extends React.Component {
 
         let iuids = entities.selectedEntitiesIds
         let selections = iuids.map(function(iuid){
-          let typeUid = entities.entitiesById[iuid].typeUid
+          let entity  = entities.entitiesById[iuid]
+          let typeUid =  undefined
+          if(entity) typeUid = entity.typeUid
           return typeUid//bom.byId[typeUid]
         })
         //.filter( bom.selectedEntries.indexOf(typeUid)  )
@@ -564,7 +565,6 @@ export default class App extends React.Component {
 
         //FIXME: hack "centerMesh" like method, as centerMesh centers a mesh that gets "discarded" in a way
         let h = data.bbox.max[2]  - data.bbox.min[2]
-        console.log("Z OFFSET ", h)
 
         let partInstance =
         {
