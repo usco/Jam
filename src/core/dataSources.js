@@ -4,10 +4,11 @@ let merge = Rx.Observable.merge
 import {observableDragAndDrop} from '../interactions/interactions'
 import {first,toggleCursor,getEntity,hasEntity,extractMeshTransforms, getExtension} from '../utils/otherUtils'
 
+import meshExtensions from './extensions'
 
 /////////////
 //deal with data sources
-let meshExtensions = ["stl","amf","obj","ctm","ply"]
+
 
 //only load meshes for resources that are ...mesh files
 function validMeshExtension(entry){
