@@ -1,7 +1,9 @@
-import {observableDragAndDrop} from '../interactions/interactions'
 import Rx from 'rx'
 let Observable= Rx.Observable
 let merge = Rx.Observable.merge
+import {observableDragAndDrop} from '../interactions/interactions'
+import {first,toggleCursor,getEntity,hasEntity,extractMeshTransforms, getExtension} from '../utils/otherUtils'
+
 
 /////////////
 //deal with data sources
@@ -9,7 +11,7 @@ let meshExtensions = ["stl","amf","obj","ctm","ply"]
 
 //only load meshes for resources that are ...mesh files
 function validMeshExtension(entry){
-  return meshExtensions.indexOf(getExtension(entry.name)) > -1
+  return meshExtensions.indexOf(getExtension(entry)) > -1
 }
 
 
@@ -19,16 +21,22 @@ export function getDataSources ( container ){
   //other sources (url, localstorage)
   let urlSources = require('./urlSources')
 
-  let dndMeshUris$  = dnds$.filter(e=>e.type ==="file").pluck("data").flatMap(Observable.fromArray)
+  let dndMeshFiles$  = dnds$.filter(e=>e.type ==="file").pluck("data").flatMap(Observable.fromArray)
+    .filter(file => validMeshExtension(file.name) )
+
+  let dndMeshUris$    = dnds$.filter(e=> (e.type === "url") ).pluck("data").flatMap(Observable.fromArray)
+    .filter(file => validMeshExtension(url) )
 
   //meshSources is either url or file (direct data)
   let meshSources$ = merge(
     urlSources.meshUris$,
+    dndMeshFiles$,
     dndMeshUris$
   )
 
   //FIXME these are technically untrue, but still should work
-  let dndDesignUris$ = dnds$.filter(e=>e.type === "url").pluck("data").flatMap(Observable.fromArray)
+  let dndDesignUris$ = dnds$.filter(e=> (e.type === "url" || e.type==="text") ).pluck("data").flatMap(Observable.fromArray)
+    //.filter(url => validMeshExtension(url) )
 
   let designSources$ = merge(
     urlSources.designUri$,
