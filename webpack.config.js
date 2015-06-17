@@ -68,7 +68,7 @@ var config= {
   output: {
     path: path.join(__dirname, 'dist'),
     filename: 'bundle.js',
-    publicPath: '/'+'dist'+'/'
+    publicPath: '/dist/' //'/'+'dist'+'/'
   },
   plugins: [
     //new webpack.NoErrorsPlugin(),
@@ -78,7 +78,7 @@ var config= {
     loaders: [
       { test: /\.json$/,   loader: "json-loader" },
       { test: /-worker*\.js$/, loader: "worker-loader",include : pathsToInclude},//if any module does "require(XXX-worker)" it converts to a web worker
-      { test: /\.js?$/,loaders: ['react-hot', 'babel?experimental&optional=runtime'],include : pathsToInclude},
+      { test: /\.js?$/, loaders: ['react-hot', 'babel?experimental&optional=runtime'],include : pathsToInclude},
       { test: /\.css$/, loader: "style-loader!css-loader" }
     ],
     noParse: /\.min\.js/
@@ -107,6 +107,8 @@ if (production) {
   config.debug = false
   config.profile = false
   config.output.pathInfo = false
+  config.output.publicPath = './dist/'//withouth this, issues with webworker paths
+
   //config.devtool = "#source-map";
   //config.output.filename = "[name].min.js"//"[name].[hash].min.js"
   //config.output.chunkFilename = '[id].js'
