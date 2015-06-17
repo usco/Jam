@@ -56,7 +56,6 @@ function BomView(drivers, props) {
       if(direction!==undefined && direction === false ) {
         output = output.reverse()
       }
-
       return output
     })
     //.map( x => x.sort(sortBy( ) ) )

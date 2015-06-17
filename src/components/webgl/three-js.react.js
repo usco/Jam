@@ -376,7 +376,6 @@ class ThreeJs extends React.Component{
   }
   
   shouldComponentUpdate(nextProps){
-    console.log("nextProps",nextProps)
 
     this.scene.remove(this.grid)
     if(nextProps.gridSettings.show){
