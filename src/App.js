@@ -98,10 +98,6 @@ export default class App extends React.Component {
     this.kernel.dataApi.store = this.assetManager.stores["xhr"]
     this.kernel.assetManager  = this.assetManager
 
-    //test
-    //this.kernel.testStuff()
-    //throw new Error("AAAI")
-
     let self = this
     let oldSetState = this.setState.bind(this)
 
@@ -189,6 +185,23 @@ export default class App extends React.Component {
     ///////////
     //setup key bindings
     this.setupKeyboard()
+    //experiment with rxjs
+    let source = Rx.Observable.fromEvent(document, 'keydown')
+
+      /*.map( e => e.altKey )
+      .map( e => e.ctrlKey )
+      .map( e => e.metaKey )*/
+      
+      .map( e => String.fromCharCode( e.which) )
+      .scan(function(acc, newKey){
+
+        return acc + newKey//.push(newKey)
+      })
+      .takeUntil(Rx.Observable.fromEvent(document, 'keyup'))
+      .repeat()
+      .subscribe(function(keys){
+        console.log("keyEvent", keys )
+      })
     ///////////
 
     /////////
@@ -220,6 +233,13 @@ export default class App extends React.Component {
         annotationsData:annotations
       })
     }
+
+    function updateBom(bom){
+      //hack, obviously
+      self.setState({
+        bom:bom
+      })
+    }
     ////////
 
     let designLData$ = require('./core/designLocalSource')//local storage etc
@@ -240,32 +260,6 @@ export default class App extends React.Component {
         setTimeout(self._tempForceDataUpdate.bind(self), 10)
       })
 
-
-    let prev = {}
-    design$
-      .distinctUntilChanged()//only save if something ACTUALLY changed
-      //.skip(1) // we don't care about the "initial" state
-      .debounce(1000)
-      //only save when design is set to persistent
-      .filter(design=>design._persistent && (design.uri || design.name) && design._doSave)
-      //staggered approach , do not save the first times
-      .bufferWithCount(2,1)
-      .map(value => value[1])
-      .map(self.kernel.saveDesignMeta.bind(self.kernel))
-      .subscribe(function(def){
-        def.promise.then(function(result){
-          //FIXME: hack for now
-          console.log("save result",result)
-          let serverResp =  JSON.parse(result)
-          let persistentUri = self.kernel.dataApi.designsUri+"/"+serverResp.uuid
-
-          localStorage.setItem("jam!-lastDesignUri",persistentUri)
-          setDesignData$({uri:persistentUri})
-        })
-      })
-      /*.subscribe(function(res){
-        console.log("experimental save result",res)
-      })*/
 
 
     //when creating a new design
@@ -288,7 +282,7 @@ export default class App extends React.Component {
         setWindowPathAndTitle()
       })
 
-     design$
+    design$
       .pluck("uri")
       .distinctUntilChanged()
       .subscribe(function(designsUri){
@@ -346,7 +340,6 @@ export default class App extends React.Component {
 
     appState$
       .subscribe(function(data){
-        console.log("setting app state")
         updateAppState(data)
         setTimeout(self._tempForceDataUpdate.bind(self), 10)
       })
@@ -400,12 +393,7 @@ export default class App extends React.Component {
     ///////////////////
     //data sources
     let dataSources = require('./core/dataSources').getDataSources
-    let {meshSources$, designSources$}= dataSources(container)
-
-    /*meshSources$.subscribe(function(data){
-      console.log("got some mesh data")
-    })*/
-   
+    let {meshSources$, designSources$} = dataSources(container)
 
     //experimental 
     let res$ = meshSources$
@@ -441,8 +429,6 @@ export default class App extends React.Component {
       selectBomEntries2$:selectBomEntries2$
     })
 
-
-
     //TODO: deal with loading
     /*.subscribe(
     function(uri){
@@ -466,55 +452,8 @@ export default class App extends React.Component {
       return Array.prototype.concat.apply([], this.map(lambda)) 
     }
 
-    //selection bomentry => instances
-    let selectInstsFromBom$ = 
-      selectBomEntries$
-      .withLatestFrom(bom$,(e,bom)=>bom)
-      .map( bom => bom.selectedEntries)
-      .withLatestFrom(entities$,function(typeUids,entities){
-        //fixme use flat data structure (instances will not be)
-        let selections = typeUids.flatMap(function(typeUid){
-          return entities.instances.filter( i => i.typeUid === typeUid )//.map( i => i.iuid )
-        })
-        
-        console.log("selecting entities from bom", selections)
-        return selections
-      })   
-      .subscribe(function(data){
-        selectEntities$(data)
-      })
-
-    //selection instances => bom entry
-    let selectsBomFromInsts$ = 
-      selectEntities$
-      .withLatestFrom(entities$,(e,entities)=>entities)
-      //entities$
-      //.map( entities => entities.selectedEntitiesIds)
-      .withLatestFrom(bom$,function(entities,bom){
-
-        let iuids = entities.selectedEntitiesIds
-        let selections = iuids.map(function(iuid){
-          let entity  = entities.entitiesById[iuid]
-          let typeUid =  undefined
-          if(entity) typeUid = entity.typeUid
-          return typeUid//bom.byId[typeUid]
-        })
-        //.filter( bom.selectedEntries.indexOf(typeUid)  )
-        //GUARD !!
-        //if(selections.sort() === )
-        console.log("selecting bom entries from entities", selections)
-        return selections
-      })
-      .subscribe(function(data){
-        selectBomEntries2$(data)
-      })
-
     bom$.subscribe(function(bom){
-      console.log("updated bom ",bom)
-      //hack, obviously
-      self.setState({
-        bom:bom
-      })
+      updateBom(bom)
     })
 
     //this one takes care of adding templatemeshes
@@ -525,9 +464,6 @@ export default class App extends React.Component {
       .subscribe(function(data){
         console.log("templatemeshes",data)
       })
-
-
-    
 
     //we observe changes to partTypes to add new instances
     //note : this should only be the case if we have either
@@ -582,8 +518,14 @@ export default class App extends React.Component {
 
     showContextMenu$
       .skipUntil(appState$.filter(appState=>appState.mode !=="viewer"))//no context menu in viewer mode
-      .subscribe(function(requestData){
-      console.log("requestData",requestData)
+      /*.combineLatest(
+        $entities.pluck("selectedEntitiesIds"),
+        //$annotations.pluck("selectedAnnots"),
+        function(event, entityIds){
+          return {event, entityIds}
+        }
+      )*/
+      .subscribe(function(event){
 
       //TODO: refactor
       let selectedEntities = self.state.entities.selectedEntitiesIds
@@ -635,7 +577,7 @@ export default class App extends React.Component {
       self.setState({
         contextMenu:{
           active:active,
-          position:requestData.position,
+          position:event.position,
           //not sure about all these
           selectedEntities:selectedEntities,
           actions,
@@ -730,10 +672,7 @@ export default class App extends React.Component {
 
   }
 
-  unsetKeyboard(){
-    //keymaster.unbind('esc', this.onClose)
-  }
-
+ 
   /*temporary method to force 3d view updates*/
   _tempForceDataUpdate(){
     log.info("forcing re-render")
