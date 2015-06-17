@@ -42,7 +42,6 @@ export function Intent(interactions) {
   let entityTransforms$ = Observable
     .combineLatest(objectTransforms$,objectsId$,
       function(transforms,entity){
-        console.log("transforms",entity)
         return{
           entity:entity,
           pos:transforms.pos,
