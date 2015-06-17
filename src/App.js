@@ -32,8 +32,6 @@ import {first,toggleCursor,getEntity,hasEntity,extractMeshTransforms} from './ut
 import {clearCursor} from './utils/uiUtils'
 import {generateUUID} from 'usco-kernel2/src/utils'
 
-
-
 import keymaster from 'keymaster'
 
 import logger from './utils/log'
@@ -301,7 +299,6 @@ export default class App extends React.Component {
 
 
     //////////////
-   
 
     let annotations$ = require("./core/annotationModel")
 
@@ -320,11 +317,6 @@ export default class App extends React.Component {
         setTimeout(self._tempForceDataUpdate.bind(self), 10)
       })
     
-
-
-
-
-
     ///////////////////
     //data sources
     let dataSources = require('./core/dataSources').getDataSources
@@ -711,11 +703,6 @@ export default class App extends React.Component {
       })()
     }
 
-    let fooStreams = []
-    entries.map(function(entity){
-      //let stream = new Rx.Subject()
-    })
-
     glview.forceUpdate({
       data:entries, 
       mapper:mapper.bind(this), 
@@ -786,7 +773,7 @@ export default class App extends React.Component {
     let bom = undefined
     if(this.state.appState.mode !== "viewer"){
       bom=  (
-        <BomView 
+        <BomView ref="bom"
           fieldNames={fieldNames} 
           sortableFields={sortableFields}
           entries={entries} 

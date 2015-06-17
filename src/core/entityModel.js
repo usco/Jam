@@ -16,6 +16,7 @@ let fromEvent = Rx.Observable.fromEvent
 let Observable = Rx.Observable
 let merge = Rx.Observable.merge
 
+import {generateUUID} from 'usco-kernel2/src/utils'
 
 ///defaults, what else ?
 const defaults = {
@@ -57,29 +58,6 @@ const partTemplate = {
 
 ///helper methods
 
-function duplicateEntity( originalEntity ){
-  log.info("duplicating entity", originalEntity)
-
-  //let entityType = this.partRegistry.partTypes[ originalEntity.typeUid ]
-  //let dupe       = this.partRegistry.createTypeInstance( entityType )
-
-  //FIXME: do this correctly
-  let doNotCopy = ["iuid","name"]
-  let onlyCopy = ["pos","rot","sca","color"]
-
-  for(let key in originalEntity ){
-    if( onlyCopy.indexOf( key ) > -1 ){
-      dupe[key] = JSON.parse(JSON.stringify(originalEntity[key])) //Object.assign([], originalEntity[key] )
-    }
-  }
-  //FIXME : needs to work with all entity types
-  //dupe.typeName + "" + ( this.partRegistry.partTypeInstances[ dupe.typeUid ].length - 1)
-  dupe.name = originalEntity.name + "" //+ ( this.partRegistry.partTypeInstances[ dupe.typeUid ].length - 1)
-  
-  return dupe
-}
-
-
 //////
 
 function makeModification$(intent){
@@ -90,6 +68,38 @@ function makeModification$(intent){
     let parent = parent || null
 
   }*/
+
+  /*let _createEntityInstance$ = intent.createEntityInstance$
+    .map((data) => (entitiesData) => {
+
+      let h = data.bbox.max[2]  - data.bbox.min[2]
+
+        let partInstance =
+        {
+            name: data.name,
+            iuid: generateUUID(),
+            typeUid: data.typeUid,
+            color: "#07a9ff",
+            pos: [
+                0,
+                0,
+                h/2
+            ],
+            rot: [
+                0,
+                0,
+                0
+            ],
+            sca: [
+                1,
+                1,
+                1
+            ],
+            bbox:data.bbox
+        }
+
+    })*/
+
 
   /*save a new entity instance*/
   let _addEntities$ = intent.addEntities$
@@ -169,27 +179,26 @@ function makeModification$(intent){
       log.info("duplicating entity instances", sources)
       let dupes = []
 
-      /*duplicateEntities( instances ){
-    log.info("duplicating entity instances", instances)
-    let self  = this
-    let dupes = []
 
-        instances.map(function(instance){
-          let duplicate = self.kernel.duplicateEntity(instance)
-          dupes.push( duplicate )
-          //FIXME: this is redundant  
-          addEntityInstances$(duplicate)
-        })
+      function duplicate(original){
+        let doNotCopy = ["iuid","name"]
+        let onlyCopy = ["pos","rot","sca","color","typeUid"]
 
-        return dupes
-      }*/
+        let dupe = {
+          iuid:generateUUID()
+        }
+        for(let key in original ){
+          if( onlyCopy.indexOf( key ) > -1 ){
+            dupe[key] = JSON.parse(JSON.stringify(original[key])) //Object.assign([], originalEntity[key] )
+          }
+        }
+        //FIXME : needs to work with all entity types
+        //dupe.typeName + "" + ( this.partRegistry.partTypeInstances[ dupe.typeUid ].length - 1)
+        dupe.name = original.name + "" //+ ( this.partRegistry.partTypeInstances[ dupe.typeUid ].length - 1)
+        return dupe
+      }
+      dupes = sources.map(duplicate)
 
-      sources.map(function(instance){
-        let duplicate = self.kernel.duplicateEntity(instance)
-        dupes.push( duplicate )
-        //FIXME: this is redundant  
-        //self.addEntityInstance(duplicate)
-      })
       entitiesData.instances = entitiesData.instances.concat(dupes)
       return entitiesData
     })
