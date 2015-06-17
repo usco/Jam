@@ -25,9 +25,10 @@ import Rx from 'rx'
 Rx.config.longStackSupport = true
 let fromEvent = Rx.Observable.fromEvent
 let Observable = Rx.Observable
+import combineTemplate from 'rx.observable.combinetemplate'
 
 import {fetchUriParams,getUriQuery,setWindowPathAndTitle}  from './utils/urlUtils'
-import {first,toggleCursor,getEntity,hasEntity,extractMeshTransforms, getExtension} from './utils/otherUtils'
+import {first,toggleCursor,getEntity,hasEntity,extractMeshTransforms} from './utils/otherUtils'
 import {clearCursor} from './utils/uiUtils'
 import {generateUUID} from 'usco-kernel2/src/utils'
 
@@ -136,61 +137,15 @@ export default class App extends React.Component {
     let container = this.refs.wrapper.getDOMNode()
     let glview   = this.refs.glview
     
-    function attributesToArrays(attrs){
-      let output= {}
-      for(let key in attrs){
-        output[key] = attrs[key].toArray()
-      }
-      //special case for rotation
-      if("rot" in attrs)
-      {
-        output["rot"] = output["rot"].slice(0,3)
-      }
-      return output
-    }
-
-    function setEntityT(attrsAndEntity){
-      let [transforms, entity] = attrsAndEntity      
-      setEntityData$({entity:entity,
-        pos:transforms.pos,
-        rot:transforms.rot,
-        sca:transforms.sca
-      })
-
-      return attrsAndEntity
-    }
-
-    //debounce 16.666 ie 60 fps ?
-    let rawTranforms     =  glview.objectsTransform$
-      .debounce(16.6666)
-      .filter(hasEntity)
-      .share()
-
-    let objectTransforms = rawTranforms 
-      .map(extractMeshTransforms)
-      .map(attributesToArrays)
-      .take(1)
-
-    let objectsId = rawTranforms
-      .map(getEntity)
-      .take(1)
-
-    let test = Observable.forkJoin(
-      objectTransforms,
-      objectsId
-    )
-    .repeat()
-    .subscribe( setEntityT )
-
     ///////////
     //setup key bindings
     this.setupKeyboard()
     //experiment with rxjs
-    let source = Rx.Observable.fromEvent(document, 'keydown')
+    /*let source = Rx.Observable.fromEvent(document, 'keydown')
 
-      /*.map( e => e.altKey )
+      .map( e => e.altKey )
       .map( e => e.ctrlKey )
-      .map( e => e.metaKey )*/
+      .map( e => e.metaKey )
       
       .map( e => String.fromCharCode( e.which) )
       .scan(function(acc, newKey){
@@ -201,7 +156,7 @@ export default class App extends React.Component {
       .repeat()
       .subscribe(function(keys){
         console.log("keyEvent", keys )
-      })
+      })*/
     ///////////
 
     /////////
@@ -219,21 +174,18 @@ export default class App extends React.Component {
         entities:entities
       })
     }
-
     function updateAppState(data){
       //console.log("updating app state",data)
         self.setState({
           appState:data
       },null,false)
     }
-
     function updateAnnotations(annotations){
       //console.log("updating annotations")
       self.setState({
         annotationsData:annotations
       })
     }
-
     function updateBom(bom){
       //hack, obviously
       self.setState({
@@ -259,8 +211,6 @@ export default class App extends React.Component {
         updateDesign(data)
         setTimeout(self._tempForceDataUpdate.bind(self), 10)
       })
-
-
 
     //when creating a new design
     design$
@@ -298,8 +248,6 @@ export default class App extends React.Component {
       })
     
     ///////////
-
-   
 
     let entities$ = require("./core/entityModel")
 
@@ -358,6 +306,7 @@ export default class App extends React.Component {
         }
       })
 
+
     //////////////
    
 
@@ -377,18 +326,11 @@ export default class App extends React.Component {
         updateAnnotations(data)
         setTimeout(self._tempForceDataUpdate.bind(self), 10)
       })
+    
 
-    ///////////////
-    let selectedMeshes$ = glview.selectedMeshes$
-      .defaultIfEmpty([])
-      //only select entities when no tool is selected 
-      .onlyWhen(appState$, appState => appState.activeTool === undefined)
-      .subscribe(
-        function (selections){
-          let res= selections.filter(hasEntity).map(getEntity)
-          selectEntities$(res)
-        }
-      )
+
+
+
 
     ///////////////////
     //data sources
@@ -514,6 +456,27 @@ export default class App extends React.Component {
         addEntityInstances$(partInstance)
       })
 
+
+
+    //interactions
+    let inter = require('./core/interactions.js')
+    let intent = inter.Intent({
+      objectsTransforms$ : glview.objectsTransform$,
+      selectedMeshes$    : glview.selectedMeshes$,
+      selectedBomEntries$: selectBomEntries$,
+
+      //these indicate an issue, they should not need to be injected into an intent
+      appState$: appState$,
+      entities$:entities$,
+      bom$:bom$,
+    })
+
+    intent.entityTransforms$
+      .subscribe(setEntityData$)
+
+    intent.entitiesToSelect$
+      .subscribe( selectEntities$ )
+      
     //////////////////////////////
 
     showContextMenu$
@@ -829,7 +792,6 @@ export default class App extends React.Component {
 
     let bom = undefined
     if(this.state.appState.mode !== "viewer"){
-      console.log("bom stuff")
       bom=  (
         <BomView 
           fieldNames={fieldNames} 
