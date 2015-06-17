@@ -23,14 +23,6 @@ function getOffset(event) {
   }
 }
 
-function isMovingOLD(startEnd, deltaSqr){
-  let {start,end} = startEnd
-  let offset = {x:end.x-start.x, y:end.y-start.y}
-  let distSqr  = (offset.x*offset.x + offset.y * offset.y)
-  //log.info(offset,distSqr, deltaSqr)
-  return distSqr > deltaSqr
-}
-
 function isMoving(moveDelta, deltaSqr){
   return true
   let distSqr  = (moveDelta.x * moveDelta.x + moveDelta.y*moveDelta.y)
@@ -346,7 +338,6 @@ export function observableDragAndDrop(targetEl){
   dragOvers$.subscribe(preventDefault)
 
   drops$
-    .map(function(event){ console.log("here in drag & drop");return event})
     .share()
 
   let urls$ = drops$
