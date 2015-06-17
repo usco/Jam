@@ -270,14 +270,7 @@ export default class App extends React.Component {
         setTimeout(self._tempForceDataUpdate.bind(self), 10)
       })
 
-    Observable.prototype.onlyWhen = function (observable, selector) {
-      return this.withLatestFrom(observable,
-        (self,other)=> { /*console.log("here in onlyWhen",self,other);*/return [self,other] })
-      .filter(function(args) {
-        return selector(args[1])
-      })
-      .map((data)=>data[0])
-    }
+    
 
     
     //////////

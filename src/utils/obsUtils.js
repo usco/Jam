@@ -1,6 +1,6 @@
 import Rx from 'rx'
-let Observable= Rx.Observable;
-let Subject   = Rx.Subject;
+let Observable= Rx.Observable
+let Subject   = Rx.Subject
 
 /* create an action that is both an observable AND
 a function/callable*/
@@ -10,18 +10,18 @@ export function createAction(paramsMap){
     //use rest parameters or not ? ...params
     if(paramsMap && typeof paramsMap === 'function')
     {
-      params = paramsMap(params);
+      params = paramsMap(params)
     }
-    action.onNext(params);
+    action.onNext(params)
   }
   //assign prototype stuff from Subject
   for (let key in Rx.Subject.prototype) {
-    action[key] = Rx.Subject.prototype[key];
+    action[key] = Rx.Subject.prototype[key]
   }
 
   Rx.Subject.call( action )
 
-  return action;
+  return action
 }
 
 
@@ -52,7 +52,16 @@ export function exists(input){
   return input !== null && input !== undefined
 }
 
+Observable.prototype.onlyWhen = function (observable, selector) {
+  return this.withLatestFrom(observable,
+    (self,other)=> { /*console.log("here in onlyWhen",self,other);*/return [self,other] })
+  .filter(function(args) {
+    return selector(args[1])
+  })
+  .map((data)=>data[0])
+}
 
+export {Observable}
 /*
   //FIXME !clunky as heck !!
   .combineLatest(design$,//no saving when design is not persistent
@@ -64,7 +73,7 @@ export function exists(input){
 */
 /*Observable.prototype.onlyWhen = function (observable, selector) {
   return this.combineLatest(observable,
-    (self,other)=> { console.log("here");return [self,other] })
+    (self,other)=> { console.log("here")return [self,other] })
   .filter(function(args) {
     return selector(args[1])
   })
