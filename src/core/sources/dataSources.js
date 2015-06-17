@@ -1,14 +1,13 @@
 import Rx from 'rx'
 let Observable= Rx.Observable
 let merge = Rx.Observable.merge
-import {observableDragAndDrop} from '../interactions/interactions'
-import {first,toggleCursor,getEntity,hasEntity,extractMeshTransforms, getExtension} from '../utils/otherUtils'
+import {observableDragAndDrop} from '../../interactions/interactions'
+import {first,toggleCursor,getEntity,hasEntity,extractMeshTransforms, getExtension} from '../../utils/otherUtils'
 
-import meshExtensions from './extensions'
+import {meshExtensions} from '../extensions'
 
 /////////////
 //deal with data sources
-
 
 //only load meshes for resources that are ...mesh files
 function validMeshExtension(entry){
@@ -16,11 +15,10 @@ function validMeshExtension(entry){
 }
 
 
-export function getDataSources ( container ){
+export function getDataSources ( container, urlSources ){
   //drag & drop sources
   let dnds$ = observableDragAndDrop(container)
   //other sources (url, localstorage)
-  let urlSources = require('./urlSources')
 
   let dndMeshFiles$  = dnds$.filter(e=>e.type ==="file").pluck("data").flatMap(Observable.fromArray)
     .filter(file => validMeshExtension(file.name) )

@@ -1,5 +1,5 @@
 import Rx from 'rx'
-import defaults from "./designDefaults"
+import defaults from "../designDefaults"
 
 //let name = localStorage.getItem("jam!-lastDesignName") || undefined
 let uri  = localStorage.getItem("jam!-lastDesignUri") || undefined

@@ -1,9 +1,7 @@
 import Rx from 'rx'
 
-import {fetchUriParams,getUriQuery,setWindowPathAndTitle}  from '../utils/urlUtils'
-import {setSetting$} from '../actions/appActions'
-import {newDesign$, setDesignData$} from '../actions/designActions'
-
+import {fetchUriParams,getUriQuery,setWindowPathAndTitle}  from '../../utils/urlUtils'
+import {exists} from '../../utils/obsUtils'
 
 let mainUri    = window.location.href 
 let uriQuery   = getUriQuery(mainUri)
@@ -11,10 +9,6 @@ let designUri = fetchUriParams(mainUri, "designUrl").pop()
 let meshUris   = fetchUriParams(mainUri, "modelUrl")
 let appMode    = fetchUriParams(mainUri, "appMode").pop()
 
-//let designUri$ = new Rx.Observable()
-//let meshUri$   = new Rx.Observable()
-
-import {exists} from '../utils/obsUtils'
 
 //mesh sources : drag & drop 
 //mesh URI source: drag & drop OR query param
@@ -23,10 +17,10 @@ import {exists} from '../utils/obsUtils'
 //design URI source: localstorage OR query param OR drag & drop 
 
 //only allow if appMode is actually set
-Rx.Observable
+let appMode$ = Rx.Observable
   .just(appMode)
   .filter(exists)
-  .subscribe( setSetting$({path:"mode",value:appMode}) )
+  //.subscribe( setSetting$({path:"mode",value:appMode}) )
 
 //load from localstorage in case all else failed
 
@@ -45,7 +39,6 @@ function inParallel (items){
         return Rx.Observable.just(item)
     })
 }
-
 
 function getShortDesignUri (uriQuery){
   if(!uriQuery) return Rx.Observable.just(undefined)
@@ -81,7 +74,6 @@ let stDesignUri$ = Rx.Observable.merge(
   .filter(exists)
 
 
-
 let designUri$ = Rx.Observable.merge(
   urDesignUri$,//ORDER MATTERS !!!
   lsDesignUri$
@@ -90,5 +82,4 @@ let designUri$ = Rx.Observable.merge(
   .take(1)
  
 
-
-export {designUri$,meshUris$}
+export {designUri$,meshUris$,appMode$}
