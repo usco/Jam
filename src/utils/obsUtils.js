@@ -62,20 +62,11 @@ Observable.prototype.onlyWhen = function (observable, selector) {
 }
 
 export {Observable}
-/*
-  //FIXME !clunky as heck !!
-  .combineLatest(design$,//no saving when design is not persistent
-    (e,d)=> { return {e,d} })
-  .filter((data) => data.d._persistent)
-  .map((data)=>data.e)
 
-   //.skipUntil(design$.filter(design=>design._persistent))//no saving when design is not persistent
-*/
-/*Observable.prototype.onlyWhen = function (observable, selector) {
-  return this.combineLatest(observable,
-    (self,other)=> { console.log("here")return [self,other] })
-  .filter(function(args) {
-    return selector(args[1])
-  })
-  .map((data)=>data[0])
-}*/
+
+//utility to run multiple ones in parallel, see here :
+//https://github.com/Reactive-Extensions/RxJS/blob/master/doc/mapping/async/comparing.md#asyncparallel
+function wrapArrayParallel (items) {
+  //let __items = Rx.Observable.from()
+  return Rx.Observable.forkJoin.apply(null, items);
+}
