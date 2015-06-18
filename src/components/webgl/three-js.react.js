@@ -71,7 +71,11 @@ class ThreeJs extends React.Component{
       },
       viewports:[
         {
-          name:"bla",
+          name:"main",
+          left: 0,
+          bottom: 0,
+          width: 1.0,
+          height: 1.0,
         }
       ],
       cameras:[
@@ -199,19 +203,22 @@ class ThreeJs extends React.Component{
     //camPos[2] = -camPos[2]
 
     let camViewCamConfig = {
-        width:512,
-        height:256,
+        width:256,
+        height:128,
+        aspect:1,
         pos:camPos,
         up:[0,0,1]
     }
 
     let camViewCam   = this._makeCamera(camViewCamConfig)
-    
+
+    //camViewRenderer.setSize( camViewContainer.style.width, camViewContainer.style.height )
     //camViewCam.toDiagonalView()
     //camViewCam.toOrthographic()
     camViewCam.aspect = 1
     camViewCam.updateProjectionMatrix()
     camViewCam.lookAt(this.camViewScene.position) 
+
 
     let camViewControls = new CamViewControls({
       size:9, 
@@ -236,6 +243,8 @@ class ThreeJs extends React.Component{
     this.camViewRenderer = camViewRenderer
     this.controls.addObject( camViewCam, {userZoom:false, userPan:false})
     //planesColor:"#17a9f5",edgesColor:"#17a9f5",cornersColor:"#17a9f5",
+    camViewRenderer.setSize(256,128)
+
 
     this.selector = new Selector()
     this.selector.camera = this.camera
@@ -252,23 +261,26 @@ class ThreeJs extends React.Component{
       console.log("setting size",sizeInfos)
       let {width,height,aspect} = sizeInfos
     
-      this.width  = width
-      this.height = height
-      let camera = this.camera
-      let renderer = this.renderer
+      if(width >0 && height >0 ){
+        this.width  = width
+        this.height = height
+        let camera = this.camera
+        let renderer = this.renderer
 
-      renderer.setSize( width, height )
-      //camera.aspect = 1
-      camera.aspect = aspect
-      camera.updateProjectionMatrix()
+        renderer.setSize( width, height )
+        //camera.aspect = 1
+        camera.aspect = width/height //aspect
+        camera.updateProjectionMatrix()   
+
+        self.composer.reset()
+
+        let pixelRatio = window.devicePixelRatio || 1
+        self.fxaaPass.uniforms[ 'resolution' ].value.set (1 / (width * pixelRatio), 1 / (height * pixelRatio))
+        self.composer.setSize(width * pixelRatio, height * pixelRatio)
+
+        self._render()
+      }
       
-      self.composer.reset()
-
-      let pixelRatio = window.devicePixelRatio || 1
-      self.fxaaPass.uniforms[ 'resolution' ].value.set (1 / (width * pixelRatio), 1 / (height * pixelRatio))
-      self.composer.setSize(width * pixelRatio, height * pixelRatio)
-
-      self._render()
     }
 
     handleResize = handleResize.bind(this)
@@ -276,7 +288,7 @@ class ThreeJs extends React.Component{
 
     this.resizer.subscribe( handleResize.bind(this) )
     //set the inital size correctly
-    handleResize({width:window.innerWidth,height:window.innerHeight,aspect:0})
+    handleResize({width:window.innerWidth,height:window.innerHeight,aspect:1})
     //subscribe(listen)
 
     //setup INTERACTIONS
@@ -393,7 +405,7 @@ class ThreeJs extends React.Component{
   /*picking function to be use for mapping over evenstreams
 for tap/toubleTaps etc*/
   _getSelectionsAt(event){
-    log.debug("selection at",event)
+    //log.debug("selection at",event)
     
     let rect = this.container.getBoundingClientRect()
     let intersects = this.selector.pickAlt({x:event.clientX,y:event.clientY}, rect, this.width, this.height, this.dynamicInjector)
@@ -675,7 +687,6 @@ for tap/toubleTaps etc*/
 
     this.selectedMeshes = selectedMeshes
 
-  console.log("selectedMeshes",selectedMeshes)
 
     if(this._prevSelectedMeshes && this._prevSelectedMeshes.length>0){
         this.transformControls.detach(this._prevSelectedMeshes[0])
@@ -751,8 +762,8 @@ for tap/toubleTaps etc*/
   _render() 
   {	
 	  //this.renderer.render( this.scene, this.camera )
+    
     this.camViewRenderer.render( this.camViewScene,this.camViewCam)
-
     this.composer.render()
 
     //this.renderer.render( this.outScene, this.camera ) 
@@ -767,8 +778,6 @@ for tap/toubleTaps etc*/
    - this should not even be in the basic "3D view " as it deals with higher abstractions
 
   so a "diff " method is in order , to determine what changed between two forced updates/renders
-
-  
 
   */
   forceUpdate( inputs ){
