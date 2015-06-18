@@ -32,6 +32,7 @@ import {first,toggleCursor,getEntity,hasEntity,extractMeshTransforms} from './ut
 import {clearCursor} from './utils/uiUtils'
 import {generateUUID} from 'usco-kernel2/src/utils'
 
+import screenfull from 'screenfull'
 import keymaster from 'keymaster'
 
 import logger from './utils/log'
@@ -192,7 +193,7 @@ export default class App extends React.Component {
     }
     ////////
 
-    let designLData$ = require('./core/designLocalSource')//local storage etc
+    let designLData$ = require('./core/sources/designLocalSource')//local storage etc
     let design$ = require('./core/designModel')
 
     design$ = design$({
@@ -250,6 +251,7 @@ export default class App extends React.Component {
     let entities$ = require("./core/entityModel")
 
     entities$ = entities$({
+        createEntityInstance$:new Rx.Subject(),//createEntityInstance$,
         addEntities$:addEntityInstances$,
         setEntityData$, 
         deleteEntities$, 
@@ -268,9 +270,7 @@ export default class App extends React.Component {
         setTimeout(self._tempForceDataUpdate.bind(self), 10)
       })
 
-    
-
-    
+        
     //////////
     let appState$ = require("./core/appModel.js")
     appState$ = appState$({
@@ -291,12 +291,12 @@ export default class App extends React.Component {
     //temp hack
     appState$
       .pluck("activeTool")
+      //.filter(tool => ["translate","rotate","scale"].indexOf(tool)===-1)
       .subscribe(function (activeTool) {
         if(activeTool !== undefined){
           toggleCursor(true,"crosshair")
         }
       })
-
 
     //////////////
 
@@ -319,8 +319,11 @@ export default class App extends React.Component {
     
     ///////////////////
     //data sources
-    let dataSources = require('./core/dataSources').getDataSources
-    let {meshSources$, designSources$} = dataSources(container)
+    let dataSources = require('./core/sources/dataSources').getDataSources
+    let urlSources = require('./core/sources/urlSources')
+    urlSources.appMode$.subscribe( appMode => setSetting$({path:"mode",value:appMode}) )
+
+    let {meshSources$, designSources$} = dataSources(container, urlSources)
 
     //experimental 
     let res$ = meshSources$
@@ -444,7 +447,7 @@ export default class App extends React.Component {
 
 
     //interactions
-    let inter = require('./core/interactions.js')
+    let inter = require('./core/intents.js')
     let intent = inter.Intent({
       objectsTransforms$ : glview.objectsTransform$,
       selectedMeshes$    : glview.selectedMeshes$,
@@ -763,7 +766,41 @@ export default class App extends React.Component {
         .filter( (annot) => { return selectIds.indexOf(annot.iuid) > -1} )
       
       selectedEntities = selectedEntities.concat(selectedAnnots)
-  }
+    }
+
+
+    //hack hack hack
+    function toggleFullScreen(){
+      if (screenfull.enabled) {
+        screenfull.toggle()
+        self.setState({fullScreen:screenfull.isFullscreen},null,false)
+      } else {
+      }
+    }
+
+    let fullScreenTogglerImg = null
+
+    if(!screenfull.isFullscreen)
+    {
+        fullScreenTogglerImg = (
+          <svg version="1.1" id="Resize_full_screen" 
+             x="0px" y="0px" viewBox="0 0 20 20" enable-background="new 0 0 20 20" >
+            <path d="M6.987,10.987l-2.931,3.031L2,11.589V18h6.387l-2.43-2.081l3.03-2.932L6.987,10.987z M11.613,2l2.43,2.081l-3.03,2.932l2,2
+            l2.931-3.031L18,8.411V2H11.613z"/>
+          </svg>
+        )
+    }else{
+      fullScreenTogglerImg = (
+          <svg version="1.1" id="Resize_100_x25_" xmlns="http://www.w3.org/2000/svg" 
+            x="0px" y="0px" viewBox="0 0 20 20" enable-background="new 0 0 20 20" >
+            <path fill="#FFFFFF" d="M4.1,14.1L1,17l2,2l2.9-3.1L8,18v-6H2L4.1,14.1z M19,3l-2-2l-2.9,3.1L12,2v6h6l-2.1-2.1L19,3z"/>
+          </svg>
+        )
+    }
+    
+
+
+
 
     //BOM stuff
     let fieldNames = ["id","name","qty","unit","version"]
@@ -818,6 +855,10 @@ export default class App extends React.Component {
           {bom}
 
           <ContextMenu settings={contextmenuSettings} />
+
+          <button className="fullScreenToggler" onClick={toggleFullScreen}>
+            {fullScreenTogglerImg}
+          </button>
 
         </div>
     )

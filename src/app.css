@@ -249,6 +249,26 @@
   top:240px;
 }
 
+/*//////////////////*/
+
+.fullScreenToggler{
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+
+  bottom: 20px;
+  right: 20px;
+  width: 24px;
+  height: 24px;
+  background: white;
+  border: none;
+  padding: 0px;
+  margin: 0px;
+}
+
+button path{fill:#60C4F8!important;}
+button:focus path{fill:#60C4F8!important;}
+button:focus {outline:0;}
 
 /*//////////////////*/
 .settings{
@@ -271,8 +291,7 @@
   right: 0px;
   top: 30px;
   width: 200px;
-
-      border: 1px solid white;
+  border: 1px solid white;
 
 }
 
@@ -295,9 +314,7 @@
 }
 
 .settings .toggler{
-
-      border: 1px solid white;
-
+  border: 1px solid white;
 }
 
 /*.settings .toggler .toggled .icon{
@@ -314,8 +331,6 @@
 .icon:hover path{
   fill:#60C4F8;
 }
-
-
 
 .settings button{
   background: white;
