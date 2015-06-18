@@ -26,7 +26,13 @@ let appMode$ = Rx.Observable
 
 //let name = localStorage.getItem("jam!-lastDesignName") || undefined
 //let uri  = localStorage.getItem("jam!-lastDesignUri") || undefined
-//let _persistent     = JSON.parse( localStorage.getItem("jam!-persistent") ) || false
+
+
+let settings$ = Rx.Observable.just(
+  JSON.parse( localStorage.getItem("jam!-settings")  )
+)
+
+
 
 
 //on second thought, that does not fit, as it merges the results back together
@@ -80,4 +86,4 @@ let designUri$ = Rx.Observable.merge(
   .take(1)
  
 
-export {designUri$,meshUris$,appMode$}
+export {designUri$,meshUris$,settings$, appMode$}
