@@ -46,23 +46,6 @@ function makeModification$(intent){
 
       return design
     })
-/*
-      //seperation of "sinks" from the rest
-      .filter(()=>self.state._persistent)//only save when design is set to persistent
-      .debounce(1000)
-      .map(self.kernel.saveDesignMeta.bind(self.kernel))
-      .subscribe(function(def){
-        def.promise.then(function(result){
-          //FIXME: hack for now
-          console.log("save result",result)
-          let serverResp =  JSON.parse(result)
-          let persistentUri = self.kernel.dataApi.designsUri+"/"+serverResp.slug
-
-          localStorage.setItem("jam!-lastDesignUri",persistentUri)
-        })
-        localStorage.setItem("jam!-lastDesignName",self.state.design.name)
-
-      })*/
 
     return merge(
       newDesign$,
