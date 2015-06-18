@@ -29,7 +29,7 @@ const defaults = {
 
 /*
 const partTemplate = {
-      name: data.name,
+      name: "",
       iuid: generateUUID(),
       typeUid: undefined,
       color: "#07a9ff",
@@ -52,8 +52,8 @@ const partTemplate = {
         min:[0,0,0],
         max:[0,0,0]
       }
-  }
-*/
+  }*/
+
 
 
 ///helper methods
@@ -69,7 +69,7 @@ function makeModification$(intent){
 
   }*/
 
-  /*let _createEntityInstance$ = intent.createEntityInstance$
+  let _createEntityInstance$ = intent.createEntityInstance$
     .map((data) => (entitiesData) => {
 
       let h = data.bbox.max[2]  - data.bbox.min[2]
@@ -98,7 +98,7 @@ function makeModification$(intent){
             bbox:data.bbox
         }
 
-    })*/
+    })
 
 
   /*save a new entity instance*/
@@ -243,6 +243,7 @@ function makeModification$(intent){
     _duplicateEntities$,
     _selectEntities$,
 
+    _createEntityInstance$,
     _resetEntities$
   )
 }
@@ -251,6 +252,15 @@ function model(intent, source) {
   let source$ = source || Observable.just(defaults)
 
   let modification$ = makeModification$(intent)
+
+  //just an idea: for context menu etc
+  let availableActions$ ={
+    "delete"   :deleteEntities$,
+    "deleteAll":deleteAllEntities$,
+    "duplicate":duplicateEntities$,
+
+
+  }
 
   return modification$
     .merge(source$)
