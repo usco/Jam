@@ -193,15 +193,23 @@ export default class App extends React.Component {
     }
     ////////
 
-    let designLData$ = require('./core/sources/designLocalSource')//local storage etc
+    /*let testObj = {
+      foo:"bar",
+      baz:"baz",
+      stuff:43,
+      blerk:{
+        arr:["dsfsdf"]
+      }
+    }
+    localStorage.setItem("jam!-test",JSON.stringify(testObj))*/
+
     let design$ = require('./core/designModel')
 
     design$ = design$({
         newDesign$,
         setDesignData$,
         setAsPersistent$:setDesignAsPersistent$
-      },
-      designLData$
+      }
     )
 
     design$
@@ -798,9 +806,6 @@ export default class App extends React.Component {
         )
     }
     
-
-
-
 
     //BOM stuff
     let fieldNames = ["id","name","qty","unit","version"]

@@ -24,14 +24,11 @@ let appMode$ = Rx.Observable
 
 //load from localstorage in case all else failed
 
+//let name = localStorage.getItem("jam!-lastDesignName") || undefined
+//let uri  = localStorage.getItem("jam!-lastDesignUri") || undefined
+//let _persistent     = JSON.parse( localStorage.getItem("jam!-persistent") ) || false
 
 
-//utility to run multiple ones in parallel, see here :
-//https://github.com/Reactive-Extensions/RxJS/blob/master/doc/mapping/async/comparing.md#asyncparallel
-function wrapArrayParallel (items) {
-  //let __items = Rx.Observable.from()
-  return Rx.Observable.forkJoin.apply(null, items);
-}
 //on second thought, that does not fit, as it merges the results back together
 function inParallel (items){
   return Rx.Observable
@@ -47,18 +44,19 @@ function getShortDesignUri (uriQuery){
   return Rx.Observable.just( designUri )
 }
 
+//query param
 let urDesignUri$ = Rx.Observable
   .just( designUri )
   .filter(exists)
   .shareReplay(1)
 
+//local storage
 let lsDesignUri$  = Rx.Observable
   .just(  localStorage.getItem("jam!-lastDesignUri") )
   .filter(exists)
   .shareReplay(1)
 
 //only load meshes if no designs need to be loaded 
-
 let meshUris$ = inParallel(meshUris)//Rx.Observable.just(meshUris.pop()) //
   //.takeUntil(urDesignUri$.merge(lsDesignUri$))
   .filter(exists)
