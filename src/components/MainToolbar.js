@@ -78,6 +78,7 @@ class MainToolBar extends React.Component {
     let persistent    = this.props.design._persistent
 
 
+
     let social = (
       <span className="social"> 
         <span>

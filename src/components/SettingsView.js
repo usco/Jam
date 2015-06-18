@@ -72,7 +72,7 @@ function SettingsView(interactions, props) {
     .startWith(false)
 
 
-  interactions.get(".settings","click")
+  /*interactions.get(".settings","click")
     //.do(e => e.preventDefault)
     .subscribe(function(){
       console.log("click inside settings")
@@ -81,7 +81,7 @@ function SettingsView(interactions, props) {
   Rx.Observable.fromEvent(document,'click')
     .subscribe(function(){
       console.log("clicked document")
-    })
+    })*/
     
   let vtree$ = Rx.Observable
     .combineLatest(
