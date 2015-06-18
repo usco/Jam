@@ -192,17 +192,6 @@ export default class App extends React.Component {
       })
     }
     ////////
-
-    /*let testObj = {
-      foo:"bar",
-      baz:"baz",
-      stuff:43,
-      blerk:{
-        arr:["dsfsdf"]
-      }
-    }
-    localStorage.setItem("jam!-test",JSON.stringify(testObj))*/
-
     let design$ = require('./core/designModel')
 
     design$ = design$({
@@ -228,8 +217,7 @@ export default class App extends React.Component {
       //.skipUntil(newDesign$)
       .subscribe(function(data){
         console.log("newDesign, reseting data")
-        localStorage.removeItem("jam!-lastDesignUri")
-        localStorage.removeItem("jam!-persistent")
+        localStorage.removeItem("jam!-settings")
 
         //remove meshes, resources etc
         self.assetManager.clearResources()
@@ -329,7 +317,33 @@ export default class App extends React.Component {
     //data sources
     let dataSources = require('./core/sources/dataSources').getDataSources
     let urlSources = require('./core/sources/urlSources')
+
     urlSources.appMode$.subscribe( appMode => setSetting$({path:"mode",value:appMode}) )
+    urlSources.settings$.subscribe(function(settings){
+      console.log("settings from old",settings)
+      const defaults = {
+        persistent:false,
+        lastDesignUri:undefined,
+        lastDesignName:undefined,
+
+        /*grid:{
+          show:false,
+        },
+        annotations{
+          show:false
+        }*/
+      }
+      let _settings = Object.assign({},defaults,settings)
+
+      setDesignData$({
+        _persistent:_settings.persistent,
+        uri:_settings.lastDesignUri,
+        name:_settings.lastDesignName
+      })
+
+      //setSetting$({path:"grid.show",value:_settings.grid.show})
+      //setSetting$({path:"grid.show",value:_settings.grid.show})
+    })
 
     let {meshSources$, designSources$} = dataSources(container, urlSources)
 
@@ -367,6 +381,10 @@ export default class App extends React.Component {
       selectBomEntries2$:selectBomEntries2$
     })
 
+    bom$.subscribe(function(bom){
+      updateBom(bom)
+    })
+
     //TODO: deal with loading
     /*.subscribe(
     function(uri){
@@ -390,10 +408,7 @@ export default class App extends React.Component {
       return Array.prototype.concat.apply([], this.map(lambda)) 
     }
 
-    bom$.subscribe(function(bom){
-      updateBom(bom)
-    })
-
+ 
     //this one takes care of adding templatemeshes
     combos$
       .zip(partTypes$.skip(1).map( x=>x.latest ),function(cb, typeUid){
@@ -473,6 +488,8 @@ export default class App extends React.Component {
     intent.entitiesToSelect$
       .subscribe( selectEntities$ )
       
+    let sinks = require('./core/sinks')
+    sinks.serializer(self.kernel, design$, entities$, annotations$, bom$, combos$, setDesignData$)
     //////////////////////////////
 
     showContextMenu$
@@ -506,8 +523,9 @@ export default class App extends React.Component {
         {name:"Export design (NA)",action:undefined},
         {name:"Delete all",action:deleteAllEntities$},
 
-          {name:"Distance",action:toggleDistanceAnnot$},
-          {name:"Angle",action:toggleAngleAnnot$},
+        /*  {name:"Distance",action:toggleDistanceAnnot$},
+          {name:"Angle",action:toggleAngleAnnot$},*/
+        {name:`Jam! version : ${self.state.appInfos.version}`,action:(()=>null)}
       ]
 
       if(selectedEntities && selectedEntities.length>0)
@@ -581,7 +599,7 @@ export default class App extends React.Component {
       self.setState(lastState,afterSetState,false)
     })
 
-    //fetch & handle url parameters
+    console.log("---READY TO START JAM!---")
   }
 
   //event handlers
