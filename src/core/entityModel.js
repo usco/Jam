@@ -122,23 +122,28 @@ function makeModification$(intent){
   let _updateEntities$ = intent.setEntityData$
     .debounce(3)
     .map((data) => (entitiesData) => {
-      //log.info("setting entity data", data)
-      
-      if(!data) return entitiesData
+      log.info("updating entities with data", data)
+      let outputData = Object.assign({},entitiesData)
+
+      if(!data) return outputData
 
       let entity = data.entity
-      let entitiesById = entitiesData.entitiesById
-      let tgtEntity    = entitiesById[entity.iuid]
+      let entitiesById = outputData.entitiesById
+      let tgtEntity    =  Object.assign({}, entitiesById[entity.iuid] )
       delete data.entity
 
-      if(!tgtEntity) return entitiesData
+      if(!tgtEntity) return outputData
 
       for(let key in data){
         tgtEntity[key] = data[key]
       }
+      //why is this even needed ?
+      delete entitiesById[entity.iuid]
+      outputData.instances = outputData.instances.filter(inst => inst.iuid !== tgtEntity.iuid)
 
-      entitiesById[entity.iuid] = tgtEntity
-      return entitiesData
+      outputData.instances.push( tgtEntity)
+      outputData.entitiesById[entity.iuid] = tgtEntity
+      return outputData
     })
 
   /*remove an entity : it actually only 
@@ -241,10 +246,13 @@ function makeModification$(intent){
     _deleteEntities$,
     _deleteAllEntities$,
     _duplicateEntities$,
-    _selectEntities$,
+    
 
     _createEntityInstance$,
-    _resetEntities$
+    _resetEntities$,
+
+    //selection "state" is different
+    _selectEntities$
   )
 }
 

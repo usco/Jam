@@ -8,6 +8,15 @@ design$
   .filter(design=>design._persistent && (design.uri || design.name) && design._doSave)     
 */
 
+
+function entitiesEqual(a,b){
+  //perhaps an immutable library would not require such horrors?
+  if(JSON.stringify(a)===JSON.stringify(b)){
+    return true
+  }
+  return false
+}
+
 //////////////////
 //code related to saving etc
 export function serializer(kernel, design$, entities$, annotations$, bom$, combos$, setDesignData$)
@@ -58,19 +67,26 @@ export function serializer(kernel, design$, entities$, annotations$, bom$, combo
   //////SINK!!! save change to assemblies
   entities$
     .debounce(500)//don't save too often
+    .pluck('instances')
+    .map(entityInstances => {console.log(entityInstances); return entityInstances})
+
+    .distinctUntilChanged(null, entitiesEqual)
+
     //only save when design is _persistent
     .onlyWhen(design$, design=>design._persistent && (design.uri || design.name) && design._doSave)
-    .subscribe(function(entities){
-      kernel.saveAssemblyState(entities.instances)
+    .subscribe(function(entityInstances){
+      kernel.saveAssemblyState(entityInstances)
     })
   ///////////
 
   bom$
     .debounce(500)
+    .pluck('entries')
+    .distinctUntilChanged()
     //only save when design is _persistent
     .onlyWhen(design$, design=>design._persistent && (design.uri || design.name) && design._doSave)
-    .subscribe(function(bom){
-      kernel.saveBom(bom.entries)
+    .subscribe(function(bomEntries){
+      kernel.saveBom(bomEntries)
     })
 
   //////SINK!!! save change to assemblies
