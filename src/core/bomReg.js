@@ -53,12 +53,12 @@ function makeModifications(intent){
      })
 
   console.log("intent",intent)
-  let bla$ = intent.entities$ 
+  /*let bla$ = intent.entities$ 
     .map((data) => (bomData) => {
       console.log("foo",data)
 
       return bomData
-    })
+    })*/
 
   let select$ = intent.selectBomEntries$
     .merge(intent.selectBomEntries2$)
@@ -70,7 +70,7 @@ function makeModifications(intent){
 
   return merge(
     newType$,
-    bla$,
+    //bla$,
     select$
   )
 }
