@@ -494,21 +494,35 @@ export default class App extends React.Component {
           
           setDesignData$(bla.design)
           addBomEntries$(bla.bom)
+          addEntityInstances$(bla.assemblies.children)
 
-            //meshSources$.onNext(entry.uri)
-          bla.meshSources$
-            .subscribe( entry => {console.log("mesh entry",entry); return entry })
-            /*.flatMap(function(dataSource){
+
+          let meshData$ =bla.meshSources$
+            .shareReplay(1)
+
+          /*meshData$
+            .subscribe( function(entry){
+              console.log("mesh entry",entry)})*/
+
+          let meshes$ =
+            meshData$
+            .pluck("uri")
+            .flatMap(function(dataSource){
               let resource = self.assetManager.load( dataSource, {keepRawData:true, parsing:{useWorker:true,useBuffers:true} } )
               return Rx.Observable.fromPromise(resource.deferred.promise)
             })
-            .shareReplay(1)*/
+            .map( postProcessMesh )
+            .map( centerMesh )
+          
 
+          meshData$
+            .zip(meshes$,function(meshData, mesh){
+              self.kernel.partRegistry.addTemplateMeshForPartType( mesh.clone(), meshData.typeUid )
+            })
+            .subscribe((bla)=>{setTimeout(self._tempForceDataUpdate.bind(self), 10)})  
 
         })
-
-
-      })
+      },(err)=>console.log("error",err))
     //////////////////////////////
 
     showContextMenu$
