@@ -15,6 +15,22 @@ const defaults = {
 }
 
 function makeModifications(intent){
+  let _addEntries$ = intent.addBomEntries$
+    .map((nData) => (bomData) => {
+      console.log("ADDING BOM entries")
+      //FIXME , immutable
+      let newData = nData || []
+      if(newData.constructor !== Array) newData = [newData]
+
+      bomData.entries = bomData.entries.concat(newData)
+
+      newData.map( entry =>
+         bomData.byId[entry.uuid]= entry
+        )
+
+      return bomData
+    })
+
   let newType$ = intent.partTypes$
     .withLatestFrom(intent.combos$,function(types, combos){ return {combos,types}})
     .map((data) => (bomData) => {
@@ -63,12 +79,13 @@ function makeModifications(intent){
   let select$ = intent.selectBomEntries$
     .merge(intent.selectBomEntries2$)
     .map((data) => (bomData) => {
-      console.log("select",data)
+      //console.log("select",data)
       bomData.selectedEntries = data
       return bomData
     })
 
   return merge(
+    _addEntries$,
     newType$,
     //bla$,
     select$
