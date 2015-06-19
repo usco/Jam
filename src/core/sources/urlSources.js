@@ -30,7 +30,7 @@ let appMode$ = Rx.Observable
 
 let settings$ = Rx.Observable.just(
   JSON.parse( localStorage.getItem("jam!-settings")  )
-)
+).shareReplay(1)
 
 
 
@@ -57,8 +57,9 @@ let urDesignUri$ = Rx.Observable
   .shareReplay(1)
 
 //local storage
-let lsDesignUri$  = Rx.Observable
-  .just(  localStorage.getItem("jam!-lastDesignUri") )
+let lsDesignUri$  =
+  settings$
+  .pluck("lastDesignUri")
   .filter(exists)
   .shareReplay(1)
 
