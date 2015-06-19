@@ -104,7 +104,7 @@ function makeModification$(intent){
   /*save a new entity instance*/
   let _addEntities$ = intent.addEntities$
     .map((nentities) => (entitiesData) => {
-      //log.info("adding entity instance", instance)
+      log.info("adding entity instance(s)", nentities)
 
       let entities = nentities || []
       if(entities.constructor !== Array) entities = [entities]
