@@ -23,8 +23,6 @@ function makeModifications(intent){
     .map((data) => (regData) => {
 
       console.log("I would register something", data, regData)
-      //let {partKlass,typeUid}    = self.kernel.registerPartType( null, null, mesh, {name:resource.name, resource:resource} )
-      //addEntityType$( {type:partKlass,typeUid} )
 
       //we do not return the shape since that becomes the "reference shape/mesh", not the
       //one that will be shown
@@ -35,8 +33,8 @@ function makeModifications(intent){
       let typeUidToMeshName = regData.typeUidToMeshName || {}
       let typeData = regData.typeData || {}
 
-      let meshName = data.resource.name || ""
-      let cName   = nameCleanup(meshName)
+      let meshName      = data.resource.name || ""
+      let cleanedName   = nameCleanup(meshName)
       let typeUid = meshNameToPartTypeUId[ meshName ]
 
       //no typeUid was given, it means we have a mesh with no part (yet !)
@@ -48,7 +46,7 @@ function makeModifications(intent){
         computeBoundingSphere(mesh)
         computeBoundingBox(mesh)
         typeData[typeUid]={
-          name:cName,
+          name:cleanedName,
           bbox:{
             min: mesh.boundingBox.min.toArray(),
             max: mesh.boundingBox.max.toArray()
@@ -57,7 +55,7 @@ function makeModifications(intent){
         //console.log("mesh bb",mesh.boundingBox)
         
         //create ...
-        //partKlass = this.makeNamedPartKlass( cName, typeUid )
+        //partKlass = this.makeNamedPartKlass( cleanedName, typeUid )
         //& register class
         
         partTypes.push(typeUid)
