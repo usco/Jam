@@ -52,7 +52,7 @@ import {setToTranslateMode$, setToRotateMode$, setToScaleMode$} from './actions/
 import {showContextMenu$, hideContextMenu$, undo$, redo$, setDesignAsPersistent$, clearActiveTool$,setSetting$} from './actions/appActions'
 import {newDesign$, setDesignData$} from './actions/designActions'
 import {toggleNote$,toggleThicknessAnnot$,toggleDistanceAnnot$, toggleDiameterAnnot$, toggleAngleAnnot$} from './actions/annotActions'
-import {selectBomEntries$, selectBomEntries2$} from './actions/bomActions'
+import {addBomEntries$, selectBomEntries$, selectBomEntries2$} from './actions/bomActions'
 
 let commands = {
   "undo":undo$,
@@ -355,17 +355,26 @@ export default class App extends React.Component {
       })
       .shareReplay(1)
 
+    //mesh + resource data together
+    let combos$ =
+      res$.map(function(resource){
+        let mesh = postProcessMesh(resource)
+        mesh=centerMesh(mesh)
+        return {mesh, resource}
+      })
+      .shareReplay(1)
+
     //stream of processed meshes
-    let meshes$ = res$
+    /*let meshes$ = res$
       .map( postProcessMesh )
       .map( centerMesh )
 
     //mesh + resource data together
     let combos$ = meshes$
-      .zip(res$,function(mesh,resource){
+      .zip(res$, function(mesh,resource){
         return {mesh,resource}
       })
-      .shareReplay(1)
+      .shareReplay(1)*/
     
     //register meshes <=> types
     let partTypes$ = require('./core/partReg')
@@ -374,6 +383,7 @@ export default class App extends React.Component {
     //register meshes <=> bom entries
     let bom$ = require('./core/bomReg')
     bom$ = bom$({
+      addBomEntries$:addBomEntries$,
       combos$:combos$,
       partTypes$:partTypes$,
       entities$:entities$,
@@ -384,25 +394,6 @@ export default class App extends React.Component {
     bom$.subscribe(function(bom){
       updateBom(bom)
     })
-
-    //TODO: deal with loading
-    /*.subscribe(
-    function(uri){
-      console.log("HI THERE : design uri data source",uri)
-      setDesignData$({uri})
-
-      let data = self.kernel.loadDesign(uri)
-      data.subscribe(function(bla){
-        console.log("gnn",bla)
-        setDesignData$(bla.design)
-        bla.meshSources$.subscribe(function(entry){
-          console.log("mesh entry",entry)
-          meshSources$.onNext(entry.uri)
-        })
-      })
-      //self.loadDesign(data)
-  })*/
-
 
     Array.prototype.flatMap = function(lambda) { 
       return Array.prototype.concat.apply([], this.map(lambda)) 
@@ -488,8 +479,36 @@ export default class App extends React.Component {
     intent.entitiesToSelect$
       .subscribe( selectEntities$ )
       
+
+    //sinks (saving etc )
     let sinks = require('./core/sinks')
-    sinks.serializer(self.kernel, design$, entities$, annotations$, bom$, combos$, setDesignData$)
+    //sinks.serializer(self.kernel, design$, entities$, annotations$, bom$, combos$, setDesignData$)
+
+    designSources$
+      .subscribe(function(designUri){
+        console.log("LOOOOAD hey , can you please load",designUri)
+
+        let source = self.kernel.loadDesign(designUri)
+        source.subscribe(function(bla){
+          console.log("gnn",bla)
+          
+          setDesignData$(bla.design)
+          addBomEntries$(bla.bom)
+
+            //meshSources$.onNext(entry.uri)
+          bla.meshSources$
+            .subscribe( entry => {console.log("mesh entry",entry); return entry })
+            /*.flatMap(function(dataSource){
+              let resource = self.assetManager.load( dataSource, {keepRawData:true, parsing:{useWorker:true,useBuffers:true} } )
+              return Rx.Observable.fromPromise(resource.deferred.promise)
+            })
+            .shareReplay(1)*/
+
+
+        })
+
+
+      })
     //////////////////////////////
 
     showContextMenu$
@@ -826,7 +845,7 @@ export default class App extends React.Component {
     
 
     //BOM stuff
-    let fieldNames = ["id","name","qty","unit","version"]
+    let fieldNames = ["name","qty","unit","version"]
     let sortableFields = ["id","name","qty","unit"]
     let entries = this.state.bom.entries
 
