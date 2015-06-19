@@ -1,5 +1,7 @@
 import {createAction} from '../utils/obsUtils'
 
+/*add annotation*/
+export let addAnnotations$ = createAction()
 
 /*create new note */
 export let addNote$ = createAction()
@@ -33,3 +35,5 @@ export let toggleDiameterAnnot$ = createAction()
 
 /*toggle angle annot*/
 export let toggleAngleAnnot$ = createAction()
+
+

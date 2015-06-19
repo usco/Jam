@@ -51,7 +51,7 @@ import {selectEntities$,addEntityInstances$, setEntityData$, deleteEntities$, du
 import {setToTranslateMode$, setToRotateMode$, setToScaleMode$} from './actions/transformActions'
 import {showContextMenu$, hideContextMenu$, undo$, redo$, setDesignAsPersistent$, clearActiveTool$,setSetting$} from './actions/appActions'
 import {newDesign$, setDesignData$} from './actions/designActions'
-import {toggleNote$,toggleThicknessAnnot$,toggleDistanceAnnot$, toggleDiameterAnnot$, toggleAngleAnnot$} from './actions/annotActions'
+import {addAnnotations$, toggleNote$,toggleThicknessAnnot$,toggleDistanceAnnot$, toggleDiameterAnnot$, toggleAngleAnnot$} from './actions/annotActions'
 import {addBomEntries$, selectBomEntries$, selectBomEntries2$} from './actions/bomActions'
 
 let commands = {
@@ -301,6 +301,7 @@ export default class App extends React.Component {
     annotations$ = annotations$({
         singleTaps$:glview.singleTaps$, 
         activeTool$:appState$.map(aS=>aS.activeTool),
+        addAnnotations$:addAnnotations$,
         deleteAnnots$:deleteEntities$
       },
       self.state.annotationsData
@@ -495,14 +496,10 @@ export default class App extends React.Component {
           setDesignData$(bla.design)
           addBomEntries$(bla.bom)
           addEntityInstances$(bla.assemblies.children)
-
+          addAnnotations$(bla.annotations)
 
           let meshData$ =bla.meshSources$
             .shareReplay(1)
-
-          /*meshData$
-            .subscribe( function(entry){
-              console.log("mesh entry",entry)})*/
 
           let meshes$ =
             meshData$
@@ -519,7 +516,7 @@ export default class App extends React.Component {
             .zip(meshes$,function(meshData, mesh){
               self.kernel.partRegistry.addTemplateMeshForPartType( mesh.clone(), meshData.typeUid )
             })
-            .subscribe((bla)=>{setTimeout(self._tempForceDataUpdate.bind(self), 10)})  
+            .subscribe((bla)=>{setTimeout(self._tempForceDataUpdate.bind(self), 100)})  
 
         })
       },(err)=>console.log("error",err))

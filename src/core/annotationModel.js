@@ -11,6 +11,9 @@ import {setActiveTool$,clearActiveTool$} from '../actions/appActions'
 import {first,toggleCursor} from '../utils/otherUtils'
 import {generateUUID} from 'usco-kernel2/src/utils'
 
+import logger from '../utils/log'
+let log = logger("annotations")
+log.setLevel("info")
 
 import Rx from 'rx'
 let fromEvent = Rx.Observable.fromEvent
@@ -258,9 +261,14 @@ function addAnnotationMod$(intent){
 
 function makeModification$(intent){
 
-  let addAnnot$ = intent.addAnnotation$
-    .map((annotData) => (annotList) => {
-      annotList.push(annotData)
+  let addAnnot$ = intent.addAnnotations$
+    .map((nData) => (annotList) => {
+      log.info("adding annotation(s)",nData)
+      //FIXME , immutable
+      let newData = nData || []
+      if(newData.constructor !== Array) newData = [newData]
+
+      annotList = annotList.concat( newData )
       return annotList
     })
 
@@ -285,7 +293,9 @@ function makeModification$(intent){
 function model(intent, source) {
   let source$ = source.annotData$ || Observable.just([])
   //hack
-  intent.addAnnotation$ = addAnnotationMod$(intent)
+  intent.addAnnotations$ = intent.addAnnotations$
+    .merge( addAnnotationMod$(intent) )
+
   let modification$ = makeModification$(intent)
 
   return modification$
