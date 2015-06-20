@@ -2,76 +2,52 @@ import Rx from 'rx'
 import {Observable, exists} from '../utils/obsUtils'
 let merge = Rx.Observable.merge
 import {first,toggleCursor,getEntity,hasEntity,extractMeshTransforms} from '../utils/otherUtils'
+import combineTemplate from 'rx.observable.combinetemplate'
+
+
+function itemsEqual(a,b){
+  //perhaps an immutable library would not require such horrors?
+  if(JSON.stringify(a)===JSON.stringify(b)){
+    return true
+  }
+  return false
+}
 
 
 ////////////////////////////
 export function Intent(interactions) {
 
-  function attributesToArrays(attrs){
-    let output= {}
-    for(let key in attrs){
-      output[key] = attrs[key].toArray()
-    }
-    //special case for rotation
-    if("rot" in attrs)
-    {
-      output["rot"] = output["rot"].slice(0,3)
-    }
-    return output
+  function toArray (vec){
+    return vec.toArray().slice(0,3)
   }
 
-  //debounce 16.666 ie 60 fps ?
-  let rawTranforms     =  interactions.objectsTransforms$
+  let objTransform$ = interactions.objectsTransforms$
     .debounce(16.6666)
     .filter(hasEntity)
-    .share()
 
-  let objectTransforms$ = rawTranforms 
-    .map(extractMeshTransforms)
-    .map(attributesToArrays)
-    .take(1)
+  let entity = objTransform$.map(getEntity)//.startWith({typeUid:undefined,iuid:undefined})//temporary
+    .distinctUntilChanged(null, itemsEqual)
 
-  let objectsId$ = rawTranforms
-    .map(getEntity)
-    .take(1)
+  let eId = objTransform$.map(getEntity).pluck('iuid').startWith("-1")
+    .distinctUntilChanged(null, itemsEqual)
+  let pos = objTransform$.pluck('position').map(toArray).startWith([0,0,0])
+    .distinctUntilChanged(null, itemsEqual)
+  let rot = objTransform$.pluck('rotation').map(toArray).startWith([0,0,0])
+    .distinctUntilChanged(null, itemsEqual)
+  let sca = objTransform$.pluck('scale').map(toArray).startWith([1,1,1])
+    .distinctUntilChanged(null, itemsEqual)
 
-  /*let entityTransforms$ = Observable.forkJoin(
-    objectTransforms$,
-    objectsId$
-  )*/
-  let entityTransforms$ = Observable
-    .combineLatest(objectTransforms$,objectsId$,
-      function(transforms,entity){
-        return{
-          entity:entity,
-          pos:transforms.pos,
-          rot:transforms.rot,
-          sca:transforms.sca
-        }
-      })
-  .repeat()
-
-  /*let entitiesOnly = hasEntity 
-    let toArray = attributesToArrays
-
-    let objTransform$ = objectTransforms
-    .debounce(16)
-    .filter(entitiesOnly)
- 
-    let eId = objTransform$.map(getEntity).pluck('iuid').startWith(-1)
-    let pos = objTransform$.pluck('position').map(toArray).startWith([0,0,0])
-    let rot = objTransform$.pluck('rotation').map(toArray).startWith([0,0,0])
-    let sca = objTransform$.pluck('scale').map(toArray).startWith([0,0,0])
-     
-    let endTranforms = combineTemplate(
-      {entityId:eId, 
-       pos:pos,
-       rot:rot,
-       sca:sca}
-    ).subscribe(function(value){
-      console.log("transforms value",JSON.stringify(value))
-    })*/
+   
+  let endTranforms$ = combineTemplate(
+    {
+      iuid: eId, 
+      entity,
+      pos:pos,
+      rot:rot,
+      sca:sca
+    })
   
+  ////////
   let appState$ = interactions.appState$ //???ugh, no, no no !
 
 
@@ -137,11 +113,10 @@ export function Intent(interactions) {
     .subscribe(function(data){
       selectBomEntries2$(data)
     })*/
-    
 
 
   return {
-    entityTransforms$,
+    entityTransforms$:endTranforms$,
     entitiesToSelect$
     //bomEntriesToSelect$
   }

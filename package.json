@@ -42,7 +42,7 @@
     "rx": "^2.5.3",
     "rx-dom": "^5.0.3",
     "rx-lite": "^2.5.2",
-    "rx.observable.combinetemplate": "^0.2.4",
+    "rx.observable.combinetemplate": "^0.2.5",
     "screenfull": "^2.0.0",
     "three": "^0.70.0",
     "transducers.js": "^0.3.1",
