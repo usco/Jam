@@ -25,7 +25,6 @@ import Rx from 'rx'
 Rx.config.longStackSupport = true
 let fromEvent = Rx.Observable.fromEvent
 let Observable = Rx.Observable
-import combineTemplate from 'rx.observable.combinetemplate'
 
 import {fetchUriParams,getUriQuery,setWindowPathAndTitle}  from './utils/urlUtils'
 import {first,toggleCursor,getEntity,hasEntity,extractMeshTransforms} from './utils/otherUtils'
@@ -47,7 +46,7 @@ import ContextMenu from './components/ContextMenu'
 
 
 ////TESTING
-import {selectEntities$,addEntityInstances$, setEntityData$, deleteEntities$, duplicateEntities$, deleteAllEntities$ } from './actions/entityActions'
+import {selectEntities$,addEntityInstances$, updateEntities$, deleteEntities$, duplicateEntities$, deleteAllEntities$ } from './actions/entityActions'
 import {setToTranslateMode$, setToRotateMode$, setToScaleMode$} from './actions/transformActions'
 import {showContextMenu$, hideContextMenu$, undo$, redo$, setDesignAsPersistent$, clearActiveTool$,setSetting$} from './actions/appActions'
 import {newDesign$, setDesignData$} from './actions/designActions'
@@ -249,7 +248,7 @@ export default class App extends React.Component {
     entities$ = entities$({
         createEntityInstance$:new Rx.Subject(),//createEntityInstance$,
         addEntities$:addEntityInstances$,
-        setEntityData$, 
+        updateEntities$, 
         deleteEntities$, 
         duplicateEntities$, 
         deleteAllEntities$,
@@ -475,11 +474,11 @@ export default class App extends React.Component {
     })
 
     intent.entityTransforms$
-      .subscribe(setEntityData$)
+      .subscribe(updateEntities$)
 
     intent.entitiesToSelect$
       .subscribe( selectEntities$ )
-      
+
 
     //sinks (saving etc )
     let sinks = require('./core/sinks')
@@ -516,7 +515,11 @@ export default class App extends React.Component {
             .zip(meshes$,function(meshData, mesh){
               self.kernel.partRegistry.addTemplateMeshForPartType( mesh.clone(), meshData.typeUid )
             })
-            .subscribe((bla)=>{setTimeout(self._tempForceDataUpdate.bind(self), 100)})  
+            .subscribe((bla)=>{
+              //HACK HACK HACK
+              setTimeout(self._tempForceDataUpdate.bind(self), 10)
+              setTimeout(self._tempForceDataUpdate.bind(self), 300)
+            })  
 
         })
       },(err)=>console.log("error",err))
