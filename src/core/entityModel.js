@@ -1,6 +1,6 @@
 import {
   addEntityInstances$, 
-  setEntityData$, 
+  updateEntities$, 
   deleteEntities$, 
   duplicateEntities$, 
   deleteAllEntities$,
@@ -119,30 +119,42 @@ function makeModification$(intent){
     })
 
   /*set entites properties*/
-  let _updateEntities$ = intent.setEntityData$
+  let _updateEntities$ = intent.updateEntities$
     .debounce(3)
-    .map((data) => (entitiesData) => {
-      log.info("updating entities with data", data)
+    .map((nData) => (entitiesData) => {
+      log.info("updating entities with data", nData)
+
+      //FIXME , immutable
+      let newData = nData || []
+      if(newData.constructor !== Array) newData = [newData]
+      
       let outputData = Object.assign({},entitiesData)
+      if(!newData) return outputData
 
-      if(!data) return outputData
-
-      let entity = data.entity
       let entitiesById = outputData.entitiesById
-      let tgtEntity    =  Object.assign({}, entitiesById[entity.iuid] )
-      delete data.entity
 
-      if(!tgtEntity) return outputData
+      newData.map(function(entry){
+        let iuid = entry.iuid
+        if(!iuid){
+          return undefined
+        }
+        let tgtEntity    =  Object.assign({}, entitiesById[iuid] )
+        if(!tgtEntity){
+          return undefined
+        }
 
-      for(let key in data){
-        tgtEntity[key] = data[key]
-      }
-      //why is this even needed ?
-      delete entitiesById[entity.iuid]
-      outputData.instances = outputData.instances.filter(inst => inst.iuid !== tgtEntity.iuid)
+        for(let key in entry){
+          tgtEntity[key] = entry[key]
+        }
 
-      outputData.instances.push( tgtEntity)
-      outputData.entitiesById[entity.iuid] = tgtEntity
+        //why is this even needed ?
+        delete entitiesById[iuid]
+        outputData.instances = outputData.instances.filter(inst => inst.iuid !== iuid)
+
+        outputData.instances.push( tgtEntity)
+        outputData.entitiesById[iuid] = tgtEntity
+      })
+
       return outputData
     })
 

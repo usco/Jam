@@ -9,7 +9,7 @@ import logger from '../utils/log'
 let log = logger("Jam-ToolBar")
 log.setLevel("info")
 
-import {setEntityData$, setEntityBBox} from '../actions/entityActions'
+import {updateEntities$, setEntityBBox} from '../actions/entityActions'
 
 import EditableItem from './EditableItem'
 import ColorPicker from 'react-color-picker'
@@ -72,8 +72,8 @@ class EntityInfos extends React.Component {
     transforms[type][index]=parseFloat(event.target.value)
     
     let data = transforms
-    data["entity"] = entity
-    setEntityData$(data)
+    data["iuid"] = entity.iuid
+    updateEntities$(data)
   }
 
   handleSizeChange(index, event) {
@@ -107,8 +107,8 @@ class EntityInfos extends React.Component {
     console.log("entity data bla ",field, value, entity)// this.props.entities[0] )
     let data = {}
     data[field]  = value
-    data["entity"] = entity
-    setEntityData$(data)
+    data["iuid"] = entity.iuid
+    updateEntities$(data)
   }
 
   

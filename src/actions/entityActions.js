@@ -27,5 +27,5 @@ export let deleteAllEntities$ = createAction()
 export let duplicateEntities$ = createAction()
 
 /*set entity data : FIXME : merge all the above ?*/
-export let setEntityData$ = createAction()
+export let updateEntities$ = createAction()
 
