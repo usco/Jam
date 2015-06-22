@@ -49,7 +49,7 @@ import ContextMenu from './components/ContextMenu'
 import {selectEntities$,addEntityInstances$, updateEntities$, deleteEntities$, duplicateEntities$, deleteAllEntities$ } from './actions/entityActions'
 import {setToTranslateMode$, setToRotateMode$, setToScaleMode$} from './actions/transformActions'
 import {showContextMenu$, hideContextMenu$, undo$, redo$, setDesignAsPersistent$, clearActiveTool$,setSetting$} from './actions/appActions'
-import {newDesign$, setDesignData$} from './actions/designActions'
+import {newDesign$, updateDesign$} from './actions/designActions'
 import {addAnnotations$, toggleNote$,toggleThicknessAnnot$,toggleDistanceAnnot$, toggleDiameterAnnot$, toggleAngleAnnot$} from './actions/annotActions'
 import {addBomEntries$, selectBomEntries$, selectBomEntries2$} from './actions/bomActions'
 
@@ -163,13 +163,13 @@ export default class App extends React.Component {
     function updateDesign(design){
       //console.log("updating design state")
       self.setState({
-        design:design
+        design
       })
     }
     function updateEntities(entities){
       //console.log("updating entities state")
       self.setState({
-        entities:entities
+        entities
       })
     }
     function updateAppState(data){
@@ -187,7 +187,7 @@ export default class App extends React.Component {
     function updateBom(bom){
       //hack, obviously
       self.setState({
-        bom:bom
+        bom
       })
     }
     ////////
@@ -195,7 +195,7 @@ export default class App extends React.Component {
 
     design$ = design$({
         newDesign$,
-        setDesignData$,
+        updateDesign$,
         setAsPersistent$:setDesignAsPersistent$
       }
     )
@@ -335,7 +335,7 @@ export default class App extends React.Component {
       }
       let _settings = Object.assign({},defaults,settings)
 
-      setDesignData$({
+      updateDesign$({
         _persistent:_settings.persistent,
         uri:_settings.lastDesignUri,
         name:_settings.lastDesignName
@@ -482,22 +482,49 @@ export default class App extends React.Component {
 
     //sinks (saving etc )
     let sinks = require('./core/sinks')
-    //sinks.serializer(self.kernel, design$, entities$, annotations$, bom$, combos$, setDesignData$)
+    sinks.serializer(self.kernel, design$, entities$, annotations$, bom$, combos$, updateDesign$)
 
     designSources$
-      .subscribe(function(designUri){
+      .map(function(designUri){
+        updateDesign$({_doSave:false})
         console.log("LOOOOAD hey , can you please load",designUri)
 
-        let source = self.kernel.loadDesign(designUri)
-        source.subscribe(function(bla){
-          console.log("gnn",bla)
-          
-          setDesignData$(bla.design)
-          addBomEntries$(bla.bom)
-          addEntityInstances$(bla.assemblies.children)
-          addAnnotations$(bla.annotations)
+        //we want to be notified once ALL of these have finished 
+        let _meshesDone$ = new Rx.Subject()
 
-          let meshData$ =bla.meshSources$
+        let loadDone$ = Rx.Observable.zip(
+          design$,
+          entities$,
+          annotations$,
+          bom$,
+          _meshesDone$,
+          function(d,e,a,b,m){
+            return {d,e,a,b,m}
+          }
+        )
+        .shareReplay(1)
+
+
+        loadDone$.subscribe((done)=>{
+          console.log("done with unserialization")
+
+          updateDesign$({_doSave:true})
+            
+          //self._tempForceDataUpdate()
+          //HACK HACK HACK
+          setTimeout(self._tempForceDataUpdate.bind(self), 10)
+        })
+
+        let source = self.kernel.loadDesign(designUri)
+        source.subscribe(function(designData){
+          console.log("gnn",designData)
+                    
+          updateDesign$(designData.design)
+          addBomEntries$(designData.bom)
+          addEntityInstances$(designData.assemblies.children)
+          addAnnotations$(designData.annotations)
+
+          let meshData$ =designData.meshSources$
             .shareReplay(1)
 
           let meshes$ =
@@ -515,14 +542,18 @@ export default class App extends React.Component {
             .zip(meshes$,function(meshData, mesh){
               self.kernel.partRegistry.addTemplateMeshForPartType( mesh.clone(), meshData.typeUid )
             })
-            .subscribe((bla)=>{
-              //HACK HACK HACK
-              setTimeout(self._tempForceDataUpdate.bind(self), 10)
-              setTimeout(self._tempForceDataUpdate.bind(self), 300)
+            .subscribe((designData)=>{
+              _meshesDone$.onNext("done")
             })  
 
         })
-      },(err)=>console.log("error",err))
+
+        return loadDone$
+      })
+      //.flatMap(Rx.Observable.from)
+      .subscribe(done=>done)
+      
+      
     //////////////////////////////
 
     showContextMenu$
