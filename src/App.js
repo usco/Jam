@@ -91,11 +91,10 @@ export default class App extends React.Component {
     this.assetManager.addStore( "desktop", new DesktopStore() )
     this.assetManager.addStore( "xhr"    , new XhrStore() )
 
-    this.kernel = new Kernel(this.state)
+    this.kernel = new Kernel()
 
     //temporary
     this.kernel.dataApi.store = this.assetManager.stores["xhr"]
-    this.kernel.assetManager  = this.assetManager
 
     let self = this
     let oldSetState = this.setState.bind(this)

@@ -119,7 +119,7 @@ function BomView(drivers, props) {
           return(
             <tr
               className={Class("bomEntry", {selected: selected})} 
-              attributes={{"data-name": row.name}} key={row.name}
+              attributes={{"data-name": row.name}} key={row.uuid}
               data-name={row.name}
               data-uuid={row.uuid}
               onClick={drivers.getEventSubject('onClickEntry').onEvent}

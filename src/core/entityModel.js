@@ -163,7 +163,6 @@ function makeModification$(intent){
   let _deleteEntities$ = intent.deleteEntities$
     .map((remEntitites) => (entitiesData) => {
       //log.info("removing entity instances", instances)
-      //self.kernel.removeEntity(instance)
 
       //FIXME: not sure...., duplication of the above again
       let nEntities  =  entitiesData.instances
