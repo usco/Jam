@@ -21,7 +21,7 @@ function makeModification$(intent){
     })
 
 
-  let updateDesign$ = intent.setDesignData$ 
+  let updateDesign$ = intent.updateDesign$ 
     .map((data) => (designData) => {
       log.info("setting design data", data)
 

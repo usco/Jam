@@ -2,7 +2,7 @@ import React from 'react'
 //import Rx from 'rx'
 
 import EditableItem from './EditableItem'
-import {setDesignData$} from '../actions/designActions'
+import {updateDesign$} from '../actions/designActions'
 
 
 export default class DesignCard extends React.Component{
@@ -17,7 +17,7 @@ export default class DesignCard extends React.Component{
   setDesignData(field, value){
     let data = {}
     data[field] = value
-    setDesignData$(data)
+    updateDesign$(data)
   }
 
   addTag(value){
@@ -35,7 +35,7 @@ export default class DesignCard extends React.Component{
       .map(function(data){
         let tags = self.props.design.tags
         tags = tags.concat( data )
-        setDesignData$({tags:tags})
+        updateDesign$({tags:tags})
         self.setState({currentTagInput:""})
       })
   }
@@ -45,7 +45,7 @@ export default class DesignCard extends React.Component{
     if(idx>-1){ 
       let tags = Object.assign([],this.props.design.tags)
       tags.splice(idx,1)
-      setDesignData$({tags:tags})
+      updateDesign$({tags:tags})
     }
   }
 
@@ -58,7 +58,7 @@ export default class DesignCard extends React.Component{
     let licenses = Object.assign([], this.props.design.licenses)
     if(licenses.indexOf(selectedLicense)===-1){
       licenses.push(selectedLicense)
-      setDesignData$({licenses:licenses})
+      updateDesign$({licenses:licenses})
     }
 
     //let selectedLicense = selectedLicense
@@ -70,7 +70,7 @@ export default class DesignCard extends React.Component{
     if(idx>-1){ 
       let licenses = Object.assign([],this.props.design.licenses)
       licenses.splice(idx,1)
-      setDesignData$({licenses:licenses})
+      updateDesign$({licenses:licenses})
     }
   }
 
@@ -86,7 +86,7 @@ export default class DesignCard extends React.Component{
       email:email,
       url:url
     })
-    setDesignData$({authors:authors})
+    updateDesign$({authors:authors})
   }
 
   removeAuthor(author){
@@ -99,7 +99,7 @@ export default class DesignCard extends React.Component{
         authorsEntry.email=== author.email)
     })
 
-    setDesignData$({authors:authors})
+    updateDesign$({authors:authors})
   }
 
   render() {

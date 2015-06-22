@@ -19,7 +19,7 @@ function itemsEqual(a,b){
 
 //////////////////
 //code related to saving etc
-export function serializer(kernel, design$, entities$, annotations$, bom$, combos$, setDesignData$)
+export function serializer(kernel, design$, entities$, annotations$, bom$, combos$, updateDesign$)
 {
 
   //testing only
@@ -62,7 +62,7 @@ export function serializer(kernel, design$, entities$, annotations$, bom$, combo
         let serverResp =  JSON.parse(result)
         let persistentUri = kernel.dataApi.designsUri+"/"+serverResp.uuid
 
-        setDesignData$({uri:persistentUri})
+        updateDesign$({uri:persistentUri})
       })
     })
 

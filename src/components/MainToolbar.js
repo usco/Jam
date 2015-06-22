@@ -11,7 +11,7 @@ log.setLevel("info")
 import EditableItem from './EditableItem'
 import DesignCard   from './DesignCard'
 
-import {newDesign$, setDesignData$} from '../actions/designActions'
+import {newDesign$, updateDesign$} from '../actions/designActions'
 import {undo$,redo$,setDesignAsPersistent$,setSetting$} from '../actions/appActions'
 import {toggleNote$,toggleThicknessAnnot$,toggleDistanceAnnot$, toggleDiameterAnnot$, toggleAngleAnnot$,toggleAnnotation$} from '../actions/annotActions'
 
@@ -21,7 +21,7 @@ let designNameInteraction$ = new Rx.Subject()
 designNameInteraction$
   .debounce(800)
   .subscribe(
-    setDesignData$
+    updateDesign$
   )
 
 class MainToolBar extends React.Component {

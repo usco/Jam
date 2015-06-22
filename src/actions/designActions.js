@@ -5,7 +5,7 @@ import {createAction} from '../utils/obsUtils'
 export let newDesign$ = createAction()
 
 /*set active designs data/fields */
-export let setDesignData$ = createAction()
+export let updateDesign$ = createAction()
 
 /*save current design */
 export let saveDesign$ = createAction()
