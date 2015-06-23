@@ -2,16 +2,9 @@ import Rx from 'rx'
 import {Observable, exists} from '../utils/obsUtils'
 let merge = Rx.Observable.merge
 import {first,toggleCursor,getEntity,hasEntity,extractMeshTransforms} from '../utils/otherUtils'
+import {itemsEqual} from '../utils/utils'
+
 import combineTemplate from 'rx.observable.combinetemplate'
-
-
-function itemsEqual(a,b){
-  //perhaps an immutable library would not require such horrors?
-  if(JSON.stringify(a)===JSON.stringify(b)){
-    return true
-  }
-  return false
-}
 
 
 ////////////////////////////
@@ -56,7 +49,7 @@ export function Intent(interactions) {
     //only select entities when no tool is selected 
     .onlyWhen(appState$, appState => !exists(appState.activeTool) )
     .map(
-      (meshes)=>( meshes.filter(hasEntity).map(getEntity) )
+      (meshes)=>( meshes.filter(hasEntity).map(getEntity).map(i=>i.iuid) )
     )
 
   
@@ -77,7 +70,7 @@ export function Intent(interactions) {
 
       //fixme use flat data structure (instances will not be)
       let selections = typeUids.flatMap(function(typeUid){
-        return entities.instances.filter( i => i.typeUid === typeUid )//.map( i => i.iuid )
+        return entities.instances.filter( i => i.typeUid === typeUid ).map( i => i.iuid )
       })
       
       console.log("selecting entities from bom", selections)
@@ -88,18 +81,20 @@ export function Intent(interactions) {
     entitiesToSelect$,
     entitiesToSelectFromBom$
   )
-  /*
+  
   //selection instances => bom entry
-  let selectsBomFromInsts$ = 
+  let selectEntities$ = interactions.selectEntities$ //this be an intent, from an interaction
+  //entities$.pluck("selectionIds").distinctUntilChanged()
+
+  let bomEntriesToSelect$ = 
     selectEntities$
     .withLatestFrom(entities$,(e,entities)=>entities)
-    //entities$
-    //.map( entities => entities.selectedEntitiesIds)
     .withLatestFrom(bom$,function(entities,bom){
 
-      let iuids = entities.selectedEntitiesIds
+      console.log("selecting bom stuff")
+      let iuids = entities.selectedIds
       let selections = iuids.map(function(iuid){
-        let entity  = entities.entitiesById[iuid]
+        let entity  = entities.byId[iuid]
         let typeUid =  undefined
         if(entity) typeUid = entity.typeUid
         return typeUid//bom.byId[typeUid]
@@ -110,47 +105,11 @@ export function Intent(interactions) {
       console.log("selecting bom entries from entities", selections)
       return selections
     })
-    .subscribe(function(data){
-      selectBomEntries2$(data)
-    })*/
 
 
   return {
     entityTransforms$:endTranforms$,
-    entitiesToSelect$
-    //bomEntriesToSelect$
+    entitiesToSelect$,
+    bomEntriesToSelect$
   }
 }
-
-//keyboard experiment
-/*
-function setKeyBidings( element ){
-  //based on http://qiita.com/jdeseno/items/72e12a5fa815b52f95e2
-  // US keyboard
-  let keycodes = {
-    48: "0", 49: "1", 50: "2", 51: "3", 52: "4", 53: "5", 54: "6", 55: "7", 56: "8", 57: "9",
-    65: "a", 66: "b", 67: "c", 68: "d", 69: "e", 70: "f", 71: "g",
-    72: "h", 73: "i", 74: "j", 75: "k", 76: "l", 77: "m", 78: "n",
-    79: "o", 80: "p", 81: "q", 82: "r", 83: "s", 84: "t", 85: "u",
-    86: "v", 87: "w", 88: "x", 89: "y", 90: "z"
-  }
-  let source = Rx.Observable.fromEvent(element, 'keydown')
-  let subscription = source
-     .map(function(e) {
-        return keycodes[e.keyCode]
-      })
-     .filter(function(key) {
-       return !!key
-     })
-     .subscribe(function(key) {
-       console.log('keydown', key)
-     });
-
-}
-
-let rxjsTrap = {
-
-  bind(keyCombo){
-
-  }
-}*/

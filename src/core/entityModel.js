@@ -21,10 +21,10 @@ import {generateUUID} from 'usco-kernel2/src/utils'
 ///defaults, what else ?
 const defaults = {
   instances:[],
-  selectedEntitiesIds:[],
+  selectedIds:[],
 
   //secondary storage of instances, for (flat) faster/simpler access
-  entitiesById:{}
+  byId:{}
 }
 
 /*
@@ -110,11 +110,14 @@ function makeModification$(intent){
       if(entities.constructor !== Array) entities = [entities]
 
       entitiesData.instances = entitiesData.instances.concat(entities)
-      entities.map(entity=>{entitiesData.entitiesById[entity.iuid] = entity})
+      let entityIds = entities.map( function(entity) {
+        entitiesData.byId[entity.iuid] = entity
+        return entity.iuid
+      })
+      
 
       //set selections
-      selectEntities$( entities )//entities.map((entity)=>entity.iuid))
-      //entitiesData.selectedEntitiesIds = entities.map((entity)=>entity.iuid)
+      selectEntities$( entityIds )
       return entitiesData
     })
 
@@ -131,14 +134,14 @@ function makeModification$(intent){
       let outputData = Object.assign({},entitiesData)
       if(!newData) return outputData
 
-      let entitiesById = outputData.entitiesById
+      let byId = outputData.byId
 
       newData.map(function(entry){
         let iuid = entry.iuid
         if(!iuid){
           return undefined
         }
-        let tgtEntity    =  Object.assign({}, entitiesById[iuid] )
+        let tgtEntity    =  Object.assign({}, byId[iuid] )
         if(!tgtEntity){
           return undefined
         }
@@ -148,11 +151,11 @@ function makeModification$(intent){
         }
 
         //why is this even needed ?
-        delete entitiesById[iuid]
+        delete byId[iuid]
         outputData.instances = outputData.instances.filter(inst => inst.iuid !== iuid)
 
         outputData.instances.push( tgtEntity)
-        outputData.entitiesById[iuid] = tgtEntity
+        outputData.byId[iuid] = tgtEntity
       })
 
       return outputData
@@ -171,10 +174,10 @@ function makeModification$(intent){
 
       entitiesData.instances = outNEntities
 
-      remEntitites.map(entity=>{ delete entitiesData.entitiesById[entity.iuid] })
+      remEntitites.map(entity=>{ delete entitiesData.byId[entity.iuid] })
 
       //set selections
-      entitiesData.selectedEntitiesIds = []
+      entitiesData.selectedIds = []
 
       return entitiesData
     })
@@ -183,9 +186,9 @@ function makeModification$(intent){
   let _deleteAllEntities$ = intent.deleteAllEntities$
     .map(() => (entitiesData) => {
       entitiesData.instances = []
-      entitiesData.entitiesById = {}
+      entitiesData.byId = {}
       //set selections
-      entitiesData.selectedEntitiesIds = []
+      entitiesData.selectedIds = []
       return entitiesData
     })
 
@@ -222,16 +225,16 @@ function makeModification$(intent){
   /*select given entities*/
   let _selectEntities$ = intent.selectEntities$ 
     .distinctUntilChanged()//we do not want to be notified multiple times in a row for the same selections
-    .map((sentities) => (entitiesData) => {
+    .map((sentityIds) => (entitiesData) => {
       //log.info("selecting entitites",sentities)
 
-      let entities = sentities || []
-      if(entities.constructor !== Array) entities = [entities]
+      let entityIds = sentityIds || []
+      if(entityIds.constructor !== Array) entityIds = [entityIds]
 
-      let ids = entities.map( entity => entity.iuid)
+      //let ids = entities.map( entity => entity.iuid)
 
       ////TODO: should it be serialized in history ?
-      entitiesData.selectedEntitiesIds = ids
+      entitiesData.selectedIds = entityIds
       return entitiesData
     })
 
@@ -239,9 +242,9 @@ function makeModification$(intent){
   let _resetEntities$ = intent.newDesign$
     .map((sentities) => (entitiesData) => {
       entitiesData.instances = []
-      entitiesData.entitiesById = {}
+      entitiesData.byId = {}
       //set selections
-      entitiesData.selectedEntitiesIds = []
+      entitiesData.selectedIds = []
       return entitiesData
     })
 

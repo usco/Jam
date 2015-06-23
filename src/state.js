@@ -69,11 +69,10 @@ let state = {
 
   entities:{
     instances:[],
-    types:{},
-    selectedEntitiesIds:[],
+    selectedIds:[],
 
     //secondary storage of instances, for faster/simpler access
-    entitiesById:{}
+    byId:{}
   },
 
   bom: {

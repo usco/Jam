@@ -1,3 +1,4 @@
+import {itemsEqual} from '../utils/utils'
 //////SINK!!! save changes to design
 /*
 design$
@@ -9,17 +10,9 @@ design$
 */
 
 
-function itemsEqual(a,b){
-  //perhaps an immutable library would not require such horrors?
-  if(JSON.stringify(a)===JSON.stringify(b)){
-    return true
-  }
-  return false
-}
-
 //////////////////
 //code related to saving etc
-export function serializer(kernel, design$, entities$, annotations$, bom$, combos$, updateDesign$)
+export function serializer(kernel, design$, entities$, annotations$, bom$, combos$, updateDesign$, debounce=500)
 {
 
   //testing only
@@ -48,7 +41,7 @@ export function serializer(kernel, design$, entities$, annotations$, bom$, combo
   design$
     .distinctUntilChanged(null, itemsEqual)//only save if something ACTUALLY changed
     //.skip(1) // we don't care about the "initial" state
-    .debounce(1000)
+    .debounce(debounce)
     //only save when design is set to persistent
     .filter(design=>design._persistent && (design.uri || design.name) && design._doSave)
     //staggered approach , do not save the first times
@@ -68,7 +61,7 @@ export function serializer(kernel, design$, entities$, annotations$, bom$, combo
 
   //////SINK!!! save change to assemblies
   entities$
-    .debounce(500)//don't save too often
+    .debounce(debounce)//don't save too often
     .pluck('instances')
     .distinctUntilChanged(null, itemsEqual)//only save if something ACTUALLY changed
 
@@ -80,7 +73,7 @@ export function serializer(kernel, design$, entities$, annotations$, bom$, combo
   ///////////
 
   bom$
-    .debounce(500)
+    .debounce(debounce)//don't save too often
     .pluck('entries')
     .distinctUntilChanged(null, itemsEqual)//only save if something ACTUALLY changed
     //only save when design is _persistent
@@ -91,7 +84,7 @@ export function serializer(kernel, design$, entities$, annotations$, bom$, combo
 
   //////SINK!!! save change to assemblies
   annotations$
-    .debounce(500)//don't save too often
+    .debounce(debounce)//don't save too often
     //.distinctUntilChanged(null, itemsEqual)
 
     //only save when design is _persistent

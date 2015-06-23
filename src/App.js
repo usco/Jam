@@ -416,7 +416,7 @@ export default class App extends React.Component {
       .skip(1)
       .withLatestFrom(entities$,function(partTypes, entities){
 
-        let idx = Object.keys(entities.entitiesById).length
+        let idx = Object.keys(entities.byId).length
         let typeUid = partTypes.latest
         let name = partTypes.typeUidToMeshName[typeUid]+idx
         let bbox = partTypes.typeData[typeUid].bbox
@@ -465,6 +465,7 @@ export default class App extends React.Component {
       objectsTransforms$ : glview.objectsTransform$,
       selectedMeshes$    : glview.selectedMeshes$,
       selectedBomEntries$: selectBomEntries$,
+      selectEntities$,
 
       //these indicate an issue, they should not need to be injected into an intent
       appState$: appState$,
@@ -477,6 +478,9 @@ export default class App extends React.Component {
 
     intent.entitiesToSelect$
       .subscribe( selectEntities$ )
+
+    intent.bomEntriesToSelect$
+      .subscribe( selectBomEntries2$ )
 
 
     //sinks (saving etc )
@@ -558,7 +562,7 @@ export default class App extends React.Component {
     showContextMenu$
       .skipUntil(appState$.filter(appState=>appState.mode !=="viewer"))//no context menu in viewer mode
       /*.combineLatest(
-        $entities.pluck("selectedEntitiesIds"),
+        $entities.pluck("selectedIds"),
         //$annotations.pluck("selectedAnnots"),
         function(event, entityIds){
           return {event, entityIds}
@@ -567,11 +571,11 @@ export default class App extends React.Component {
       .subscribe(function(event){
 
       //TODO: refactor
-      let selectedEntities = self.state.entities.selectedEntitiesIds
-        .map(entityId => self.state.entities.entitiesById[entityId])
+      let selectedEntities = self.state.entities.selectedIds
+        .map(entityId => self.state.entities.byId[entityId])
         .filter(id => id!==undefined)
 
-      let selectIds = self.state.entities.selectedEntitiesIds
+      let selectIds = self.state.entities.selectedIds
       let selectedAnnots = self.state.annotationsData
         .filter( (annot) => { return selectIds.indexOf(annot.iuid) > -1} )
 
@@ -725,7 +729,7 @@ export default class App extends React.Component {
     let entries  = this.state.entities.instances// assemblies_main_children
 
     let annotationsData = this.state.annotationsData //FIXME : HACK obviously    
-    let selectedEntitiesIds = this.state.entities.selectedEntitiesIds
+    let selectedIds = this.state.entities.selectedIds
 
     let meshCache = {}
 
@@ -798,7 +802,7 @@ export default class App extends React.Component {
     glview.forceUpdate({
       data:entries, 
       mapper:mapper.bind(this), 
-      selectedEntities:selectedEntitiesIds,
+      selectedEntities:selectedIds,
       metadata:annotationsData})
 
   }
@@ -844,13 +848,13 @@ export default class App extends React.Component {
     let self=this
     let contextmenuSettings = this.state.contextMenu
     let selectedEntities = []
-    if(this.state.entities.selectedEntitiesIds)
+    if(this.state.entities.selectedIds)
     {
-      selectedEntities= this.state.entities.selectedEntitiesIds
-      .map(entityId => self.state.entities.entitiesById[entityId])
+      selectedEntities= this.state.entities.selectedIds
+      .map(entityId => self.state.entities.byId[entityId])
       .filter(id => id!==undefined)
 
-      let selectIds = this.state.entities.selectedEntitiesIds
+      let selectIds = this.state.entities.selectedIds
       let selectedAnnots = this.state.annotationsData
         .filter( (annot) => { return selectIds.indexOf(annot.iuid) > -1} )
       
