@@ -27,7 +27,7 @@
   "dependencies": {
     "babel-runtime": "^4.7.16",
     "classnames": "^1.2.0",
-    "cycle-react": "^0.26.0",
+    "cycle-react": "^0.27.0",
     "deep-diff": "^0.3.2",
     "glView-helpers": "usco/glView-helpers",
     "immutable": "^3.7.0",

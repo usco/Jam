@@ -346,3 +346,11 @@ button:focus {outline:0;}
 
 .settings button:focus {outline:0;}
 .settings button:focus path{fill:#60C4F8;}
+
+
+/*----------------*/
+
+.glView{
+  width: 100%;
+  height: 100%;
+}
