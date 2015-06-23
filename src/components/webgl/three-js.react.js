@@ -958,7 +958,7 @@ for tap/toubleTaps etc*/
         arrowColor:"#000",
         lineWidth:2.2,
 
-        highlightColor:"#00F",
+        highlightColor: "#60C4F8",//"#00F",
         fontFace:"Open Sans"
       }
 
