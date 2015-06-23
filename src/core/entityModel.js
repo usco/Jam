@@ -165,7 +165,7 @@ function makeModification$(intent){
   removes it from the active assembly*/
   let _deleteEntities$ = intent.deleteEntities$
     .map((remEntitites) => (entitiesData) => {
-      //log.info("removing entity instances", instances)
+      log.info("removing entities ", remEntitites)
 
       //FIXME: not sure...., duplication of the above again
       let nEntities  =  entitiesData.instances
@@ -275,15 +275,6 @@ function model(intent, source) {
 
   let modification$ = makeModification$(intent)
 
-  //just an idea: for context menu etc
-  let availableActions$ ={
-    "delete"   :deleteEntities$,
-    "deleteAll":deleteAllEntities$,
-    "duplicate":duplicateEntities$,
-
-
-  }
-
   return modification$
     .merge(source$)
     .scan((entityData, modFn) => modFn(entityData))//combine existing data with new one
@@ -292,3 +283,16 @@ function model(intent, source) {
 }
 
 export default model
+
+
+
+
+ //just an idea: for context menu etc
+/*let availableActions = {
+  "select"   :selectEntities$,
+  "delete"   :deleteEntities$,
+  "deleteAll":deleteAllEntities$,
+  "duplicate":duplicateEntities$
+}
+
+export {availableActions}*/
