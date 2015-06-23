@@ -42,7 +42,8 @@ import state from './state'
 
 import BomView from './components/Bom/BomView'
 import SettingsView from './components/SettingsView'
-import ContextMenu from './components/ContextMenu'
+import ContextMenu2 from './components/ContextMenu2'
+
 
 
 ////TESTING
@@ -558,40 +559,21 @@ export default class App extends React.Component {
       
       
     //////////////////////////////
-
-    showContextMenu$
+    this.contextFoo = showContextMenu$
       .skipUntil(appState$.filter(appState=>appState.mode !=="viewer"))//no context menu in viewer mode
-      /*.combineLatest(
-        $entities.pluck("selectedIds"),
-        //$annotations.pluck("selectedAnnots"),
-        function(event, entityIds){
-          return {event, entityIds}
-        }
-      )*/
-      .subscribe(function(event){
+      .withLatestFrom(
+        entities$.pluck("selectedIds"),
+        function(event,selectedIds){
+          return {event,selectedIds}
+        }) //proves again, slection should be handled outside of entites/annotations
+      .shareReplay(1)
 
-      //TODO: refactor
-      let selectedEntities = self.state.entities.selectedIds
-        .map(entityId => self.state.entities.byId[entityId])
-        .filter(id => id!==undefined)
 
-      let selectIds = self.state.entities.selectedIds
-      let selectedAnnots = self.state.annotationsData
-        .filter( (annot) => { return selectIds.indexOf(annot.iuid) > -1} )
-
-      selectedEntities = selectedEntities.concat(selectedAnnots)
-
-      let active = true//(selectedEntities && selectedEntities.length>0)
-      let actions = []
-
-      //default actions ?
-      actions = [
+    ///default actions ?
+    /*  actions = [
         {name:"Import file (NA)",action:undefined},
         {name:"Export design (NA)",action:undefined},
         {name:"Delete all",action:deleteAllEntities$},
-
-        /*  {name:"Distance",action:toggleDistanceAnnot$},
-          {name:"Angle",action:toggleAngleAnnot$},*/
         {name:`Jam! version : ${self.state.appInfos.version}`,action:(()=>null)}
       ]
 
@@ -605,28 +587,37 @@ export default class App extends React.Component {
               {name:"Thickness",action:toggleThicknessAnnot$},
               {name:"Diameter",action:toggleDiameterAnnot$},
               {name:"Angle",action:toggleAngleAnnot$}
-          /*{
-            name:"Annotations", 
-            items:[
-              {name:"Note",action:toggleNote$},
-              {name:"Distance",action:toggleDistanceAnnot$},
-              {name:"Thickness",action:toggleThicknessAnnot$},
-              {name:"Diameter",action:toggleDiameterAnnot$},
-              {name:"Angle",action:toggleAngleAnnot$}
-            ]
-          }*/
          ]
       }
-      //TODO: this is ui state, not logic state
+    */
+
+    this.contextFoo.subscribe(function(data){
+      console.log("ContextMenu2")
+      let {event,selectedIds} = data
+      console.log("contextMenu",event.position)
+
+      let items = [ //default actions ?
+        /*{name:"Import file (NA)",action:undefined},
+        {name:"Export design (NA)",action:undefined},*/
+        {text:"Delete all", action:deleteAllEntities$},
+        {text:"Sub items",
+          items:[
+            {text:"foo"},
+            {text:"bar"}
+          ]
+        },
+        {text:`Jam! version : ${self.state.appInfos.version}`}
+      ]
+
       self.setState({
         contextMenu:{
-          active:active,
+          active:true,
           position:event.position,
-          //not sure about all these
-          selectedEntities:selectedEntities,
-          actions,
+
+          items,
+          selectedIds
         }
-      },null, false)
+      })
     })
 
     hideContextMenu$.subscribe(function(requestData){
@@ -911,7 +902,19 @@ export default class App extends React.Component {
       )
     }
 
-    //console.log("selectedAnnots",selectedAnnots )//,selectIds,this.state.annotationsData)
+    //Context menu
+    let showCtxMenu = false
+    let ctxMenuPos = {x:0,y:0}
+    let ctxMenuItems = []
+    let ctxMenuselectedIds = []
+    if(this.state.contextMenu){
+      showCtxMenu = this.state.contextMenu.active
+      ctxMenuPos  = this.state.contextMenu.position
+      ctxMenuItems = this.state.contextMenu.items
+      ctxMenuselectedIds = this.state.contextMenu.selectedIds
+    }
+    console.log("showCtxMenu",showCtxMenu, ctxMenuPos)
+
     return (
         <div ref="wrapper" style={wrapperStyle} className="Jam">
           <MainToolbar 
@@ -944,7 +947,7 @@ export default class App extends React.Component {
 
           {bom}
 
-          <ContextMenu settings={contextmenuSettings} />
+          <ContextMenu2 active={showCtxMenu} position={ctxMenuPos} items={ctxMenuItems} selections={ctxMenuselectedIds}/>
 
           <button className="fullScreenToggler" onClick={toggleFullScreen}>
             {fullScreenTogglerImg}
