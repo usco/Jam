@@ -271,6 +271,7 @@ class ThreeJs extends React.Component{
         //camera.aspect = 1
         camera.aspect = width/height //aspect
         camera.updateProjectionMatrix()   
+        camera.setSize(width,height)
 
         self.composer.reset()
 
