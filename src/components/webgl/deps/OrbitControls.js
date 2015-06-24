@@ -577,6 +577,11 @@ var OrbitControls = function ( object, domElement, upVector ) {
       //this.domElement.addEventListener( 'DOMMouseScroll', onMouseWheel, false ); // firefox
     }
 
+    this.setObservables=function(){
+      
+      
+    }
+
     scope.pointers= {};
     
 };

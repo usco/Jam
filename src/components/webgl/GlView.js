@@ -150,7 +150,6 @@ function _GlView(interactions, props, self){
     .subscribe(data => console.log("contextTaps",data),err=>console.log("error",err))
 
 
-
   //singleTaps$ = pointerInteractions( container ).singleTaps$.map( selectionAt )
   //singleTaps$ = singleTaps$.map( selectionAt ) //stream of taps + selected meshes
   //doubleTaps$ = doubleTaps$.map( selectionAt ) //this._zoomInOnObject.execute( object, {position:pickingInfos[0].point} )
