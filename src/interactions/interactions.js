@@ -46,7 +46,7 @@ function isLong(elapsed, maxTime){
 
 
  //window resize event stream, throttled by throttle amount (250ms default)
- export let windowResizes=function(throttle=250)
+ export function windowResizes (throttle=250)
  {
   //only get the fields we need
   let extractSize = function(x){ 
@@ -61,12 +61,13 @@ function isLong(elapsed, maxTime){
   let throttledWinResize = fromEvent(window, 'resize')
   .throttleFirst(throttle /* ms */)
   .map( extractSize )
+  .startWith({width:window.innerWidth, height:window.innerHeight, aspect:window.innerWidth/window.innerHeight, bRect:undefined})
 
   return throttledWinResize
  }
 
 
- export let clicks = function(mouseDowns, mouseUps, mouseMoves, timing=200, deltaSqr){
+ export function clicks(mouseDowns, mouseUps, mouseMoves, timing=200, deltaSqr){
     /*
     "pseudo click" that does not trigger when there was
     a mouse movement 
@@ -250,7 +251,7 @@ function pinches(touchstarts, touchmoves, touchEnds) {
       })
 }
 
- export let pointerInteractions = function(targetEl){
+ export function pointerInteractions (targetEl){
     let multiClickDelay = 250
     let longPressDelay  = 800
 
@@ -320,6 +321,85 @@ function pinches(touchstarts, touchmoves, touchEnds) {
       zoomIntents$:zoomIntents$
     } 
  }
+
+
+
+export function pointerInteractions2 (targetEl){
+  function fromCEvent(targetEl, eventName){
+    return targetEl.get('canvas', eventName)
+  }
+    //mouseDowns$, mouseUps$, mouseMoves$, rightClicks$, zoomIntents$,
+    let multiClickDelay = 250
+    let longPressDelay  = 800
+
+    let minDelta        = 25//max 50 pixels delta
+    let deltaSqr        = (minDelta*minDelta)
+
+    let mouseDowns  = fromCEvent(targetEl, 'mousedown')
+    let mouseUps    = fromCEvent(targetEl, 'mouseup')
+    let mouseMoves  = fromCEvent(targetEl, 'mousemove')
+    let rightclicks = fromCEvent(targetEl, 'contextmenu').do(preventDefault)// disable the context menu / right click
+    let mouseMoves2 = altMouseMoves(mouseMoves)
+    let zoomIntents = fromCEvent(targetEl, 'wheel')
+
+    let touchStart  = fromCEvent(targetEl,'touchstart')//dom.touchstart(window)
+    let touchMove   = fromCEvent(targetEl,'touchmove')//dom.touchmove(window)
+    let touchEnd    = fromCEvent(targetEl,'touchend')//dom.touchend(window)
+
+
+    ///// now setup the more complex interactions
+    let _clicks = altClicks(mouseDowns, mouseUps, mouseMoves2, longPressDelay, deltaSqr).share()
+
+    let clickStreamBase = _clicks
+      .filter( event => ('button' in event && event.button === 0) )
+      .buffer(function() { return _clicks.debounce( multiClickDelay ) })
+      .map( list => ({list:list,nb:list.length}) )
+      .share()
+
+
+    //we get our custom right clicks
+    let rightClicks2 = _clicks.filter( event => ('button' in event && event.button === 2) )
+    let _holds       = holds(mouseDowns, mouseUps, mouseMoves2, multiClickDelay, deltaSqr)
+    
+
+    let unpack = function(list){ return list.list}
+    let extractData = function(event){ return {clientX:event.clientX,clientY:event.clientY}}
+
+
+    let singleClicks$ = clickStreamBase.filter( x => x.nb == 1 ).flatMap(unpack)
+    let doubleClicks$ = clickStreamBase.filter( x => x.nb == 2 ).flatMap(unpack).take(1).map(extractData).repeat()
+    let contextTaps$  =  Observable.amb([
+      _holds,//.map(function(x){ console.log("HOLDS");return x}),
+      rightClicks2,//.map(function(x){ console.log("rightClicks2");return x}),
+      // Skip if we get a movement
+      mouseMoves
+        .take(1).flatMap( x => Rx.Observable.empty() ),
+      ]
+    ).take(1).repeat()// contextTaps: either HELD leftmouse/pointer or right click
+    
+
+    let dragMoves$   = drags3(mouseDowns, mouseUps, mouseMoves2, longPressDelay, deltaSqr)
+    let zoomIntents$ = zoomIntents 
+    /*dragMoves$.subscribe(function(){console.log("dragMoves")})
+    singleClicks$.subscribe(function(){console.log("singleTaps")})
+    doubleClicks$.subscribe(function(){console.log("doubleTaps")})
+    zoomIntents$.subscribe(function(){console.log("zoomIntents")})*/
+
+    Observable.merge(singleClicks$, doubleClicks$, contextTaps$, dragMoves$, zoomIntents$)
+        //.debounce(200)
+        .subscribe(function (suggestion) {})
+
+    return {
+      taps:clickStreamBase, 
+      singleTaps$: singleClicks$, 
+      doubleTaps$: doubleClicks$, 
+      contextTaps$:contextTaps$,
+      dragMoves$:  dragMoves$,
+      zoomIntents$:zoomIntents$
+    } 
+ }
+
+
 ///////
 export function preventScroll(targetEl){
   fromEvent(targetEl, 'mousewheel').subscribe(preventDefault)

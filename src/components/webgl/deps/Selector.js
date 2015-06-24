@@ -22,7 +22,7 @@ export function findSelectionRoot(node){
   return walkUp(node, isRootNode)
 }
 
-function getCoordsFromPosSizeRect(inputs)
+export function getCoordsFromPosSizeRect(inputs)
 {
   let {pos,rect,width,height} = inputs
   let x =   ( (pos.x - rect.left) / width) * 2 - 1
@@ -31,19 +31,19 @@ function getCoordsFromPosSizeRect(inputs)
   return {x,y}
 }
 
-export function pick(mouseCoords, camera, ortho = false, precision=10){
-  let {x,y} = mousecoords
+export function pick(mouseCoords, camera, hiearchyRoot, ortho = false, precision=10){
+  let {x,y} = mouseCoords
   let mousecoords = new THREE.Vector3(x,y,0.5)
   let v = mousecoords
   let intersects = []
   
-  if( !isOrtho)
+  if( !ortho)
   {
     v.unproject( camera )
     let fooV = v.clone()
     let raycaster = new THREE.Raycaster(camera.position, v.sub(camera.position).normalize())
     //raycaster.precision = 10
-    intersects = raycaster.intersectObjects(this.hiearchyRoot, true)
+    intersects = raycaster.intersectObjects(hiearchyRoot, true)
   }
   else
   {
@@ -61,13 +61,13 @@ export function pick(mouseCoords, camera, ortho = false, precision=10){
     }
 
     let raycaster = new THREE.Raycaster()
-    v.pickingRay( this.camera )
-    raycaster.set( this.camera.position, v )
-    intersects = raycaster.intersectObjects(this.hiearchyRoot, true)
+    v.pickingRay( camera )
+    raycaster.set( camera.position, v )
+    intersects = raycaster.intersectObjects(hiearchyRoot, true)
   }
   
   //remove invisibles, dedupe 
-  //TODO: use transducers.js
+  //TODO: use transducers.js ?
   intersects = intersects
   .sort()
   .filter( (intersect, pos) => {

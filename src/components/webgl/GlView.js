@@ -8,30 +8,31 @@ let Rx = Cycle.Rx
 let fromEvent = Rx.Observable.fromEvent
 let merge = Rx.Observable.merge
 
-import {windowResizes,pointerInteractions,preventScroll} from '../../interactions/interactions'
+import {windowResizes,pointerInteractions,pointerInteractions2,preventScroll} from '../../interactions/interactions'
+import Selector from './deps/Selector'
+import {pick, getCoordsFromPosSizeRect, findSelectionRoot} from './deps/Selector'
+import {preventDefault,isTextNotEmpty,formatData,exists} from '../../utils/obsUtils'
+
+
 
 function positionFromCoords(coords){return{position:{x:coords.x,y:coords.y},event:coords}}
 function extractObject(event){ return event.target.object}
 
-function selectionAt(event, container, selector, width, height, dynamicInjector){
+function selectionAt(event, mouseCoords, camera, hiearchyRoot){
   //log.debug("selection at",event)
-  
-  let rect = container.getBoundingClientRect()
-  let intersects = selector.pickAlt({x:event.clientX,y:event.clientY}, rect, width, height, dynamicInjector)
+  //, container, selector, width, height, rootObject
 
-  //let selectedMeshes = intersects.map( intersect => intersect.object )
-  //selectedMeshes.sort().filter( ( mesh, pos ) => { return (!pos || mesh != intersects[pos - 1]) } )
+  //let intersects = selector.pickAlt({x:event.clientX,y:event.clientY}, rect, width, height, rootObject)
+  let intersects = pick(mouseCoords, camera, hiearchyRoot )//, ortho = false, precision=10)
 
-  //TODO: we are mutating details, is that ok ?
-  //not working in safari etc
-  let outEvent = {}//Object.assign({}, event)
+  let outEvent = {}
   outEvent.clientX = event.clientX
   outEvent.clientY = event.clientY
   outEvent.offsetX = event.offsetX
   outEvent.offsetY = event.offsetY
   outEvent.x = event.x || event.clientX
   outEvent.y = event.y || event.clientY
-
+  //outEvent.rect = event.rect
 
   outEvent.detail = {}
   outEvent.detail.pickingInfos = intersects
@@ -39,26 +40,24 @@ function selectionAt(event, container, selector, width, height, dynamicInjector)
   return outEvent
 }
 
-function selectMeshes(event, container){
-
+function meshesFrom(event){
   let intersects = event.detail.pickingInfos
-  let rect = container.getBoundingClientRect()
 
   let selectedMeshes = intersects.map( intersect => intersect.object )
-  selectedMeshes.sort().filter( ( mesh, pos ) => { return (!pos || mesh != intersects[pos - 1]) } )
-
   selectedMeshes = selectedMeshes.shift()//we actually only get the best match
   selectedMeshes = findSelectionRoot(selectedMeshes)//now we make sure that what we have is actually selectable
 
   if(selectedMeshes){ selectedMeshes = [selectedMeshes] }
   else{ selectedMeshes = []}
 
-  this.selectedMeshes = selectedMeshes
+  return selectedMeshes
+}
 
-
+  //TODO: rethink this
+  /*
   if(this._prevSelectedMeshes && this._prevSelectedMeshes.length>0){
-      this.transformControls.detach(this._prevSelectedMeshes[0])
-  }
+        this.transformControls.detach(this._prevSelectedMeshes[0])
+    }
   if(selectedMeshes.length>0){
     //if(["0","1","2","3"].indexOf(selectedMeshes[0].typeUid) === -1 )
     if(this.props.activeTool && ["translate","rotate","scale"].indexOf(this.props.activeTool) > -1 )
@@ -68,22 +67,20 @@ function selectMeshes(event, container){
   }
 
 
-  /*if(this.props.activeTool && ["translate","rotate","scale"].indexOf(this.props.activeTool) > -1 )
-  {
-    if(selectedMeshes.length>0){
-      this.transformControls.attach(selectedMeshes[0])
-    }
-  }else{
+  function areThereSelections(){ return (self.selectedMeshes && self.selectedMeshes.length>0) }
+  
+  setToTranslateMode$.filter(areThereSelections).subscribe( this.transformControls.setMode.bind(transformControls,"translate") )
+  setToRotateMode$.filter(areThereSelections).subscribe( this.transformControls.setMode.bind(transformControls,"rotate") )
+  setToScaleMode$.filter(areThereSelections).subscribe( this.transformControls.setMode.bind(transformControls,"scale") )
+  //from this to  below
 
-    if(this._prevSelectedMeshes && this._prevSelectedMeshes.length>0){
-      this.transformControls.detach(this._prevSelectedMeshes[0])
-    }
-  }*/
-  this._prevSelectedMeshes = this.selectedMeshes
-  this.selectedMeshes$.onNext(selectedMeshes)
+  function setTransformsFrom(obses, modes, controls){
+    modes.map( mode => 
+      obs.filter(areThereSelections).subscribe( controls.setMode.bind(controls, mode) )
+    )
+  }
+  setTransformsFrom([setToXXX],transformControls,["translate","rotate","scale"])*/
 
-  return event
-}
 
 /*TODO:
 - remove any "this", adapt code accordingly 
@@ -102,13 +99,64 @@ function _GlView(interactions, props, self){
   let items$  = props.get('items').startWith([])
   let windowResizes$ = windowResizes(1) //get from intents/interactions ?
   
-  //singleTaps$ = pointerInteractions( container ).singleTaps$.map( selectionAt )
+  let renderer = null
+  let camera = null  
+  let sphere =null
+
+  let scene = new THREE.Scene()
+  let dynamicInjector = new THREE.Object3D()//all dynamic mapped objects reside here
+  scene.add( dynamicInjector )
+
+
   let {singleTaps$, doubleTaps$, contextTaps$, 
-      dragMoves$, zoomIntents$} =  pointerInteractions(container)
+      dragMoves$, zoomIntents$} =  pointerInteractions2(interactions)
+
+  contextTaps$ = contextTaps$.shareReplay(1)
+  /*singleTaps$.subscribe(event => console.log("singleTaps"))
+  doubleTaps$.subscribe(event => console.log("multiTaps"))
+  contextTaps$.subscribe(event => console.log("contextTaps"))
+  dragMoves$.subscribe(event => console.log("dragMoves"))
+  zoomIntents$.subscribe(event => console.log("zoomIntents"))*/
+
+  function withPickingInfos(inStream, windowResizes$ ){
+    let clientRect$ = inStream
+      .map(e => e.target)
+      .map(target => target.getBoundingClientRect())
+
+    return inStream
+      .withLatestFrom(
+        clientRect$,
+        windowResizes$,
+        function(event, clientRect, resizes){
+          console.log("clientRect",clientRect,event, resizes)
+          //return {pos:{x:event.clientX,y:event.clientY},rect:clientRect,width:resizes.width,height:resizes.height}
+          let data = {pos:{x:event.clientX,y:event.clientY},rect:clientRect,width:resizes.width,height:resizes.height,event}
+
+          let mouseCoords = getCoordsFromPosSizeRect(data)
+          return selectionAt(event, mouseCoords, camera, scene.children)
+        }
+      )
+  }
+
   
-  singleTaps$ = singleTaps$.map( selectionAt ) //stream of taps + selected meshes
-  doubleTaps$ = doubleTaps$.map( selectionAt )
-  contextTaps$ = contextTaps$ //handle context menu type interactions
+  withPickingInfos(singleTaps$, windowResizes$)
+    .subscribe(data => console.log("singleTaps",data),err=>console.log("error",err))
+
+  withPickingInfos(doubleTaps$, windowResizes$)
+    .subscribe(data => console.log("doubleTaps",data),err=>console.log("error",err))
+
+  withPickingInfos(contextTaps$, windowResizes$)
+    .map( meshesFrom )
+    .subscribe(data => console.log("contextTaps",data),err=>console.log("error",err))
+
+
+
+  //singleTaps$ = pointerInteractions( container ).singleTaps$.map( selectionAt )
+  //singleTaps$ = singleTaps$.map( selectionAt ) //stream of taps + selected meshes
+  //doubleTaps$ = doubleTaps$.map( selectionAt ) //this._zoomInOnObject.execute( object, {position:pickingInfos[0].point} )
+
+
+  /*contextTaps$ = contextTaps$ //handle context menu type interactions
     .map( selectionAt )
     .map( selectMeshes )
     .map( positionFromCoords )
@@ -122,39 +170,22 @@ function _GlView(interactions, props, self){
   selectedMeshes$ = singleTaps$.map( selectionAt ) //still needed ?
 
   let objectsTransforms$ = fromEvent(transformControls, 'objectChange')
-      .map(extractObject)
+      .map(extractObject)*/
 
   //hande all the cases where events require re-rendering
-  reRender$ = reRender$.merge(
+  /*reRender$ = reRender$.merge(
     fromEvent(controls,'change'), 
     fromEvent(transformControls,'change'), 
     fromEvent(camViewControls,'change'),
     selectedMeshes$, 
-    objectsTransform$)
+    objectsTransform$)*/
  
-
   
 
-  function areThereSelections(){ return (self.selectedMeshes && self.selectedMeshes.length>0) }
-
-  /*setToTranslateMode$.filter(areThereSelections).subscribe( this.transformControls.setMode.bind(transformControls,"translate") )
-  setToRotateMode$.filter(areThereSelections).subscribe( this.transformControls.setMode.bind(transformControls,"rotate") )
-  setToScaleMode$.filter(areThereSelections).subscribe( this.transformControls.setMode.bind(transformControls,"scale") )*/
-  //from this to  below
-
-  function setTransformsFrom(obses, modes, controls){
-    modes.map( mode => 
-      obs.filter(areThereSelections).subscribe( controls.setMode.bind(controls, mode) )
-    )
-  }
-  setTransformsFrom([setToXXX],transformControls,["translate","rotate","scale"])
-
-
-
-  preventScroll(container)
+  //preventScroll(container)
+  interactions.get('canvas', 'contextmenu').subscribe( e => preventDefault(e) )
 
   //console.log("interactions",interactions,"props",props, self.refs)
-
 
   //actual 3d stuff
 
@@ -163,22 +194,15 @@ function _GlView(interactions, props, self){
         shadowMapEnabled:true,
         shadowMapAutoUpdate:true,
         shadowMapSoft:true,
-        shadowMapType : THREE.PCFSoftShadowMap,//THREE.PCFSoftShadowMap,//PCFShadowMap 
-        autoUpdateScene : true,
-        physicallyBasedShading : false,
-        autoClear:true,
+        shadowMapType : undefined,//THREE.PCFSoftShadowMap,//THREE.PCFSoftShadowMap,//PCFShadowMap 
+        autoUpdateScene : true,//Default ?
+        physicallyBasedShading : false,//Default ?
+        autoClear:true,//Default ?
         gammaInput:false,
         gammaOutput:false
       }
   }
 
-  let scene = new THREE.Scene()
-  let dynamicInjector = new THREE.Object3D()//all dynamic mapped objects reside here
-  scene.add( dynamicInjector )
-
-  let renderer = null
-  let camera = null  
-  let sphere =null
   
 
   function setupCamera(){
@@ -215,21 +239,15 @@ function _GlView(interactions, props, self){
     } else {
       renderer = new THREE.WebGLRenderer( {antialias:false} )
     }
-    renderer.setClearColor( "#fff" )
-    renderer.shadowMapEnabled = config.renderer.shadowMapEnabled
-    renderer.shadowMapAutoUpdate = config.renderer.shadowMapAutoUpdate
-    renderer.shadowMapSoft = config.renderer.shadowMapSoft
 
-    //renderer.shadowMapType = config.renderer.PCFSoftShadowMap//THREE.PCFShadowMap 
-    //renderer.autoUpdateScene = config.renderer.autoUpdateScene
-    //renderer.physicallyBasedShading = config.renderer.physicallyBasedShading
-    //renderer.autoClear = config.renderer.autoClear
-    renderer.gammaInput = config.renderer.gammaInput
-    renderer.gammaOutput = config.renderer.gammaOutput
+    renderer.setClearColor( "#fff" )
+    Object.keys(config.renderer).map(function(key){
+      //TODO add hasOwnProp check
+      renderer[key] = config.renderer[key]
+    })
 
     let pixelRatio = window.devicePixelRatio || 1
     renderer.setPixelRatio( pixelRatio )
-
 
     container.appendChild( renderer.domElement )
     scene.add(camera)
@@ -239,13 +257,12 @@ function _GlView(interactions, props, self){
     console.log("setting size",sizeInfos)
     let {width,height,aspect} = sizeInfos
   
-    if(width >0 && height >0 ){
+    if(width >0 && height >0 && camera && renderer){
       renderer.setSize( width, height )
       camera.aspect = aspect
       camera.updateProjectionMatrix()   
 
       //self.composer.reset()
-
       let pixelRatio = window.devicePixelRatio || 1
       //self.fxaaPass.uniforms[ 'resolution' ].value.set (1 / (width * pixelRatio), 1 / (height * pixelRatio))
       //self.composer.setSize(width * pixelRatio, height * pixelRatio)
@@ -255,7 +272,7 @@ function _GlView(interactions, props, self){
   setupCamera()
   setupScene()
 
-  windowResizes(1).subscribe(  handleResize  )//(data)=>console.log("windowResizes",data))
+  windowResizes(1).subscribe(  handleResize  )
 
 
   //for now we use refs, but once in cycle, we should use virtual dom widgets & co
@@ -264,7 +281,7 @@ function _GlView(interactions, props, self){
   let vtree$ =  Rx.Observable.combineLatest(
     reRender$,
     initialized$,
-    function(timer,initialized){
+    function(reRender, initialized){
 
       if(!initialized && self.refs.container!==undefined){
         configure(self.refs.container.getDOMNode())
@@ -276,10 +293,8 @@ function _GlView(interactions, props, self){
       }
 
       if(initialized){
-        console.log("render")
         render(scene,camera)
-
-        camera.rotation.y += 0.05
+        //camera.rotation.y += 0.005
       }
 
       return ()=> (
@@ -288,7 +303,7 @@ function _GlView(interactions, props, self){
         <div className="camViewControls" />
 
         <div className="overlayTest" style={overlayStyle}>
-          {timer} {initialized}
+          {reRender} {initialized}
         </div>
       </div>)
     })
@@ -302,10 +317,10 @@ function _GlView(interactions, props, self){
       doubleTaps$,
 
       contextTaps$,
-      stopContext$,
+      /*stopContext$,
 
       selectedMeshes$,//is this one needed or redundant ?
-      objectsTransforms$
+      objectsTransforms$*/
     }
   }
 }
