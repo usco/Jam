@@ -153,5 +153,5 @@ function BomView(drivers, props) {
   }
 }
 
-BomView = Cycle.createReactClass('BomView',BomView)
+BomView = Cycle.component('BomView',BomView)
 export default BomView
