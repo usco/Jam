@@ -38,7 +38,7 @@ let Observable= Rx.Observable
 let Subject   = Rx.Subject
 
 
-import {windowResizes,pointerInteractions,preventScroll} from '../../interactions/interactions'
+import {windowResizes, elementResizes, pointerInteractions,preventScroll} from '../../interactions/interactions'
 
 import logger from '../../utils/log'
 let log = logger("glView")
@@ -255,7 +255,7 @@ class ThreeJs extends React.Component{
 
    
     ///////////:setup ui interactions
-    this.resizer = windowResizes(1)
+    this.resizer = elementResizes( container, 1).merge( windowResizes(1) )
 
     let handleResize = function(sizeInfos){
       console.log("setting size",sizeInfos)

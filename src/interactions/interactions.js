@@ -2,6 +2,10 @@ import Rx from 'rx'
 let Observable= Rx.Observable
 let fromEvent = Observable.fromEvent
 
+require("rx-dom")
+//import * from "rx-dom"
+
+
 import logger from '../utils/log'
 let log = logger("interactions")
 log.setLevel("info")
@@ -59,6 +63,25 @@ function isLong(elapsed, maxTime){
   }
 
   let throttledWinResize = fromEvent(window, 'resize')
+  .throttleFirst(throttle /* ms */)
+  .map( extractSize )
+
+  return throttledWinResize
+ }
+
+
+ export function elementResizes(element, throttle=250){
+  console.log("elementResizes")
+  function extractSize(x){ 
+    let x = x.target
+    let bRect = {left:0,top:0,bottom:0,right:0,width:0,height:0}
+    if(x.getBoundingClientRect) bRect = x.getBoundingClientRect()
+
+    let res = {width:x.innerWidth, height:x.innerHeight, aspect:x.innerWidth/x.innerHeight, bRect:bRect} 
+    return res
+  }
+
+  let throttledWinResize = Rx.DOM.resize(element) //fromEvent(window, 'resize')
   .throttleFirst(throttle /* ms */)
   .map( extractSize )
 
