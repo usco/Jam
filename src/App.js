@@ -856,7 +856,7 @@ export default class App extends React.Component {
     //hack hack hack
     function toggleFullScreen(){
       if (screenfull.enabled) {
-        screenfull.toggle()
+        screenfull.toggle() //self.refs.wrapper.getDOMNode()
         self.setState({fullScreen:screenfull.isFullscreen},null,false)
       } else {
       }
