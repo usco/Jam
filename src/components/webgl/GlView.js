@@ -16,6 +16,8 @@ import {preventDefault,isTextNotEmpty,formatData,exists} from '../../utils/obsUt
 
 import OrbitControls from './deps/OrbitControls'
 import CombinedCamera from './deps/CombinedCamera'
+import TransformControls from './transforms/TransformControls'
+
 import helpers from 'glView-helpers'
 
 let LabeledGrid = helpers.grids.LabeledGrid
@@ -27,7 +29,8 @@ let ZoomInOnObject= helpers.objectEffects.ZoomInOnObject
 
 
 function positionFromCoords(coords){return{position:{x:coords.x,y:coords.y},event:coords}}
-function extractObject(event){ return event.target.object}
+function targetObject(event){ return event.target.object}
+function isTransformTool(input){ return ["translate","rotate","scale",null,undefined].indexOf(input) > -1 }
 
 function selectionAt(event, mouseCoords, camera, hiearchyRoot){
   //log.debug("selection at",event)
@@ -273,8 +276,8 @@ function _GlView(interactions, props, self){
   let reRender$ = Rx.Observable.interval(16) //observable should be the merger of all observable that need to re-render the view?
   let update$ = reRender$
   let items$  = props.get('items').startWith([])
-  let windowResizes$ = windowResizes(1) //get from intents/interactions ?
-  
+  let activeTool$ = props.get('activeTool').startWith("translate")
+
   let renderer = null
   let zoomInOnObject = null
   let sphere =null
@@ -285,6 +288,7 @@ function _GlView(interactions, props, self){
 
   let camera   = makeCamera(config.cameras[0])
   let controls = makeControls(config.controls[0])
+  let transformControls = new TransformControls( camera )
 
 
   let grid        = new LabeledGrid(200, 200, 10, config.cameras[0].up)
@@ -292,7 +296,7 @@ function _GlView(interactions, props, self){
 
   zoomInOnObject = new ZoomInOnObject()
 
-
+  let windowResizes$ = windowResizes(1) //get from intents/interactions ?
   let {singleTaps$, doubleTaps$, contextTaps$, 
       dragMoves$, zoomIntents$} =  pointerInteractions2(interactions)
 
@@ -321,15 +325,16 @@ function _GlView(interactions, props, self){
 
   
   let _singleTaps$ = withPickingInfos(singleTaps$, windowResizes$)
-    //.subscribe(data => console.log("singleTaps",data),err=>console.log("error",err))
 
   let _doubleTaps$ = withPickingInfos(doubleTaps$, windowResizes$)
-    //.subscribe(data => console.log("doubleTaps",data),err=>console.log("error",err))
 
   let _contextTaps$ = withPickingInfos(contextTaps$, windowResizes$)
     .map( meshesFrom )
-    //.subscribe(data => console.log("contextTaps",data),err=>console.log("error",err))
 
+  activeTool$.filter(isTransformTool).subscribe(function(mode){
+    console.log("setting mode",mode)
+    transformControls.setMode(mode)
+  })
 
   /*singleTaps$.subscribe(event => console.log("singleTaps"))
   doubleTaps$.subscribe(event => console.log("multiTaps"))
@@ -361,11 +366,11 @@ function _GlView(interactions, props, self){
   let stopContext$ = merge(singleTaps$, doubleTaps$, dragMoves$)//, zoomIntents$)
     .take(1)
     .repeat()
-
   selectedMeshes$ = singleTaps$.map( selectionAt ) //still needed ?
+  */
 
-  let objectsTransforms$ = fromEvent(transformControls, 'objectChange')
-      .map(extractObject)*/
+  let selectionsTransforms$ = fromEvent(transformControls, 'objectChange')
+      .map(targetObject)
 
   //hande all the cases where events require re-rendering
   /*reRender$ = reRender$.merge(
@@ -375,12 +380,10 @@ function _GlView(interactions, props, self){
     selectedMeshes$, 
     objectsTransform$)*/
   
+
   //console.log("interactions",interactions,"props",props, self.refs)
 
   //actual 3d stuff
-
-
-  
 
   function setupScene(){
     var light = new THREE.PointLight(0xffffff)
@@ -407,8 +410,8 @@ function _GlView(interactions, props, self){
 
   function update(){
     controls.update()
+    transformControls.update()
     //if(this.camViewControls) this.camViewControls.update()
-    //if(this.transformControls) this.transformControls.update()
   }
 
 
@@ -431,16 +434,22 @@ function _GlView(interactions, props, self){
     renderer.setPixelRatio( pixelRatio )
 
     container.appendChild( renderer.domElement )
-    scene.add(camera)
 
     controls.setDomElement( container )
     controls.addObject( camera )
 
+    transformControls.setDomElement( container )
+    transformControls.attach(sphere)
+
     //not a fan
     zoomInOnObject.camera = camera
 
+    scene.add(camera)
     scene.add(grid)
     scene.add(shadowPlane)
+
+    scene.add(transformControls)
+
   }
 
   function handleResize (sizeInfos){
@@ -451,6 +460,7 @@ function _GlView(interactions, props, self){
       renderer.setSize( width, height )
       camera.aspect = aspect
       camera.updateProjectionMatrix()   
+      camera.setSize(width,height)
 
       //self.composer.reset()
       let pixelRatio = window.devicePixelRatio || 1
@@ -475,7 +485,8 @@ function _GlView(interactions, props, self){
   let vtree$ =  Rx.Observable.combineLatest(
     reRender$,
     initialized$,
-    function(reRender, initialized){
+    activeTool$,
+    function(reRender, initialized, activeTool){
 
       if(!initialized && self.refs.container!==undefined){
         configure(self.refs.container.getDOMNode())
@@ -511,10 +522,13 @@ function _GlView(interactions, props, self){
       doubleTaps$,
 
       contextTaps$,
+
+      selectionsTransforms$,
       /*stopContext$,
 
       selectedMeshes$,//is this one needed or redundant ?
-      objectsTransforms$*/
+      */
+
     }
   }
 }
