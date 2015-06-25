@@ -8,6 +8,12 @@ import React from 'react'
 let Rx = Cycle.Rx
 let fromEvent = Rx.Observable.fromEvent
 let merge = Rx.Observable.merge
+let combineLatest = Rx.Observable.combineLatest
+import combineTemplate from 'rx.observable.combinetemplate'
+
+
+Rx.config.longStackSupport = true
+
 
 import {windowResizes,pointerInteractions,pointerInteractions2,preventScroll} from '../../interactions/interactions'
 import Selector from './deps/Selector'
@@ -39,6 +45,7 @@ function selectionAt(event, mouseCoords, camera, hiearchyRoot){
   //let intersects = selector.pickAlt({x:event.clientX,y:event.clientY}, rect, width, height, rootObject)
   let intersects = pick(mouseCoords, camera, hiearchyRoot )//, ortho = false, precision=10)
 
+
   let outEvent = {}
   outEvent.clientX = event.clientX
   outEvent.clientY = event.clientY
@@ -54,17 +61,14 @@ function selectionAt(event, mouseCoords, camera, hiearchyRoot){
   return outEvent
 }
 
-function meshesFrom(event){
-  let intersects = event.detail.pickingInfos
+function meshFrom(event){
+  let intersect = event.detail.pickingInfos.shift() //we actually only get the best match
+  console.log("meshFrom",intersect)
 
-  let selectedMeshes = intersects.map( intersect => intersect.object )
-  selectedMeshes = selectedMeshes.shift()//we actually only get the best match
-  selectedMeshes = findSelectionRoot(selectedMeshes)//now we make sure that what we have is actually selectable
+  let mesh = findSelectionRoot(intersect.object)//now we make sure that what we have is actually selectable
 
-  if(selectedMeshes){ selectedMeshes = [selectedMeshes] }
-  else{ selectedMeshes = []}
-
-  return selectedMeshes
+  console.log(mesh)
+  return mesh
 }
 
 
@@ -273,10 +277,14 @@ function _GlView(interactions, props, self){
   let container$ = interactions.get("#container","ready")
 
   let initialized$ = interactions.subject('initialized').startWith(false) //.get('initialized','click').startWith(false)
-  let reRender$ = Rx.Observable.interval(16) //observable should be the merger of all observable that need to re-render the view?
-  let update$ = reRender$
+  let update$ = Rx.Observable.interval(16)
+  //let reRender$ = Rx.Observable.just(0) //Rx.Observable.interval(16) //observable should be the merger of all observable that need to re-render the view?
+
   let items$  = props.get('items').startWith([])
-  let activeTool$ = props.get('activeTool').startWith("translate")
+  let activeTool$ = props.get('activeTool')//.startWith("translate")
+  let selections$ = props.get('selections').startWith([]).filter(exists).distinctUntilChanged()
+  //every time either activeTool or selection changes, reset/update transform controls
+
 
   let renderer = null
   let zoomInOnObject = null
@@ -328,13 +336,45 @@ function _GlView(interactions, props, self){
 
   let _doubleTaps$ = withPickingInfos(doubleTaps$, windowResizes$)
 
-  let _contextTaps$ = withPickingInfos(contextTaps$, windowResizes$)
-    .map( meshesFrom )
+  let _contextTaps$ = withPickingInfos(contextTaps$, windowResizes$).map( meshFrom )
 
-  activeTool$.filter(isTransformTool).subscribe(function(mode){
-    console.log("setting mode",mode)
-    transformControls.setMode(mode)
+  //problem : this fires BEFORE the rest is ready
+  //we modify the transformControls mode based on the active tool
+  activeTool$.skip(1).filter(isTransformTool).subscribe(transformControls.setMode)
+
+
+  //hack/test
+  let selections2$ = _singleTaps$.map( meshFrom )
+    //.map(function(data){console.log("data",data);return data})
+  let activeTool2$ = _contextTaps$.map("translate").scan(function (acc, x) { 
+    if(acc === 'translate') return undefined
+      return 'translate'
+     }
+  )
+ 
+  //every time either activeTool or selection changes, reset/update transform controls
+  let foo$ = combineTemplate({
+    tool:activeTool2$,  //.filter(isTransformTool)),
+    selections:selections2$
   })
+    //.scan(function (acc, x) { return acc + x; })
+    //.sample( initialized$.filter( x => x===true) ) //skipUntil ??//Rx.Observable.timer(1000) )//initialized$)
+    .subscribe( 
+      function(data){
+        let {tool,selections} = data
+        console.log("data",data, tool, selections)
+        transformControls.detach()
+
+        if(tool && selections)
+        {
+          transformControls.attach(sphere)
+          transformControls.setMode(tool)
+        }
+        
+      } 
+      ,(err)=>console.log("error in stuff",err)
+    )
+
 
   /*singleTaps$.subscribe(event => console.log("singleTaps"))
   doubleTaps$.subscribe(event => console.log("multiTaps"))
@@ -350,11 +390,11 @@ function _GlView(interactions, props, self){
   function objectAndPosition(pickingInfo){
     return {object:pickingInfo.object,point:pickingInfo.point}
   }
-  _doubleTaps$
+  /*_doubleTaps$
     .map(e => e.detail.pickingInfos.shift())
     .filter(exists)
     .map( objectAndPosition )
-    .subscribe( (oAndP) => zoomInOnObject.execute( oAndP.object, {position:oAndP.point} ) )
+    .subscribe( (oAndP) => zoomInOnObject.execute( oAndP.object, {position:oAndP.point} ) )*/
 
   /*contextTaps$ = contextTaps$ //handle context menu type interactions
     .map( selectionAt )
@@ -373,16 +413,22 @@ function _GlView(interactions, props, self){
       .map(targetObject)
 
   //hande all the cases where events require re-rendering
-  /*reRender$ = reRender$.merge(
-    fromEvent(controls,'change'), 
-    fromEvent(transformControls,'change'), 
-    fromEvent(camViewControls,'change'),
-    selectedMeshes$, 
-    objectsTransform$)*/
+  let reRender$ = merge(
+    //ready$,
+    //fromEvent(controls,'change'),
+    update$
+    //Rx.Observable.timer(200, 100).map(2).take(3)
+    //fromEvent(controls,'change'), 
+    //fromEvent(transformControls,'change'), 
+    //fromEvent(camViewControls,'change'),
+    //selectedMeshes$, 
+    //selectionsTransforms$
+    )
+    .shareReplay(1)
   
 
-  //console.log("interactions",interactions,"props",props, self.refs)
-
+  //reRender$.subscribe( () => console.log("reRender"), (err)=>console.log("error in reRender",err))
+  //fromEvent(controls,'change').subscribe( () => console.log("reRender"), (err)=>console.log("error in reRender",err))
   //actual 3d stuff
 
   function setupScene(){
@@ -395,6 +441,8 @@ function _GlView(interactions, props, self){
     sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
     sphere.position.set(0, 0, -0)
     sphere.geometry.computeBoundingSphere()
+    sphere.selectTrickleUp = false 
+    sphere.selectable = true
     scene.add(sphere)
 
 
@@ -469,7 +517,6 @@ function _GlView(interactions, props, self){
     }
   }
 
-
   ///////////
   setupScene()
 
@@ -503,12 +550,15 @@ function _GlView(interactions, props, self){
       }
 
       return ()=> (
-      <div className="glView" style={style}>
-        <div className="container" ref="container" />  
+      <div className="glView" style={style} >
+        <div className="container" ref="container" autofocus/>  
         <div className="camViewControls" />
 
         <div className="overlayTest" style={overlayStyle}>
           {reRender} {initialized}
+          <div>
+
+          </div>
         </div>
       </div>)
     })
