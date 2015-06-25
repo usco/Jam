@@ -66,13 +66,11 @@ export function pick(mouseCoords, camera, hiearchyRoot, ortho = false, precision
     intersects = raycaster.intersectObjects(hiearchyRoot, true)
   }
   
-  //remove invisibles, dedupe 
+  //remove invisibles, dedupe ?? 
   //TODO: use transducers.js ?
   intersects = intersects
   .sort()
-  .filter( (intersect, pos) => {
-    return ( intersect.object && intersect.object.visible === true && !pos || intersect != intersects[pos - 1])
-  })
+  .filter(intersect => intersect.object && intersect.object.visible ===true)
 
   return intersects
 }
