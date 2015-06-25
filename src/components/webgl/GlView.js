@@ -34,65 +34,82 @@ import {selectionAt,meshFrom,isTransformTool,targetObject,
   makeCamera, makeControls, makeLight
 } from './utils2'
 
+import {presets} from './presets' //default configuration for lighting, cameras etc
+
+import EffectComposer from './deps/post-process/EffectComposer'
+import ShaderPass from './deps/post-process/ShaderPass'
+import RenderPass from './deps/post-process/RenderPass'
+import {ClearMaskPass, MaskPass} from './deps/post-process/MaskPass'
+
+import CopyShader     from './deps/post-process/CopyShader'
+import FXAAShader     from './deps/post-process/FXAAShader'
+import vignetteShader from './deps/post-process/vignetteShader'
+
+
+function setupPostProcess(camera, renderer, scene){
+  console.log("setupPostProcess")
+    ////////post processing
+    let renderTargetParameters = {
+        minFilter: THREE.LinearFilter,
+        magFilter: THREE.LinearFilter,
+        format: THREE.RGBAFormat,
+        stencilBuffer: true
+    }
+
+    let outScene = new THREE.Scene()
+    let maskScene = new THREE.Scene()
+
+    let renderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, renderTargetParameters)
+
+    //setup composer
+    let composer    = new EffectComposer(renderer)
+    composer.renderTarget1.stencilBuffer = true
+    composer.renderTarget2.stencilBuffer = true
+
+    let normal      = new RenderPass(scene, camera)
+    let outline     = new RenderPass(outScene, camera)
+    let maskPass        = new THREE.MaskPass(maskScene, camera)
+    maskPass.inverse = true
+    let clearMask   = new THREE.ClearMaskPass()
+    let copyPass     = new THREE.ShaderPass(THREE.CopyShader)
+    let fxaaPass     = new THREE.ShaderPass( THREE.FXAAShader )
+    let vignettePass = new THREE.ShaderPass( THREE.VignetteShader )
+
+    fxaaPass.uniforms[ 'resolution' ].value.set( 1 / window.innerWidth*window.devicePixelRatio, 1 / window.innerHeight*window.devicePixelRatio )
+    vignettePass.uniforms[ "offset" ].value = 0.95
+    vignettePass.uniforms[ "darkness" ].value = 0.9
+
+    renderer.autoClear = false
+    //renderer.autoClearStencil = false
+    
+    outline.clear = false  
+    //normal.clear = false    
+
+    composer.addPass(normal)
+    composer.addPass(maskPass)
+    composer.addPass(outline)
+    
+    composer.addPass(clearMask)
+    //composer.addPass(vignettePass)
+    //composer.addPass(fxaaPass)
+    composer.addPass(copyPass)
+
+    let lastPass = composer.passes[composer.passes.length-1]
+    lastPass.renderToScreen = true
+    
+    return {composer, fxaaPass, outScene, maskScene}
+  }
+
+
 /*TODO:
-- remove any "this", adapt code accordingly 
-- extract reusable pieces of code
-- remove any explicit "actions" like showContextMenu$, hideContextMenu$ etc
+- remove any "this", adapt code accordingly  
+- extract reusable pieces of code => 50 % done
+- remove any explicit "actions" like showContextMenu$, hideContextMenu$ etc => done
 - streamline all interactions
 */
 ////////////
 function _GlView(interactions, props, self){
-  let config = {
-    renderer:{
-      shadowMapEnabled:true,
-      shadowMapAutoUpdate:true,
-      shadowMapSoft:true,
-      shadowMapType : undefined,//THREE.PCFSoftShadowMap,//THREE.PCFSoftShadowMap,//PCFShadowMap 
-      autoUpdateScene : true,//Default ?
-      physicallyBasedShading : false,//Default ?
-      autoClear:true,//Default ?
-      gammaInput:false,
-      gammaOutput:false
-    },
-    cameras:[
-      {
-        name:"mainCamera",
-        pos:[75,75,145] ,//[100,-100,100]
-        up:[0,0,1],
-        lens:{
-          fov:45,
-          near:0.1,
-          far:20000,
-        }
-      }
-    ],
-    controls:[
-      {
-        up:[0,0,1],
-        rotateSpeed:2.0,
-        panSpeed:2.0,
-        zoomSpeed:2.0,
-        autoRotate:{
-          enabled:false,
-          speed:0.2
-        },
-        _enabled:true,
-        _active:true,
-      }
-    ],
-    scenes:{
-      "main":[
-        //{ type:"hemisphereLight", color:"#FFFF33", gndColor:"#FF9480", pos:[0, 0, 500], intensity:0.6 },
-        { type:"hemisphereLight", color:"#FFEEEE", gndColor:"#FFFFEE", pos:[0, 1200, 1500], intensity:0.8 },
-        { type:"ambientLight", color:"#0x252525", intensity:0.03 },
-        { type:"directionalLight", color:"#262525", intensity:0.2 , pos:[150,150,1500], castShadow:true, onlyShadow:true}
-        //{ type:"directionalLight", color:"#FFFFFF", intensity:0.2 , pos:[150,150,1500], castShadow:true, onlyShadow:true}
-      ],
-      "helpers":[
-        {type:"LabeledGrid"}
-      ]
-    }
-  }
+  let config = presets
 
   let container$ = interactions.get("#container","ready")
 
@@ -107,6 +124,11 @@ function _GlView(interactions, props, self){
 
 
   let renderer = null
+
+  let composer = null
+  let fxaaPass = null
+  let outScene = null
+
   let zoomInOnObject = null
   let sphere =null
 
@@ -118,10 +140,11 @@ function _GlView(interactions, props, self){
   let controls = makeControls(config.controls[0])
   let transformControls = new TransformControls( camera )
 
-
   let grid        = new LabeledGrid(200, 200, 10, config.cameras[0].up)
   let shadowPlane = new ShadowPlane(2000, 2000, null, config.cameras[0].up) 
 
+
+  //interactions
   zoomInOnObject = new ZoomInOnObject()
 
   let windowResizes$ = windowResizes(1) //get from intents/interactions ?
@@ -249,7 +272,6 @@ function _GlView(interactions, props, self){
   
 
   //reRender$.subscribe( () => console.log("reRender"), (err)=>console.log("error in reRender",err))
-  //fromEvent(controls,'change').subscribe( () => console.log("reRender"), (err)=>console.log("error in reRender",err))
   //actual 3d stuff
 
   function setupScene(){
@@ -274,13 +296,14 @@ function _GlView(interactions, props, self){
   }
     
   function render(scene, camera){
-    renderer.render( scene, camera )
+    //renderer.render( scene, camera )
+    composer.render()
   }
 
   function update(){
     controls.update()
     transformControls.update()
-    //if(this.camViewControls) this.camViewControls.update()
+    //if(camViewControls) camViewControls.update()
   }
 
 
@@ -319,6 +342,9 @@ function _GlView(interactions, props, self){
 
     scene.add(transformControls)
 
+    let ppData = setupPostProcess(camera, renderer, scene)
+    composer = ppData.composer
+    fxaaPass = ppData.fxaaPass
   }
 
   function handleResize (sizeInfos){
@@ -331,10 +357,11 @@ function _GlView(interactions, props, self){
       camera.updateProjectionMatrix()   
       camera.setSize(width,height)
 
-      //self.composer.reset()
       let pixelRatio = window.devicePixelRatio || 1
-      //self.fxaaPass.uniforms[ 'resolution' ].value.set (1 / (width * pixelRatio), 1 / (height * pixelRatio))
-      //self.composer.setSize(width * pixelRatio, height * pixelRatio)
+
+      composer.reset()
+      fxaaPass.uniforms[ 'resolution' ].value.set (1 / (width * pixelRatio), 1 / (height * pixelRatio))
+      composer.setSize(width * pixelRatio, height * pixelRatio)
     }
   }
 
