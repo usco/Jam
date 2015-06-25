@@ -62,12 +62,11 @@ function selectionAt(event, mouseCoords, camera, hiearchyRoot){
 }
 
 function meshFrom(event){
+  let mesh = undefined
   let intersect = event.detail.pickingInfos.shift() //we actually only get the best match
-  console.log("meshFrom",intersect)
-
-  let mesh = findSelectionRoot(intersect.object)//now we make sure that what we have is actually selectable
-
-  console.log(mesh)
+  if(intersect && intersect.object) {
+    mesh = findSelectionRoot(intersect.object)//now we make sure that what we have is actually selectable
+  }
   return mesh
 }
 
@@ -183,34 +182,6 @@ function makeLight( lightData ){
 
   return light
 }
-
-  //TODO: rethink this
-  /*
-  if(this._prevSelectedMeshes && this._prevSelectedMeshes.length>0){
-        this.transformControls.detach(this._prevSelectedMeshes[0])
-    }
-  if(selectedMeshes.length>0){
-    //if(["0","1","2","3"].indexOf(selectedMeshes[0].typeUid) === -1 )
-    if(this.props.activeTool && ["translate","rotate","scale"].indexOf(this.props.activeTool) > -1 )
-    {
-      this.transformControls.attach(selectedMeshes[0])
-    }
-  }
-
-  function areThereSelections(){ return (self.selectedMeshes && self.selectedMeshes.length>0) }
-  
-  setToTranslateMode$.filter(areThereSelections).subscribe( this.transformControls.setMode.bind(transformControls,"translate") )
-  setToRotateMode$.filter(areThereSelections).subscribe( this.transformControls.setMode.bind(transformControls,"rotate") )
-  setToScaleMode$.filter(areThereSelections).subscribe( this.transformControls.setMode.bind(transformControls,"scale") )
-  //from this to  below
-
-  function setTransformsFrom(obses, modes, controls){
-    modes.map( mode => 
-      obs.filter(areThereSelections).subscribe( controls.setMode.bind(controls, mode) )
-    )
-  }
-  setTransformsFrom([setToXXX],transformControls,["translate","rotate","scale"])*/
-
 
 /*TODO:
 - remove any "this", adapt code accordingly 
@@ -347,7 +318,9 @@ function _GlView(interactions, props, self){
   let selections2$ = _singleTaps$.map( meshFrom )
     //.map(function(data){console.log("data",data);return data})
   let activeTool2$ = _contextTaps$.map("translate").scan(function (acc, x) { 
-    if(acc === 'translate') return undefined
+    if(acc === 'translate') return 'rotate'
+    if(acc === 'rotate') return 'scale'
+    if(acc === 'scale') return undefined
       return 'translate'
      }
   )
@@ -384,7 +357,6 @@ function _GlView(interactions, props, self){
 
   //singleTaps$ = pointerInteractions( container ).singleTaps$.map( selectionAt )
   //singleTaps$ = singleTaps$.map( selectionAt ) //stream of taps + selected meshes
-  //doubleTaps$ = doubleTaps$.map( selectionAt ) //this._zoomInOnObject.execute( object, {position:pickingInfos[0].point} )
 
   //extract the object & position from a pickingInfo data
   function objectAndPosition(pickingInfo){
