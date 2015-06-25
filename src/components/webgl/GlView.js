@@ -18,6 +18,11 @@ import OrbitControls from './deps/OrbitControls'
 import CombinedCamera from './deps/CombinedCamera'
 import helpers from 'glView-helpers'
 
+let LabeledGrid = helpers.grids.LabeledGrid
+let ShadowPlane = helpers.planes.ShadowPlane
+let CamViewControls= helpers.CamViewControls
+let annotations = helpers.annotations
+
 let ZoomInOnObject= helpers.objectEffects.ZoomInOnObject
 
 
@@ -91,6 +96,24 @@ function makeCamera( cameraData ){
   return camera
 }
 
+
+/*setup a controls instance from the provided data*/
+function makeControls( controlsData ){
+  let up = new THREE.Vector3().fromArray( controlsData.up )
+
+  let controlsData = controlsData//TODO: merge with defaults using object.assign
+  let controls = new OrbitControls(undefined, undefined, up )
+  controls.upVector = up
+  
+  controls.userPanSpeed = controlsData.panSpeed
+  controls.userZoomSpeed = controlsData.zoomSpeed
+  controls.userRotateSpeed = controlsData.rotateSpeed
+
+  controls.autoRotate = controlsData.autoRotate.enabled
+  controls.autoRotateSpeed = controlsData.autoRotate.speed
+  
+  return controls
+}
 
 function makeLight( lightData ){
   let light = undefined
@@ -192,6 +215,58 @@ function makeLight( lightData ){
 
 ////////////
 function _GlView(interactions, props, self){
+  let config = {
+    renderer:{
+      shadowMapEnabled:true,
+      shadowMapAutoUpdate:true,
+      shadowMapSoft:true,
+      shadowMapType : undefined,//THREE.PCFSoftShadowMap,//THREE.PCFSoftShadowMap,//PCFShadowMap 
+      autoUpdateScene : true,//Default ?
+      physicallyBasedShading : false,//Default ?
+      autoClear:true,//Default ?
+      gammaInput:false,
+      gammaOutput:false
+    },
+    cameras:[
+      {
+        name:"mainCamera",
+        pos:[75,75,145] ,//[100,-100,100]
+        up:[0,0,1],
+        lens:{
+          fov:45,
+          near:0.1,
+          far:20000,
+        }
+      }
+    ],
+    controls:[
+      {
+        up:[0,0,1],
+        rotateSpeed:2.0,
+        panSpeed:2.0,
+        zoomSpeed:2.0,
+        autoRotate:{
+          enabled:false,
+          speed:0.2
+        },
+        _enabled:true,
+        _active:true,
+      }
+    ],
+    scenes:{
+      "main":[
+        //{ type:"hemisphereLight", color:"#FFFF33", gndColor:"#FF9480", pos:[0, 0, 500], intensity:0.6 },
+        { type:"hemisphereLight", color:"#FFEEEE", gndColor:"#FFFFEE", pos:[0, 1200, 1500], intensity:0.8 },
+        { type:"ambientLight", color:"#0x252525", intensity:0.03 },
+        { type:"directionalLight", color:"#262525", intensity:0.2 , pos:[150,150,1500], castShadow:true, onlyShadow:true}
+        //{ type:"directionalLight", color:"#FFFFFF", intensity:0.2 , pos:[150,150,1500], castShadow:true, onlyShadow:true}
+      ],
+      "helpers":[
+        {type:"LabeledGrid"}
+      ]
+    }
+  }
+
   let container$ = interactions.get("#container","ready")
 
   let initialized$ = interactions.subject('initialized').startWith(false) //.get('initialized','click').startWith(false)
@@ -201,7 +276,6 @@ function _GlView(interactions, props, self){
   let windowResizes$ = windowResizes(1) //get from intents/interactions ?
   
   let renderer = null
-  let camera = null  
   let zoomInOnObject = null
   let sphere =null
 
@@ -209,7 +283,13 @@ function _GlView(interactions, props, self){
   let dynamicInjector = new THREE.Object3D()//all dynamic mapped objects reside here
   scene.add( dynamicInjector )
 
-  let controls = new OrbitControls(camera, undefined, new THREE.Vector3(0,0,1))
+  let camera   = makeCamera(config.cameras[0])
+  let controls = makeControls(config.controls[0])
+
+
+  let grid        = new LabeledGrid(200, 200, 10, config.cameras[0].up)
+  let shadowPlane = new ShadowPlane(2000, 2000, null, config.cameras[0].up) 
+
   zoomInOnObject = new ZoomInOnObject()
 
 
@@ -261,6 +341,7 @@ function _GlView(interactions, props, self){
   //singleTaps$ = singleTaps$.map( selectionAt ) //stream of taps + selected meshes
   //doubleTaps$ = doubleTaps$.map( selectionAt ) //this._zoomInOnObject.execute( object, {position:pickingInfos[0].point} )
 
+  //extract the object & position from a pickingInfo data
   function objectAndPosition(pickingInfo){
     return {object:pickingInfo.object,point:pickingInfo.point}
   }
@@ -298,47 +379,18 @@ function _GlView(interactions, props, self){
 
   //actual 3d stuff
 
-  let config = {
-    renderer:{
-      shadowMapEnabled:true,
-      shadowMapAutoUpdate:true,
-      shadowMapSoft:true,
-      shadowMapType : undefined,//THREE.PCFSoftShadowMap,//THREE.PCFSoftShadowMap,//PCFShadowMap 
-      autoUpdateScene : true,//Default ?
-      physicallyBasedShading : false,//Default ?
-      autoClear:true,//Default ?
-      gammaInput:false,
-      gammaOutput:false
-    },
-    scenes:{
-      "main":[
-        //{ type:"hemisphereLight", color:"#FFFF33", gndColor:"#FF9480", pos:[0, 0, 500], intensity:0.6 },
-        { type:"hemisphereLight", color:"#FFEEEE", gndColor:"#FFFFEE", pos:[0, 1200, 1500], intensity:0.8 },
-        { type:"ambientLight", color:"#0x252525", intensity:0.03 },
-        { type:"directionalLight", color:"#262525", intensity:0.2 , pos:[150,150,1500], castShadow:true, onlyShadow:true}
-        //{ type:"directionalLight", color:"#FFFFFF", intensity:0.2 , pos:[150,150,1500], castShadow:true, onlyShadow:true}
-      ],
-      "helpers":[
-        {type:"LabeledGrid"}
-      ]
-    }
-  }
 
   
-
-  function setupCamera(){
-    camera = makeCamera()
-  }
 
   function setupScene(){
     var light = new THREE.PointLight(0xffffff)
     light.position.set(0,250,0)
     scene.add(light)
 
-    var sphereGeometry = new THREE.SphereGeometry( 50, 32, 16 ) 
+    var sphereGeometry = new THREE.SphereGeometry( 20, 32, 16 ) 
     var sphereMaterial = new THREE.MeshLambertMaterial( {color: 0x8888ff} );
     sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
-    sphere.position.set(100, 50, -50)
+    sphere.position.set(0, 0, -0)
     sphere.geometry.computeBoundingSphere()
     scene.add(sphere)
 
@@ -364,8 +416,7 @@ function _GlView(interactions, props, self){
     console.log("initializing into container", container)
 
     if(!Detector.webgl){
-    //Detector.addGetWebGLMessage()
-    //renderer = new CanvasRenderer() 
+      //renderer = new CanvasRenderer() 
     } else {
       renderer = new THREE.WebGLRenderer( {antialias:false} )
     }
@@ -387,6 +438,9 @@ function _GlView(interactions, props, self){
 
     //not a fan
     zoomInOnObject.camera = camera
+
+    scene.add(grid)
+    scene.add(shadowPlane)
   }
 
   function handleResize (sizeInfos){
@@ -407,7 +461,6 @@ function _GlView(interactions, props, self){
 
 
   ///////////
-  setupCamera()
   setupScene()
 
   //preventScroll(container)
