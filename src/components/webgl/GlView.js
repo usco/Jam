@@ -1,5 +1,6 @@
 
 import THREE from 'three'
+import TWEEN from 'tween.js'
 import Detector from './deps/Detector.js'
 
 import Cycle from 'cycle-react'
@@ -13,6 +14,11 @@ import Selector from './deps/Selector'
 import {pick, getCoordsFromPosSizeRect, findSelectionRoot} from './deps/Selector'
 import {preventDefault,isTextNotEmpty,formatData,exists} from '../../utils/obsUtils'
 
+import OrbitControls from './deps/OrbitControls'
+import CombinedCamera from './deps/CombinedCamera'
+import helpers from 'glView-helpers'
+
+let ZoomInOnObject= helpers.objectEffects.ZoomInOnObject
 
 
 function positionFromCoords(coords){return{position:{x:coords.x,y:coords.y},event:coords}}
@@ -53,6 +59,101 @@ function meshesFrom(event){
   return selectedMeshes
 }
 
+
+function makeCamera( cameraData ){
+  //let cameraData = cameraData//TODO: merge with defaults using object.assign
+  const DEFAULTS ={
+    width:window.innerWidth,
+    height:window.innerHeight,
+    lens:{
+          fov:45,
+          near:0.1,
+          far:20000,
+    },
+    aspect: window.innerWidth/window.innerHeight,
+    up:[0,0,1],
+    pos:[0,0,0]
+  }
+  let cameraData = Object.assign({}, DEFAULTS, cameraData)
+
+
+  let camera = new CombinedCamera(
+        cameraData.width,
+        cameraData.height,
+        cameraData.lens.fov,
+        cameraData.lens.near,
+        cameraData.lens.far,
+        cameraData.lens.near,
+        cameraData.lens.far)
+
+  camera.up.fromArray( cameraData.up )  
+  camera.position.fromArray( cameraData.pos )
+  return camera
+}
+
+
+function makeLight( lightData ){
+  let light = undefined
+  const DEFAULTS ={
+    color:"#FFF",
+    intensity:1,
+    pos: [0,0,0]
+  }
+  let lightData = Object.assign({}, DEFAULTS, lightData)
+
+  switch(lightData.type){
+    case "light":
+       light = new THREE.Light(lightData.color)
+       light.intensity = lightData.intensity
+    break
+    case "hemisphereLight":
+      light = new THREE.HemisphereLight(lightData.color, lightData.gndColor, lightData.intensity)
+    break
+    case "ambientLight":
+      // ambient light does not have intensity, only color
+      let newColor = new THREE.Color( lightData.color )
+      newColor.r *= lightData.intensity
+      newColor.g *= lightData.intensity
+      newColor.b *= lightData.intensity
+      light = new THREE.AmbientLight( newColor )
+    break
+    case "directionalLight":
+      const dirLightDefaults = {
+        castShadow:false,
+        onlyShadow:false,
+
+        shadowMapWidth:2048,
+        shadowMapHeight:2048,
+        shadowCameraLeft:-500,
+        shadowCameraRight:500,
+        shadowCameraTop:500,
+        shadowCameraBottom:-500,
+        shadowCameraNear: 1200,
+        shadowCameraFar:5000,
+        shadowCameraFov:50,
+        shadowBias:0.0001,
+        shadowDarkness:0.3,
+        shadowCameraVisible:false
+      }
+      lightData = Object.assign({}, dirLightDefaults, lightData)
+      light = new THREE.DirectionalLight( lightData.color, lightData.intensity )
+      for(var key in lightData) {
+        if(light.hasOwnProperty(key)) {
+          light[key] = lightData[key]
+        }
+      }
+
+    break
+    default:
+      throw new Error("could not create light")
+    break
+  }
+
+  light.position.fromArray( lightData.pos )
+
+  return light
+}
+
   //TODO: rethink this
   /*
   if(this._prevSelectedMeshes && this._prevSelectedMeshes.length>0){
@@ -65,7 +166,6 @@ function meshesFrom(event){
       this.transformControls.attach(selectedMeshes[0])
     }
   }
-
 
   function areThereSelections(){ return (self.selectedMeshes && self.selectedMeshes.length>0) }
   
@@ -96,27 +196,28 @@ function _GlView(interactions, props, self){
 
   let initialized$ = interactions.subject('initialized').startWith(false) //.get('initialized','click').startWith(false)
   let reRender$ = Rx.Observable.interval(16) //observable should be the merger of all observable that need to re-render the view?
+  let update$ = reRender$
   let items$  = props.get('items').startWith([])
   let windowResizes$ = windowResizes(1) //get from intents/interactions ?
   
   let renderer = null
   let camera = null  
+  let zoomInOnObject = null
   let sphere =null
 
   let scene = new THREE.Scene()
   let dynamicInjector = new THREE.Object3D()//all dynamic mapped objects reside here
   scene.add( dynamicInjector )
 
+  let controls = new OrbitControls(camera, undefined, new THREE.Vector3(0,0,1))
+  zoomInOnObject = new ZoomInOnObject()
+
 
   let {singleTaps$, doubleTaps$, contextTaps$, 
       dragMoves$, zoomIntents$} =  pointerInteractions2(interactions)
 
   contextTaps$ = contextTaps$.shareReplay(1)
-  /*singleTaps$.subscribe(event => console.log("singleTaps"))
-  doubleTaps$.subscribe(event => console.log("multiTaps"))
-  contextTaps$.subscribe(event => console.log("contextTaps"))
-  dragMoves$.subscribe(event => console.log("dragMoves"))
-  zoomIntents$.subscribe(event => console.log("zoomIntents"))*/
+
 
   function withPickingInfos(inStream, windowResizes$ ){
     let clientRect$ = inStream
@@ -128,7 +229,7 @@ function _GlView(interactions, props, self){
         clientRect$,
         windowResizes$,
         function(event, clientRect, resizes){
-          console.log("clientRect",clientRect,event, resizes)
+          //console.log("clientRect",clientRect,event, resizes)
           //return {pos:{x:event.clientX,y:event.clientY},rect:clientRect,width:resizes.width,height:resizes.height}
           let data = {pos:{x:event.clientX,y:event.clientY},rect:clientRect,width:resizes.width,height:resizes.height,event}
 
@@ -139,21 +240,35 @@ function _GlView(interactions, props, self){
   }
 
   
-  withPickingInfos(singleTaps$, windowResizes$)
-    .subscribe(data => console.log("singleTaps",data),err=>console.log("error",err))
+  let _singleTaps$ = withPickingInfos(singleTaps$, windowResizes$)
+    //.subscribe(data => console.log("singleTaps",data),err=>console.log("error",err))
 
-  withPickingInfos(doubleTaps$, windowResizes$)
-    .subscribe(data => console.log("doubleTaps",data),err=>console.log("error",err))
+  let _doubleTaps$ = withPickingInfos(doubleTaps$, windowResizes$)
+    //.subscribe(data => console.log("doubleTaps",data),err=>console.log("error",err))
 
-  withPickingInfos(contextTaps$, windowResizes$)
+  let _contextTaps$ = withPickingInfos(contextTaps$, windowResizes$)
     .map( meshesFrom )
-    .subscribe(data => console.log("contextTaps",data),err=>console.log("error",err))
+    //.subscribe(data => console.log("contextTaps",data),err=>console.log("error",err))
 
+
+  /*singleTaps$.subscribe(event => console.log("singleTaps"))
+  doubleTaps$.subscribe(event => console.log("multiTaps"))
+  contextTaps$.subscribe(event => console.log("contextTaps"))
+  dragMoves$.subscribe(event => console.log("dragMoves"))
+  zoomIntents$.subscribe(event => console.log("zoomIntents"))*/
 
   //singleTaps$ = pointerInteractions( container ).singleTaps$.map( selectionAt )
   //singleTaps$ = singleTaps$.map( selectionAt ) //stream of taps + selected meshes
   //doubleTaps$ = doubleTaps$.map( selectionAt ) //this._zoomInOnObject.execute( object, {position:pickingInfos[0].point} )
 
+  function objectAndPosition(pickingInfo){
+    return {object:pickingInfo.object,point:pickingInfo.point}
+  }
+  _doubleTaps$
+    .map(e => e.detail.pickingInfos.shift())
+    .filter(exists)
+    .map( objectAndPosition )
+    .subscribe( (oAndP) => zoomInOnObject.execute( oAndP.object, {position:oAndP.point} ) )
 
   /*contextTaps$ = contextTaps$ //handle context menu type interactions
     .map( selectionAt )
@@ -178,38 +293,41 @@ function _GlView(interactions, props, self){
     fromEvent(camViewControls,'change'),
     selectedMeshes$, 
     objectsTransform$)*/
- 
   
-
-  //preventScroll(container)
-  interactions.get('canvas', 'contextmenu').subscribe( e => preventDefault(e) )
-
   //console.log("interactions",interactions,"props",props, self.refs)
 
   //actual 3d stuff
 
   let config = {
-      renderer:{
-        shadowMapEnabled:true,
-        shadowMapAutoUpdate:true,
-        shadowMapSoft:true,
-        shadowMapType : undefined,//THREE.PCFSoftShadowMap,//THREE.PCFSoftShadowMap,//PCFShadowMap 
-        autoUpdateScene : true,//Default ?
-        physicallyBasedShading : false,//Default ?
-        autoClear:true,//Default ?
-        gammaInput:false,
-        gammaOutput:false
-      }
+    renderer:{
+      shadowMapEnabled:true,
+      shadowMapAutoUpdate:true,
+      shadowMapSoft:true,
+      shadowMapType : undefined,//THREE.PCFSoftShadowMap,//THREE.PCFSoftShadowMap,//PCFShadowMap 
+      autoUpdateScene : true,//Default ?
+      physicallyBasedShading : false,//Default ?
+      autoClear:true,//Default ?
+      gammaInput:false,
+      gammaOutput:false
+    },
+    scenes:{
+      "main":[
+        //{ type:"hemisphereLight", color:"#FFFF33", gndColor:"#FF9480", pos:[0, 0, 500], intensity:0.6 },
+        { type:"hemisphereLight", color:"#FFEEEE", gndColor:"#FFFFEE", pos:[0, 1200, 1500], intensity:0.8 },
+        { type:"ambientLight", color:"#0x252525", intensity:0.03 },
+        { type:"directionalLight", color:"#262525", intensity:0.2 , pos:[150,150,1500], castShadow:true, onlyShadow:true}
+        //{ type:"directionalLight", color:"#FFFFFF", intensity:0.2 , pos:[150,150,1500], castShadow:true, onlyShadow:true}
+      ],
+      "helpers":[
+        {type:"LabeledGrid"}
+      ]
+    }
   }
 
   
 
   function setupCamera(){
-    var SCREEN_WIDTH = window.innerWidth, SCREEN_HEIGHT = window.innerHeight; 
-    var VIEW_ANGLE = 35, ASPECT = SCREEN_WIDTH / SCREEN_HEIGHT, NEAR = 0.01, FAR = 20000
-    camera = new THREE.PerspectiveCamera( VIEW_ANGLE, ASPECT, NEAR, FAR)
-    camera.position.set(0,150,400)
-    camera.lookAt(scene.position)
+    camera = makeCamera()
   }
 
   function setupScene(){
@@ -221,11 +339,24 @@ function _GlView(interactions, props, self){
     var sphereMaterial = new THREE.MeshLambertMaterial( {color: 0x8888ff} );
     sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
     sphere.position.set(100, 50, -50)
+    sphere.geometry.computeBoundingSphere()
     scene.add(sphere)
+
+
+    for( let light of config.scenes["main"])
+    {
+      scene.add( makeLight( light ) )
+    }
   }
     
   function render(scene, camera){
     renderer.render( scene, camera )
+  }
+
+  function update(){
+    controls.update()
+    //if(this.camViewControls) this.camViewControls.update()
+    //if(this.transformControls) this.transformControls.update()
   }
 
 
@@ -250,6 +381,12 @@ function _GlView(interactions, props, self){
 
     container.appendChild( renderer.domElement )
     scene.add(camera)
+
+    controls.setDomElement( container )
+    controls.addObject( camera )
+
+    //not a fan
+    zoomInOnObject.camera = camera
   }
 
   function handleResize (sizeInfos){
@@ -268,10 +405,15 @@ function _GlView(interactions, props, self){
     }
   }
 
+
+  ///////////
   setupCamera()
   setupScene()
 
-  windowResizes(1).subscribe(  handleResize  )
+  //preventScroll(container)
+  interactions.get('canvas', 'contextmenu').subscribe( e => preventDefault(e) )
+  windowResizes$.subscribe(  handleResize  )
+  update$.subscribe( update )
 
 
   //for now we use refs, but once in cycle, we should use virtual dom widgets & co
@@ -293,7 +435,7 @@ function _GlView(interactions, props, self){
 
       if(initialized){
         render(scene,camera)
-        //camera.rotation.y += 0.005
+        TWEEN.update(reRender)
       }
 
       return ()=> (

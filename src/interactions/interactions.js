@@ -10,11 +10,9 @@ import {preventDefault,isTextNotEmpty,formatData,exists} from '../utils/obsUtils
 
 //various helpers
 
-
 function hasTwoTouchPoints(event) {
   return event.touches && event.touches.length === 2
 }
-
 
 function getOffset(event) {
   return {
@@ -363,7 +361,7 @@ export function pointerInteractions2 (targetEl){
     
 
     let unpack = function(list){ return list.list}
-    let extractData = function(event){ return {clientX:event.clientX,clientY:event.clientY}}
+    let extractData = function(event){ return event} //{clientX:event.clientX,clientY:event.clientY}}
 
 
     let singleClicks$ = clickStreamBase.filter( x => x.nb == 1 ).flatMap(unpack)
