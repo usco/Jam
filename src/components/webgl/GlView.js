@@ -101,6 +101,48 @@ function setupPostProcess(camera, renderer, scene){
   }
 
 
+function makeOutlineFx(mesh){
+  console.log("makeOutlineFx")
+  let geometry = mesh.geometry
+  let matFlat = new THREE.MeshBasicMaterial({color: 0xffffff})
+  let maskMesh = new THREE.Mesh( geometry, matFlat )
+
+  //maskMesh.quaternion = mesh.quaternion
+  //maskMesh.position.fromArray( entity.pos )
+  //maskMesh.rotation.fromArray( entity.rot)
+  //maskMesh.scale.fromArray( entity.sca )
+
+  let uniforms = {
+    offset: {
+      type: "f",
+      value: 0.5
+    },
+    color:{ 
+      type: "c", 
+      value: new THREE.Color("#ff2500")//[1.0,0.0,0.0] 
+    }
+  }
+
+  let shader = require("./deps/post-process/OutlineShader")
+  let outShader = shader['outline']
+
+  let matShader = new THREE.ShaderMaterial({
+    uniforms: uniforms,
+    vertexShader: outShader.vertex_shader,
+    fragmentShader: outShader.fragment_shader
+  })
+
+  let outlineMesh = new THREE.Mesh(geometry, matShader)
+  //outlineMesh.quaternion = mesh1.quaternion
+  outlineMesh.material.depthTest = false
+
+  //outlineMesh.position.fromArray( entity.pos )
+  //outlineMesh.rotation.fromArray( entity.rot)
+  //outlineMesh.scale.fromArray( entity.sca )
+
+  return {maskMesh, outlineMesh}
+}
+
 /*TODO:
 - remove any "this", adapt code accordingly  
 - extract reusable pieces of code => 50 % done
@@ -128,6 +170,7 @@ function _GlView(interactions, props, self){
   let composer = null
   let fxaaPass = null
   let outScene = null
+  let maskScene = null
 
   let zoomInOnObject = null
   let sphere =null
@@ -219,6 +262,22 @@ function _GlView(interactions, props, self){
       } 
       ,(err)=>console.log("error in stuff",err)
     )
+
+  //for outlines, experimental
+  selections2$.subscribe(function(mesh){
+
+    outScene.children = []
+    maskScene.children = []
+
+    if(mesh){
+      let oData = makeOutlineFx(mesh)
+      outScene.add( oData.outlineMesh )
+      maskScene.add( oData.maskMesh )
+    }
+    
+  })
+  
+
 
 
   /*singleTaps$.subscribe(event => console.log("singleTaps"))
@@ -331,7 +390,6 @@ function _GlView(interactions, props, self){
     controls.addObject( camera )
 
     transformControls.setDomElement( container )
-    transformControls.attach(sphere)
 
     //not a fan
     zoomInOnObject.camera = camera
@@ -345,6 +403,8 @@ function _GlView(interactions, props, self){
     let ppData = setupPostProcess(camera, renderer, scene)
     composer = ppData.composer
     fxaaPass = ppData.fxaaPass
+    outScene = ppData.outScene
+    maskScene = ppData.maskScene
   }
 
   function handleResize (sizeInfos){
