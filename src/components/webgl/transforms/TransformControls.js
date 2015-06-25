@@ -537,7 +537,7 @@ var TransformControls = function ( camera, domElement ) {
 
 	THREE.Object3D.call( this );
 
-	domElement = ( domElement !== undefined ) ? domElement : document;
+	//domElement = ( domElement !== undefined ) ? domElement : document;
 	//console.log("attaching TransformControls to",domElement);
 
 	this.gizmo = {};
@@ -611,7 +611,7 @@ var TransformControls = function ( camera, domElement ) {
 	var camPosition = new THREE.Vector3();
 	var camRotation = new THREE.Euler();
 
-	domElement.addEventListener( "mousedown", onPointerDown, false );
+	/*domElement.addEventListener( "mousedown", onPointerDown, false );
 	domElement.addEventListener( "touchstart", onPointerDown, false );
 
 	domElement.addEventListener( "mousemove", onPointerHover, false );
@@ -624,7 +624,27 @@ var TransformControls = function ( camera, domElement ) {
 	domElement.addEventListener( "mouseout", onPointerUp, true );
 	domElement.addEventListener( "touchend", onPointerUp, true );
 	domElement.addEventListener( "touchcancel", onPointerUp, true );
-	domElement.addEventListener( "touchleave", onPointerUp, true );
+	domElement.addEventListener( "touchleave", onPointerUp, true );*/
+
+	this.setDomElement = function(domElement){
+		scope.domElement = ( domElement !== undefined ) ? domElement : document;
+
+		domElement.addEventListener( "mousedown", onPointerDown, false );
+		domElement.addEventListener( "touchstart", onPointerDown, false );
+
+		domElement.addEventListener( "mousemove", onPointerHover, false );
+		domElement.addEventListener( "touchmove", onPointerHover, false );
+
+		domElement.addEventListener( "mousemove", onPointerMove, false );
+		domElement.addEventListener( "touchmove", onPointerMove, false );
+
+		domElement.addEventListener( "mouseup", onPointerUp, true );
+		domElement.addEventListener( "mouseout", onPointerUp, true );
+		domElement.addEventListener( "touchend", onPointerUp, true );
+		domElement.addEventListener( "touchcancel", onPointerUp, true );
+		domElement.addEventListener( "touchleave", onPointerUp, true );
+	} 
+
 
 	this.attach = function ( object ) {
 		scope.object = object;
@@ -651,12 +671,14 @@ var TransformControls = function ( camera, domElement ) {
 	this.setMode = function ( mode ) {
 
 		_mode = mode ? mode : _mode;
+		//_mode = mode
 
 		if ( _mode == "scale" ) scope.space = "local";
 
 		this.gizmo["translate"].hide();
 		this.gizmo["rotate"].hide();
 		this.gizmo["scale"].hide();
+		//if(_mode) 
 		this.gizmo[_mode].show();
 
 		this.update();
@@ -974,7 +996,7 @@ var TransformControls = function ( camera, domElement ) {
 
 	function intersectObjects( pointer, objects ) {
 
-		var rect = domElement.getBoundingClientRect();
+		var rect = scope.domElement.getBoundingClientRect();
 		var x = ( pointer.clientX - rect.left ) / rect.width;
 		var y = ( pointer.clientY - rect.top ) / rect.height;
 
