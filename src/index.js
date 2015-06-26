@@ -1,11 +1,4 @@
-/*import React from 'react';
-import App from './App';
-
-React.render(<App />, document.getElementById('root'));*/
-require("./app.css")
 let Cycle = require('cycle-react')
-import Timer from './App2'
-import GlView from './components/webgl/GlView'
+import App from './App2'
 
-
-Cycle.applyToDOM('#root', GlView)
+Cycle.applyToDOM('#root', App)

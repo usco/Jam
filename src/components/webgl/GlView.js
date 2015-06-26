@@ -164,6 +164,7 @@ function _GlView(interactions, props, self){
   let selections$ = props.get('selections').startWith([]).filter(exists).distinctUntilChanged()
   //every time either activeTool or selection changes, reset/update transform controls
 
+  activeTool$.subscribe((data)=>console.log("activeTool",data))
 
   let renderer = null
 
@@ -224,25 +225,17 @@ function _GlView(interactions, props, self){
 
   let _contextTaps$ = withPickingInfos(contextTaps$, windowResizes$).map( meshFrom )
 
-  //problem : this fires BEFORE the rest is ready
-  //we modify the transformControls mode based on the active tool
-  activeTool$.skip(1).filter(isTransformTool).subscribe(transformControls.setMode)
-
+  
+//problem : this fires BEFORE the rest is ready
+  //activeTool$.skip(1).filter(isTransformTool).subscribe(transformControls.setMode)
 
   //hack/test
-  let selections2$ = _singleTaps$.map( meshFrom )
+  let selections2$ = _singleTaps$.map( meshFrom ).shareReplay(1)
     //.map(function(data){console.log("data",data);return data})
-  let activeTool2$ = _contextTaps$.map("translate").scan(function (acc, x) { 
-    if(acc === 'translate') return 'rotate'
-    if(acc === 'rotate') return 'scale'
-    if(acc === 'scale') return undefined
-      return 'translate'
-     }
-  )
- 
+  //we modify the transformControls mode based on the active tool
   //every time either activeTool or selection changes, reset/update transform controls
   let foo$ = combineTemplate({
-    tool:activeTool2$,  //.filter(isTransformTool)),
+    tool:activeTool$,  //.filter(isTransformTool)),
     selections:selections2$
   })
     //.scan(function (acc, x) { return acc + x; })
@@ -265,7 +258,6 @@ function _GlView(interactions, props, self){
 
   //for outlines, experimental
   selections2$.subscribe(function(mesh){
-
     outScene.children = []
     maskScene.children = []
 
