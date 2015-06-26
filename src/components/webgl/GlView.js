@@ -278,7 +278,10 @@ function _GlView(interactions, props, self){
   })
   
 
-
+  /*let obsTest$ = Rx.Observable.timer(200, 100)
+    .do((data) => console.log("data",data)) //SIDE EFFECT !!
+    .map((data)=>`data${data})
+    .subscribe((data)=>console.log("subscribed data",data)) */
 
   /*singleTaps$.subscribe(event => console.log("singleTaps"))
   doubleTaps$.subscribe(event => console.log("multiTaps"))

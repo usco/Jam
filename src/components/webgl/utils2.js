@@ -154,3 +154,183 @@ export function makeLight( lightData ){
 
   return light
 }
+
+//for annotations, overlays etc
+export function makeMeta(data, style)
+{
+  //console.log("drawing metadata",data)
+
+  let annotStyle = {
+    crossColor:"#000",
+    textColor:"#000",
+    lineColor:"#000",
+    arrowColor:"#000",
+    lineWidth:2.2,
+
+    highlightColor: "#60C4F8",//"#00F",
+    fontFace:"Open Sans"
+  }
+
+  return data
+    .map(function(entry){
+      let visual = undefined
+      if(entry.typeUid === "0"){
+        console.log("note annot",entry)
+
+        let point = entry.target.point
+        let entity = data.filter(function(data){return data.iuid === entry.target.iuid})
+        entity = entity.pop()
+
+        if(!entity) return
+        let mesh = __localCache[entity.iuid]
+        if(!mesh) return
+
+        //mesh.updateMatrix()
+        //mesh.updateMatrixWorld()
+        let pt = new THREE.Vector3().fromArray(point)//.add(mesh.position)
+        pt = mesh.localToWorld(pt)
+
+        let params = {
+          point:pt,
+          object:mesh}
+        params = Object.assign(params,annotStyle)
+        
+        visual = new annotations.NoteVisual(params)
+
+        //dynamicInjector.add(visual)
+        /*visual.applyMatrix( dynamicInjector.matrixWorld )
+        let matrixWorldInverse = new THREE.Matrix4()
+        matrixWorldInverse.getInverse( mesh.matrixWorld )
+        visual.applyMatrix( matrixWorldInverse )*/
+      }
+      if(entry.typeUid === "1"){
+        //Thickness
+        let entity = data.filter(function(data){return data.iuid === entry.target.iuid})
+        entity = entity.pop()
+
+        if(!entity) return
+        let mesh = __localCache[entity.iuid]
+        if(!mesh) return
+
+        let entryPoint = entry.target.entryPoint
+        let exitPoint  = entry.target.exitPoint
+                      
+        entryPoint= new THREE.Vector3().fromArray(entryPoint)//.add(mesh.position)
+        exitPoint = new THREE.Vector3().fromArray(exitPoint)
+
+        entryPoint = mesh.localToWorld(entryPoint)
+        exitPoint = mesh.localToWorld(exitPoint)
+
+        let params = {
+          entryPoint,
+          exitPoint,
+          object:mesh
+        }
+        params = Object.assign(params,annotStyle)
+        visual = new annotations.ThicknessVisual(params)
+
+      }
+
+      if(entry.typeUid === "2"){
+        //distance
+        let start = entry.target.start
+        let startEntity = data.filter(function(data){return data.iuid === start.iuid})
+        startEntity = startEntity.pop()
+
+        let end = entry.target.end
+        let endEntity = data.filter(function(data){return data.iuid === end.iuid})
+        endEntity = endEntity.pop()
+
+        if(!startEntity || !endEntity) return
+
+        let startMesh = __localCache[startEntity.iuid]
+        let endMesh   = __localCache[endEntity.iuid]
+        if( startMesh && endMesh ){
+          let startPt = new THREE.Vector3().fromArray(start.point)
+          let endPt   = new THREE.Vector3().fromArray(end.point)
+          
+          startMesh.localToWorld(startPt)
+          endMesh.localToWorld(endPt)
+          //startMesh.worldToLocal(startPt)
+          //endMesh.worldToLocal(endPt)
+
+          let params = {
+            start:startPt,
+            startObject:startMesh,
+            end: endPt,
+            endObject: endMesh
+          }
+          params = Object.assign(params, annotStyle)
+
+          visual = new annotations.DistanceVisual(params)
+        }            
+      }
+
+
+      if(entry.typeUid === "3"){
+        //diameter
+        console.log("diameter annot",entry)
+
+        let point = entry.target.point
+        let entity = data.filter(function(data){return data.iuid === entry.target.iuid})
+        entity = entity.pop()
+
+        if(!entity) return
+        let mesh = __localCache[entity.iuid]
+        if(!mesh) return
+
+        //mesh.updateMatrix()
+        //mesh.updateMatrixWorld()
+        point        = new THREE.Vector3().fromArray(point)
+        let normal   = new THREE.Vector3().fromArray(entry.target.normal)
+        let diameter = entry.value
+       
+        if(!entity) return
+
+        point = mesh.localToWorld(point)
+
+
+        let params = {
+           center:point,
+           diameter,
+           orientation:normal
+        }
+        params = Object.assign(params,annotStyle)
+
+        visual = new annotations.DiameterVisual(params)
+    
+        /*let matrixWorldInverse = new THREE.Matrix4()
+        matrixWorldInverse.getInverse( mesh.matrixWorld )
+        visual.applyMatrix( matrixWorldInverse )*/
+
+        //mesh.updateMatrix()
+        //mesh.updateMatrixWorld()
+        //
+
+        //let matrixWorldInverse = new THREE.Matrix4()
+        //matrixWorldInverse.getInverse( dynamicInjector.matrixWorld )
+
+        //visual.applyMatrix( matrixWorldInverse )
+
+
+        /*let m = new THREE.Matrix4()
+        m.multiplyMatrices( mesh.matrixWorld, visual.matrix)
+        visual.applyMatrix(m)
+        visual.matrixWorld.multiplyMatrices( mesh.matrixWorld, visual.matrix )*/
+
+        //visual.matrixWorld.multiplyMatrices( mesh.matrixWorld, visual.matrix )//WORKS
+        //visual.applyMatrix( mesh.matrixWorld )
+      }
+
+      if(visual){
+        visual.userData.entity = entry
+        dynamicInjector.add( visual )
+      }
+
+      //FIXME: solve selection 
+      /*if(visual && selectedEntities.indexOf(entry.iuid)>-1){
+        visual.highlight(true)
+      }*/
+      return visual
+    })
+}
