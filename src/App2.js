@@ -2,7 +2,9 @@ require("./app.css")
 
 let Cycle = require('cycle-react')
 let React = require('react')
-let Rx = Cycle.Rx
+import Rx from 'rx'
+import combineTemplate from 'rx.observable.combinetemplate'
+
 
 import GlView from './components/webgl/GlView'
 import BomView from './components/Bom/BomView'
@@ -17,6 +19,32 @@ let appMetadata$ = Rx.Observable.just({
   name: pjson.name,
   version:pjson.version 
 })
+
+  //interactions
+  /*let inter = require('./core/intents.js')
+  let intent = inter.Intent({
+    objectsTransforms$ : glview.objectsTransform$,
+    selectedMeshes$    : glview.selectedMeshes$,
+    selectedBomEntries$: selectBomEntries$,
+    selectEntities$,
+
+    //these indicate an issue, they should not need to be injected into an intent
+    appState$: appState$,
+    entities$:entities$,
+    bom$:bom$,
+  })
+
+  intent.entityTransforms$
+    .subscribe(updateEntities$)
+
+  intent.entitiesToSelect$
+    .subscribe( selectEntities$ )
+
+  intent.bomEntriesToSelect$
+    .subscribe( selectBomEntries2$ )
+            <GlView activeTool={activeTool} className="glview" /> 
+    */
+
 
 
 function intent(interactions){
@@ -37,10 +65,124 @@ function intent(interactions){
 
   interactions.get(".jam","click")
     .subscribe( event => console.log("click"))
+
+
+  /*interactions.get(".settingsView", "foo")
+    .subscribe(settings => console.log("settings change",settings))
+
+  interactions.get(".settingsView","bla$")
+    .subscribe(settings => console.log("settingsView bla"))
+
+  interactions.get(".settingsView .showGrid", "change")
+    .subscribe(settings => console.log("showGrid bla")) */
+
+
+  let clicky$ = interactions.get(".foo .innerButton","click").map(true).startWith(true)
+    //.subscribe(settings => console.log("inner click"))
+
+  let checky$ = interactions.get(".foo #fooSetting","change").map(event => event.target.checked).startWith(false)
+    //.subscribe(settings => console.log("checkbox change"))
+
+
+  let bla$ = Rx.Observable.combineLatest(
+    clicky$,
+    checky$,
+    function(clicky,checky){
+      return {
+        valid:checky,
+        stuff:"42"
+      }
+
+    }
+  )
+
+  //bla$.subscribe(data=>console.log("data",data))
+
+  return bla$
+
+  /*interactions.get(".foo","mambo")
+    .subscribe(settings => console.log("inner mambo"))*/
+}
+
+function settingsM(interactions){
+  let showGrid$   = interactions.get(".settingsView .showGrid", "change").map(event => event.target.checked).startWith(false)
+  let showAnnot$  = interactions.get(".settingsView .showAnnot", "change").map(event => event.target.checked).startWith(false)
+  let autoRotate$ = interactions.get(".settingsView .autoRotate", "change").map(event => event.target.checked).startWith(false)
+
+  /*function foobar(fieldName){
+    return interactions.get(".settingsView "+fieldName, "change").map(event => event.target.checked).startWith(false)
+  }
+  let fieldNames = [".showGrid",".showAnnot",".autoRotate"]
+
+  fieldNames.map(foobar)*/
+
+
+  /*let bla$= combineTemplate(
+    {
+      camera:{
+        autoRotate:autoRotate$
+      },
+      grid:{
+        show:showGrid$
+      },
+      annotations:{
+        show:showAnnot$
+      }
+    }
+  )
+
+  //bla$.subscribe(bla=>console.log("lkjfdsfsfsd",bla))*/
+  //return bla$
+  return Rx.Observable.combineLatest(
+    showGrid$,
+    autoRotate$,
+    function(showGrid$,autoRotate$, showAnnot$){
+      return (
+        {
+          camera:{
+            autoRotate:autoRotate$
+          },
+          grid:{
+            show:showGrid$
+          },
+          annotations:{
+            show:showAnnot$
+          }
+        }
+      )
+    }
+  )
+
 }
 
 
-function _App(interactions) {
+function TestCompo(interactions,props){
+
+
+  let vtree$= props.get("data")
+    .map(function(data){
+      console.log("data",data)
+      return <div className="foo">
+        <span> Testing </span>
+        <button className="innerButton">clicky </button>
+        <input type="checkbox" id="fooSetting" checked={data.valid}/> 
+      </div>
+      } 
+    )
+
+  return {
+    view:vtree$,
+    events:{
+      mambo:Rx.Observable.timer(200, 100),
+    }
+
+  }
+}
+
+TestCompo = Cycle.component('TestCompo',TestCompo)
+
+
+function App(interactions) {
   let activeTool = "translate"
   let items$ = Rx.Observable.just(
     [
@@ -69,52 +211,35 @@ function _App(interactions) {
     ]
   )
 
-  intent(interactions)
+  
 
-  //interactions
-  /*let inter = require('./core/intents.js')
-  let intent = inter.Intent({
-    objectsTransforms$ : glview.objectsTransform$,
-    selectedMeshes$    : glview.selectedMeshes$,
-    selectedBomEntries$: selectBomEntries$,
-    selectEntities$,
-
-    //these indicate an issue, they should not need to be injected into an intent
-    appState$: appState$,
-    entities$:entities$,
-    bom$:bom$,
-  })
-
-  intent.entityTransforms$
-    .subscribe(updateEntities$)
-
-  intent.entitiesToSelect$
-    .subscribe( selectEntities$ )
-
-  intent.bomEntriesToSelect$
-    .subscribe( selectBomEntries2$ )
-            <GlView activeTool={activeTool} className="glview" /> 
-
-
-    */
-
+  let testCompoData$ = intent(interactions)
+  let settings$ = settingsM(interactions)
 
 
   return Rx.Observable
     .combineLatest(
       appMetadata$,
       items$,
+      settings$,
+      testCompoData$,
+      function(appMetadata, items, settings, testCompoData){
 
-      function(appMetadata, items){
-
-        let settings = {}
+        //console.log("settings",settings)
         return (
           <div className="jam">
             <div>{appMetadata.name}{appMetadata.version}</div>
-            <GlView activeTool={activeTool} items={items} className="glview"/>
+            <GlView 
+              activeTool={activeTool} 
+              settings={settings}
+              items={items} 
+              className="glview"/>
 
-            <SettingsView settings={settings}></SettingsView>
+            <SettingsView settings={settings} ></SettingsView>
             <FullScreenToggler/> 
+
+
+            <TestCompo data={testCompoData}/>
           </div>
         )
       }
@@ -122,6 +247,6 @@ function _App(interactions) {
 }
 
 
-let App = Cycle.component('App', _App)
+App = Cycle.component('App', App)
 
 export default App
