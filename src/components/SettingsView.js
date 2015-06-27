@@ -149,5 +149,5 @@ function SettingsView(interactions, props) {
   }
 }
 
-let SettingsView = Cycle.createReactClass('SettingsView',SettingsView)
+let SettingsView = Cycle.component('SettingsView',SettingsView)
 export default SettingsView

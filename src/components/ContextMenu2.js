@@ -53,7 +53,7 @@ function _ContextMenuItems(interactions,props){
   }
 }
 
-let ContextMenuItems = Cycle.createReactClass('ContextMenuItems', _ContextMenuItems)
+let ContextMenuItems = Cycle.component('ContextMenuItems', _ContextMenuItems)
 
 //fyi for now, we hardcode some of the ui 
 function ContextMenu(interactions, props) {
@@ -101,5 +101,5 @@ function ContextMenu(interactions, props) {
 
 
 
-let ContextMenu = Cycle.createReactClass('ContextMenu',ContextMenu)
+let ContextMenu = Cycle.component('ContextMenu',ContextMenu)
 export default ContextMenu
