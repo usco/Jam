@@ -3,97 +3,29 @@ let React = Cycle.React
 let {Rx} = Cycle
 import Class from "classnames"
 
-import {setSetting$} from '../actions/appActions'
-
 
 //fyi for now, we hardcode some of the ui 
 
 function SettingsView(interactions, props) {
 
   let settings$ = props.get('settings').startWith({})
-
-  let showGrid$ = interactions.get(".showGrid", "change")
-    .map(e => e.target.checked)
-    .filter( settings => settings !== undefined )
-    .merge(settings$.map( 
-      function(settings){
-        if( settings.grid && settings.grid.show ) return settings.grid.show //FIXME: hack needed because of other issues
-        return false
-      }))
-      //settings => settings.grid.show ) )
-    
-  let showAnnot$ = interactions.get(".showAnnot", "change")
-    .map(e => e.target.checked)
-    .filter( settings => settings !== undefined )
-    .merge(settings$.map( 
-      function(settings){
-        if( settings.annotations && settings.annotations.show ) return settings.annotations.show //FIXME: hack needed because of other issues
-        return false
-      }))
-      //settings => settings.annotations.show ) )
-
-  let autoRotate$ = interactions.get(".autoRotate", "change")
-    .map(e => e.target.checked)
-    .filter( settings => settings !== undefined )
-    //.map( settings => settings.camera.autoRotate )
-    .merge(settings$.map( 
-      function(settings){
-        if( settings.camera && settings.camera.autoRotate ) return settings.annotations.autoRotate //FIXME: hack needed because of other issues
-        return false
-      }))
-
-  //let autoRotate$ = Rx.Observable.just(true)
-    
-  //output
-  interactions.get(".showGrid", "click")
-    .map(e => e.target.checked)
-    .subscribe(function(checked){
-      setSetting$({path:"grid.show",value:checked})
-    })
-
-  interactions.get(".showAnnot", "click")
-    .map(e => e.target.checked)
-    .subscribe(function(checked){
-      setSetting$({path:"annotations.show",value:checked})
-    })
-
-  interactions.get(".autoRotate", "click")
-    .map(e => e.target.checked)
-    .subscribe(function(checked){
-      setSetting$({path:"camera.autoRotate",value:checked})
-    })
-
-
-  let toggled$ = interactions.get(".toggler", "click")
-    .map(e => true)
-    .scan(function(acc,n){
-      return (!acc)
-    })
+  let toggled$  = interactions.subject("toggle")//interactions.get(".toggler", "click")
+    .map(true)
+    .scan((acc,val)=>!acc)
     .startWith(false)
+  
 
 
-  /*interactions.get(".settings","click")
-    //.do(e => e.preventDefault)
-    .subscribe(function(){
-      console.log("click inside settings")
-  })
-
-  Rx.Observable.fromEvent(document,'click')
-    .subscribe(function(){
-      console.log("clicked document")
-    })*/
-    
   let vtree$ = Rx.Observable
     .combineLatest(
       settings$,
-      showGrid$,
-      showAnnot$,
-      autoRotate$,
       toggled$,
-      function(settings ,showGrid, showAnnot, autoRotate, toggled){
+      function(settings , toggled){
         let fields = undefined
         //console.log("settings",settings)
-        
+        let showGrid = settings.grid.show
+        let showAnnot = settings.annotations.show
+        let autoRotate = settings.camera.autoRotate
         /*let fields = settings
           .map(function(){
             <input type="checkbox" >Foo </input> 
@@ -101,7 +33,7 @@ function SettingsView(interactions, props) {
         if(toggled)
         {
           fields = (
-            <div>
+            <div className="settingsView">
               <section className="settingEntry">
                 <input className="showGrid" type="checkbox" id="showGrid" checked={showGrid}> </input> 
                 <label for="showGrid"> Show grid </label>
@@ -120,9 +52,11 @@ function SettingsView(interactions, props) {
 
         return(
          <div className="settings">
-          <button id="toggler" className={Class("toggler", {toggled: toggled})} >
+          <button id="toggler" className={Class("toggler", {toggled: toggled})} 
+            onClick={interactions.subject('toggle').onEvent} 
+            >
             <svg version="1.1" id="Cog" xmlns="http://www.w3.org/2000/svg"  x="0px" y="0px"
-                 viewBox="0 0 20 20" enable-background="new 0 0 20 20" className="icon toggler">
+                 viewBox="0 0 20 20" enable-background="new 0 0 20 20" className="icon">
               <path fill="#FFFFFF" d="M16.783,10c0-1.049,0.646-1.875,1.617-2.443c-0.176-0.584-0.407-1.145-0.692-1.672
                 c-1.089,0.285-1.97-0.141-2.711-0.883c-0.741-0.74-0.968-1.621-0.683-2.711c-0.527-0.285-1.088-0.518-1.672-0.691
                 C12.074,2.57,11.047,3.215,10,3.215c-1.048,0-2.074-0.645-2.643-1.615C6.772,1.773,6.213,2.006,5.686,2.291
@@ -144,7 +78,7 @@ function SettingsView(interactions, props) {
 
   return {
     view: vtree$,
-    events: {
+    events:{
     }
   }
 }
