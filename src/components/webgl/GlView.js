@@ -380,6 +380,8 @@ function _GlView(interactions, props, self){
     renderer.setPixelRatio( pixelRatio )
 
     container.appendChild( renderer.domElement )
+    //prevents zooming the 3d view from scrolling the window
+    preventScroll(container)
 
     controls.setDomElement( container )
     controls.addObject( camera )
@@ -409,21 +411,24 @@ function _GlView(interactions, props, self){
     if(width >0 && height >0 && camera && renderer){
       renderer.setSize( width, height )
       camera.aspect = aspect
-      camera.updateProjectionMatrix()   
       camera.setSize(width,height)
+      camera.updateProjectionMatrix()   
+      
 
       let pixelRatio = window.devicePixelRatio || 1
 
       composer.reset()
       fxaaPass.uniforms[ 'resolution' ].value.set (1 / (width * pixelRatio), 1 / (height * pixelRatio))
       composer.setSize(width * pixelRatio, height * pixelRatio)
+
+      render()
     }
   }
 
   ///////////
   setupScene()
 
-  //preventScroll(container)
+
   interactions.get('canvas', 'contextmenu').subscribe( e => preventDefault(e) )
   windowResizes$.subscribe(  handleResize  )
   update$.subscribe( update )
