@@ -5,6 +5,10 @@ let React = require('react')
 let Rx = Cycle.Rx
 
 import GlView from './components/webgl/GlView'
+import BomView from './components/Bom/BomView'
+import SettingsView from './components/SettingsView'
+import FullScreenToggler from './components/FullScreenToggler'
+import ContextMenu2 from './components/ContextMenu2'
 
 import {observableDragAndDrop} from './interactions/dragAndDrop'
 
@@ -30,6 +34,9 @@ function intent(interactions){
   selectTransforms$.pluck("detail").subscribe(event => console.log("selectTransforms",event))
 
   dnds$.subscribe(event => console.log("dnds",event))  
+
+  interactions.get(".jam","click")
+    .subscribe( event => console.log("click"))
 }
 
 
@@ -100,10 +107,14 @@ function _App(interactions) {
 
       function(appMetadata, items){
 
+        let settings = {}
         return (
-          <div className="jam"> 
+          <div className="jam">
             <div>{appMetadata.name}{appMetadata.version}</div>
             <GlView activeTool={activeTool} items={items} className="glview"/>
+
+            <SettingsView settings={settings}></SettingsView>
+            <FullScreenToggler/> 
           </div>
         )
       }
