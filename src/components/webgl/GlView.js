@@ -159,10 +159,14 @@ function _GlView(interactions, props, self){
   let update$ = Rx.Observable.interval(16)
   //let reRender$ = Rx.Observable.just(0) //Rx.Observable.interval(16) //observable should be the merger of all observable that need to re-render the view?
 
-  let items$  = props.get('items').startWith([])
+  let settings$   = props.get('settings')//.startWith({camera:{autoRotate:false}})
+  let items$      = props.get('items').startWith([])
   let activeTool$ = props.get('activeTool')//.startWith("translate")
   let selections$ = props.get('selections').startWith([]).filter(exists).distinctUntilChanged()
   //every time either activeTool or selection changes, reset/update transform controls
+
+  settings$.subscribe(function(data){console.log("SETTINGS ",data)})
+  items$.subscribe(function(data){console.log("items ",data)})
 
   activeTool$.subscribe((data)=>console.log("activeTool",data))
 
@@ -329,22 +333,20 @@ function _GlView(interactions, props, self){
   //actual 3d stuff
 
   function setupScene(){
-    var light = new THREE.PointLight(0xffffff)
-    light.position.set(0,250,0)
-    scene.add(light)
-
     var sphereGeometry = new THREE.SphereGeometry( 20, 32, 16 ) 
     var sphereMaterial = new THREE.MeshLambertMaterial( {color: 0x8888ff} );
     sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
-    sphere.position.set(0, 0, -0)
+    sphere.position.set(0, 0, 30)
     sphere.geometry.computeBoundingSphere()
     sphere.selectTrickleUp = false 
     sphere.selectable = true
+    sphere.castShadow = true
     scene.add(sphere)
 
 
     for( let light of config.scenes["main"])
     {
+      console.log("setting up light")
       scene.add( makeLight( light ) )
     }
   }
@@ -362,7 +364,7 @@ function _GlView(interactions, props, self){
 
 
   function configure (container){
-    console.log("initializing into container", container)
+    //log.debug("initializing into container", container)
 
     if(!Detector.webgl){
       //renderer = new CanvasRenderer() 
@@ -392,7 +394,7 @@ function _GlView(interactions, props, self){
     zoomInOnObject.camera = camera
 
     scene.add(camera)
-    scene.add(grid)
+    
     scene.add(shadowPlane)
 
     scene.add(transformControls)
@@ -405,7 +407,7 @@ function _GlView(interactions, props, self){
   }
 
   function handleResize (sizeInfos){
-    console.log("setting size",sizeInfos)
+    //log.debug("setting glView size",sizeInfos)
     let {width,height,aspect} = sizeInfos
   
     if(width >0 && height >0 && camera && renderer){
@@ -432,6 +434,17 @@ function _GlView(interactions, props, self){
   interactions.get('canvas', 'contextmenu').subscribe( e => preventDefault(e) )
   windowResizes$.subscribe(  handleResize  )
   update$.subscribe( update )
+  settings$.filter(exists).subscribe(function(settings){
+    controls.autoRotate = settings.camera.autoRotate
+  })
+  //big HACK
+  settings$.filter(exists).map(s => s.grid.show)
+    .subscribe(function(showGrid){
+      scene.remove(grid)
+      if(showGrid){
+        scene.add(grid)
+      }
+    })
 
 
   //for now we use refs, but once in cycle, we should use virtual dom widgets & co
@@ -441,7 +454,8 @@ function _GlView(interactions, props, self){
     reRender$,
     initialized$,
     activeTool$,
-    function(reRender, initialized, activeTool){
+    settings$,
+    function(reRender, initialized, activeTool, settings){
 
       if(!initialized && self.refs.container!==undefined){
         configure(self.refs.container.getDOMNode())
@@ -455,6 +469,8 @@ function _GlView(interactions, props, self){
       if(initialized){
         render(scene,camera)
         TWEEN.update(reRender)
+
+        //onsole.log("settings",settings.grid.show)
       }
 
       return ()=> (

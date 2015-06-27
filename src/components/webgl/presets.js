@@ -41,7 +41,7 @@ export const presets = {
         //{ type:"hemisphereLight", color:"#FFFF33", gndColor:"#FF9480", pos:[0, 0, 500], intensity:0.6 },
         { type:"hemisphereLight", color:"#FFEEEE", gndColor:"#FFFFEE", pos:[0, 1200, 1500], intensity:0.8 },
         { type:"ambientLight", color:"#0x252525", intensity:0.03 },
-        { type:"directionalLight", color:"#262525", intensity:0.2 , pos:[150,150,1500], castShadow:true, onlyShadow:true}
+        { type:"directionalLight", color:"#262525", intensity:0.2 , pos:[150, 150, 1500], castShadow:true, onlyShadow:true}
         //{ type:"directionalLight", color:"#FFFFFF", intensity:0.2 , pos:[150,150,1500], castShadow:true, onlyShadow:true}
       ],
       "helpers":[
