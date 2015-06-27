@@ -47,7 +47,7 @@ function isLong(elapsed, maxTime){
  export function windowResizes (throttle=250)
  {
   //only get the fields we need
-  let extractSize = function(x){ 
+  function extractSize(x){ 
     let x = x.target
     let bRect = {left:0,top:0,bottom:0,right:0,width:0,height:0}
     if(x.getBoundingClientRect) bRect = x.getBoundingClientRect()
@@ -366,6 +366,7 @@ export function pointerInteractions2 (targetEl){
 
     let singleClicks$ = clickStreamBase.filter( x => x.nb == 1 ).flatMap(unpack)
     let doubleClicks$ = clickStreamBase.filter( x => x.nb == 2 ).flatMap(unpack).take(1).map(extractData).repeat()
+    //TODO, these should only be valid if there was no movement
     let contextTaps$  =  Observable.amb([
       _holds,//.map(function(x){ console.log("HOLDS");return x}),
       rightClicks2,//.map(function(x){ console.log("rightClicks2");return x}),
@@ -373,7 +374,7 @@ export function pointerInteractions2 (targetEl){
       mouseMoves
         .take(1).flatMap( x => Rx.Observable.empty() ),
       ]
-    ).take(1).repeat()// contextTaps: either HELD leftmouse/pointer or right click
+    ).take(1).repeat()//.takeUntil(mouseMoves2)// contextTaps: either HELD leftmouse/pointer or right click
     
 
     let dragMoves$   = drags3(mouseDowns, mouseUps, mouseMoves2, longPressDelay, deltaSqr)
