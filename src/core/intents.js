@@ -8,7 +8,7 @@ import combineTemplate from 'rx.observable.combinetemplate'
 
 
 ////////////////////////////
-export function Intent(interactions) {
+export default function intent(interactions) {
 
   function toArray (vec){
     return vec.toArray().slice(0,3)

@@ -471,8 +471,8 @@ function _GlView(interactions, props, self){
     events:{
       initialized:initialized$,
 
-      singleTaps$,
-      doubleTaps$,
+      singleTaps$:_singleTaps$,
+      doubleTaps$:_doubleTaps$,
 
       contextTaps$,
 
