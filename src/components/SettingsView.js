@@ -36,15 +36,15 @@ function SettingsView(interactions, props) {
             <div className="settingsView">
               <section className="settingEntry">
                 <input className="showGrid" type="checkbox" id="showGrid" checked={showGrid}> </input> 
-                <label for="showGrid"> Show grid </label>
+                <label htmlFor="showGrid"> Show grid </label>
               </section>
               <section className="settingEntry">
                 <input className="showAnnot" type="checkbox" id="showAnnot" checked={showAnnot}> </input> 
-                <label for="showAnnot"> Show annotations </label>
+                <label htmlFor="showAnnot"> Show annotations </label>
               </section>
               <section className="settingEntry">
                 <input className="autoRotate" type="checkbox" id="autoRotate" checked={autoRotate}> </input>
-                <label for="autoRotate"> Auto rotate camera </label>
+                <label htmlFor="autoRotate"> Auto rotate camera </label>
               </section>
             </div>
           )
