@@ -15,15 +15,15 @@ function validMeshExtension(entry){
 }
 
 
-export function getDataSources ( container, urlSources ){
+export function getDataSources ( dndSources$, urlSources ){
   //drag & drop sources
-  let dnds$ = observableDragAndDrop(container)
+  //let dndSources$ = observableDragAndDrop(container)
   //other sources (url, localstorage)
 
-  let dndMeshFiles$  = dnds$.filter(e=>e.type ==="file").pluck("data").flatMap(Observable.fromArray)
+  let dndMeshFiles$  = dndSources$.filter(e=>e.type ==="file").pluck("data").flatMap(Observable.fromArray)
     .filter(file => validMeshExtension(file.name) )
 
-  let dndMeshUris$    = dnds$.filter(e=> (e.type === "url") ).pluck("data").flatMap(Observable.fromArray)
+  let dndMeshUris$    = dndSources$.filter(e=> (e.type === "url") ).pluck("data").flatMap(Observable.fromArray)
     .filter(file => validMeshExtension(url) )
 
   //meshSources is either url or file (direct data)
@@ -34,7 +34,7 @@ export function getDataSources ( container, urlSources ){
   )
 
   //FIXME these are technically untrue, but still should work
-  let dndDesignUris$ = dnds$.filter(e=> (e.type === "url" || e.type==="text") ).pluck("data").flatMap(Observable.fromArray)
+  let dndDesignUris$ = dndSources$.filter(e=> (e.type === "url" || e.type==="text") ).pluck("data").flatMap(Observable.fromArray)
     //.filter(url => validMeshExtension(url) )
 
   let designSources$ = merge(
