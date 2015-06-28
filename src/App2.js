@@ -42,9 +42,28 @@ let appMetadata$ = Rx.Observable.just({
 
   intent.bomEntriesToSelect$
     .subscribe( selectBomEntries2$ )
-            <GlView activeTool={activeTool} className="glview" /> 
     */
+function TestCompo(interactions,props){
+  let vtree$= props.get("data")
+    .map(function(data){
+      console.log("data",data)
+      return <div className="foo">
+        <span> Testing </span>
+        <button className="innerButton">clicky </button>
+        <input type="checkbox" id="fooSetting" checked={data.valid}/> 
+      </div>
+      } 
+    )
+  return {
+    view:vtree$,
+    events:{
+      mambo:Rx.Observable.timer(200, 100),
+    }
 
+  }
+}
+
+TestCompo = Cycle.component('TestCompo',TestCompo)
 
 
 function intent(interactions){
@@ -54,14 +73,14 @@ function intent(interactions){
   let contextTaps$ = interactions.get(".glview","contextTaps$")
   let selectTransforms$ = interactions.get(".glview","selectionsTransforms$")
 
-  let dnds$ = observableDragAndDrop('.glview', interactions)
+  //let dnds$ = observableDragAndDrop('.glview', interactions)
 
   singleTaps$.pluck("detail").subscribe(event => console.log("singleTaps",event))
   doubleTaps$.pluck("detail").subscribe(event => console.log("doubleTaps",event))
   contextTaps$.pluck("detail").subscribe(event => console.log("contextTaps",event))
   selectTransforms$.pluck("detail").subscribe(event => console.log("selectTransforms",event))
 
-  dnds$.subscribe(event => console.log("dnds",event))  
+  //dnds$.subscribe(event => console.log("dnds",event))  
 
   interactions.get(".jam","click")
     .subscribe( event => console.log("click"))
@@ -152,34 +171,162 @@ function settingsM(interactions){
       )
     }
   )
-
 }
 
 
-function TestCompo(interactions,props){
 
+function sources(urlSources$, dndSources$){
+  console.log("sources")
+  //data sources
+  let dataSources = require('./core/sources/dataSources').getDataSources
+  let urlSources = require('./core/sources/urlSources')
 
-  let vtree$= props.get("data")
-    .map(function(data){
-      console.log("data",data)
-      return <div className="foo">
-        <span> Testing </span>
-        <button className="innerButton">clicky </button>
-        <input type="checkbox" id="fooSetting" checked={data.valid}/> 
-      </div>
-      } 
-    )
+  //urlSources.appMode$.subscribe( appMode => setSetting$({path:"mode",value:appMode}) )
+  urlSources.settings$.subscribe(function(settings){
+    console.log("settings from old",settings)
+    const defaults = {
+      persistent:false,
+      lastDesignUri:undefined,
+      lastDesignName:undefined,
 
-  return {
-    view:vtree$,
-    events:{
-      mambo:Rx.Observable.timer(200, 100),
+      /*grid:{
+        show:false,
+      },
+      annotations{
+        show:false
+      }*/
     }
+    let _settings = Object.assign({},defaults,settings)
 
+    /*updateDesign$({
+      _persistent:_settings.persistent,
+      uri:_settings.lastDesignUri,
+      name:_settings.lastDesignName
+    })*/
+  })
+
+  let {meshSources$, designSources$} = dataSources(dndSources$, urlSources)
+
+  meshSources$
+    .subscribe(data => console.log("meshSources",data))
+  return
+}  
+
+function doLotsOfThings(assetManager, kernel){
+
+  //experimental 
+  let res$ = meshSources$
+    .flatMap(function(dataSource){
+      let resource = assetManager.load( dataSource, {keepRawData:true, parsing:{useWorker:true,useBuffers:true} } )
+      return Rx.Observable.fromPromise(resource.deferred.promise)
+    })
+    .shareReplay(1)
+
+  //mesh + resource data together
+  let combos$ =
+    res$.map(function(resource){
+      let mesh = postProcessMesh(resource)
+      mesh=centerMesh(mesh)
+      return {mesh, resource}
+    })
+    .shareReplay(1)
+
+  //stream of processed meshes
+  /*let meshes$ = res$
+    .map( postProcessMesh )
+    .map( centerMesh )
+
+  //mesh + resource data together
+  let combos$ = meshes$
+    .zip(res$, function(mesh,resource){
+      return {mesh,resource}
+    })
+    .shareReplay(1)*/
+  
+  //register meshes <=> types
+  let partTypes$ = require('./core/partReg')
+  partTypes$ = partTypes$({combos$:combos$})
+
+  //register meshes <=> bom entries
+  let bom$ = require('./core/bomReg')
+  bom$ = bom$({
+    addBomEntries$:addBomEntries$,
+    combos$:combos$,
+    partTypes$:partTypes$,
+    entities$:entities$,
+    selectBomEntries$:selectBomEntries$,
+    selectBomEntries2$:selectBomEntries2$
+  })
+
+  bom$.subscribe(function(bom){
+    updateBom(bom)
+  })
+
+  Array.prototype.flatMap = function(lambda) { 
+    return Array.prototype.concat.apply([], this.map(lambda)) 
   }
+
+
+  //this one takes care of adding templatemeshes
+  combos$
+    .zip(partTypes$.skip(1).map( x=>x.latest ),function(cb, typeUid){
+      kernel.partRegistry.addTemplateMeshForPartType( cb.mesh.clone(), typeUid )
+    })
+    .subscribe(function(data){
+      console.log("templatemeshes",data)
+    })
+
+  //we observe changes to partTypes to add new instances
+  //note : this should only be the case if we have either
+  //draged meshed, or got meshes from urls
+  //OR we must use data from our entities "model"
+  partTypes$
+    .skip(1)
+    .withLatestFrom(entities$,function(partTypes, entities){
+
+      let idx = Object.keys(entities.byId).length
+      let typeUid = partTypes.latest
+      let name = partTypes.typeUidToMeshName[typeUid]+idx
+      let bbox = partTypes.typeData[typeUid].bbox
+      
+      return {name, typeUid, bbox}
+    })
+    .subscribe(
+      function(data){
+      console.log("updated mesh registry, adding instance",data)
+
+      //FIXME: hack "centerMesh" like method, as centerMesh centers a mesh that gets "discarded" in a way
+      let h = data.bbox.max[2]  - data.bbox.min[2]
+
+      let partInstance =
+      {
+          name: data.name,
+          iuid: generateUUID(),
+          typeUid: data.typeUid,
+          color: "#07a9ff",
+          pos: [
+              0,
+              0,
+              h/2
+          ],
+          rot: [
+              0,
+              0,
+              0
+          ],
+          sca: [
+              1,
+              1,
+              1
+          ],
+          bbox:data.bbox
+      }
+
+      addEntityInstances$(partInstance)
+    })
 }
 
-TestCompo = Cycle.component('TestCompo',TestCompo)
+
 
 
 function App(interactions) {
@@ -211,10 +358,18 @@ function App(interactions) {
     ]
   )
 
-  
+  let dragOvers$ = interactions.subject("dragover")
+  let drops$  = interactions.subject("drop")  
+  let dndSources$ = observableDragAndDrop(dragOvers$, drops$)  
+    //.subscribe(data => console.log("dndSources",data))
+  let urlSources$ =null
+  let sources$ = sources(urlSources$, dndSources$)
 
   let testCompoData$ = intent(interactions)
+
   let settings$ = settingsM(interactions)
+
+  
 
 
   return Rx.Observable
@@ -227,7 +382,10 @@ function App(interactions) {
 
         //console.log("settings",settings)
         return (
-          <div className="jam">
+          <div className="jam" 
+            onDragOver={interactions.subject('dragover').onEvent}
+            onDrop={interactions.subject('drop').onEvent}
+          >
             <div>{appMetadata.name}{appMetadata.version}</div>
             <GlView 
               activeTool={activeTool} 
