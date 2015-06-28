@@ -136,6 +136,14 @@ function makeOutlineFx(mesh){
   //outlineMesh.quaternion = mesh1.quaternion
   outlineMesh.material.depthTest = false
 
+  //synch with original
+  maskMesh.position.copy( mesh.position )
+  maskMesh.rotation.copy( mesh.rotation )
+  maskMesh.scale.copy( mesh.scale )
+
+  outlineMesh.position.copy( mesh.position )
+  outlineMesh.rotation.copy( mesh.rotation )
+  outlineMesh.scale.copy( mesh.scale )
   //outlineMesh.position.fromArray( entity.pos )
   //outlineMesh.rotation.fromArray( entity.rot)
   //outlineMesh.scale.fromArray( entity.sca )
@@ -292,11 +300,12 @@ function _GlView(interactions, props, self){
   function objectAndPosition(pickingInfo){
     return {object:pickingInfo.object,point:pickingInfo.point}
   }
-  /*_doubleTaps$
+
+  _doubleTaps$
     .map(e => e.detail.pickingInfos.shift())
     .filter(exists)
     .map( objectAndPosition )
-    .subscribe( (oAndP) => zoomInOnObject.execute( oAndP.object, {position:oAndP.point} ) )*/
+    .subscribe( (oAndP) => zoomInOnObject.execute( oAndP.object, {position:oAndP.point} ) )
 
   /*contextTaps$ = contextTaps$ //handle context menu type interactions
     .map( selectionAt )
@@ -338,6 +347,7 @@ function _GlView(interactions, props, self){
     sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
     sphere.position.set(0, 0, 30)
     sphere.geometry.computeBoundingSphere()
+    sphere.geometry.computeBoundingBox()
     sphere.selectTrickleUp = false 
     sphere.selectable = true
     sphere.castShadow = true
@@ -346,7 +356,6 @@ function _GlView(interactions, props, self){
 
     for( let light of config.scenes["main"])
     {
-      console.log("setting up light")
       scene.add( makeLight( light ) )
     }
   }
@@ -446,7 +455,7 @@ function _GlView(interactions, props, self){
       }
     })
 
-
+  let elapsed = 0
   //for now we use refs, but once in cycle, we should use virtual dom widgets & co
   let style = {width:"100%",height:"100%"}
   let overlayStyle ={position:'absolute',top:10,left:10}
@@ -468,8 +477,8 @@ function _GlView(interactions, props, self){
 
       if(initialized){
         render(scene,camera)
-        TWEEN.update(reRender)
-
+        TWEEN.update(elapsed)
+        elapsed += 15//reRender *16
         //onsole.log("settings",settings.grid.show)
       }
 
