@@ -158,7 +158,7 @@ function makeOutlineFx(mesh){
 - streamline all interactions
 */
 ////////////
-function _GlView(interactions, props, self){
+function GlView(interactions, props, self){
   let config = presets
 
   let container$ = interactions.get("#container","ready")
@@ -171,12 +171,15 @@ function _GlView(interactions, props, self){
   let items$      = props.get('items').startWith([])
   let activeTool$ = props.get('activeTool')//.startWith("translate")
   let selections$ = props.get('selections').startWith([]).filter(exists).distinctUntilChanged()
+  let visualMappings$ = props.get('visualMappings').startWith([])
   //every time either activeTool or selection changes, reset/update transform controls
 
   settings$.subscribe(function(data){console.log("SETTINGS ",data)})
   items$.subscribe(function(data){console.log("items ",data)})
-
   activeTool$.subscribe((data)=>console.log("activeTool",data))
+
+  visualMappings$.subscribe(data=>console.log("visualMappings",data))
+
 
   let renderer = null
 
@@ -337,6 +340,17 @@ function _GlView(interactions, props, self){
     )
     .shareReplay(1)
   
+  Rx.Observable.combineLatest(
+    items$.pluck("instances"),
+    visualMappings$,
+    function(instances,mappings){
+
+      console.log("trying to map instances to visuals")
+
+      return undefined
+    })
+  .subscribe(data=>console.log("visualMappings 2",data))
+
 
   //reRender$.subscribe( () => console.log("reRender"), (err)=>console.log("error in reRender",err))
   //actual 3d stuff
@@ -517,6 +531,6 @@ function _GlView(interactions, props, self){
 }
 
 
-let GlView = Cycle.component('GlView', _GlView, {bindThis: true})
+GlView = Cycle.component('GlView', GlView, {bindThis: true})
 
 export default GlView

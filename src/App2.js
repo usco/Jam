@@ -14,9 +14,10 @@ import ContextMenu2 from './components/ContextMenu2'
 
 import {observableDragAndDrop} from './interactions/dragAndDrop'
 
-
 //temporary
-import {makeInternals, meshResources, entityInstanceFromPartTypes} from './core/tbd0.js'
+import {makeInternals, meshResources, entityInstanceFromPartTypes} from './core/tbd0'
+import {entityToVisuals} from './core/entityToVisuals'
+
 
 let pjson = require('../package.json')
 let appMetadata$ = Rx.Observable.just({
@@ -28,7 +29,7 @@ let appMetadata$ = Rx.Observable.just({
   /*let inter = require('./core/intents.js')
   let intent = inter.Intent({
     objectsTransforms$ : glview.objectsTransform$,
-    selectedMeshes$    : glview.selectedMeshes$,
+    selectedMeshes$    : glview.selectedMeshes$,²
     selectedBomEntries$: selectBomEntries$,
     selectEntities$,
 
@@ -201,6 +202,53 @@ function App(interactions) {
 
   //entities$
   //  .subscribe(data=>console.log("mesh data",data))
+  //what is my visual for any given entity
+
+  /*let otherData$ = partTypes$
+    .zip(meshResources$,function(types, meshResource){
+
+      console.log("types",types,"meshResource",meshResource)
+
+
+      return {
+        typeUid:types.meshNameToPartTypeUId[meshResource.resource.name],
+        mesh:meshResource.mesh,
+        resource:meshResource.resource
+      }
+    })
+  .subscribe(data=>console.log(" data",data))*/
+  entityToVisuals()
+
+  /*let entitiesToMeshInstancesMap = new WeakMap()
+  let meshInstancesToEntitiesMap = new WeakMap()//reverse map
+
+  function entityVisual(entity){
+  }
+
+  entities$
+  .skip(1)
+  .combineLatest(partTypes$,
+    function(entities,partTypes){
+
+    }
+  )
+  .subscribe(data=>console.log(" data",data))
+  */
+
+  
+
+  /*.flatMap(function(data){
+    return Rx.Observable.from( kernel.getPartMeshInstance( data[0] ) )
+  })
+  .map(Rx.Observable.from)
+  .subscribe(function(data){
+    console.log("mesh data",data)
+    //let foo$ = Rx.Observable.from( kernel.getPartMeshInstance(data.instances[0]) )
+  })*/
+
+
+  //let requestVisualForEntity$ = new Rx.Observable()
+  let visualMappings$ = Rx.Observable.just()
   
 
   return Rx.Observable
@@ -208,7 +256,8 @@ function App(interactions) {
       appMetadata$,
       entities$,
       settings$,
-      function(appMetadata, items, settings){
+      visualMappings$,
+      function(appMetadata, items, settings,visualMappings){
 
         //console.log("settings",settings)
         return (
@@ -221,6 +270,7 @@ function App(interactions) {
               activeTool={activeTool} 
               settings={settings}
               items={items} 
+              mappings={visualMappings}
               className="glview"/>
 
             <SettingsView settings={settings} ></SettingsView>
