@@ -14,6 +14,10 @@ import ContextMenu2 from './components/ContextMenu2'
 
 import {observableDragAndDrop} from './interactions/dragAndDrop'
 
+
+//temporary
+import {makeInternals, meshResources, entityInstanceFromPartTypes} from './core/tbd0.js'
+
 let pjson = require('../package.json')
 let appMetadata$ = Rx.Observable.just({
   name: pjson.name,
@@ -43,27 +47,7 @@ let appMetadata$ = Rx.Observable.just({
   intent.bomEntriesToSelect$
     .subscribe( selectBomEntries2$ )
     */
-function TestCompo(interactions,props){
-  let vtree$= props.get("data")
-    .map(function(data){
-      console.log("data",data)
-      return <div className="foo">
-        <span> Testing </span>
-        <button className="innerButton">clicky </button>
-        <input type="checkbox" id="fooSetting" checked={data.valid}/> 
-      </div>
-      } 
-    )
-  return {
-    view:vtree$,
-    events:{
-      mambo:Rx.Observable.timer(200, 100),
-    }
 
-  }
-}
-
-TestCompo = Cycle.component('TestCompo',TestCompo)
 
 
 function intent(interactions){
@@ -73,54 +57,12 @@ function intent(interactions){
   let contextTaps$ = interactions.get(".glview","contextTaps$")
   let selectTransforms$ = interactions.get(".glview","selectionsTransforms$")
 
-  //let dnds$ = observableDragAndDrop('.glview', interactions)
-
   singleTaps$.pluck("detail").subscribe(event => console.log("singleTaps",event))
   doubleTaps$.pluck("detail").subscribe(event => console.log("doubleTaps",event))
   contextTaps$.pluck("detail").subscribe(event => console.log("contextTaps",event))
   selectTransforms$.pluck("detail").subscribe(event => console.log("selectTransforms",event))
 
-  //dnds$.subscribe(event => console.log("dnds",event))  
 
-  interactions.get(".jam","click")
-    .subscribe( event => console.log("click"))
-
-
-  /*interactions.get(".settingsView", "foo")
-    .subscribe(settings => console.log("settings change",settings))
-
-  interactions.get(".settingsView","bla$")
-    .subscribe(settings => console.log("settingsView bla"))
-
-  interactions.get(".settingsView .showGrid", "change")
-    .subscribe(settings => console.log("showGrid bla")) */
-
-
-  let clicky$ = interactions.get(".foo .innerButton","click").map(true).startWith(true)
-    //.subscribe(settings => console.log("inner click"))
-
-  let checky$ = interactions.get(".foo #fooSetting","change").map(event => event.target.checked).startWith(false)
-    //.subscribe(settings => console.log("checkbox change"))
-
-
-  let bla$ = Rx.Observable.combineLatest(
-    clicky$,
-    checky$,
-    function(clicky,checky){
-      return {
-        valid:checky,
-        stuff:"42"
-      }
-
-    }
-  )
-
-  //bla$.subscribe(data=>console.log("data",data))
-
-  return bla$
-
-  /*interactions.get(".foo","mambo")
-    .subscribe(settings => console.log("inner mambo"))*/
 }
 
 function settingsM(interactions){
@@ -132,9 +74,7 @@ function settingsM(interactions){
     return interactions.get(".settingsView "+fieldName, "change").map(event => event.target.checked).startWith(false)
   }
   let fieldNames = [".showGrid",".showAnnot",".autoRotate"]
-
   fieldNames.map(foobar)*/
-
 
   /*let bla$= combineTemplate(
     {
@@ -174,9 +114,7 @@ function settingsM(interactions){
 }
 
 
-
 function sources(urlSources$, dndSources$){
-  console.log("sources")
   //data sources
   let dataSources = require('./core/sources/dataSources').getDataSources
   let urlSources = require('./core/sources/urlSources')
@@ -207,178 +145,70 @@ function sources(urlSources$, dndSources$){
 
   let {meshSources$, designSources$} = dataSources(dndSources$, urlSources)
 
+  let settingsSources$ = urlSources.settings$
+
   meshSources$
     .subscribe(data => console.log("meshSources",data))
-  return
+
+  return {meshSources$, designSources$, settingsSources$}
 }  
-
-function doLotsOfThings(assetManager, kernel){
-
-  //experimental 
-  let res$ = meshSources$
-    .flatMap(function(dataSource){
-      let resource = assetManager.load( dataSource, {keepRawData:true, parsing:{useWorker:true,useBuffers:true} } )
-      return Rx.Observable.fromPromise(resource.deferred.promise)
-    })
-    .shareReplay(1)
-
-  //mesh + resource data together
-  let combos$ =
-    res$.map(function(resource){
-      let mesh = postProcessMesh(resource)
-      mesh=centerMesh(mesh)
-      return {mesh, resource}
-    })
-    .shareReplay(1)
-
-  //stream of processed meshes
-  /*let meshes$ = res$
-    .map( postProcessMesh )
-    .map( centerMesh )
-
-  //mesh + resource data together
-  let combos$ = meshes$
-    .zip(res$, function(mesh,resource){
-      return {mesh,resource}
-    })
-    .shareReplay(1)*/
-  
-  //register meshes <=> types
-  let partTypes$ = require('./core/partReg')
-  partTypes$ = partTypes$({combos$:combos$})
-
-  //register meshes <=> bom entries
-  let bom$ = require('./core/bomReg')
-  bom$ = bom$({
-    addBomEntries$:addBomEntries$,
-    combos$:combos$,
-    partTypes$:partTypes$,
-    entities$:entities$,
-    selectBomEntries$:selectBomEntries$,
-    selectBomEntries2$:selectBomEntries2$
-  })
-
-  bom$.subscribe(function(bom){
-    updateBom(bom)
-  })
-
-  Array.prototype.flatMap = function(lambda) { 
-    return Array.prototype.concat.apply([], this.map(lambda)) 
-  }
-
-
-  //this one takes care of adding templatemeshes
-  combos$
-    .zip(partTypes$.skip(1).map( x=>x.latest ),function(cb, typeUid){
-      kernel.partRegistry.addTemplateMeshForPartType( cb.mesh.clone(), typeUid )
-    })
-    .subscribe(function(data){
-      console.log("templatemeshes",data)
-    })
-
-  //we observe changes to partTypes to add new instances
-  //note : this should only be the case if we have either
-  //draged meshed, or got meshes from urls
-  //OR we must use data from our entities "model"
-  partTypes$
-    .skip(1)
-    .withLatestFrom(entities$,function(partTypes, entities){
-
-      let idx = Object.keys(entities.byId).length
-      let typeUid = partTypes.latest
-      let name = partTypes.typeUidToMeshName[typeUid]+idx
-      let bbox = partTypes.typeData[typeUid].bbox
-      
-      return {name, typeUid, bbox}
-    })
-    .subscribe(
-      function(data){
-      console.log("updated mesh registry, adding instance",data)
-
-      //FIXME: hack "centerMesh" like method, as centerMesh centers a mesh that gets "discarded" in a way
-      let h = data.bbox.max[2]  - data.bbox.min[2]
-
-      let partInstance =
-      {
-          name: data.name,
-          iuid: generateUUID(),
-          typeUid: data.typeUid,
-          color: "#07a9ff",
-          pos: [
-              0,
-              0,
-              h/2
-          ],
-          rot: [
-              0,
-              0,
-              0
-          ],
-          sca: [
-              1,
-              1,
-              1
-          ],
-          bbox:data.bbox
-      }
-
-      addEntityInstances$(partInstance)
-    })
-}
 
 
 
 
 function App(interactions) {
   let activeTool = "translate"
-  let items$ = Rx.Observable.just(
-    [
-      {
-        name: "fff",
-        iuid: "uuid",
-        typeUid: "dfsdfsdf",
-        color: "#07a9ff",
-        pos: [
-            0,
-            0,
-            0,
-        ],
-        rot: [
-            0,
-            0,
-            0
-        ],
-        sca: [
-            1,
-            1,
-            1
-        ],
-        bbox:undefined
-      }
-    ]
-  )
 
   let dragOvers$ = interactions.subject("dragover")
   let drops$  = interactions.subject("drop")  
   let dndSources$ = observableDragAndDrop(dragOvers$, drops$)  
     //.subscribe(data => console.log("dndSources",data))
   let urlSources$ =null
-  let sources$ = sources(urlSources$, dndSources$)
-
-  let testCompoData$ = intent(interactions)
+  let {meshSources$, designSources$, settingsSources$} = sources(urlSources$, dndSources$)
 
   let settings$ = settingsM(interactions)
 
+  let {kernel, assetManager} = makeInternals()
+
+  let meshResources$ = meshResources(meshSources$, assetManager)
+    //.subscribe(data=>console.log("mesh data",data))
+  //doLotsOfThings(kernel,assetManager,meshSources$)
+
+  //register meshes <=> types
+  let partTypes = require('./core/partReg')
+  let partTypes$ = partTypes({combos$:meshResources$})
+
+  //get new instances from "types"
+  let newInstFromTypes$ = entityInstanceFromPartTypes(partTypes$)
+    //.subscribe(data=>console.log("mesh data",data))
   
 
+  let entities = require("./core/entityModel")
+
+  let intent = {
+    createEntityInstance$:new Rx.Subject(),//createEntityInstance$,
+    addEntities$: newInstFromTypes$,//addEntityInstances$,
+
+    updateEntities$: new Rx.Subject(), 
+    deleteEntities$: new Rx.Subject(), 
+    duplicateEntities$: new Rx.Subject(),  
+    deleteAllEntities$: new Rx.Subject(), 
+    selectEntities$: new Rx.Subject(), 
+
+    newDesign$: new Rx.Subject(), 
+  }
+  let entities$ = entities(intent)
+
+  //entities$
+  //  .subscribe(data=>console.log("mesh data",data))
+  
 
   return Rx.Observable
     .combineLatest(
       appMetadata$,
-      items$,
+      entities$,
       settings$,
-      testCompoData$,
-      function(appMetadata, items, settings, testCompoData){
+      function(appMetadata, items, settings){
 
         //console.log("settings",settings)
         return (
@@ -396,8 +226,6 @@ function App(interactions) {
             <SettingsView settings={settings} ></SettingsView>
             <FullScreenToggler/> 
 
-
-            <TestCompo data={testCompoData}/>
           </div>
         )
       }
