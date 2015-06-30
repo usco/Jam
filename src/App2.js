@@ -19,7 +19,7 @@ import {observableDragAndDrop} from './interactions/dragAndDrop'
 import {makeInternals, meshResources, entityInstanceFromPartTypes} from './core/tbd0'
 import {entityToVisuals, meshInjectPostProcess, applyEntityPropsToMesh} from './core/entityToVisuals'
 import {exists} from './utils/obsUtils'
-import {hasEntity,getEntity} from './utils/entityUtils'
+import {hasEntity,hasNoEntity,getEntity} from './utils/entityUtils'
 
 
 
@@ -53,27 +53,76 @@ let appMetadata$ = Rx.Observable.just({
     .subscribe( selectBomEntries2$ )
     */
 
+function dataFromMesh (objTransform$){
+  function toArray (vec){
+    return vec.toArray().slice(0,3)
+  }
+  objTransform$ = objTransform$.filter(hasEntity)
 
+  let eId = objTransform$.map(getEntity).pluck('iuid').startWith("-1")
+    .distinctUntilChanged(null, itemsEqual)
+  let pos = objTransform$.pluck('position').map(toArray).startWith([0,0,0])
+    .distinctUntilChanged(null, itemsEqual)
+  let rot = objTransform$.pluck('rotation').map(toArray).startWith([0,0,0])
+    .distinctUntilChanged(null, itemsEqual)
+  let sca = objTransform$.pluck('scale').map(toArray).startWith([1,1,1])
+    .distinctUntilChanged(null, itemsEqual)
+
+   
+  return combineTemplate(
+    {
+      iuids: eId, 
+      //entity,
+      pos:pos,
+      rot:rot,
+      sca:sca
+    })
+} 
+
+function dataFromMesh2(objTransform$){
+  function toArray (vec){
+    return vec.toArray().slice(0,3)
+  }
+
+  let foo$= objTransform$
+    .filter(hasEntity)
+    .map(
+      function(m){ 
+        return {
+          iuids:m.userData.entity.iuid, 
+          pos:toArray(m.position),
+          rot:toArray(m.rotation),
+          sca:toArray(m.scale)
+        } 
+    })
+    .shareReplay(1)
+
+  //foo$.subscribe(data => console.log("RAW objTransform",data))
+
+  return foo$
+}
 
 function intent(interactions){
   let glviewInit$ = interactions.get(".glview","initialized$")
   let singleTaps$ = interactions.get(".glview","singleTaps$")
   let doubleTaps$ = interactions.get(".glview","doubleTaps$")
   let contextTaps$ = interactions.get(".glview","contextTaps$")
-  let selectTransforms$ = interactions.get(".glview","selectionsTransforms$")
 
   /*singleTaps$.pluck("detail").subscribe(event => console.log("singleTaps",event))
   doubleTaps$.pluck("detail").subscribe(event => console.log("doubleTaps",event))
   contextTaps$.pluck("detail").subscribe(event => console.log("contextTaps",event))
   selectTransforms$.pluck("detail").subscribe(event => console.log("selectTransforms",event))*/
+  
+  let selectionTransforms$ = Rx.Observable.merge(
+    //interactions.get(".glview","selectionsTransforms$").pluck("detail").filter(hasEntity)
+    //  .map(function(m){ return {iuids:m.userData.entity.iuid, pos:m.position,rot:m.rot,sca:m.sca} })
 
+    dataFromMesh2( interactions.get(".glview","selectionsTransforms$").pluck("detail") )
+    ,interactions.get(".entityInfos","selectionTransforms$").pluck("detail")
+  )
 
   let selections$ = interactions.get(".glview","selectedMeshes$")
     .pluck("detail")
-
-  function hasNoEntity( input ){
-    return !(input && input.userData && input.userData.entity)
-  }
 
   selections$ = Rx.Observable.merge(
     selections$.filter(hasEntity).map(getEntity).map(e=>e.iuid),
@@ -82,7 +131,8 @@ function intent(interactions){
 
 
   return {
-    selections$
+    selections$,
+    selectionTransforms$
 
   }
 }
@@ -202,8 +252,8 @@ function App(interactions) {
     //.subscribe(data=>console.log("mesh data",data))
 
   let intents = intent(interactions)  
-  //intents.selections$
-  //  .subscribe(data=>console.log("selections",data))
+  //intents.selectionTransforms$
+  //  .subscribe(data=>console.log("selectionTransforms",data.pos))
 
 
   let entities = require("./core/entityModel")
@@ -212,7 +262,7 @@ function App(interactions) {
     createEntityInstance$:new Rx.Subject(),//createEntityInstance$,
     addEntities$: newInstFromTypes$,//addEntityInstances$,
 
-    updateEntities$: new Rx.Subject(), 
+    updateEntities$: intents.selectionTransforms$,//
     deleteEntities$: new Rx.Subject(), 
     duplicateEntities$: new Rx.Subject(),  
     deleteAllEntities$: new Rx.Subject(), 
@@ -278,7 +328,7 @@ function App(interactions) {
     .pluck("instances")
     .withLatestFrom(partTypes$,function(entries, types){
 
-      console.log("entries",entries,"types",types)
+      //console.log("entries",entries,"types",types)
 
       return entries.map(function(entity){
         let mesh = types.typeUidToTemplateMesh[entity.typeUid].clone()
@@ -304,7 +354,7 @@ function App(interactions) {
       visualMappings$,
       function(appMetadata, items, settings, visualMappings){
 
-        console.log("items",items, items.instances)
+        //console.log("items",items, items.instances)
 
         let selections = items.selectedIds.map( id=>items.byId[id] )
 

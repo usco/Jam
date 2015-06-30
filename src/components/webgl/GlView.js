@@ -174,10 +174,10 @@ function GlView(interactions, props, self){
   let visualMappings$ = props.get('visualMappings').startWith([])
   //every time either activeTool or selection changes, reset/update transform controls
 
-  settings$.subscribe(function(data){console.log("SETTINGS ",data)})
-  items$.subscribe(function(data){console.log("items ",data)})
-  activeTool$.subscribe((data)=>console.log("activeTool",data))
-  visualMappings$.filter(exists).subscribe(data=>console.log("visualMappings",data))
+  //debug only
+  //settings$.subscribe(function(data){console.log("SETTINGS ",data)})
+  //items$.subscribe(function(data){console.log("items ",data)})
+  //activeTool$.subscribe((data)=>console.log("activeTool",data))
 
    /*Rx.Observable.combineLatest(
     items$.pluck("instances"),
@@ -296,15 +296,8 @@ function GlView(interactions, props, self){
     
   })
 
-    let selectedMeshes$ = selections2$
-    //.map( meshFrom )
-    /*.pluck("detail")
-    .map(e => e.detail.pickingInfos.shift())
-    .filter(exists)
-    .map(p => p.object)
-    //.filter(hasEntity)
-    .defaultIfEmpty([])*/
-  
+  let selectedMeshes$ = selections2$
+
 
   /*let obsTest$ = Rx.Observable.timer(200, 100)
     .do((data) => console.log("data",data)) //SIDE EFFECT !!
@@ -346,6 +339,9 @@ function GlView(interactions, props, self){
 
   let selectionsTransforms$ = fromEvent(transformControls, 'objectChange')
       .map(targetObject)
+
+  //selectionsTransforms$
+  //  .subscribe(data => console.log("transforms",data.position))
 
   //hande all the cases where events require re-rendering
   let reRender$ = merge(

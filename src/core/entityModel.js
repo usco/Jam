@@ -137,7 +137,7 @@ function makeModification$(intent){
       let byId = outputData.byId
 
       newData.map(function(entry){
-        let iuid = entry.iuid
+        let iuid = entry.iuids
         if(!iuid){
           return undefined
         }
