@@ -169,9 +169,6 @@ function sources(urlSources$, dndSources$){
 
   let settingsSources$ = urlSources.settings$
 
-  meshSources$
-    .subscribe(data => console.log("meshSources",data))
-
   return {meshSources$, designSources$, settingsSources$}
 }  
 
@@ -205,8 +202,8 @@ function App(interactions) {
     //.subscribe(data=>console.log("mesh data",data))
 
   let intents = intent(interactions)  
-  intents.selections$
-    .subscribe(data=>console.log("selections",data))
+  //intents.selections$
+  //  .subscribe(data=>console.log("selections",data))
 
 
   let entities = require("./core/entityModel")
@@ -219,7 +216,7 @@ function App(interactions) {
     deleteEntities$: new Rx.Subject(), 
     duplicateEntities$: new Rx.Subject(),  
     deleteAllEntities$: new Rx.Subject(), 
-    selectEntities$: new Rx.Subject(), 
+    selectEntities$: intents.selections$,//new Rx.Subject(), 
 
     newDesign$: new Rx.Subject(), 
   }
@@ -309,6 +306,8 @@ function App(interactions) {
 
         console.log("items",items, items.instances)
 
+        let selections = items.selectedIds.map( id=>items.byId[id] )
+
         return (
           <div className="jam" 
             onDragOver={interactions.subject('dragover').onEvent}
@@ -325,7 +324,7 @@ function App(interactions) {
 
             <SettingsView settings={settings} ></SettingsView>
             <FullScreenToggler/> 
-            <EntityInfos entities={items.instances} settings={settings} />
+            <EntityInfos entities={selections} settings={settings} />
 
           </div>
         )
