@@ -480,12 +480,21 @@ function GlView(interactions, props, self){
       }
     })
 
+  //sorta hack ??
+  scene.dynamicInjector = dynamicInjector
+
   visualMappings$
+    .do(function(){
+      scene.remove(scene.dynamicInjector)
+      let dynamicInjector = new THREE.Object3D()//all dynamic mapped objects reside here
+      scene.dynamicInjector = dynamicInjector
+      scene.add( dynamicInjector )
+    })
     .filter(exists)
     .subscribe(function(data){
 
       data.map(function(entry){
-        scene.add(entry)
+        scene.dynamicInjector.add(entry)
       })
       
     })
