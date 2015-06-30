@@ -11,12 +11,16 @@ import BomView from './components/Bom/BomView'
 import SettingsView from './components/SettingsView'
 import FullScreenToggler from './components/FullScreenToggler'
 import ContextMenu2 from './components/ContextMenu2'
+import EntityInfos from './components/EntityInfos2'
 
 import {observableDragAndDrop} from './interactions/dragAndDrop'
 
 //temporary
 import {makeInternals, meshResources, entityInstanceFromPartTypes} from './core/tbd0'
 import {entityToVisuals, meshInjectPostProcess, applyEntityPropsToMesh} from './core/entityToVisuals'
+import {exists} from './utils/obsUtils'
+import {hasEntity,getEntity} from './utils/entityUtils'
+
 
 
 let pjson = require('../package.json')
@@ -58,12 +62,29 @@ function intent(interactions){
   let contextTaps$ = interactions.get(".glview","contextTaps$")
   let selectTransforms$ = interactions.get(".glview","selectionsTransforms$")
 
-  singleTaps$.pluck("detail").subscribe(event => console.log("singleTaps",event))
+  /*singleTaps$.pluck("detail").subscribe(event => console.log("singleTaps",event))
   doubleTaps$.pluck("detail").subscribe(event => console.log("doubleTaps",event))
   contextTaps$.pluck("detail").subscribe(event => console.log("contextTaps",event))
-  selectTransforms$.pluck("detail").subscribe(event => console.log("selectTransforms",event))
+  selectTransforms$.pluck("detail").subscribe(event => console.log("selectTransforms",event))*/
 
 
+  let selections$ = interactions.get(".glview","selectedMeshes$")
+    .pluck("detail")
+
+  function hasNoEntity( input ){
+    return !(input && input.userData && input.userData.entity)
+  }
+
+  selections$ = Rx.Observable.merge(
+    selections$.filter(hasEntity).map(getEntity).map(e=>e.iuid),
+    selections$.filter(hasNoEntity).map([])
+  )
+
+
+  return {
+    selections$
+
+  }
 }
 
 function settingsM(interactions){
@@ -182,11 +203,15 @@ function App(interactions) {
   //get new instances from "types"
   let newInstFromTypes$ = entityInstanceFromPartTypes(partTypes$)
     //.subscribe(data=>console.log("mesh data",data))
-  
+
+  let intents = intent(interactions)  
+  intents.selections$
+    .subscribe(data=>console.log("selections",data))
+
 
   let entities = require("./core/entityModel")
 
-  let intent = {
+  intents = {
     createEntityInstance$:new Rx.Subject(),//createEntityInstance$,
     addEntities$: newInstFromTypes$,//addEntityInstances$,
 
@@ -198,7 +223,7 @@ function App(interactions) {
 
     newDesign$: new Rx.Subject(), 
   }
-  let entities$ = entities(intent)
+  let entities$ = entities(intents)
 
   //entities$
   //  .subscribe(data=>console.log("mesh data",data))
@@ -282,7 +307,8 @@ function App(interactions) {
       visualMappings$,
       function(appMetadata, items, settings, visualMappings){
 
-        //console.log("settings",settings)
+        console.log("items",items, items.instances)
+
         return (
           <div className="jam" 
             onDragOver={interactions.subject('dragover').onEvent}
@@ -296,8 +322,10 @@ function App(interactions) {
               visualMappings={visualMappings}
               className="glview"/>
 
+
             <SettingsView settings={settings} ></SettingsView>
             <FullScreenToggler/> 
+            <EntityInfos entities={items.instances} settings={settings} />
 
           </div>
         )
