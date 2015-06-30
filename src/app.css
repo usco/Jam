@@ -20,6 +20,7 @@
 
 .jam {
   background-color: #fff;/*#f5f5f5;*/
+  z-index: 9999;
 }
 
 .jam input[type=text]{

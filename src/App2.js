@@ -16,7 +16,7 @@ import {observableDragAndDrop} from './interactions/dragAndDrop'
 
 //temporary
 import {makeInternals, meshResources, entityInstanceFromPartTypes} from './core/tbd0'
-import {entityToVisuals} from './core/entityToVisuals'
+import {entityToVisuals, meshInjectPostProcess, applyEntityPropsToMesh} from './core/entityToVisuals'
 
 
 let pjson = require('../package.json')
@@ -204,11 +204,10 @@ function App(interactions) {
   //  .subscribe(data=>console.log("mesh data",data))
   //what is my visual for any given entity
 
-  /*let otherData$ = partTypes$
+  let otherData$ = partTypes$
     .zip(meshResources$,function(types, meshResource){
 
       console.log("types",types,"meshResource",meshResource)
-
 
       return {
         typeUid:types.meshNameToPartTypeUId[meshResource.resource.name],
@@ -216,8 +215,12 @@ function App(interactions) {
         resource:meshResource.resource
       }
     })
-  .subscribe(data=>console.log(" data",data))*/
-  entityToVisuals()
+    /*.scan(function(acc,val){
+      console.lot("acc",acc,"val",val)
+      return acc[val.typeUid] = val.mesh
+    },{})*/
+  .subscribe(data=>console.log(" data",data))
+  //entityToVisuals()
 
   /*let entitiesToMeshInstancesMap = new WeakMap()
   let meshInstancesToEntitiesMap = new WeakMap()//reverse map
@@ -248,7 +251,27 @@ function App(interactions) {
 
 
   //let requestVisualForEntity$ = new Rx.Observable()
-  let visualMappings$ = Rx.Observable.just()
+
+  let visualMappings$ = entities$
+    .pluck("instances")
+    .withLatestFrom(partTypes$,function(entries, types){
+
+      console.log("entries",entries,"types",types)
+
+      return entries.map(function(entity){
+        let mesh = types.typeUidToTemplateMesh[entity.typeUid].clone()
+        
+        mesh = meshInjectPostProcess(mesh)
+        mesh = applyEntityPropsToMesh({entity,mesh})
+
+        return mesh
+      })
+
+    })
+    /*.flatMap(function(items){
+      return Rx.Observable.from(items)
+    })*/
+    //.filter(x=> types.indexOf(x.type) > -1 )
   
 
   return Rx.Observable
@@ -257,7 +280,7 @@ function App(interactions) {
       entities$,
       settings$,
       visualMappings$,
-      function(appMetadata, items, settings,visualMappings){
+      function(appMetadata, items, settings, visualMappings){
 
         //console.log("settings",settings)
         return (
@@ -270,7 +293,7 @@ function App(interactions) {
               activeTool={activeTool} 
               settings={settings}
               items={items} 
-              mappings={visualMappings}
+              visualMappings={visualMappings}
               className="glview"/>
 
             <SettingsView settings={settings} ></SettingsView>

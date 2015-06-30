@@ -15,7 +15,10 @@ const defaults = {
   meshNameToPartTypeUId:{},
   typeUidToMeshName:{},
   typeData:{},
-  latest:undefined
+  latest:undefined,
+
+  //not sure
+  typeUidToTemplateMesh:{}
 }
 
 function makeModifications(intent){
@@ -36,6 +39,8 @@ function makeModifications(intent){
       let meshName      = data.resource.name || ""
       let cleanedName   = nameCleanup(meshName)
       let typeUid = meshNameToPartTypeUId[ meshName ]
+
+      let typeUidToTemplateMesh = regData.typeUidToTemplateMesh || {}
 
       //no typeUid was given, it means we have a mesh with no part (yet !)
       if( !typeUid ) {
@@ -61,6 +66,8 @@ function makeModifications(intent){
         partTypes.push(typeUid)
         meshNameToPartTypeUId[meshName] = typeUid
         typeUidToMeshName[typeUid] = meshName
+
+        typeUidToTemplateMesh[typeUid] = mesh
       } 
 
       return {
@@ -68,7 +75,10 @@ function makeModifications(intent){
         meshNameToPartTypeUId,
         typeUidToMeshName, 
         typeData,
-        latest:typeUid}
+        latest:typeUid,
+
+        typeUidToTemplateMesh
+      }
   })
 
   

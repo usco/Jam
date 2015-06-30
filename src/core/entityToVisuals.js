@@ -54,7 +54,7 @@ function getRandomInt(min, max) {
 }
 
 //method to filter the source data by types : types are arrays of typeUids
-function obsByTypes(srcData, types){
+export function obsByTypes(srcData, types){
   return srcData
     .flatMap(function(items){
       console.log("items",items)
@@ -141,4 +141,32 @@ export function entityToVisuals(){
     otherVisualProvider$
   )
   return visualProviders$
+}
+
+
+
+///////////////
+//mesh insertion post process
+export function meshInjectPostProcess( mesh ){
+  //FIXME: not sure about these, they are used for selection levels
+  mesh.selectable      = true
+  mesh.selectTrickleUp = false
+  mesh.transformable   = true
+  //FIXME: not sure, these are very specific for visuals
+  mesh.castShadow      = true
+  //mesh.receiveShadow = true
+  return mesh
+}
+
+export function applyEntityPropsToMesh( inputs ){
+  let {entity, mesh} = inputs
+  mesh.userData.entity = entity//FIXME : should we have this sort of backlink ?
+  //FIXME/ make a list of all operations needed to be applied on part meshes
+  //computeObject3DBoundingSphere( meshInstance, true )
+  //centerMesh( meshInstance ) //FIXME do not use the "global" centerMesh
+  mesh.position.fromArray( entity.pos )
+  mesh.rotation.fromArray( entity.rot )
+  mesh.scale.fromArray(  entity.sca )
+  mesh.material.color.set( entity.color )
+  return mesh
 }

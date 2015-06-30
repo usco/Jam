@@ -177,8 +177,20 @@ function GlView(interactions, props, self){
   settings$.subscribe(function(data){console.log("SETTINGS ",data)})
   items$.subscribe(function(data){console.log("items ",data)})
   activeTool$.subscribe((data)=>console.log("activeTool",data))
+  visualMappings$.filter(exists).subscribe(data=>console.log("visualMappings",data))
 
-  visualMappings$.subscribe(data=>console.log("visualMappings",data))
+   /*Rx.Observable.combineLatest(
+    items$.pluck("instances"),
+    visualMappings$,
+    function(instances,mappings){
+
+      console.log("trying to map instances to visuals")
+
+      return undefined
+    })*/
+  /*visualMappings$
+    .filter(exists)
+    .subscribe(data=>console.log("visualMappings 2",data))*/
 
 
   let renderer = null
@@ -340,16 +352,7 @@ function GlView(interactions, props, self){
     )
     .shareReplay(1)
   
-  Rx.Observable.combineLatest(
-    items$.pluck("instances"),
-    visualMappings$,
-    function(instances,mappings){
-
-      console.log("trying to map instances to visuals")
-
-      return undefined
-    })
-  .subscribe(data=>console.log("visualMappings 2",data))
+ 
 
 
   //reRender$.subscribe( () => console.log("reRender"), (err)=>console.log("error in reRender",err))
@@ -468,6 +471,17 @@ function GlView(interactions, props, self){
         scene.add(grid)
       }
     })
+
+  visualMappings$
+    .filter(exists)
+    .subscribe(function(data){
+
+      data.map(function(entry){
+        scene.add(entry)
+      })
+      
+    })
+
 
   let elapsed = 0
   //for now we use refs, but once in cycle, we should use virtual dom widgets & co
