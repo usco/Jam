@@ -102,7 +102,7 @@ function setupPostProcess(camera, renderer, scene){
 
 
 function makeOutlineFx(mesh){
-  console.log("makeOutlineFx")
+  //log.debug("makeOutlineFx")
   let geometry = mesh.geometry
   let matFlat = new THREE.MeshBasicMaterial({color: 0xffffff})
   let maskMesh = new THREE.Mesh( geometry, matFlat )
@@ -270,12 +270,12 @@ function GlView(interactions, props, self){
     .subscribe( 
       function(data){
         let {tool,selections} = data
-        console.log("data",data, tool, selections)
+        //console.log("data",data, tool, selections)
         transformControls.detach()
 
         if(tool && selections)
         {
-          transformControls.attach(sphere)
+          transformControls.attach(selections)
           transformControls.setMode(tool)
         }
         
@@ -295,6 +295,15 @@ function GlView(interactions, props, self){
     }
     
   })
+
+    let selectedMeshes$ = selections2$
+    //.map( meshFrom )
+    /*.pluck("detail")
+    .map(e => e.detail.pickingInfos.shift())
+    .filter(exists)
+    .map(p => p.object)
+    //.filter(hasEntity)
+    .defaultIfEmpty([])*/
   
 
   /*let obsTest$ = Rx.Observable.timer(200, 100)
@@ -352,7 +361,6 @@ function GlView(interactions, props, self){
     )
     .shareReplay(1)
   
- 
 
 
   //reRender$.subscribe( () => console.log("reRender"), (err)=>console.log("error in reRender",err))
@@ -368,7 +376,7 @@ function GlView(interactions, props, self){
     sphere.selectTrickleUp = false 
     sphere.selectable = true
     sphere.castShadow = true
-    scene.add(sphere)
+    //scene.add(sphere)
 
 
     for( let light of config.scenes["main"])
@@ -535,6 +543,7 @@ function GlView(interactions, props, self){
       contextTaps$,
 
       selectionsTransforms$,
+      selectedMeshes$,
       /*stopContext$,
 
       selectedMeshes$,//is this one needed or redundant ?
