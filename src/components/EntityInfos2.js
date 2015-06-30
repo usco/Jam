@@ -33,11 +33,11 @@ function transformInputs(entity, fieldName, displayName, controlsStep, numberPre
   }
 }
 
-function colorInput(entity){
+function colorInput(entity, changeHandler){
   if(entity && entity.color){
     return (
        <span>
-        <input type="color" value={entity.color} /> 
+        <input type="color" value={entity.color} onChange={changeHandler.bind(null,"color",null)} /> 
       </span>
     )
   } 
@@ -70,6 +70,8 @@ function debugItems(entity,debug){
 function EntityInfos(interactions, props) {
   let settings$ = props.get('settings').filter(exists).startWith([])
   let entities$ = props.get('entities').filter(exists).startWith([])
+
+  let selectionTransforms$ = interactions.subject('selectionTransforms$')
     
   let numberPrecision = 2
   let controlsStep = 0.1
@@ -84,22 +86,36 @@ function EntityInfos(interactions, props) {
         let entity = null
 
         if(entities.length>0) entity = entities[0]
-        console.log("ENTITY",entity)
 
         function changeHandler(fieldName, index, event){
-          let value = parseFloat(event.target.value)
-          
-          let transforms = entity[fieldName] //[0,0,0]
-          transforms[index] = value
-          console.log("reacting to change",fieldName, index, value, transforms)
-          interactions.subject('selectionTransform').onEvent({iuids:[entity.iuid],transforms})
+          let transforms = entity[fieldName]
+          let value = event.target.value
+
+          if(fieldName!=="color"){
+            value = parseFloat(value)
+
+            //FIXME : needed because of side efect of mutability ugh
+            let transforms2 = Object.assign([],transforms)
+            transforms2[index] = value
+            console.log("reacting to change",fieldName, index, value, transforms, transforms2)
+            transforms = transforms2
+          }
+          else{
+            //dealing with color : this needs to be done better
+            transforms = value
+          }
+         
+          let output = {iuids:entity.iuid}
+          output[fieldName] = transforms
+          interactions.subject('selectionTransforms$').onEvent(output)
+
         }
 
         if(settings.mode !== "viewer")
         {
           element = (
-            <div className="toolBarBottom">
-              {colorInput(entity)}
+            <div className="toolBarBottom entityInfos">
+              {colorInput(entity, changeHandler)}
               {transformInputs(entity, "pos", "P", controlsStep, numberPrecision, changeHandler)}
               {transformInputs(entity, "rot", "R", controlsStep, numberPrecision, changeHandler)}
               {transformInputs(entity, "sca", "S", controlsStep, numberPrecision, changeHandler)}
@@ -114,11 +130,10 @@ function EntityInfos(interactions, props) {
   return {
     view: vtree$,
     events:{
+      selectionTransforms$
     }
   }
 }
-
-
 
 EntityInfos = Cycle.component('EntityInfos',EntityInfos)
 export default EntityInfos
