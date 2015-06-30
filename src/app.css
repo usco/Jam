@@ -117,6 +117,9 @@
 
 .toolbarBottom{
   font-size: 0.8em;
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
 }
 
 .toolbarBottom input[type=text]{
@@ -125,6 +128,13 @@
 
   border: none;
   border-width: 0px;
+
+
+  max-width: 150px;
+  border: none;
+  line-height: 0.8em;
+  font-size: 0.8em;
+  font-family: inherit;
 }
 
 .toolbarBottom input[type=number]{
@@ -133,6 +143,13 @@
 
   border: none;
   border-width: 0px;
+
+  width:10em;
+  max-width: 50px;
+  border: none;
+  line-height: 0.8em;
+  font-size: 0.8em;
+  font-family: inherit;
 }
 
 /*.tooolbarBottom */input[type=color]{
@@ -144,11 +161,19 @@
 
 .toolbarBottom input[type=text]:focus{
   outline: none;
+
+
 }
 
 .toolbarBottom input[type=number]:focus{
   outline: none;
 }
+
+
+
+
+      
+
 
 /*//////////////*/
 /*camview controls overlay*/
