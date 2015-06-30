@@ -71,15 +71,6 @@ export function isNoToolSelected(activeTool){
   return !activeTool
 }
 
-/////////////////////////////////
-//entity utils
-export function hasEntity( input ){
-  return (input.userData && input.userData.entity)
-}
-
-export function getEntity( input ){
-  return input.userData.entity
-}
 
 /////////////////////////////////
 //ui utils
