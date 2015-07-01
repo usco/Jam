@@ -1,11 +1,11 @@
 import Cycle from 'cycle-react'
 let React = Cycle.React
 let {Rx} = Cycle
-import Class from "classnames"
+import Class from 'classnames'
 
 import {preventDefault,isTextNotEmpty,formatData,exists} from '../utils/obsUtils'
 import {formatNumberTo, absSizeFromBBox} from '../utils/formatters'
-
+import EditableItem from './EditableItem2'
 
 //onChange={this.handleColorChange.bind(this)}
 
@@ -44,6 +44,12 @@ function colorInput(entity, changeHandler){
 }
 
 
+function nameInput(entity,changeHandler){
+  if(entity && entity.name){
+    return <EditableItem data={entity.name}/>
+  }
+}
+
 function extraInput(entity, numberPrecision){
   //this is used only for annotations I guess?
   if(entity && entity.value){
@@ -63,8 +69,6 @@ function debugItems(entity,debug){
     )
   }     
 }
-
-
 
 
 function EntityInfos(interactions, props) {
@@ -115,6 +119,7 @@ function EntityInfos(interactions, props) {
         {
           element = (
             <div className="toolBarBottom entityInfos">
+              {nameInput(entity)}
               {colorInput(entity, changeHandler)}
               {transformInputs(entity, "pos", "P", controlsStep, numberPrecision, changeHandler)}
               {transformInputs(entity, "rot", "R", controlsStep, numberPrecision, changeHandler)}
