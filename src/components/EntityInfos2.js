@@ -46,7 +46,7 @@ function colorInput(entity, changeHandler){
 
 function nameInput(entity,changeHandler){
   if(entity && entity.name){
-    return <EditableItem data={entity.name}/>
+    return <EditableItem data={entity.name} changeHandler={changeHandler} />
   }
 }
 
@@ -76,6 +76,24 @@ function EntityInfos(interactions, props) {
   let entities$ = props.get('entities').filter(exists).startWith([])
 
   let selectionTransforms$ = interactions.subject('selectionTransforms$')
+
+  //interactions.subject("valueChange$")
+  //  .subscribe(data=>console.log("textChanges"))
+
+  //FIXME : HACK !
+  let nameChange$ = interactions.get(".textInput","valueChange$")
+    .map(e => e.target.value)
+    .combineLatest(
+      entities$,
+      function(data,entities){
+        let entity = null
+        if(entities.length>0) entity = entities[0]
+        if(entity){
+          let output = {iuids:entity.iuid,name:data}
+          interactions.subject('selectionTransforms$').onEvent(output)
+        }
+      })
+    .subscribe( function(){})
     
   let numberPrecision = 2
   let controlsStep = 0.1
@@ -84,6 +102,7 @@ function EntityInfos(interactions, props) {
     .combineLatest(
       settings$,
       entities$,
+
       function(settings,entities){
 
         let element = null
@@ -95,7 +114,7 @@ function EntityInfos(interactions, props) {
           let transforms = entity[fieldName]
           let value = event.target.value
 
-          if(fieldName!=="color"){
+          if(fieldName!=="color" && fieldName !=="name"){
             value = parseFloat(value)
 
             //FIXME : needed because of side efect of mutability ugh
@@ -112,14 +131,13 @@ function EntityInfos(interactions, props) {
           let output = {iuids:entity.iuid}
           output[fieldName] = transforms
           interactions.subject('selectionTransforms$').onEvent(output)
-
         }
 
         if(settings.mode !== "viewer")
         {
           element = (
             <div className="toolBarBottom entityInfos">
-              {nameInput(entity)}
+              {nameInput(entity,changeHandler)}
               {colorInput(entity, changeHandler)}
               {transformInputs(entity, "pos", "P", controlsStep, numberPrecision, changeHandler)}
               {transformInputs(entity, "rot", "R", controlsStep, numberPrecision, changeHandler)}

@@ -8,13 +8,28 @@ import {preventDefault,isTextNotEmpty,formatData,exists} from '../utils/obsUtils
 
 
 function EditableItem(interactions, props) {
-  //let selectionTransforms$ = interactions.subject('selectionTransforms$')
   let multiline$   = props.get('multiline').filter(exists).startWith(false)
   let placeholder$ = props.get('placeholder').startWith("")
-  let editable$    = props.get('editable').filter(exists).startWith(false)
+  let editable$    = props.get('editable').filter(exists).startWith(true)
   let data$        = props.get('data').startWith("")
 
-  let editing$     = props.get('editing').filter(exists).startWith(false)
+  let keydowns$ = interactions.subject('keydown')//.get('.textInput','keydown')
+  let keyups$   = interactions.subject('keyup') //.get('.textInput','keyups')
+
+  let valueChange$ = interactions.subject('valueChange')
+  //let changes$  = interactions.subject('valueChange').map(e=>e.target).map(eventer("changes$"))
+    //changes$.subscribe(data=>console.log("CHANGES",data))
+
+  let editing$     = Rx.Observable.merge(
+    interactions.subject('editing').map(true),//interactions.get('.textInput','click')
+    interactions.subject('blur').map(false),//interactions.get('.textInput','blur')
+    keydowns$.map(e => e.keyCode).filter(k => k ===13).map(false) //if we press enter, stop editing
+  ).startWith(false)
+
+  //just a small helper
+  function eventer(eventName, eventContent){
+    return interactions.subject(eventName).onEvent //(eventContent)
+  }
   
   let vtree$ = Rx.Observable
     .combineLatest(
@@ -24,12 +39,7 @@ function EditableItem(interactions, props) {
       editable$,
       data$,
       function(editing,multiline,placeholder,editable,data){
-      
-        //onKeyDown={this.handleKeyDown} onChange={this.handleChange} onBlur={this.handleBlur} 
-        //onKeyDown={this.handleKeyDown} onChange={this.handleChange} onBlur={this.handleBlur}
-        //onClick={this.handleEditCell} onBlur={this.handleBlur} >{value}{placeholder}
-        function changeHandler(fieldName, index, event){   
-        }
+        console.log("change to EditableItem",editing)
 
         let element =null
 
@@ -39,24 +49,37 @@ function EditableItem(interactions, props) {
         if(!value || trim(value) === ""){
           value = undefined
         }
-
+        if(value) trim(value)
 
          if (editing && editable) {
           if(multiline){
             element = <textarea 
             className="textInput"
             autoFocus 
-            value={value}/> 
+            value={value}
+            onBlur={eventer('blur')}
+            onKeyDown={eventer('keydown')}
+            onKeyUp={eventer('keyup')}
+            onChange={eventer('valueChange')} 
+            /> 
           }else{
             element = <input type='text' 
             className="textInput"
             autoFocus 
             value={value}
-            placeholder={placeholder}/>           
+            placeholder={placeholder}
+            onBlur={eventer('blur')}
+            onKeyDown={eventer('keydown')}
+            onKeyUp={eventer('keyup')}
+            onChange={eventer('valueChange')} 
+            />           
           }
         }
         else {
-          element = <span className="textInput">{value}{placeholder}</span>
+          element = <span className="textInput"
+            onClick={eventer('editing')} >
+            {value}{placeholder}
+          </span>
         }
 
 
@@ -66,6 +89,7 @@ function EditableItem(interactions, props) {
   return {
     view: vtree$,
     events:{
+      valueChange$
     }
   }
 }
