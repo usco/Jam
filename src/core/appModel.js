@@ -31,7 +31,7 @@ const defaults = {//TODO: each component should "register its settings"
     show:true,
   },
   grid:{
-    show:false,
+    show:true,
     size:""
   },
   bom:{

@@ -39,7 +39,7 @@ let state = {
       show:true,
     },
     grid:{
-      show:false,
+      show:true,
     },
     camera:{
       autoRotate:false
