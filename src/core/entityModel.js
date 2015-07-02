@@ -117,7 +117,7 @@ function makeModification$(intent){
       
 
       //set selections
-      selectEntities$( entityIds )
+      //selectEntities$( entityIds ) //TODO : make dependant on app level setting
       return entitiesData
     })
 

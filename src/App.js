@@ -44,7 +44,9 @@ import BomView from './components/Bom/BomView'
 import SettingsView from './components/SettingsView'
 import ContextMenu2 from './components/ContextMenu2'
 
+import Detector from './components/webgl/deps/Detector.js'
 
+let webglEnabled = Detector.webgl
 
 ////TESTING
 import {selectEntities$,addEntityInstances$, updateEntities$, deleteEntities$, duplicateEntities$, deleteAllEntities$ } from './actions/entityActions'
@@ -660,7 +662,8 @@ export default class App extends React.Component {
       self.setState(lastState,afterSetState,false)
     })
 
-    console.log("---READY TO START JAM!---")
+    let startupMsg = `---READY TO START  JAM! v ${pjson.version} ---`
+    console.log(startupMsg)
   }
 
   //event handlers
@@ -918,21 +921,35 @@ export default class App extends React.Component {
     }
     
     //spinner /loader
-    
+    //webglEnabled = false
+
     let loaderSpinner = null
    
-    let loading = (this.state.loading && this.state.appState.mode === "viewer")
+    let loading = (this.state.loading && this.state.appState.mode === "viewer" && webglEnabled)
      if(loading){
       loaderSpinner = <span className="spinner" /> 
     }
 
-    //classNames()
-    //loaderSpinner
+    //failed load
+    let errorDisplay = null
+    
+    if(!webglEnabled){
+      errorDisplay = <div className="mainError">
+        <span>
+          <div className="container-heading">
+            <h1>Whoops, it seems you do not have a WebGL capable browser, sorry!</h1>
+          </div>
+          <div className="container-text">
+            <span> <a href="https://get.webgl.org/"> Find out more here  </a> </span>
+          </div>
+        </span>
+      </div>
+    }
 
     return (
         <div ref="wrapper" style={wrapperStyle} className="Jam">
 
-          <div className={Class("innerWrapper",{loading: loading})}>
+          <div className={Class("innerWrapper",{loading: loading},{visible:webglEnabled})}>
 
             <MainToolbar 
               design={this.state.design} 
@@ -974,6 +991,8 @@ export default class App extends React.Component {
           </div>
 
           {loaderSpinner}
+
+          {errorDisplay}
 
         </div>
     )

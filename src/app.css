@@ -386,9 +386,68 @@ button:focus {outline:0;}
   opacity: 0 !important;
 }
 
+.visible{
+  opacity: 1!important; 
+}
+
 .innerWrapper{
-    opacity: 1;
+    opacity: 0;
     transition: opacity 1.0s ease-in-out;
    -moz-transition: opacity 1.0s ease-in-out;
    -webkit-transition: opacity 1.0s ease-in-out;
+}
+
+
+.mainError{
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 25%;
+
+  color: #3d6179;
+
+}
+
+ a {
+      color: #3d6179;
+    }
+
+    a:hover {
+      text-decoration: none;
+    }
+
+.mainError{
+  /*position: absolute;
+  top: 50%;
+  width: 100%;
+  left: 0;*/
+
+  text-align: center;
+}
+.mainError h1{
+  font-size: 1.5em;
+  margin-bottom: 40px;
+  line-height: 1.5em;
+  font-weight: 600;
+}
+
+div.container-heading {
+  max-width: 80%;
+  margin: 40px auto;
+  border-bottom: 1px solid #efefef;
+  padding: 0 10px 0 10px;
+}
+
+div.container-text {
+  max-width: 90%;
+  margin: 40px auto;
+  padding: 0 10px 0 10px;
+}
+
+div.largeIcon{
+
+    margin: 80px auto 80px auto;
+  width: 80px;
+  height: 80px;
+  text-align: center;
 }
