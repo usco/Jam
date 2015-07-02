@@ -86,15 +86,159 @@ function removeAuthor(author, authors){
 
 
 
+function authors(authors, editable){
+  let authorsList = []
+    authors.map(function(author){
+      let item = null
+      if(editable){
+        item = <button onClick={self.removeAuthor.bind(self,author)}>X</button>
+      }
+      authorsList.push(
+        <li>
+          <span> Name:{author.name} Email:{author.email} , Site:{author.url}</span>
+          {item}
+        </li>
+      )
+    })
+    authorsList = <ul>{authorsList}</ul>
+
+    let authorsEditor = null
+
+    if(editable){
+      authorsEditor = (
+        <div>
+          <span>
+            Name<input type="text" ref="nAuthorName"></input>
+            Email<input type="text" ref="nAuthorEmail"></input>
+            Url<input type="text" ref="nAuthorUrl"></input>
+            <button onClick={this.addAuthor.bind(this)}> Add </button>
+          </span>
+        </div>
+      )
+    }
+}
+
+function tags(tags, editable){
+   /////////TAGS
+    let tagsList = []
+    tags.map(function(tag){
+      let item = null
+      if(editable){ 
+        item = <button onClick={self.removeTag.bind(self,tag)}>X</button>
+      }
+      tagsList.push( 
+        <li> 
+          {tag}
+          {item}
+        </li> )
+    })
+    tagsList = <ul>{tagsList}</ul>
+
+    //tags editor
+    let tagsEditor = null
+
+    if(editable){
+      tagsEditor = (
+        <div>
+          <div> Put a comma between each one </div>
+          <EditableItem 
+            placeholder={"...type here"} 
+            data={this.state.currentTagInput} 
+            ref="tagInput"/>
+          <button onClick={this.addTag.bind(this)}>ok</button>
+        </div>
+      )
+    }
+}
+
+function licenses(licenses,editable){
+  ///////
+  let licensesList = []
+  licenses.map(function(license){
+    let item = null
+    if(editable){ 
+      item = <button onClick={self.removeLicense.bind(self,license)}>X</button>
+    }
+    licensesList.push(
+      <li>
+        {license}
+        {item}
+      </li>)
+  })
+  licensesList = <ul>{licensesList}</ul>
+  //////
+
+
+  let licensesEditor = null
+
+  if(editable){
+    let availableLicenses = ["MIT","GPLV3"]
+    let availableLicensesD  = []
+    availableLicenses.map(function(license){
+      availableLicensesD.push(<option>{license}</option>)
+    })
+
+    licensesEditor = (
+      <div>
+        <select ref="licenseInput">
+          {availableLicensesD}
+        </select>
+        <button onClick={this.addLicense.bind(this)} > Add</button>
+      </div>
+    )
+  }
+}
+
 
 function DesignCard(props,interactions){
 
-
-
   function view(){
+    return <div> 
+      <h1>
+          {design.name} 
+          { versionField }
+        </h1>
+        <section>
+          <span>
+            Description:
+          </span>
+          <div>
+            <EditableItem 
+              editable={editable}
+              multiline={true} 
+              data={design.description} 
+              changeCallback={ this.setDesignData.bind(this,"description") } /> 
+          </div>
+        </section>
 
-    return <div> </div>
+        <section>
+          <span>Authors:</span>
+          {authorsList}
+          {authorsEditor}
+        </section>
 
+        <section>
+          <span>Tags:</span>
+          {tagsEditor}
+          {tagsList}
+        </section>
+
+        <section>
+          <span>Licences:</span>
+          {licensesEditor}
+          {licensesList}
+        </section>
+
+        <section>
+          <div>
+          Persistent design <input type="checkbox" disabled={true} checked={persistent}></input>
+          </div>
+          <div>
+          Url : {persistentUrl}
+          </div>
+        </section>
+
+    </div>
   }
 
 
