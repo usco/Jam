@@ -36,7 +36,7 @@ import keymaster from 'keymaster'
 
 import logger from './utils/log'
 let log = logger("Jam-Root")
-log.setLevel("info")
+log.setLevel("error")
 
 import state from './state'
 
@@ -215,7 +215,7 @@ export default class App extends React.Component {
       )
       //.skipUntil(newDesign$)
       .subscribe(function(data){
-        console.log("newDesign, reseting data")
+        //console.log("newDesign, reseting data")
         localStorage.removeItem("jam!-settings")
 
         //remove meshes, resources etc
@@ -320,7 +320,7 @@ export default class App extends React.Component {
 
     urlSources.appMode$.subscribe( appMode => setSetting$({path:"mode",value:appMode}) )
     urlSources.settings$.subscribe(function(settings){
-      console.log("settings from old",settings)
+      //console.log("settings from old",settings)
       const defaults = {
         persistent:false,
         lastDesignUri:undefined,
@@ -411,7 +411,7 @@ export default class App extends React.Component {
         self.kernel.partRegistry.addTemplateMeshForPartType( cb.mesh.clone(), typeUid )
       })
       .subscribe(function(data){
-        console.log("templatemeshes",data)
+        //console.log("templatemeshes",data)
       })
 
     //we observe changes to partTypes to add new instances
@@ -434,7 +434,7 @@ export default class App extends React.Component {
       })//side effect 
       .subscribe(
         function(data){
-        console.log("updated mesh registry, adding instance",data)
+        //console.log("updated mesh registry, adding instance",data)
 
         //FIXME: hack "centerMesh" like method, as centerMesh centers a mesh that gets "discarded" in a way
         let h = data.bbox.max[2]  - data.bbox.min[2]
@@ -499,7 +499,7 @@ export default class App extends React.Component {
     designSources$
       .map(function(designUri){
         updateDesign$({_doSave:false})
-        console.log("LOOOOAD hey , can you please load",designUri)
+        //console.log("LOOOOAD hey , can you please load",designUri)
 
         //we want to be notified once ALL of these have finished 
         let _meshesDone$ = new Rx.Subject()
@@ -518,7 +518,7 @@ export default class App extends React.Component {
 
 
         loadDone$.subscribe((done)=>{
-          console.log("done with unserialization")
+          //console.log("done with unserialization")
 
           updateDesign$({_doSave:true})
             
@@ -529,7 +529,6 @@ export default class App extends React.Component {
 
         let source = self.kernel.loadDesign(designUri)
         source.subscribe(function(designData){
-          console.log("gnn",designData)
                     
           updateDesign$(designData.design)
           addBomEntries$(designData.bom)
@@ -600,9 +599,7 @@ export default class App extends React.Component {
     */
 
     this.contextFoo.subscribe(function(data){
-      console.log("ContextMenu2")
       let {event,selectedIds} = data
-      console.log("contextMenu",event.position)
 
       let items = [ //default actions ?
         /*{name:"Import file (NA)",action:undefined},
@@ -638,7 +635,6 @@ export default class App extends React.Component {
 
 
     undo$.subscribe(function(){
-      console.log("UNDO")
       function afterSetState(){
         self._tempForceDataUpdate()
       }
@@ -653,7 +649,6 @@ export default class App extends React.Component {
     })
 
     redo$.subscribe(function(){
-      console.log("REDO")
 
       function afterSetState(){
         self._tempForceDataUpdate()
@@ -701,9 +696,9 @@ export default class App extends React.Component {
     keymaster('shift+ctrl+s',function(){
       window._appState = state.save()
       window._appStateString = JSON.stringify(window._appState)
-      console.log('app state saved')
-      console.log('copy the state to your clipboard by calling copy(_appStateString)')
-      console.log('for dev type _appState and press enter')
+      //console.log('app state saved')
+      //console.log('copy the state to your clipboard by calling copy(_appStateString)')
+      //console.log('for dev type _appState and press enter')
     })
 
      keymaster('shift+ctrl+l',function(){
@@ -931,7 +926,6 @@ export default class App extends React.Component {
       loaderSpinner = <span className="spinner" /> 
     }
 
-    console.log("loading",loading)
     //classNames()
     //loaderSpinner
 

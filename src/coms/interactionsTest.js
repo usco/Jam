@@ -6,7 +6,7 @@ import React from 'react';
 
 import logger from '../utils/log'
 let log = logger("Jam-Root");
-log.setLevel("info");
+log.setLevel("error");
 
 
 export default class App extends React.Component {

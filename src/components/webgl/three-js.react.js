@@ -42,7 +42,7 @@ import {windowResizes, elementResizes, pointerInteractions,preventScroll} from '
 
 import logger from '../../utils/log'
 let log = logger("glView")
-log.setLevel("info")
+log.setLevel("error")
 
 
 //FIXME: hack for now, should not be set here
@@ -258,7 +258,7 @@ class ThreeJs extends React.Component{
     this.resizer = elementResizes( container, 1).merge( windowResizes(1) )
 
     let handleResize = function(sizeInfos){
-      console.log("setting size",sizeInfos)
+      //console.log("setting size",sizeInfos)
       let {width,height,aspect} = sizeInfos
     
       if(width >0 && height >0 ){

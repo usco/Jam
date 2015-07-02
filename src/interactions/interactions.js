@@ -8,7 +8,7 @@ require("rx-dom")
 
 import logger from '../utils/log'
 let log = logger("interactions")
-log.setLevel("info")
+log.setLevel("error")
 
 import {preventDefault,isTextNotEmpty,formatData,exists} from '../utils/obsUtils'
 
@@ -71,7 +71,6 @@ function isLong(elapsed, maxTime){
 
 
  export function elementResizes(element, throttle=250){
-  console.log("elementResizes")
   function extractSize(x){ 
     let x = x.target
     let bRect = {left:0,top:0,bottom:0,right:0,width:0,height:0}

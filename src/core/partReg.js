@@ -5,7 +5,7 @@ let merge = Rx.Observable.merge
 
 import logger from 'log-minim'
 let log = logger("app")
-log.setLevel("debug")
+log.setLevel("error")
 
 import {generateUUID, nameCleanup} from 'usco-kernel2/src/utils'
 import {computeBoundingBox,computeBoundingSphere} from 'glView-helpers/src/meshTools/computeBounds'
@@ -22,7 +22,7 @@ function makeModifications(intent){
   let bla$ = intent.combos$
     .map((data) => (regData) => {
 
-      console.log("I would register something", data, regData)
+      //console.log("I would register something", data, regData)
 
       //we do not return the shape since that becomes the "reference shape/mesh", not the
       //one that will be shown

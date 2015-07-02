@@ -97,7 +97,13 @@ function SettingsView(interactions, props) {
         /*let fields = settings
           .map(function(){
             <input type="checkbox" >Foo </input> 
-          })*/
+          })
+
+   <section className="settingEntry">
+                <input className="showAnnot" type="checkbox" id="showAnnot" checked={showAnnot}> </input> 
+                <label for="showAnnot"> Show annotations </label>
+              </section>
+        */
         if(toggled)
         {
           fields = (
@@ -106,10 +112,7 @@ function SettingsView(interactions, props) {
                 <input className="showGrid" type="checkbox" id="showGrid" checked={showGrid}> </input> 
                 <label for="showGrid"> Show grid </label>
               </section>
-              <section className="settingEntry">
-                <input className="showAnnot" type="checkbox" id="showAnnot" checked={showAnnot}> </input> 
-                <label for="showAnnot"> Show annotations </label>
-              </section>
+           
               <section className="settingEntry">
                 <input className="autoRotate" type="checkbox" id="autoRotate" checked={autoRotate}> </input>
                 <label for="autoRotate"> Auto rotate camera </label>

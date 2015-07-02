@@ -9,7 +9,7 @@ import {
 
 import logger from '../utils/log'
 let log = logger("entities")
-log.setLevel("info")
+log.setLevel("error")
 
 import Rx from 'rx'
 let fromEvent = Rx.Observable.fromEvent

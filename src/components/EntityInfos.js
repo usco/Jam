@@ -7,7 +7,7 @@ import {formatNumberTo, absSizeFromBBox} from '../utils/formatters'
 
 import logger from '../utils/log'
 let log = logger("Jam-ToolBar")
-log.setLevel("info")
+log.setLevel("error")
 
 import {updateEntities$, setEntityBBox} from '../actions/entityActions'
 

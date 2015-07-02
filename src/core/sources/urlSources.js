@@ -59,6 +59,7 @@ let urDesignUri$ = Rx.Observable
 //local storage
 let lsDesignUri$  =
   settings$
+  .filter(exists)
   .pluck("lastDesignUri")
   .filter(exists)
   .shareReplay(1)

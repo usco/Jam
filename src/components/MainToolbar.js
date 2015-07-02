@@ -6,7 +6,7 @@ let fromEvent = Observable.fromEvent
 
 import logger from '../utils/log'
 let log = logger("Jam-ToolBar")
-log.setLevel("info")
+log.setLevel("error")
 
 import EditableItem from './EditableItem'
 import DesignCard   from './DesignCard'

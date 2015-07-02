@@ -548,7 +548,7 @@ var OrbitControls = function ( object, domElement, upVector ) {
     
     this.setDomElement=function(domElement)
     {
-      console.log("attaching orbit controls to", domElement);
+      //console.log("attaching orbit controls to", domElement);
       this.domElement = domElement;
       this.domElement.addEventListener( 'contextmenu', function ( event ) { event.preventDefault(); }, false );
       this.domElement.addEventListener( 'pinch', onPinch, false);

@@ -73,7 +73,7 @@ export function Intent(interactions) {
         return entities.instances.filter( i => i.typeUid === typeUid ).map( i => i.iuid )
       })
       
-      console.log("selecting entities from bom", selections)
+      //console.log("selecting entities from bom", selections)
       return selections
     })   
 
@@ -91,7 +91,7 @@ export function Intent(interactions) {
     .withLatestFrom(entities$,(e,entities)=>entities)
     .withLatestFrom(bom$,function(entities,bom){
 
-      console.log("selecting bom stuff")
+      //console.log("selecting bom stuff")
       let iuids = entities.selectedIds
       let selections = iuids.map(function(iuid){
         let entity  = entities.byId[iuid]
@@ -102,7 +102,7 @@ export function Intent(interactions) {
       //.filter( bom.selectedEntries.indexOf(typeUid)  )
       //GUARD !!
       //if(selections.sort() === )
-      console.log("selecting bom entries from entities", selections)
+      //console.log("selecting bom entries from entities", selections)
       return selections
     })
 

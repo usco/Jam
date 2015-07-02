@@ -5,7 +5,7 @@ let merge = Rx.Observable.merge
 
 import logger from 'log-minim'
 let log = logger("app")
-log.setLevel("debug")
+log.setLevel("error")
 
 import {toggleNote$,toggleThicknessAnnot$,toggleDistanceAnnot$, toggleDiameterAnnot$, toggleAngleAnnot$} from '../actions/annotActions'
 import {setActiveTool$,clearActiveTool$} from '../actions/appActions'

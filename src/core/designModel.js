@@ -1,6 +1,6 @@
 import logger from 'log-minim'
 let log = logger("design")
-log.setLevel("debug")
+log.setLevel("error")
 
 import Rx from 'rx'
 let fromEvent = Rx.Observable.fromEvent

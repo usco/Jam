@@ -13,7 +13,7 @@ import {generateUUID} from 'usco-kernel2/src/utils'
 
 import logger from '../utils/log'
 let log = logger("annotations")
-log.setLevel("info")
+log.setLevel("error")
 
 import Rx from 'rx'
 let fromEvent = Rx.Observable.fromEvent

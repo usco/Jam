@@ -5,7 +5,7 @@ let merge = Rx.Observable.merge
 
 import logger from 'log-minim'
 let log = logger("app")
-log.setLevel("debug")
+log.setLevel("error")
 
 
 const defaults = {
@@ -17,7 +17,7 @@ const defaults = {
 function makeModifications(intent){
   let _addEntries$ = intent.addBomEntries$
     .map((nData) => (bomData) => {
-      console.log("ADDING BOM entries")
+      //console.log("ADDING BOM entries")
       //FIXME , immutable
       let newData = nData || []
       if(newData.constructor !== Array) newData = [newData]
@@ -35,7 +35,7 @@ function makeModifications(intent){
     .withLatestFrom(intent.combos$,function(types, combos){ return {combos,types}})
     .map((data) => (bomData) => {
       let {combos,types} = data
-      console.log("I would register something in BOM", data, bomData)
+      //console.log("I would register something in BOM", data, bomData)
 
       let {entries,byId} = bomData
 
@@ -68,7 +68,6 @@ function makeModifications(intent){
       return { entries, byId, selectedEntries:bomData.selectedEntries }
      })
 
-  console.log("intent",intent)
   /*let bla$ = intent.entities$ 
     .map((data) => (bomData) => {
       console.log("foo",data)
@@ -93,7 +92,7 @@ function makeModifications(intent){
 }
 
 function model(intent, source) {
-  console.log("seting up bom model")
+  //console.log("seting up bom model")
   let source$ = source || Observable.just(defaults)
   
   let modification$ = makeModifications(intent)
