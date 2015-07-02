@@ -322,7 +322,13 @@ function GlView(interactions, props, self){
     .map(e => e.detail.pickingInfos.shift())
     .filter(exists)
     .map( objectAndPosition )
-    .subscribe( (oAndP) => zoomInOnObject.execute( oAndP.object, {position:oAndP.point} ) )
+    //.subscribe( (oAndP) => zoomInOnObject.execute( oAndP.object, {position:oAndP.point} ) )
+    .subscribe(function(oAndP){
+
+      zoomInOnObject.execute( oAndP.object, {position:oAndP.point} ) 
+    })
+
+    //this._zoomInOnObject.execute( object, {position:pickingInfos[0].point} )
 
   /*contextTaps$ = contextTaps$ //handle context menu type interactions
     .map( selectionAt )
@@ -519,8 +525,8 @@ function GlView(interactions, props, self){
       if(initialized){
         render(scene,camera)
         TWEEN.update(elapsed)
-        elapsed += 15//reRender *16
-        //onsole.log("settings",settings.grid.show)
+        elapsed += 30//reRender *16
+        ///console.log("update")
       }
 
       return ()=> (
