@@ -23,6 +23,7 @@ let state = {
   //generate data, stored to ensure "RWYLO" (rgiht where you left off)
   _lastDesignUri: undefined,
 
+  loading:true,
 
   appState:{
     mode:"viewer",

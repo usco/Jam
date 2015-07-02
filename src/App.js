@@ -349,11 +349,16 @@ export default class App extends React.Component {
 
     //experimental 
     let res$ = meshSources$
+      .do(function(){
+        self.setState({loading:true},null,false)
+      })//side effect 
       .flatMap(function(dataSource){
         let resource = self.assetManager.load( dataSource, {keepRawData:true, parsing:{useWorker:true,useBuffers:true} } )
         return Rx.Observable.fromPromise(resource.deferred.promise)
       })
       .shareReplay(1)
+
+
 
     //mesh + resource data together
     let combos$ =
@@ -424,6 +429,9 @@ export default class App extends React.Component {
         
         return {name, typeUid, bbox}
       })
+      .do(function(){
+        self.setState({loading:false},null,false)
+      })//side effect 
       .subscribe(
         function(data){
         console.log("updated mesh registry, adding instance",data)
@@ -913,45 +921,65 @@ export default class App extends React.Component {
       ctxMenuItems = this.state.contextMenu.items
       ctxMenuselectedIds = this.state.contextMenu.selectedIds
     }
-    console.log("showCtxMenu",showCtxMenu, ctxMenuPos)
+    
+    //spinner /loader
+    
+    let loaderSpinner = null
+   
+    let loading = (this.state.loading && this.state.appState.mode === "viewer")
+     if(loading){
+      loaderSpinner = <span className="spinner" /> 
+    }
+
+    console.log("loading",loading)
+    //classNames()
+    //loaderSpinner
 
     return (
         <div ref="wrapper" style={wrapperStyle} className="Jam">
-          <MainToolbar 
-            design={this.state.design} 
-            appInfos={this.state.appInfos} 
 
-            activeTool={this.state.appState.activeTool}
-            settings={this.state.appState}
-            mode={this.state.appState.mode}
+          <div className={Class("innerWrapper",{loading: loading})}>
 
-            undos = {this._undos}
-            redos = {this._redos}
-            style={toolbarStyle}> </MainToolbar>
+            <MainToolbar 
+              design={this.state.design} 
+              appInfos={this.state.appInfos} 
 
-          <ThreeJs ref="glview" 
-            activeTool={this.state.appState.activeTool} 
-            showAnnotations={this.state.appState.annotations.show}
-            gridSettings={this.state.appState.grid}
-            cameraSettings={this.state.appState.camera}/> 
-
-          <div ref="testArea" style={testAreaStyle} className="toolBarBottom">
-            <EntityInfos 
-              entities={selectedEntities} 
+              activeTool={this.state.appState.activeTool}
+              settings={this.state.appState}
               mode={this.state.appState.mode}
-              debug={false}
-            />
+
+              undos = {this._undos}
+              redos = {this._redos}
+              style={toolbarStyle}> </MainToolbar>
+
+            <ThreeJs ref="glview" 
+              activeTool={this.state.appState.activeTool} 
+              showAnnotations={this.state.appState.annotations.show}
+              gridSettings={this.state.appState.grid}
+              cameraSettings={this.state.appState.camera}
+              
+              /> 
+
+            <div ref="testArea" style={testAreaStyle} className="toolBarBottom">
+              <EntityInfos 
+                entities={selectedEntities} 
+                mode={this.state.appState.mode}
+                debug={false}
+              />
+            </div>
+
+            <SettingsView settings={this.state.appState}></SettingsView>
+
+            {bom}
+
+            <ContextMenu2 active={showCtxMenu} position={ctxMenuPos} items={ctxMenuItems} selections={ctxMenuselectedIds}/>
+
+            <button className="fullScreenToggler" onClick={toggleFullScreen}>
+              {fullScreenTogglerImg}
+            </button>
           </div>
 
-          <SettingsView settings={this.state.appState}></SettingsView>
-
-          {bom}
-
-          <ContextMenu2 active={showCtxMenu} position={ctxMenuPos} items={ctxMenuItems} selections={ctxMenuselectedIds}/>
-
-          <button className="fullScreenToggler" onClick={toggleFullScreen}>
-            {fullScreenTogglerImg}
-          </button>
+          {loaderSpinner}
 
         </div>
     )
