@@ -39,7 +39,6 @@ function EditableItem(interactions, props) {
       editable$,
       data$,
       function(editing,multiline,placeholder,editable,data){
-        console.log("change to EditableItem",editing)
 
         let element =null
 

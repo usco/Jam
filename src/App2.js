@@ -12,6 +12,7 @@ import SettingsView from './components/SettingsView'
 import FullScreenToggler from './components/FullScreenToggler'
 import ContextMenu2 from './components/ContextMenu2'
 import EntityInfos from './components/EntityInfos2'
+import MainToolbar from './components/MainToolbar2'
 
 import {observableDragAndDrop} from './interactions/dragAndDrop'
 
@@ -363,7 +364,6 @@ function App(interactions) {
             onDragOver={interactions.subject('dragover').onEvent}
             onDrop={interactions.subject('drop').onEvent}
           >
-            <div>{appMetadata.name}{appMetadata.version}</div>
             <GlView 
               activeTool={activeTool} 
               settings={settings}
@@ -372,6 +372,7 @@ function App(interactions) {
               className="glview"/>
 
 
+            <MainToolbar  />
             <SettingsView settings={settings} ></SettingsView>
             <FullScreenToggler/> 
             <EntityInfos entities={selections} settings={settings} />
