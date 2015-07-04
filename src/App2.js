@@ -10,7 +10,7 @@ import GlView from './components/webgl/GlView'
 import BomView from './components/Bom/BomView'
 import SettingsView from './components/SettingsView'
 import FullScreenToggler from './components/FullScreenToggler'
-import ContextMenu2 from './components/ContextMenu2'
+import ContextMenu from './components/ContextMenu2'
 import EntityInfos from './components/EntityInfos2'
 import MainToolbar from './components/MainToolbar2'
 
@@ -107,12 +107,14 @@ function intent(interactions){
   let glviewInit$ = interactions.get(".glview","initialized$")
   let singleTaps$ = interactions.get(".glview","singleTaps$")
   let doubleTaps$ = interactions.get(".glview","doubleTaps$")
-  let contextTaps$ = interactions.get(".glview","contextTaps$")
+  let contextTaps$ = interactions.get(".glview","contextTaps$").pluck("detail")
+    .map(function(e){
+      if(!e) return undefined
+      return {x:e.x,y:e.y}
+    })
 
-  /*singleTaps$.pluck("detail").subscribe(event => console.log("singleTaps",event))
-  doubleTaps$.pluck("detail").subscribe(event => console.log("doubleTaps",event))
-  contextTaps$.pluck("detail").subscribe(event => console.log("contextTaps",event))
-  selectTransforms$.pluck("detail").subscribe(event => console.log("selectTransforms",event))*/
+
+  
   
   let selectionTransforms$ = Rx.Observable.merge(
     //interactions.get(".glview","selectionsTransforms$").pluck("detail").filter(hasEntity)
@@ -130,11 +132,21 @@ function intent(interactions){
     selections$.filter(hasNoEntity).map([])
   )
 
+  let contextMenuActions$ = interactions.get(".contextMenu", "actionSelected$").pluck("detail")
+  let deleteEntities$     = contextMenuActions$.filter(e=>e.action === "delete").pluck("selections")
+  let deleteAllEntities$  = contextMenuActions$.filter(e=>e.action === "deleteAll").pluck("selections")
+  let duplicateEntities$  = contextMenuActions$.filter(e=>e.action === "duplicate").pluck("selections")
+
 
   return {
     selections$,
-    selectionTransforms$
+    selectionTransforms$,
 
+    contextTaps$,
+
+    deleteEntities$,
+    deleteAllEntities$,
+    duplicateEntities$,
   }
 }
 
@@ -165,12 +177,17 @@ function settingsM(interactions){
 
   //bla$.subscribe(bla=>console.log("lkjfdsfsfsd",bla))*/
   //return bla$
+  
+  let autoSelectNewEntities$ = Rx.Observable.just(true) //TODO: make settable
+  let webglEnabled$ = Rx.Observable.just(true)
+
   return Rx.Observable.combineLatest(
     showGrid$,
     autoRotate$,
     function(showGrid$,autoRotate$, showAnnot$){
       return (
         {
+          autoSelectNewEntities:autoSelectNewEntities$,
           camera:{
             autoRotate:autoRotate$
           },
@@ -253,9 +270,19 @@ function App(interactions) {
     //.subscribe(data=>console.log("mesh data",data))
 
   let intents = intent(interactions)  
-  //intents.selectionTransforms$
-  //  .subscribe(data=>console.log("selectionTransforms",data.pos))
+  intents.contextTaps$
+    .subscribe(data=> console.log("contextTaps") )  //console.log("selectionTransforms",data.pos))
+  let contextTaps$ = intents.contextTaps$.startWith(undefined)
 
+
+  let deleteEntities$ = intents.deleteEntities$
+    //.subscribe(x=>console.log("contextMenu delete")) 
+
+  let deleteAllEntities$ = intents.deleteAllEntities$
+    //.subscribe(x=>console.log("contextMenu delete all")) 
+
+  let duplicateEntities$ = intents.duplicateEntities$
+    //.subscribe(x=>console.log("contextMenu duplicate")) 
 
   let entities = require("./core/entityModel")
 
@@ -264,10 +291,10 @@ function App(interactions) {
     addEntities$: newInstFromTypes$,//addEntityInstances$,
 
     updateEntities$: intents.selectionTransforms$,//
-    deleteEntities$: new Rx.Subject(), 
-    duplicateEntities$: new Rx.Subject(),  
-    deleteAllEntities$: new Rx.Subject(), 
-    selectEntities$: intents.selections$,//new Rx.Subject(), 
+    deleteEntities$:deleteEntities$, 
+    duplicateEntities$: duplicateEntities$,  
+    deleteAllEntities$: deleteAllEntities$, 
+    selectEntities$: intents.selections$,
 
     newDesign$: new Rx.Subject(), 
   }
@@ -329,8 +356,6 @@ function App(interactions) {
     .pluck("instances")
     .withLatestFrom(partTypes$,function(entries, types){
 
-      //console.log("entries",entries,"types",types)
-
       return entries.map(function(entity){
         let mesh = types.typeUidToTemplateMesh[entity.typeUid].clone()
         
@@ -341,23 +366,87 @@ function App(interactions) {
       })
 
     })
-    /*.flatMap(function(items){
-      return Rx.Observable.from(items)
-    })*/
-    //.filter(x=> types.indexOf(x.type) > -1 )
-  
 
+
+  //Experimental: system describing available actions by entity "category"
+  let lookupByEntityCategory ={
+    "common":[
+      "delete",
+      "deleteAll",
+      "duplicate"
+    ],
+    "part": [   
+    ],
+    "annot":[
+      "add note",
+      "measure thickness",
+      "measure Diameter",
+      "measure Distance"
+    ]
+  }
+
+  let contextMenuItems = contextTaps$
+    .combineLatest(
+      entities$.pluck("selectedIds").filter(exists).filter(x=>x.length>0),
+      function(taps,selectedIds){
+
+        /*selectedIds.map(function(id){
+          //HOW THE HELL DO I DO ANYTHING NOW ??
+        })*/
+        return lookupByEntityCategory["annot"].concat(lookupByEntityCategory["common"])
+      })
+    .subscribe(data=>console.log("contextMenuItems",data))
+  
+  
   return Rx.Observable
     .combineLatest(
       appMetadata$,
       entities$,
       settings$,
       visualMappings$,
-      function(appMetadata, items, settings, visualMappings){
+      contextTaps$,
+      function(appMetadata, items, settings, visualMappings, contextTaps){
 
-        //console.log("items",items, items.instances)
+        console.log("contextTaps",contextTaps)
+        //            
+        let contextMenuItems = [
+          {text:"Duplicate", action:"duplicate"},
+          {text:"Delete",action:"delete"},
+          {text:"DeleteAll",action:"deleteAll"},
+          /*{text:"annotations",items:[
+            {text:"Add note"},
+            {text:"Measure thickness"},
+            {text:"Measure Diameter"},
+            {text:"Measure Distance"},
+            {text:"Measure Angle"}
+          ]}*/
+        ]
+
+        function createContextmenuItems(){
+          //
+        }
 
         let selections = items.selectedIds.map( id=>items.byId[id] )
+
+        //contextTaps = undefined
+
+
+        function appCriticalErrorDisplay(){
+          return (
+            <div className="mainError">
+              <span>
+                <div className="container-heading">
+                  <h1>Whoops, it seems you do not have a WebGL capable browser, sorry!</h1>
+                </div>
+                <div className="container-text">
+                  <span> <a href="https://get.webgl.org/"> Find out more here  </a> </span>
+                </div>
+              </span>
+            </div>
+          )
+        }
+          
+
 
         return (
           <div className="jam" 
@@ -372,11 +461,13 @@ function App(interactions) {
               className="glview"/>
 
 
-            <MainToolbar  />
+            <MainToolbar />
             <SettingsView settings={settings} ></SettingsView>
             <FullScreenToggler/> 
             <EntityInfos entities={selections} settings={settings} />
 
+
+            <ContextMenu position={contextTaps} items={contextMenuItems} selections={selections}/>
           </div>
         )
       }
