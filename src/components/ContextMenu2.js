@@ -3,11 +3,12 @@ let React = Cycle.React
 let {Rx} = Cycle
 import Class from "classnames"
 let combineLatest =Rx.Observable.combineLatest
+
 import combineTemplate from 'rx.observable.combinetemplate'
+import {exists} from '../utils/obsUtils'
 
-import {setSetting$} from '../actions/appActions'
 
-function _ContextMenuItems(interactions,props){
+function ContextMenuItems(interactions,props){
   let active$ = props.get('active').startWith(true)
   let items$  = props.get('items').startWith([])
 
@@ -32,7 +33,7 @@ function _ContextMenuItems(interactions,props){
             itemEl = item.text
           }
           return(
-            <li className="menuEntries">
+            <li className={ `menuEntries ${item.action}` } data-action={item.action}>
             {itemEl}
             </li>
           )
@@ -53,15 +54,25 @@ function _ContextMenuItems(interactions,props){
   }
 }
 
-let ContextMenuItems = Cycle.component('ContextMenuItems', _ContextMenuItems)
+let ContextMenuItems = Cycle.component('ContextMenuItems', ContextMenuItems)
 
 //fyi for now, we hardcode some of the ui 
 function ContextMenu(interactions, props) {
 
   let active$     = props.get('active').startWith(false)
-  let position$ = props.get('position').startWith({x:0,y:0})
-  let selections$ = props.get('selections').startWith([])
-  let items$  = props.get('items').startWith([])
+  let position$   = props.get('position').startWith({x:0,y:0})
+  let selections$ = props.get('selections').filter(exists).startWith([])
+  let items$      = props.get('items').filter(exists).startWith([])
+
+  let actionSelected$ = interactions.get(".contextMenu .menuEntries", "click")
+    .map(e=>e.target.attributes["data-action"])
+    .filter(exists)
+    .map(d=>d.value)
+    .combineLatest(selections$,function(action, selections){
+      return {action,selections}
+    })
+    //.subscribe(e=>console.log("click delete inside contextMenu",e))
+
 
   let vtree$ = 
     combineLatest(
@@ -72,7 +83,7 @@ function ContextMenu(interactions, props) {
       function(active,position,selections,items){
 
         let content = null
-        if(active && position){
+        if(position){
           console.log("showing ContextMenu", selections)
 
           let style = {
@@ -95,6 +106,7 @@ function ContextMenu(interactions, props) {
   return {
     view: vtree$,
     events: {
+      actionSelected$
     }
   }
 }
