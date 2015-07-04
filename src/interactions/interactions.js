@@ -1,6 +1,7 @@
 import Rx from 'rx'
 let Observable= Rx.Observable
 let fromEvent = Observable.fromEvent
+let merge     = Rx.Observable.merge
 
 import logger from '../utils/log'
 let log = logger("interactions")
@@ -109,6 +110,7 @@ function isLong(elapsed, maxTime){
  }
 
 function altMouseMoves( mouseMoves ){
+  console.log("altMouseMoves")
  return mouseMoves
       .skip(1)
       .zip( mouseMoves, function(a, b){
@@ -125,7 +127,7 @@ function altMouseMoves( mouseMoves ){
 
 /*alternative "clicks" (ie mouseDown -> mouseUp ) implementation, with more fine
 grained control*/
-function altClicks(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
+function taps(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
   //only doing any "clicks if the time between mDOWN and mUP is below longpressDelay"
   //any small mouseMove is ignored (shaky hands)
    return mouseDowns
@@ -166,7 +168,7 @@ function holds(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
     })
 }
 
-function drags(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
+/*function drags(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
   return mouseDowns
       .flatMap( function(downEvent){
         let target = downEvent.currentTarget
@@ -214,27 +216,26 @@ function drags2(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
         .takeUntil(mouseUps)
     })
 }
-
+*/
 
 //based on http://jsfiddle.net/mattpodwysocki/pfCqq/
 function drags3(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
-  return mouseDowns.selectMany(function (md) {
-
-            // calculate offsets when mouse down
-            var startX = md.offsetX, startY = md.offsetY
-
-            // Calculate delta with mousemove until mouseup
-            return mouseMoves.map(function (mm) {
-                (mm.preventDefault) ? mm.preventDefault() : mm.returnValue = false 
-
-                let delta = {
-                    left: mm.clientX - startX,
-                    top: mm.clientY - startY
-                }
-                return Object.assign(mm, delta)
-
-            }).takeUntil(mouseUps)
-        })
+  return mouseDowns.flatMap(function (md) {
+    // calculate offsets when mouse down
+    var startX = md.offsetX, startY = md.offsetY
+    // Calculate delta with mousemove until mouseup
+    return mouseMoves
+      .map(function (mm) {
+        (mm.preventDefault) ? mm.preventDefault() : mm.returnValue = false 
+        let delta = {
+            left: mm.clientX - startX,
+            top: mm.clientY - startY
+        }
+        //console.log("delta",delta)
+        return Object.assign(mm, delta)
+      })
+      .takeUntil(mouseUps)
+  })
 }
 
 //pinch, taken from https://github.com/hugobessaa/rx-react-pinch
@@ -249,153 +250,117 @@ function pinches(touchstarts, touchmoves, touchEnds) {
       })
 }
 
- export function pointerInteractions (targetEl){
-    let multiClickDelay = 250
-    let longPressDelay  = 800
 
-    let minDelta        = 25//max 50 pixels delta
-    let deltaSqr        = (minDelta*minDelta)
+export function interactionsFromEvents(targetEl){
+  let mouseDowns$  = fromEvent(targetEl, 'mousedown')
+  let mouseUps$    = fromEvent(targetEl, 'mouseup')
+  let mouseMoves$  = altMouseMoves(fromEvent(targetEl, 'mousemove'))
+  let rightClicks$ = fromEvent(targetEl, 'contextmenu').do(preventDefault)// disable the context menu / right click
+  let zooms$ = fromEvent(targetEl, 'wheel')
 
-    let mouseDowns  = fromEvent(targetEl, 'mousedown')
-    let mouseUps    = fromEvent(targetEl, 'mouseup')
-    let mouseMoves  = fromEvent(targetEl, 'mousemove')
-    let rightclicks = fromEvent(targetEl, 'contextmenu').do(preventDefault)// disable the context menu / right click
-    let mouseMoves2 = altMouseMoves(mouseMoves)
-    let zoomIntents = fromEvent(targetEl, 'wheel')
+  let touchStart$  = fromEvent('touchstart')//dom.touchstart(window)
+  let touchMove$   = fromEvent('touchmove')//dom.touchmove(window)
+  let touchEnd$    = fromEvent('touchend')//dom.touchend(window)
 
-    let touchStart  = fromEvent('touchstart')//dom.touchstart(window)
-    let touchMove   = fromEvent('touchmove')//dom.touchmove(window)
-    let touchEnd    = fromEvent('touchend')//dom.touchend(window)
-
-
-    ///// now setup the more complex interactions
-    let _clicks = altClicks(mouseDowns, mouseUps, mouseMoves2, longPressDelay, deltaSqr).share()
-
-    let clickStreamBase = _clicks
-      .filter( event => ('button' in event && event.button === 0) )
-      .buffer(function() { return _clicks.debounce( multiClickDelay ) })
-      .map( list => ({list:list,nb:list.length}) )
-      .share()
-
-
-    //we get our custom right clicks
-    let rightClicks2 = _clicks.filter( event => ('button' in event && event.button === 2) )
-    let _holds       = holds(mouseDowns, mouseUps, mouseMoves2, multiClickDelay, deltaSqr)
-    
-
-    let unpack = function(list){ return list.list}
-    let extractData = function(event){ return {clientX:event.clientX,clientY:event.clientY}}
-
-
-    let singleClicks$ = clickStreamBase.filter( x => x.nb == 1 ).flatMap(unpack)
-    let doubleClicks$ = clickStreamBase.filter( x => x.nb == 2 ).flatMap(unpack).take(1).map(extractData).repeat()
-    let contextTaps$  =  Observable.amb([
-      _holds,//.map(function(x){ console.log("HOLDS");return x}),
-      rightClicks2,//.map(function(x){ console.log("rightClicks2");return x}),
-      // Skip if we get a movement
-      mouseMoves
-        .take(1).flatMap( x => Rx.Observable.empty() ),
-      ]
-    ).take(1).repeat()// contextTaps: either HELD leftmouse/pointer or right click
-    
-
-    let dragMoves$   = drags3(mouseDowns, mouseUps, mouseMoves2, longPressDelay, deltaSqr)
-    let zoomIntents$ = zoomIntents 
-    /*dragMoves$.subscribe(function(){console.log("dragMoves")})
-    singleClicks$.subscribe(function(){console.log("singleTaps")})
-    doubleClicks$.subscribe(function(){console.log("doubleTaps")})
-    zoomIntents$.subscribe(function(){console.log("zoomIntents")})*/
-
-    Observable.merge(singleClicks$, doubleClicks$, contextTaps$, dragMoves$, zoomIntents$)
-        //.debounce(200)
-        .subscribe(function (suggestion) {})
-
-    return {
-      taps:clickStreamBase, 
-      singleTaps$: singleClicks$, 
-      doubleTaps$: doubleClicks$, 
-      contextTaps$:contextTaps$,
-      dragMoves$:  dragMoves$,
-      zoomIntents$:zoomIntents$
-    } 
- }
-
-
-
-export function pointerInteractions2 (targetEl){
-  function fromCEvent(targetEl, eventName){
-    return targetEl.get('canvas', eventName)
+  return {
+    mouseDowns$,
+    mouseUps$,
+    mouseMoves$,
+    rightClicks$,
+    zooms$,
+    touchStart$,
+    touchMoves$,
+    touchEnd$
   }
-    //mouseDowns$, mouseUps$, mouseMoves$, rightClicks$, zoomIntents$,
-    let multiClickDelay = 250
-    let longPressDelay  = 800
+}
 
-    let minDelta        = 25//max 50 pixels delta
-    let deltaSqr        = (minDelta*minDelta)
+/* generate a hash of basic pointer/ mouse event observables*/
+export function interactionsFromCEvents(targetEl, rTarget='canvas'){
+  function fromCEvent(targetEl, eventName){
+    return targetEl.get(rTarget, eventName)
+  }
 
-    let mouseDowns  = fromCEvent(targetEl, 'mousedown')
-    let mouseUps    = fromCEvent(targetEl, 'mouseup')
-    let mouseMoves  = fromCEvent(targetEl, 'mousemove')
-    let rightclicks = fromCEvent(targetEl, 'contextmenu').do(preventDefault)// disable the context menu / right click
-    let mouseMoves2 = altMouseMoves(mouseMoves)
-    let zoomIntents = fromCEvent(targetEl, 'wheel')
+  let mouseDowns$  = fromCEvent(targetEl, 'mousedown')
+  let mouseUps$    = fromCEvent(targetEl, 'mouseup')
+  let mouseMoves$  = altMouseMoves(fromCEvent(targetEl, 'mousemove'))
+  let rightClicks$ = fromCEvent(targetEl, 'contextmenu').do(preventDefault)// disable the context menu / right click
+  let zooms$ = fromCEvent(targetEl, 'wheel')
 
-    let touchStart  = fromCEvent(targetEl,'touchstart')//dom.touchstart(window)
-    let touchMove   = fromCEvent(targetEl,'touchmove')//dom.touchmove(window)
-    let touchEnd    = fromCEvent(targetEl,'touchend')//dom.touchend(window)
+  let touchStart$  = fromCEvent(targetEl,'touchstart')//dom.touchstart(window)
+  let touchMoves$ = fromCEvent(targetEl,'touchmove')//dom.touchmove(window)
+  let touchEnd$    = fromCEvent(targetEl,'touchend')//dom.touchend(window)
+
+  return {
+    mouseDowns$,
+    mouseUps$,
+    mouseMoves$,
+    rightClicks$,
+    zooms$,
+    touchStart$,
+    touchMoves$,
+    touchEnd$
+
+  }
+}
+
+export function pointerInteractions (baseInteractions){  
+  let multiClickDelay = 250
+  let longPressDelay  = 800
+
+  let minDelta        = 25//max 50 pixels delta
+  let deltaSqr        = (minDelta*minDelta)
+
+  let {
+    mouseDowns$, mouseUps$, rightclicks$, mouseMoves$, 
+    touchStart$, touchMoves$, touchEnd$,
+    zooms$ } = baseInteractions
 
 
-    ///// now setup the more complex interactions
-    let _clicks = altClicks(mouseDowns, mouseUps, mouseMoves2, longPressDelay, deltaSqr).share()
+  ///// now setup the more complex interactions
+  let taps$ = taps( 
+    merge(mouseDowns$,touchStart$), //mouse & touch interactions starts
+    merge(mouseUps$,touchEnd$),     //mouse & touch interactions ends
+    mouseMoves$, longPressDelay, deltaSqr).share()
 
-    let clickStreamBase = _clicks
-      .filter( event => ('button' in event && event.button === 0) )
-      .buffer(function() { return _clicks.debounce( multiClickDelay ) })
-      .map( list => ({list:list,nb:list.length}) )
-      .share()
-
-
-    //we get our custom right clicks
-    let rightClicks2 = _clicks.filter( event => ('button' in event && event.button === 2) )
-    let _holds       = holds(mouseDowns, mouseUps, mouseMoves2, multiClickDelay, deltaSqr)
-    
-
-    let unpack = function(list){ return list.list}
-    let extractData = function(event){ return event} //{clientX:event.clientX,clientY:event.clientY}}
+  let tapStream$ = taps$
+    .filter( event => ('button' in event && event.button === 0) ) //FIXME : bad filter ! 
+    .buffer(function() { return taps$.debounce( multiClickDelay ) })
+    .map( list => ({list:list,nb:list.length}) )
+    .share()
 
 
-    let singleClicks$ = clickStreamBase.filter( x => x.nb == 1 ).flatMap(unpack)
-    let doubleClicks$ = clickStreamBase.filter( x => x.nb == 2 ).flatMap(unpack).take(1).map(extractData).repeat()
-    //TODO, these should only be valid if there was no movement
-    let contextTaps$  =  Observable.amb([
-      _holds,//.map(function(x){ console.log("HOLDS");return x}),
-      rightClicks2,//.map(function(x){ console.log("rightClicks2");return x}),
-      // Skip if we get a movement
-      mouseMoves
-        .take(1).flatMap( x => Rx.Observable.empty() ),
-      ]
-    ).take(1).repeat()//.takeUntil(mouseMoves2)// contextTaps: either HELD leftmouse/pointer or right click
-    
+  //we get our custom right clicks
+  let rightClicks2 = taps$.filter( event => ('button' in event && event.button === 2) )
+  let holds$       = holds(mouseDowns$, mouseUps$, mouseMoves$, multiClickDelay, deltaSqr)
 
-    let dragMoves$   = drags3(mouseDowns, mouseUps, mouseMoves2, longPressDelay, deltaSqr)
-    let zoomIntents$ = zoomIntents 
-    /*dragMoves$.subscribe(function(){console.log("dragMoves")})
-    singleClicks$.subscribe(function(){console.log("singleTaps")})
-    doubleClicks$.subscribe(function(){console.log("doubleTaps")})
-    zoomIntents$.subscribe(function(){console.log("zoomIntents")})*/
+  let singleTaps$ = tapStream$.filter( x => x.nb == 1 ).flatMap(e=>e.list)
+  let doubleTaps$ = tapStream$.filter( x => x.nb == 2 ).flatMap(e=>e.list).take(1).repeat()
+  
+  //static , long held taps, for context menus etc
+  let contextTaps$  =  Observable.amb([
+    holds$,
+    //rightClicks2,
+    // Skip if we get a movement
+    mouseMoves$
+      .take(1).flatMap( x => Rx.Observable.empty() ),
+    ]
+  ).take(1).repeat()// contextTaps: either HELD leftmouse/pointer or HELD right click
 
-    Observable.merge(singleClicks$, doubleClicks$, contextTaps$, dragMoves$, zoomIntents$)
-        //.debounce(200)
-        .subscribe(function (suggestion) {})
+  //drag move interactions (continuously firing)
+  let dragMoves$   = merge(
+    drags3(mouseDowns$, mouseUps$, mouseMoves$, longPressDelay, deltaSqr),
+    touchMoves$
+  )
+    .takeUntil(contextTaps$).repeat()//no drag moves if there is a context action already taking place
 
-    return {
-      taps:clickStreamBase, 
-      singleTaps$: singleClicks$, 
-      doubleTaps$: doubleClicks$, 
-      contextTaps$:contextTaps$,
-      dragMoves$:  dragMoves$,
-      zoomIntents$:zoomIntents$
-    } 
+  return {
+    taps:tapStream$, 
+    singleTaps$,
+    doubleTaps$,
+    contextTaps$,
+    dragMoves$,
+    zooms$
+  } 
  }
 
 
@@ -405,40 +370,3 @@ export function preventScroll(targetEl){
   fromEvent(targetEl, 'DOMMouseScroll').subscribe(preventDefault)
   fromEvent(targetEl, 'wheel').subscribe(preventDefault)
 }
-
-
-///////
-//drag & drop behaviour 
-export function observableDragAndDrop(targetEl){
-  let dragOvers$  = fromEvent(targetEl, 'dragover')
-  let drops$  = fromEvent(targetEl, 'drop')
-
-  drops$.subscribe(preventDefault)
-  dragOvers$.subscribe(preventDefault)
-
-  drops$
-    .share()
-
-  let urls$ = drops$
-    .map( (event)=>event.dataTransfer.getData("url") )
-    .filter(isTextNotEmpty)
-    .map( (data)=>formatData([data],"url"))
-
-  let texts$ = drops$
-    .map( (event)=>event.dataTransfer.getData("Text"))
-    .filter(isTextNotEmpty)
-    .map( (data) => formatData([data],"text"))
-  
-  let files$ = drops$
-    .map( (event)=>event.dataTransfer.files )
-    .filter(exists)
-    .map( (data)=>[].slice.call(data))
-    .map( (data) => formatData(data,"file") )
-
-  return Observable.merge(
-    urls$,
-    texts$,
-    files$
-    )
-}
-
