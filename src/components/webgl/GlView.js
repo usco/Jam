@@ -164,7 +164,7 @@ function GlView(interactions, props, self){
   let container$ = interactions.get("#container","ready")
 
   let initialized$ = interactions.subject('initialized').startWith(false) //.get('initialized','click').startWith(false)
-  let update$ = Rx.Observable.interval(16)
+  let update$ = Rx.Observable.interval(16,66666666667)
   //let reRender$ = Rx.Observable.just(0) //Rx.Observable.interval(16) //observable should be the merger of all observable that need to re-render the view?
 
   let settings$   = props.get('settings')//.startWith({camera:{autoRotate:false}})
@@ -222,7 +222,14 @@ function GlView(interactions, props, self){
   let {singleTaps$, doubleTaps$, contextTaps$, 
       dragMoves$, zoomIntents$} =  pointerInteractions2(interactions)
 
-  contextTaps$ = contextTaps$.shareReplay(1)
+  //contextmenu observable should return undifined when any other basic interaction
+  //took place (to cancel displaying context menu , etc)
+  contextTaps$ = contextTaps$
+    .merge(
+      singleTaps$.map(undefined),
+      doubleTaps$.map(undefined)
+    )
+    .shareReplay(1)
 
 
   function withPickingInfos(inStream, windowResizes$ ){
@@ -247,11 +254,11 @@ function GlView(interactions, props, self){
 
   
   let _singleTaps$ = withPickingInfos(singleTaps$, windowResizes$)
-
   let _doubleTaps$ = withPickingInfos(doubleTaps$, windowResizes$)
-
   let _contextTaps$ = withPickingInfos(contextTaps$, windowResizes$).map( meshFrom )
 
+  dragMoves$.subscribe(event => console.log("dragMoves"))
+  zoomIntents$.subscribe(event => console.log("zoomIntents"))
   
 //problem : this fires BEFORE the rest is ready
   //activeTool$.skip(1).filter(isTransformTool).subscribe(transformControls.setMode)
@@ -304,15 +311,6 @@ function GlView(interactions, props, self){
     .map((data)=>`data${data})
     .subscribe((data)=>console.log("subscribed data",data)) */
 
-  /*singleTaps$.subscribe(event => console.log("singleTaps"))
-  doubleTaps$.subscribe(event => console.log("multiTaps"))
-  contextTaps$.subscribe(event => console.log("contextTaps"))
-  dragMoves$.subscribe(event => console.log("dragMoves"))
-  zoomIntents$.subscribe(event => console.log("zoomIntents"))*/
-
-  //singleTaps$ = pointerInteractions( container ).singleTaps$.map( selectionAt )
-  //singleTaps$ = singleTaps$.map( selectionAt ) //stream of taps + selected meshes
-
   //extract the object & position from a pickingInfo data
   function objectAndPosition(pickingInfo){
     return {object:pickingInfo.object,point:pickingInfo.point}
@@ -364,7 +362,6 @@ function GlView(interactions, props, self){
     .shareReplay(1)
   
 
-
   //reRender$.subscribe( () => console.log("reRender"), (err)=>console.log("error in reRender",err))
   //actual 3d stuff
 
@@ -395,6 +392,7 @@ function GlView(interactions, props, self){
   function update(){
     controls.update()
     transformControls.update()
+    TWEEN.update()
     //if(camViewControls) camViewControls.update()
   }
 
@@ -524,9 +522,6 @@ function GlView(interactions, props, self){
 
       if(initialized){
         render(scene,camera)
-        TWEEN.update(elapsed)
-        elapsed += 30//reRender *16
-        ///console.log("update")
       }
 
       return ()=> (
