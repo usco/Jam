@@ -71,8 +71,6 @@ function ContextMenu(interactions, props) {
     .combineLatest(selections$,function(action, selections){
       return {action,selections}
     })
-    //.subscribe(e=>console.log("click delete inside contextMenu",e))
-
 
   let vtree$ = 
     combineLatest(
@@ -81,10 +79,9 @@ function ContextMenu(interactions, props) {
       selections$,
       items$,
       function(active,position,selections,items){
-
+        console.log("showing ContextMenu", position)
         let content = null
         if(position){
-          console.log("showing ContextMenu", selections)
 
           let style = {
             left: position.x,
