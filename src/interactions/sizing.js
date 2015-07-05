@@ -1,6 +1,7 @@
 import Rx from 'rx'
 let Observable= Rx.Observable
 let fromEvent = Observable.fromEvent
+require("rx-dom")
 
  //window resize event stream, throttled by throttle amount (250ms default)
  export function windowResizes (throttle=250)
