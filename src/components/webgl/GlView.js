@@ -12,7 +12,9 @@ import combineTemplate from 'rx.observable.combinetemplate'
 Rx.config.longStackSupport = true
 
 
-import {windowResizes,pointerInteractions,pointerInteractions2,preventScroll} from '../../interactions/interactions'
+import {pointerInteractions,interactionsFromCEvents,preventScroll} from '../../interactions/interactions'
+import {windowResizes,elementResizes} from '../../interactions/sizing'
+
 import Selector from './deps/Selector'
 import {getCoordsFromPosSizeRect} from './deps/Selector'
 import {preventDefault,isTextNotEmpty,formatData,exists} from '../../utils/obsUtils'
@@ -45,6 +47,11 @@ import CopyShader     from './deps/post-process/CopyShader'
 import FXAAShader     from './deps/post-process/FXAAShader'
 import vignetteShader from './deps/post-process/vignetteShader'
 
+
+//extract the object & position from a pickingInfo data
+function objectAndPosition(pickingInfo){
+  return {object:pickingInfo.object,point:pickingInfo.point}
+}
 
 function setupPostProcess(camera, renderer, scene){
   console.log("setupPostProcess")
@@ -192,7 +199,6 @@ function GlView(interactions, props, self){
     .filter(exists)
     .subscribe(data=>console.log("visualMappings 2",data))*/
 
-
   let renderer = null
 
   let composer = null
@@ -214,40 +220,50 @@ function GlView(interactions, props, self){
   let grid        = new LabeledGrid(200, 200, 10, config.cameras[0].up)
   let shadowPlane = new ShadowPlane(2000, 2000, null, config.cameras[0].up) 
 
-
   //interactions
   zoomInOnObject = new ZoomInOnObject()
 
   let windowResizes$ = windowResizes(1) //get from intents/interactions ?
+  let elementResizes$ = elementResizes(".container",1)
+
   let {singleTaps$, doubleTaps$, contextTaps$, 
-      dragMoves$, zoomIntents$} =  pointerInteractions2(interactions)
+      dragMoves$, zooms$} =  pointerInteractions(interactionsFromCEvents(interactions))
 
   //contextmenu observable should return undifined when any other basic interaction
   //took place (to cancel displaying context menu , etc)
   contextTaps$ = contextTaps$
     .merge(
       singleTaps$.map(undefined),
-      doubleTaps$.map(undefined)
+      doubleTaps$.map(undefined),
+      dragMoves$.map(undefined)
     )
     .shareReplay(1)
 
 
   function withPickingInfos(inStream, windowResizes$ ){
-    let clientRect$ = inStream
-      .map(e => e.target)
-      .map(target => target.getBoundingClientRect())
+    //TODO : use a stream of element size 
+    let clientRect$ = Rx.Observable.just("foo") //inStream
+      //.filter( e => (e && e.target) )
+      //.map(e => e.target)
+      //.map(target => target.getBoundingClientRect())
 
     return inStream
       .withLatestFrom(
         clientRect$,
         windowResizes$,
-        function(event, clientRect, resizes){
-          //console.log("clientRect",clientRect,event, resizes)
-          //return {pos:{x:event.clientX,y:event.clientY},rect:clientRect,width:resizes.width,height:resizes.height}
-          let data = {pos:{x:event.clientX,y:event.clientY},rect:clientRect,width:resizes.width,height:resizes.height,event}
-
-          let mouseCoords = getCoordsFromPosSizeRect(data)
-          return selectionAt(event, mouseCoords, camera, scene.children)
+        function(event, clientRect_, resizes){
+          let input = document.querySelector('.container')//canvas
+          let clientRect = input.getBoundingClientRect()
+          //console.log("clientRect",clientRect,"event",event)
+          if(event){
+            let data = {pos:{x:event.clientX,y:event.clientY},rect:clientRect,width:resizes.width,height:resizes.height,event}
+            let mouseCoords = getCoordsFromPosSizeRect(data)
+            return selectionAt(event, mouseCoords, camera, scene.children)
+          }
+          else{
+            return {}
+          }
+        
         }
       )
   }
@@ -257,23 +273,24 @@ function GlView(interactions, props, self){
   let _doubleTaps$ = withPickingInfos(doubleTaps$, windowResizes$)
   let _contextTaps$ = withPickingInfos(contextTaps$, windowResizes$).map( meshFrom )
 
-  dragMoves$.subscribe(event => console.log("dragMoves"))
-  zoomIntents$.subscribe(event => console.log("zoomIntents"))
+  //dragMoves$.subscribe(event => console.log("dragMoves",event))
+  //_contextTaps$.subscribe(event => console.log("contextTaps",event))
+  //elementResizes().subscribe(e=>console.log("elementResizes",e))
+
   
 //problem : this fires BEFORE the rest is ready
   //activeTool$.skip(1).filter(isTransformTool).subscribe(transformControls.setMode)
 
   //hack/test
-  let selections2$ = _singleTaps$.map( meshFrom ).shareReplay(1)
-    //.map(function(data){console.log("data",data);return data})
+  let selections2$ = _singleTaps$.map( meshFrom ).merge(_contextTaps$).shareReplay(1)
+
+  //transformControls handling
   //we modify the transformControls mode based on the active tool
   //every time either activeTool or selection changes, reset/update transform controls
-  let foo$ = combineTemplate({
+  combineTemplate({
     tool:activeTool$,  //.filter(isTransformTool)),
     selections:selections2$
   })
-    //.scan(function (acc, x) { return acc + x; })
-    //.sample( initialized$.filter( x => x===true) ) //skipUntil ??//Rx.Observable.timer(1000) )//initialized$)
     .subscribe( 
       function(data){
         let {tool,selections} = data
@@ -292,6 +309,7 @@ function GlView(interactions, props, self){
 
   //for outlines, experimental
   selections2$.subscribe(function(mesh){
+    console.log("woooh selections")
     outScene.children = []
     maskScene.children = []
 
@@ -306,46 +324,18 @@ function GlView(interactions, props, self){
   let selectedMeshes$ = selections2$
 
 
-  /*let obsTest$ = Rx.Observable.timer(200, 100)
-    .do((data) => console.log("data",data)) //SIDE EFFECT !!
-    .map((data)=>`data${data})
-    .subscribe((data)=>console.log("subscribed data",data)) */
 
-  //extract the object & position from a pickingInfo data
-  function objectAndPosition(pickingInfo){
-    return {object:pickingInfo.object,point:pickingInfo.point}
-  }
 
   _doubleTaps$
     .map(e => e.detail.pickingInfos.shift())
     .filter(exists)
     .map( objectAndPosition )
-    //.subscribe( (oAndP) => zoomInOnObject.execute( oAndP.object, {position:oAndP.point} ) )
-    .subscribe(function(oAndP){
+    .subscribe( (oAndP) => zoomInOnObject.execute( oAndP.object, {position:oAndP.point} ) )
 
-      zoomInOnObject.execute( oAndP.object, {position:oAndP.point} ) 
-    })
-
-    //this._zoomInOnObject.execute( object, {position:pickingInfos[0].point} )
-
-  /*contextTaps$ = contextTaps$ //handle context menu type interactions
-    .map( selectionAt )
-    .map( selectMeshes )
-    .map( positionFromCoords )
-
-  //handle all the cases where events require removal of context menu
-  //ie anything else but context
-  let stopContext$ = merge(singleTaps$, doubleTaps$, dragMoves$)//, zoomIntents$)
-    .take(1)
-    .repeat()
-  selectedMeshes$ = singleTaps$.map( selectionAt ) //still needed ?
-  */
-
+  
   let selectionsTransforms$ = fromEvent(transformControls, 'objectChange')
       .map(targetObject)
 
-  //selectionsTransforms$
-  //  .subscribe(data => console.log("transforms",data.position))
 
   //hande all the cases where events require re-rendering
   let reRender$ = merge(
@@ -376,8 +366,6 @@ function GlView(interactions, props, self){
     sphere.selectable = true
     sphere.castShadow = true
     //scene.add(sphere)
-
-
     for( let light of config.scenes["main"])
     {
       scene.add( makeLight( light ) )
@@ -395,7 +383,6 @@ function GlView(interactions, props, self){
     TWEEN.update()
     //if(camViewControls) camViewControls.update()
   }
-
 
   function configure (container){
     //log.debug("initializing into container", container)
@@ -427,10 +414,8 @@ function GlView(interactions, props, self){
     //not a fan
     zoomInOnObject.camera = camera
 
-    scene.add(camera)
-    
+    scene.add(camera)  
     scene.add(shadowPlane)
-
     scene.add(transformControls)
 
     let ppData = setupPostProcess(camera, renderer, scene)
@@ -531,9 +516,6 @@ function GlView(interactions, props, self){
 
         <div className="overlayTest" style={overlayStyle}>
           {reRender} {initialized}
-          <div>
-
-          </div>
         </div>
       </div>)
     })
@@ -550,11 +532,6 @@ function GlView(interactions, props, self){
 
       selectionsTransforms$,
       selectedMeshes$,
-      /*stopContext$,
-
-      selectedMeshes$,//is this one needed or redundant ?
-      */
-
     }
   }
 }
