@@ -52,9 +52,9 @@ function dataFromMesh(objTransform$){
 
 function intent(interactions){
   let glviewInit$ = interactions.get(".glview","initialized$")
-  let singleTaps$ = interactions.get(".glview","singleTaps$")
-  let doubleTaps$ = interactions.get(".glview","doubleTaps$")
-  let contextTaps$ = interactions.get(".glview","contextTaps$").pluck("detail")
+  let shortSingleTaps$ = interactions.get(".glview","shortSingleTaps$")
+  let shortDoubleTaps$ = interactions.get(".glview","shortDoubleTaps$")
+  let contextTaps$ = interactions.get(".glview","longTaps$").pluck("detail")
     .map(function(e){
       if(!e) return undefined
       return {x:e.x,y:e.y}

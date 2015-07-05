@@ -310,11 +310,11 @@ export function pointerInteractions (baseInteractions){
   let rightClicks2 = taps$.filter( event => ('button' in event && event.button === 2) )
   let holds$       = holds(mouseDowns$, mouseUps$, mouseMoves$, multiClickDelay, deltaSqr)
 
-  let singleTaps$ = tapStream$.filter( x => x.nb == 1 ).flatMap(e=>e.list)
-  let doubleTaps$ = tapStream$.filter( x => x.nb == 2 ).flatMap(e=>e.list).take(1).repeat()
+  let shortSingleTaps$ = tapStream$.filter( x => x.nb == 1 ).flatMap(e=>e.list)
+  let shortDoubleTaps$ = tapStream$.filter( x => x.nb == 2 ).flatMap(e=>e.list).take(1).repeat()
   
   //static , long held taps, for context menus etc
-  let contextTaps$  =  Observable.amb([
+  let longTaps$  =  Observable.amb([
     holds$,
     //rightClicks2,
     // Skip if we get a movement
@@ -328,13 +328,13 @@ export function pointerInteractions (baseInteractions){
     drags3(mouseDowns$, mouseUps$, mouseMoves$, longPressDelay, deltaSqr),
     touchMoves$
   )
-    .takeUntil(contextTaps$).repeat()//no drag moves if there is a context action already taking place
+    .takeUntil(longTaps$).repeat()//no drag moves if there is a context action already taking place
 
   return {
     taps:tapStream$, 
-    singleTaps$,
-    doubleTaps$,
-    contextTaps$,
+    shortSingleTaps$,
+    shortDoubleTaps$,
+    longTaps$,
     dragMoves$,
     zooms$
   } 

@@ -308,11 +308,11 @@ class ThreeJs extends React.Component{
 
     this.pointerInteractions = pointerInteractions(container)
 
-    let {singleTaps$, doubleTaps$, contextTaps$, 
-      dragMoves$, zoomIntents$} =  this.pointerInteractions
+    let {singleTaps$, shortDoubleTaps$, contextTaps$, 
+      dragMoves$, zooms$} =  this.pointerInteractions
 
     singleTaps$.map( selectionAt ).subscribe( this.handleTap.bind(this) )
-    doubleTaps$.map( selectionAt ).subscribe( this.handleDoubleTap.bind(this) )
+    shortDoubleTaps$.map( selectionAt ).subscribe( this.handleDoubleTap.bind(this) )
 
     //handle context menu type interactions
     contextTaps$
@@ -352,7 +352,7 @@ class ThreeJs extends React.Component{
 
     //handle all the cases where events require removal of context menu
     //ie anything else but context
-    Observable.merge(singleTaps$, doubleTaps$, dragMoves$)//, zoomIntents$)
+    Observable.merge(singleTaps$, shortDoubleTaps$, dragMoves$)//, zooms$)
       .take(1)
       .repeat()
       .subscribe(hideContextMenu$)
@@ -375,7 +375,7 @@ class ThreeJs extends React.Component{
     preventScroll(container)
 
     this.singleTaps$ = singleTaps$.map( selectionAt )
-    this.doubleTaps$ = doubleTaps$.map( selectionAt )
+    this.shortDoubleTaps$ = shortDoubleTaps$.map( selectionAt )
     
     this._setupExtras()
     this._render()

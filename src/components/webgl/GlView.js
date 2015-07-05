@@ -226,15 +226,15 @@ function GlView(interactions, props, self){
   let windowResizes$ = windowResizes(1) //get from intents/interactions ?
   let elementResizes$ = elementResizes(".container",1)
 
-  let {singleTaps$, doubleTaps$, contextTaps$, 
+  let {shortSingleTaps$, shortDoubleTaps$, longTaps$, 
       dragMoves$, zooms$} =  pointerInteractions(interactionsFromCEvents(interactions))
 
   //contextmenu observable should return undifined when any other basic interaction
   //took place (to cancel displaying context menu , etc)
-  contextTaps$ = contextTaps$
+  longTaps$ = longTaps$
     .merge(
-      singleTaps$.map(undefined),
-      doubleTaps$.map(undefined),
+      shortSingleTaps$.map(undefined),
+      shortDoubleTaps$.map(undefined),
       dragMoves$.map(undefined)
     )
     .shareReplay(1)
@@ -269,12 +269,12 @@ function GlView(interactions, props, self){
   }
 
   
-  let _singleTaps$ = withPickingInfos(singleTaps$, windowResizes$)
-  let _doubleTaps$ = withPickingInfos(doubleTaps$, windowResizes$)
-  let _contextTaps$ = withPickingInfos(contextTaps$, windowResizes$).map( meshFrom )
+  let _shortSingleTaps$ = withPickingInfos(shortSingleTaps$, windowResizes$)
+  let _shortDoubleTaps$ = withPickingInfos(shortDoubleTaps$, windowResizes$)
+  let _longTaps$ = withPickingInfos(longTaps$, windowResizes$).map( meshFrom )
 
   //dragMoves$.subscribe(event => console.log("dragMoves",event))
-  //_contextTaps$.subscribe(event => console.log("contextTaps",event))
+  //_longTaps$.subscribe(event => console.log("contextTaps",event))
   //elementResizes().subscribe(e=>console.log("elementResizes",e))
 
   
@@ -282,7 +282,7 @@ function GlView(interactions, props, self){
   //activeTool$.skip(1).filter(isTransformTool).subscribe(transformControls.setMode)
 
   //hack/test
-  let selections2$ = _singleTaps$.map( meshFrom ).merge(_contextTaps$).shareReplay(1)
+  let selections2$ = _shortSingleTaps$.map( meshFrom ).merge(_longTaps$).shareReplay(1)
 
   //transformControls handling
   //we modify the transformControls mode based on the active tool
@@ -326,7 +326,7 @@ function GlView(interactions, props, self){
 
 
 
-  _doubleTaps$
+  _shortDoubleTaps$
     .map(e => e.detail.pickingInfos.shift())
     .filter(exists)
     .map( objectAndPosition )
@@ -525,10 +525,10 @@ function GlView(interactions, props, self){
     events:{
       initialized:initialized$,
 
-      singleTaps$:_singleTaps$,
-      doubleTaps$:_doubleTaps$,
+      shortSingleTaps$:_shortSingleTaps$,
+      shortDoubleTaps$:_shortDoubleTaps$,
 
-      contextTaps$,
+      longTaps$,
 
       selectionsTransforms$,
       selectedMeshes$,
