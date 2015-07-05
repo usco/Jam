@@ -30,62 +30,13 @@ let appMetadata$ = Rx.Observable.just({
   version:pjson.version 
 })
 
-  //interactions
-  /*let inter = require('./core/intents.js')
-  let intent = inter.Intent({
-    objectsTransforms$ : glview.objectsTransform$,
-    selectedMeshes$    : glview.selectedMeshes$,²
-    selectedBomEntries$: selectBomEntries$,
-    selectEntities$,
-
-    //these indicate an issue, they should not need to be injected into an intent
-    appState$: appState$,
-    entities$:entities$,
-    bom$:bom$,
-  })
-
-  intent.entityTransforms$
-    .subscribe(updateEntities$)
-
-  intent.entitiesToSelect$
-    .subscribe( selectEntities$ )
-
-  intent.bomEntriesToSelect$
-    .subscribe( selectBomEntries2$ )
-    */
-
-function dataFromMesh (objTransform$){
-  function toArray (vec){
-    return vec.toArray().slice(0,3)
-  }
-  objTransform$ = objTransform$.filter(hasEntity)
-
-  let eId = objTransform$.map(getEntity).pluck('iuid').startWith("-1")
-    .distinctUntilChanged(null, itemsEqual)
-  let pos = objTransform$.pluck('position').map(toArray).startWith([0,0,0])
-    .distinctUntilChanged(null, itemsEqual)
-  let rot = objTransform$.pluck('rotation').map(toArray).startWith([0,0,0])
-    .distinctUntilChanged(null, itemsEqual)
-  let sca = objTransform$.pluck('scale').map(toArray).startWith([1,1,1])
-    .distinctUntilChanged(null, itemsEqual)
-
-   
-  return combineTemplate(
-    {
-      iuids: eId, 
-      //entity,
-      pos:pos,
-      rot:rot,
-      sca:sca
-    })
-} 
-
-function dataFromMesh2(objTransform$){
+ 
+function dataFromMesh(objTransform$){
   function toArray (vec){
     return vec.toArray().slice(0,3)
   }
 
-  let foo$= objTransform$
+  return objTransform$
     .filter(hasEntity)
     .map(
       function(m){ 
@@ -97,10 +48,6 @@ function dataFromMesh2(objTransform$){
         } 
     })
     .shareReplay(1)
-
-  //foo$.subscribe(data => console.log("RAW objTransform",data))
-
-  return foo$
 }
 
 function intent(interactions){
@@ -111,16 +58,12 @@ function intent(interactions){
     .map(function(e){
       if(!e) return undefined
       return {x:e.x,y:e.y}
-    })
+    }).startWith(undefined)
 
-
-  
-  
   let selectionTransforms$ = Rx.Observable.merge(
     //interactions.get(".glview","selectionsTransforms$").pluck("detail").filter(hasEntity)
     //  .map(function(m){ return {iuids:m.userData.entity.iuid, pos:m.position,rot:m.rot,sca:m.sca} })
-
-    dataFromMesh2( interactions.get(".glview","selectionsTransforms$").pluck("detail") )
+    dataFromMesh( interactions.get(".glview","selectionsTransforms$").pluck("detail") )
     ,interactions.get(".entityInfos","selectionTransforms$").pluck("detail")
   )
 
@@ -132,10 +75,16 @@ function intent(interactions){
     selections$.filter(hasNoEntity).map([])
   )
 
+
   let contextMenuActions$ = interactions.get(".contextMenu", "actionSelected$").pluck("detail")
   let deleteEntities$     = contextMenuActions$.filter(e=>e.action === "delete").pluck("selections")
   let deleteAllEntities$  = contextMenuActions$.filter(e=>e.action === "deleteAll").pluck("selections")
   let duplicateEntities$  = contextMenuActions$.filter(e=>e.action === "duplicate").pluck("selections")
+
+  //we need to "shut down the context menu after any click inside of it"
+  contextTaps$ = contextTaps$.merge(
+    contextMenuActions$.map(undefined)
+  )
 
 
   return {
@@ -270,13 +219,10 @@ function App(interactions) {
     //.subscribe(data=>console.log("mesh data",data))
 
   let intents = intent(interactions)  
-  intents.contextTaps$
-    .subscribe(data=> console.log("contextTaps") )  //console.log("selectionTransforms",data.pos))
-  let contextTaps$ = intents.contextTaps$.startWith(undefined)
 
+  let contextTaps$ = intents.contextTaps$
 
   let deleteEntities$ = intents.deleteEntities$
-    //.subscribe(x=>console.log("contextMenu delete")) 
 
   let deleteAllEntities$ = intents.deleteAllEntities$
     //.subscribe(x=>console.log("contextMenu delete all")) 
@@ -407,7 +353,6 @@ function App(interactions) {
       contextTaps$,
       function(appMetadata, items, settings, visualMappings, contextTaps){
 
-        console.log("contextTaps",contextTaps)
         //            
         let contextMenuItems = [
           {text:"Duplicate", action:"duplicate"},
@@ -465,8 +410,6 @@ function App(interactions) {
             <SettingsView settings={settings} ></SettingsView>
             <FullScreenToggler/> 
             <EntityInfos entities={selections} settings={settings} />
-
-
             <ContextMenu position={contextTaps} items={contextMenuItems} selections={selections}/>
           </div>
         )
