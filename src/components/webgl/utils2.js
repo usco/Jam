@@ -31,9 +31,11 @@ export function selectionAt(event, mouseCoords, camera, hiearchyRoot){
 
 export function meshFrom(event){
   let mesh = undefined
-  let intersect = event.detail.pickingInfos.shift() //we actually only get the best match
-  if(intersect && intersect.object) {
-    mesh = findSelectionRoot(intersect.object)//now we make sure that what we have is actually selectable
+  if( event && event.detail && event.detail.pickingInfos){
+    let intersect = event.detail.pickingInfos.shift() //we actually only get the best match
+    if(intersect && intersect.object) {
+      mesh = findSelectionRoot(intersect.object)//now we make sure that what we have is actually selectable
+    }
   }
   return mesh
 }
