@@ -8,6 +8,7 @@ let log = logger("interactions")
 log.setLevel("info")
 
 import {preventDefault,isTextNotEmpty,formatData,exists} from '../utils/obsUtils'
+import {normalizeWheel} from './utils'
 
 //various helpers
 
@@ -87,7 +88,6 @@ function isLong(elapsed, maxTime){
  }
 
 function altMouseMoves( mouseMoves ){
-  console.log("altMouseMoves")
  return mouseMoves
       .skip(1)
       .zip( mouseMoves, function(a, b){
@@ -231,7 +231,8 @@ function pinches(touchstarts, touchmoves, touchEnds) {
 export function interactionsFromEvents(targetEl){
   let mouseDowns$  = fromEvent(targetEl, 'mousedown')
   let mouseUps$    = fromEvent(targetEl, 'mouseup')
-  let mouseMoves$  = altMouseMoves(fromEvent(targetEl, 'mousemove'))
+  let mouseLeaves$ = fromCEvent(targetEl, 'mouseleave').merge(fromCEvent(targetEl, 'mouseout') )
+  let mouseMoves$  = altMouseMoves(fromEvent(targetEl, 'mousemove')).takeUntil(mouseLeaves$)
   let rightClicks$ = fromEvent(targetEl, 'contextmenu').do(preventDefault)// disable the context menu / right click
   let zooms$ = fromEvent(targetEl, 'wheel')
 
@@ -257,11 +258,13 @@ export function interactionsFromCEvents(targetEl, rTarget='canvas'){
     return targetEl.get(rTarget, eventName)
   }
 
+
   let mouseDowns$  = fromCEvent(targetEl, 'mousedown')
   let mouseUps$    = fromCEvent(targetEl, 'mouseup')
-  let mouseMoves$  = altMouseMoves(fromCEvent(targetEl, 'mousemove'))
+  let mouseLeaves$ = fromCEvent(targetEl, 'mouseleave').merge(fromCEvent(targetEl, 'mouseout') )
+  let mouseMoves$  = altMouseMoves(fromCEvent(targetEl, 'mousemove')).takeUntil(mouseLeaves$)
   let rightClicks$ = fromCEvent(targetEl, 'contextmenu').do(preventDefault)// disable the context menu / right click
-  let zooms$ = fromCEvent(targetEl, 'wheel')
+  let zooms$       = fromCEvent(targetEl, 'wheel')
 
   let touchStart$  = fromCEvent(targetEl,'touchstart')//dom.touchstart(window)
   let touchMoves$ = fromCEvent(targetEl,'touchmove')//dom.touchmove(window)
@@ -305,6 +308,9 @@ export function pointerInteractions (baseInteractions){
     .map( list => ({list:list,nb:list.length}) )
     .share()
 
+
+  //normalize zooms (should this be elsewhere)
+  zooms$ = zooms$.map(normalizeWheel)
 
   //we get our custom right clicks
   let rightClicks2 = taps$.filter( event => ('button' in event && event.button === 2) )
