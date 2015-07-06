@@ -21,7 +21,7 @@ import {makeInternals, meshResources, entityInstanceFromPartTypes} from './core/
 import {entityToVisuals, meshInjectPostProcess, applyEntityPropsToMesh} from './core/entityToVisuals'
 import {exists} from './utils/obsUtils'
 import {hasEntity,hasNoEntity,getEntity} from './utils/entityUtils'
-
+import {getXY} from './utils/uiUtils'
 
 
 let pjson = require('../package.json')
@@ -57,7 +57,7 @@ function intent(interactions){
   let contextTaps$ = interactions.get(".glview","longTaps$").pluck("detail")
     .map(function(e){
       if(!e) return undefined
-      return {x:e.x,y:e.y}
+      return getXY(e)
     }).startWith(undefined)
 
   let selectionTransforms$ = Rx.Observable.merge(
@@ -341,7 +341,7 @@ function App(interactions) {
         })*/
         return lookupByEntityCategory["annot"].concat(lookupByEntityCategory["common"])
       })
-    .subscribe(data=>console.log("contextMenuItems",data))
+    //.subscribe(data=>console.log("contextMenuItems",data))
   
   
   return Rx.Observable
