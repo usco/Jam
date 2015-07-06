@@ -229,16 +229,6 @@ function GlView(interactions, props, self){
   let {shortSingleTaps$, shortDoubleTaps$, longTaps$, 
       dragMoves$, zooms$} =  pointerInteractions(interactionsFromCEvents(interactions))
 
-  //contextmenu observable should return undifined when any other basic interaction
-  //took place (to cancel displaying context menu , etc)
-  longTaps$ = longTaps$
-    .merge(
-      shortSingleTaps$.map(undefined),
-      shortDoubleTaps$.map(undefined),
-      dragMoves$.map(undefined)
-    )
-    .shareReplay(1)
-
 
   function withPickingInfos(inStream, windowResizes$ ){
     //TODO : use a stream of element size 
@@ -268,21 +258,18 @@ function GlView(interactions, props, self){
       )
   }
 
-  
   let _shortSingleTaps$ = withPickingInfos(shortSingleTaps$, windowResizes$)
   let _shortDoubleTaps$ = withPickingInfos(shortDoubleTaps$, windowResizes$)
-  let _longTaps$ = withPickingInfos(longTaps$, windowResizes$).map( meshFrom )
-
-  //dragMoves$.subscribe(event => console.log("dragMoves",event))
-  //_longTaps$.subscribe(event => console.log("contextTaps",event))
-  //elementResizes().subscribe(e=>console.log("elementResizes",e))
-
+  let _longTaps$        = withPickingInfos(longTaps$, windowResizes$).map( meshFrom )
   
-//problem : this fires BEFORE the rest is ready
+  //problem : this fires BEFORE the rest is ready
   //activeTool$.skip(1).filter(isTransformTool).subscribe(transformControls.setMode)
 
   //hack/test
-  let selections2$ = _shortSingleTaps$.map( meshFrom ).merge(_longTaps$).shareReplay(1)
+  let selections2$ = merge(
+    _shortSingleTaps$.map( meshFrom ),
+    _longTaps$)
+  .shareReplay(1)
 
   //transformControls handling
   //we modify the transformControls mode based on the active tool
@@ -309,7 +296,7 @@ function GlView(interactions, props, self){
 
   //for outlines, experimental
   selections2$.subscribe(function(mesh){
-    console.log("woooh selections")
+    console.log("woooh selections", mesh)
     outScene.children = []
     maskScene.children = []
 
@@ -323,18 +310,26 @@ function GlView(interactions, props, self){
 
   let selectedMeshes$ = selections2$
 
-
-
-
+  //zoom with double tap
   _shortDoubleTaps$
     .map(e => e.detail.pickingInfos.shift())
     .filter(exists)
     .map( objectAndPosition )
     .subscribe( (oAndP) => zoomInOnObject.execute( oAndP.object, {position:oAndP.point} ) )
 
-  
+  //stream of transformations done on the current selection
   let selectionsTransforms$ = fromEvent(transformControls, 'objectChange')
       .map(targetObject)
+
+  //contextmenu observable should return undifined when any other basic interaction
+  //took place (to cancel displaying context menu , etc)
+  longTaps$ = longTaps$
+    .merge(
+      shortSingleTaps$.map(undefined),
+      shortDoubleTaps$.map(undefined),
+      dragMoves$.map(undefined)
+    )
+    //.shareReplay(1)
 
 
   //hande all the cases where events require re-rendering
@@ -406,7 +401,7 @@ function GlView(interactions, props, self){
     //prevents zooming the 3d view from scrolling the window
     preventScroll(container)
 
-    controls.setDomElement( container )
+    controls.setObservables({dragMoves$, zooms$})
     controls.addObject( camera )
 
     transformControls.setDomElement( container )
@@ -481,7 +476,6 @@ function GlView(interactions, props, self){
       data.map(function(entry){
         scene.dynamicInjector.add(entry)
       })
-      
     })
 
 

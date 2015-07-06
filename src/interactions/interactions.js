@@ -285,7 +285,7 @@ export function interactionsFromCEvents(targetEl, rTarget='canvas'){
 
 export function pointerInteractions (baseInteractions){  
   let multiClickDelay = 250
-  let longPressDelay  = 800
+  let longPressDelay  = 250
 
   let minDelta        = 25//max 50 pixels delta
   let deltaSqr        = (minDelta*minDelta)
@@ -314,20 +314,16 @@ export function pointerInteractions (baseInteractions){
 
   //we get our custom right clicks
   let rightClicks2 = taps$.filter( event => ('button' in event && event.button === 2) )
-  let holds$       = holds(mouseDowns$, mouseUps$, mouseMoves$, multiClickDelay, deltaSqr)
+  let holds$       = holds(mouseDowns$, mouseUps$, mouseMoves$, longPressDelay, deltaSqr)
 
   let shortSingleTaps$ = tapStream$.filter( x => x.nb == 1 ).flatMap(e=>e.list)
   let shortDoubleTaps$ = tapStream$.filter( x => x.nb == 2 ).flatMap(e=>e.list).take(1).repeat()
   
   //static , long held taps, for context menus etc
-  let longTaps$  =  Observable.amb([
-    holds$,
-    //rightClicks2,
-    // Skip if we get a movement
-    mouseMoves$
-      .take(1).flatMap( x => Rx.Observable.empty() ),
-    ]
-  ).take(1).repeat()// contextTaps: either HELD leftmouse/pointer or HELD right click
+  // longTaps: either HELD leftmouse/pointer or HELD right click
+  let longTaps$= holds$.take(1).repeat()
+
+  longTaps$.subscribe(e=>console.log("SOURCE longTaps",e))
 
   //drag move interactions (continuously firing)
   let dragMoves$   = merge(
