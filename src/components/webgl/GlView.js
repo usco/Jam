@@ -350,6 +350,24 @@ function GlView(interactions, props, self){
   //reRender$.subscribe( () => console.log("reRender"), (err)=>console.log("error in reRender",err))
   //actual 3d stuff
 
+
+  //what are the active controls : camera, object tranforms, 
+  let tControlsActive$ = merge(
+    fromEvent(transformControls,"mouseDown").map(true),
+    fromEvent(transformControls,"mouseUp").map(false)
+  ).startWith(false)
+ 
+  //let activeControls$
+  //if transformControls are active, filter out dragMove gestures
+  let fDragMoves$ = dragMoves$
+    .combineLatest(tControlsActive$,function(dragMoves,tCActive){
+      if(tCActive) return undefined
+      return dragMoves
+    })
+    .filter(exists) 
+
+  let filteredInteractions$ = {dragMoves$:fDragMoves$, zooms$}
+
   function setupScene(){
     var sphereGeometry = new THREE.SphereGeometry( 20, 32, 16 ) 
     var sphereMaterial = new THREE.MeshLambertMaterial( {color: 0x8888ff} );
@@ -401,7 +419,7 @@ function GlView(interactions, props, self){
     //prevents zooming the 3d view from scrolling the window
     preventScroll(container)
 
-    controls.setObservables({dragMoves$, zooms$})
+    controls.setObservables(filteredInteractions$)
     controls.addObject( camera )
 
     transformControls.setDomElement( container )
