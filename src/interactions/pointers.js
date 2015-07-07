@@ -323,8 +323,6 @@ export function pointerInteractions (baseInteractions){
   // longTaps: either HELD leftmouse/pointer or HELD right click
   let longTaps$= holds$.take(1).repeat()
 
-  longTaps$.subscribe(e=>console.log("SOURCE longTaps",e))
-
   //drag move interactions (continuously firing)
   let dragMoves$   = merge(
     drags3(mouseDowns$, mouseUps$, mouseMoves$, longPressDelay, deltaSqr),
