@@ -75,12 +75,10 @@ function intent(interactions){
     selections$.filter(hasNoEntity).map([])
   )
 
-
   let contextMenuActions$ = interactions.get(".contextMenu", "actionSelected$").pluck("detail")
   let deleteEntities$     = contextMenuActions$.filter(e=>e.action === "delete").pluck("selections")
   let deleteAllEntities$  = contextMenuActions$.filter(e=>e.action === "deleteAll").pluck("selections")
   let duplicateEntities$  = contextMenuActions$.filter(e=>e.action === "duplicate").pluck("selections")
-
 
   //for annotations, should this be here ?
   //heavy code smell  too
@@ -88,7 +86,6 @@ function intent(interactions){
   let measureDistance$  = contextMenuActions$.filter(e=>e.action === "measureDistance").pluck("selections")
   let measureThickness$ = contextMenuActions$.filter(e=>e.action === "measureThickness").pluck("selections")
   let measureAngle$     = contextMenuActions$.filter(e=>e.action === "measureAngle").pluck("selections")
-
 
   //we need to "shut down the context menu after any click inside of it"
   contextTaps$ = contextTaps$.merge(
@@ -145,10 +142,11 @@ function settingsM(interactions){
 
   //bla$.subscribe(bla=>console.log("lkjfdsfsfsd",bla))*/
   //return bla$
-  
+  let webglEnabled$          = Rx.Observable.just(true)
+  let appMode$               = Rx.Observable.just("editor")
+  let activeTool$            = Rx.Observable.just("translate")
   let autoSelectNewEntities$ = Rx.Observable.just(true) //TODO: make settable
-  let webglEnabled$ = Rx.Observable.just(true)
-  let appMode$ = Rx.Observable.just("editor")
+  
 
   return Rx.Observable.combineLatest(
     showGrid$,
@@ -157,12 +155,14 @@ function settingsM(interactions){
     autoSelectNewEntities$,
     webglEnabled$,
     appMode$,
-    function(showGrid, autoRotate, showAnnot, autoSelectNewEntities, webglEnabled, appMode){
+    activeTool$,
+    function(showGrid, autoRotate, showAnnot, autoSelectNewEntities, webglEnabled, appMode, activeTool){
       return (
         {
-          autoSelectNewEntities:autoSelectNewEntities,
-          mode:appMode,
           webglEnabled:webglEnabled,
+          mode:appMode,
+          autoSelectNewEntities:autoSelectNewEntities,
+          activeTool:activeTool,
 
           camera:{
             autoRotate:autoRotate
@@ -203,12 +203,6 @@ function sources(urlSources$, dndSources$){
       }*/
     }
     let _settings = Object.assign({},defaults,settings)
-
-    /*updateDesign$({
-      _persistent:_settings.persistent,
-      uri:_settings.lastDesignUri,
-      name:_settings.lastDesignName
-    })*/
   })
 
   let {meshSources$, designSources$} = dataSources(dndSources$, urlSources)
@@ -219,16 +213,12 @@ function sources(urlSources$, dndSources$){
 }  
 
 
-
-
 function App(interactions) {
-  let activeTool = "translate"
-
-  let dragOvers$ = interactions.subject("dragover")
-  let drops$  = interactions.subject("drop")  
+  let dragOvers$  = interactions.subject("dragover")
+  let drops$      = interactions.subject("drop")  
   let dndSources$ = observableDragAndDrop(dragOvers$, drops$)  
-    //.subscribe(data => console.log("dndSources",data))
   let urlSources$ =null
+
   let {meshSources$, designSources$, settingsSources$} = sources(urlSources$, dndSources$)
 
   let settings$ = settingsM(interactions)
@@ -236,8 +226,6 @@ function App(interactions) {
   let {kernel, assetManager} = makeInternals()
 
   let meshResources$ = meshResources(meshSources$, assetManager)
-    //.subscribe(data=>console.log("mesh data",data))
-  //doLotsOfThings(kernel,assetManager,meshSources$)
 
   //register meshes <=> types
   let partTypes = require('./core/partReg')
@@ -245,7 +233,6 @@ function App(interactions) {
 
   //get new instances from "types"
   let newInstFromTypes$ = entityInstanceFromPartTypes(partTypes$)
-    //.subscribe(data=>console.log("mesh data",data))
 
   let intents = intent(interactions)  
   let contextTaps$ = intents.contextTaps$
@@ -287,37 +274,6 @@ function App(interactions) {
       return acc[val.typeUid] = val.mesh
     },{})*/
   .subscribe(data=>console.log(" data",data))
-  //entityToVisuals()
-
-  /*let entitiesToMeshInstancesMap = new WeakMap()
-  let meshInstancesToEntitiesMap = new WeakMap()//reverse map
-
-  function entityVisual(entity){
-  }
-
-  entities$
-  .skip(1)
-  .combineLatest(partTypes$,
-    function(entities,partTypes){
-
-    }
-  )
-  .subscribe(data=>console.log(" data",data))
-  */
-
-  
-
-  /*.flatMap(function(data){
-    return Rx.Observable.from( kernel.getPartMeshInstance( data[0] ) )
-  })
-  .map(Rx.Observable.from)
-  .subscribe(function(data){
-    console.log("mesh data",data)
-    //let foo$ = Rx.Observable.from( kernel.getPartMeshInstance(data.instances[0]) )
-  })*/
-
-
-  //let requestVisualForEntity$ = new Rx.Observable()
 
   let visualMappings$ = entities$
     .pluck("instances")
@@ -331,9 +287,7 @@ function App(interactions) {
 
         return mesh
       })
-
     })
-
 
   //Experimental: system describing available actions by entity "category"
   let lookupByEntityCategory ={
@@ -389,12 +343,16 @@ function App(interactions) {
         ]
 
         function createContextmenuItems(){
-          //
         }
 
         let selections = items.selectedIds.map( id=>items.byId[id] )
 
         //contextTaps = undefined
+        let settingsMeta = [
+          {type:"checkbox", label:"Show Grid", className:"showGrid"}
+        ]
+
+
 
         function appCriticalErrorDisplay(){
           return (
@@ -411,11 +369,10 @@ function App(interactions) {
           )
         }
         
-        function normalContent(activeTool,settings,items, visualMappings,selections,contextTaps){
+        function normalContent(settings,items, visualMappings,selections,contextTaps){
           let elements = (
             <div>
               <GlView 
-              activeTool={activeTool} 
               settings={settings}
               items={items} 
               visualMappings={visualMappings}
@@ -430,7 +387,6 @@ function App(interactions) {
             elements =(
               <div>
                 <GlView 
-                activeTool={activeTool} 
                 settings={settings}
                 items={items} 
                 visualMappings={visualMappings}
@@ -448,7 +404,7 @@ function App(interactions) {
           return elements
         }
 
-        let jamInner = normalContent(activeTool,settings,items, visualMappings,selections,contextTaps)
+        let jamInner = normalContent(settings,items, visualMappings,selections,contextTaps)
         if(!settings.webglEnabled){
             jamInner = appCriticalErrorDisplay()
         }
