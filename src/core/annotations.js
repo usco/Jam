@@ -4,12 +4,14 @@ import {getEntryExitThickness,
   getDistanceFromStartEnd
 } from '../components/webgl/utils'
 
-import {addNote$, addThicknessAnnot$, addDistanceAnnot$, addDiameterAnnot$,
+/*import {addNote$, addThicknessAnnot$, addDistanceAnnot$, addDiameterAnnot$,
 toggleNote$,toggleThicknessAnnot$,toggleDistanceAnnot$, toggleDiameterAnnot$, toggleAngleAnnot$} from '../actions/annotActions'
-import {setActiveTool$,clearActiveTool$} from '../actions/appActions'
+import {setActiveTool$,clearActiveTool$} from '../actions/appActions'*/
 
 import {first,toggleCursor} from '../utils/otherUtils'
 import {generateUUID} from 'usco-kernel2/src/utils'
+import {exists} from '../utils/obsUtils'
+
 
 import logger from '../utils/log'
 let log = logger("annotations")
@@ -19,7 +21,6 @@ import Rx from 'rx'
 let fromEvent = Rx.Observable.fromEvent
 let Observable = Rx.Observable
 let merge = Rx.Observable.merge
-
 
 //utilities
 /*generate note annotation data from input*/
@@ -197,34 +198,34 @@ function handleCursor(input){
 //FIXME: is this more of an intent ??
 function addAnnotationMod$(intent){
 
-  let activeTool$ = intent.activeTool$
-  let baseStream$ = intent.singleTaps$
-      .map( (event)=>event.detail.pickingInfos)
-      .filter( (pickingInfos)=>pickingInfos.length>0)
-      .map(first)
-      .share()
-
-  baseStream$ = baseStream$.withLatestFrom(
-    activeTool$,
-    (s1, s2)=> { return {data:s1, activeTool:s2} }
-  )
+  let activeTool$ = intent.settings$.pluck("activeTool")
+  let baseStream$ = intent.creationStep$
+    .withLatestFrom(
+      activeTool$,
+      (s1, s2)=> { return {data:s1, activeTool:s2} }
+    )
+    //.filter(exists)
 
   function dataOnly(entry){ return entry.data }
 
   let noteAnnot$ = baseStream$
     .filter((data)=>data.activeTool === "addNote" )
+    .take(1)//only need one point
     .map(dataOnly)
     .map(getObjectPointNormal)
     .map(generateNoteData)
+    .repeat()
 
   let thickessAnnot$ = baseStream$
     .filter((data)=>data.activeTool === "addThickess" )
+    .take(1)//only need one point
     .map(dataOnly)
     .map(getEntryExitThickness)
     .map(generateThicknessData)
 
   let distanceAnnot$ = baseStream$
     .filter((data)=>data.activeTool === "addDistance" )
+    .take(1)//only need one point
     .map(dataOnly)
     .map(getObjectPointNormal)
     .bufferWithCount(2)//we need 2 data points to generate a distance
@@ -232,6 +233,7 @@ function addAnnotationMod$(intent){
 
   let diameterAnnot$ = baseStream$
     .filter((data)=>data.activeTool === "addDiameter" )
+    .take(3)//need three points
     .map(dataOnly)
     .map(getObjectPointNormal)
     .bufferWithCount(3)//we need 3 data points to generate a diameter
@@ -239,6 +241,7 @@ function addAnnotationMod$(intent){
 
   let angleAnnot$ = baseStream$
     .filter((data)=>data.activeTool === "addAngle" )
+    .take(3)
     .map(dataOnly)
     .map(getObjectPointNormal)
     .bufferWithCount(3)//we need 3 data points to generate an angle
@@ -253,7 +256,9 @@ function addAnnotationMod$(intent){
     ).share()
 
   //clear currently active tool : is this a hack?
-  additions$.subscribe(clearActiveTool$)
+  //additions$.subscribe(clearActiveTool$)
+
+  additions$.subscribe(e=>console.log("adding annotation"))
 
   return additions$
 }
@@ -291,7 +296,7 @@ function makeModification$(intent){
 
 
 function model(intent, source) {
-  let source$ = source.annotData$ || Observable.just([])
+  let source$ = source || Observable.just([])
   //hack
   intent.addAnnotations$ = intent.addAnnotations$
     .merge( addAnnotationMod$(intent) )
