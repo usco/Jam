@@ -208,10 +208,11 @@ function GlView(interactions, props, self){
 
   let settings$   = props.get('settings')//.startWith({camera:{autoRotate:false}})
   let items$      = props.get('items').startWith([])
-  let activeTool$ = props.get('activeTool')//.startWith("translate")
   let selections$ = props.get('selections').startWith([]).filter(exists).distinctUntilChanged()
   let visualMappings$ = props.get('visualMappings').startWith([])
   //every time either activeTool or selection changes, reset/update transform controls
+
+  let activeTool$ = settings$.pluck("activeTool").startWith(undefined)
 
   //debug only
   //settings$.subscribe(function(data){console.log("SETTINGS ",data)})
@@ -536,9 +537,8 @@ function GlView(interactions, props, self){
   let vtree$ =  Rx.Observable.combineLatest(
     reRender$,
     initialized$,
-    activeTool$,
     settings$,
-    function(reRender, initialized, activeTool, settings){
+    function(reRender, initialized, settings){
 
       if(!initialized && self.refs.container!==undefined){
         configure(self.refs.container.getDOMNode())
@@ -548,14 +548,15 @@ function GlView(interactions, props, self){
         interactions.getEventSubject('initialized').onEvent(true)
         initialized = true
 
-        //not good
+        //FIXME : needs to be done in a more coherent, reusable way
         //shut down "wobble effect if ANY user interaction takes place"
         let wobble = cameraWobble3dHint(camera)
         merge(
           shortSingleTaps$,
           shortDoubleTaps$,
           longTaps$,
-          zooms$
+          zooms$,
+          dragMoves$
         ).subscribe(e=>wobble.stop())
         
       }
