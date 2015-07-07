@@ -10,9 +10,9 @@ import GlView from './components/webgl/GlView'
 import BomView from './components/Bom/BomView'
 import SettingsView from './components/SettingsView'
 import FullScreenToggler from './components/FullScreenToggler'
-import ContextMenu from './components/ContextMenu2'
-import EntityInfos from './components/EntityInfos2'
-import MainToolbar from './components/MainToolbar2'
+import ContextMenu from './components/ContextMenu'
+import EntityInfos from './components/EntityInfos'
+import MainToolbar from './components/MainToolbar'
 
 import {observableDragAndDrop} from './interactions/dragAndDrop'
 
@@ -100,9 +100,19 @@ function intent(interactions){
 }
 
 function settingsM(interactions){
-  let showGrid$   = interactions.get(".settingsView .showGrid", "change").map(event => event.target.checked).startWith(false)
+  //hack for firefox only as it does not correct get the "checked" value : note : this is not an issue in cycle.js
+  let is_firefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+  function checked(event){
+    if(is_firefox) return ! event.target.checked
+      return event.target.checked
+  }
+
+  /*let showGrid$   = interactions.get(".settingsView .showGrid", "change").map(event => event.target.checked).startWith(false)
   let showAnnot$  = interactions.get(".settingsView .showAnnot", "change").map(event => event.target.checked).startWith(false)
-  let autoRotate$ = interactions.get(".settingsView .autoRotate", "change").map(event => event.target.checked).startWith(false)
+  let autoRotate$ = interactions.get(".settingsView .autoRotate", "change").map(event => event.target.checked).startWith(false)*/
+  let showGrid$   = interactions.get(".settingsView .showGrid", "change").map(checked).startWith(false)
+  let showAnnot$  = interactions.get(".settingsView .showAnnot", "change").map(checked).startWith(false)
+  let autoRotate$ = interactions.get(".settingsView .autoRotate", "change").map(checked).startWith(false)
 
   /*function foobar(fieldName){
     return interactions.get(".settingsView "+fieldName, "change").map(event => event.target.checked).startWith(false)
@@ -133,10 +143,13 @@ function settingsM(interactions){
   return Rx.Observable.combineLatest(
     showGrid$,
     autoRotate$,
-    function(showGrid$,autoRotate$, showAnnot$){
+    showAnnot$,
+    autoSelectNewEntities$,
+    webglEnabled$,
+    function(showGrid$, autoRotate$, showAnnot$, autoSelectNewEntities, webglEnabled){
       return (
         {
-          autoSelectNewEntities:autoSelectNewEntities$,
+          autoSelectNewEntities:autoSelectNewEntities,
           camera:{
             autoRotate:autoRotate$
           },
@@ -145,7 +158,9 @@ function settingsM(interactions){
           },
           annotations:{
             show:showAnnot$
-          }
+          },
+
+          webglEnabled:webglEnabled
         }
       )
     }
@@ -390,27 +405,38 @@ function App(interactions) {
             </div>
           )
         }
-          
+        
+        function normalContent(activeTool,settings,items, visualMappings,selections,contextTaps){
+            return(
+              <div>
+                <GlView 
+                activeTool={activeTool} 
+                settings={settings}
+                items={items} 
+                visualMappings={visualMappings}
+                className="glview"/>
 
 
+                <MainToolbar />
+                <SettingsView settings={settings} ></SettingsView>
+                <FullScreenToggler/> 
+                <EntityInfos entities={selections} settings={settings} />
+                <ContextMenu position={contextTaps} items={contextMenuItems} selections={selections}/>
+              </div>
+            )
+        }
+
+        console.log("settings",settings)
+        let jamInner = normalContent(activeTool,settings,items, visualMappings,selections,contextTaps)
+        if(!settings.webglEnabled){
+            jamInner = appCriticalErrorDisplay()
+        }
         return (
+          
           <div className="jam" 
             onDragOver={interactions.subject('dragover').onEvent}
-            onDrop={interactions.subject('drop').onEvent}
-          >
-            <GlView 
-              activeTool={activeTool} 
-              settings={settings}
-              items={items} 
-              visualMappings={visualMappings}
-              className="glview"/>
-
-
-            <MainToolbar />
-            <SettingsView settings={settings} ></SettingsView>
-            <FullScreenToggler/> 
-            <EntityInfos entities={selections} settings={settings} />
-            <ContextMenu position={contextTaps} items={contextMenuItems} selections={selections}/>
+            onDrop={interactions.subject('drop').onEvent}>
+              {jamInner}
           </div>
         )
       }
