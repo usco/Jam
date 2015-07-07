@@ -103,7 +103,11 @@ function makeModification$(intent){
 
   /*add a new entity instance*/
   let _addEntities$ = intent.addEntities$
-    .map((nentities) => (entitiesData) => {
+    //splice in settings
+    .combineLatest(intent.settings$,function(data,settings){
+      return {nentities:data,settings}
+    })
+    .map(({nentities,settings}) => (entitiesData) => {
       log.info("adding entity instance(s)", nentities)
 
       let entities = nentities || []
@@ -116,8 +120,9 @@ function makeModification$(intent){
       })
       
 
-      //set selections
-      selectEntities$( entityIds )
+      //set selections, if need be
+      if(settings.autoSelectNewEntities) selectEntities$( entitiesData.instances.map(i=>i.iuid) )
+
       return entitiesData
     })
 
