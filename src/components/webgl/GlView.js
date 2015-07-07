@@ -12,7 +12,7 @@ import combineTemplate from 'rx.observable.combinetemplate'
 Rx.config.longStackSupport = true
 
 
-import {pointerInteractions,interactionsFromCEvents,preventScroll} from '../../interactions/interactions'
+import {pointerInteractions,interactionsFromCEvents,preventScroll} from '../../interactions/pointers'
 import {windowResizes,elementResizes} from '../../interactions/sizing'
 
 import Selector from './deps/Selector'
@@ -46,6 +46,38 @@ import {ClearMaskPass, MaskPass} from './deps/post-process/MaskPass'
 import CopyShader     from './deps/post-process/CopyShader'
 import FXAAShader     from './deps/post-process/FXAAShader'
 import vignetteShader from './deps/post-process/vignetteShader'
+
+
+function cameraWobble3dHint(camera, time=1500){
+  let camPos = camera.position.clone()
+  let target = camera.position.clone().add(new THREE.Vector3(-5,-10,-5))
+
+  let tween = new TWEEN.Tween( camPos )
+    .to( target , time )
+    .repeat( Infinity )
+    .delay( 500 )
+    .yoyo(true)
+    .easing( TWEEN.Easing.Cubic.InOut )
+    .onUpdate( function () {
+      camera.position.copy(camPos)
+    } )
+    .start()
+
+  let camRot = camera.rotation.clone()
+  //let rtarget = camera.rotation.clone().add(new THREE.Vector3(50,50,50))
+
+  /*let tween2 = new TWEEN.Tween( camRot )
+    .to( rtarget , time )
+    .repeat( Infinity )
+    .delay( 500 )
+    .yoyo(true)
+    .easing( TWEEN.Easing.Quadratic.InOut )
+    .onUpdate( function () {
+      camera.position.copy(camRot)
+    } )
+    .start()*/
+  return tween
+}
 
 
 //extract the object & position from a pickingInfo data
@@ -515,6 +547,17 @@ function GlView(interactions, props, self){
 
         interactions.getEventSubject('initialized').onEvent(true)
         initialized = true
+
+        //not good
+        //shut down "wobble effect if ANY user interaction takes place"
+        let wobble = cameraWobble3dHint(camera)
+        merge(
+          shortSingleTaps$,
+          shortDoubleTaps$,
+          longTaps$,
+          zooms$
+        ).subscribe(e=>wobble.stop())
+        
       }
 
       if(initialized){
