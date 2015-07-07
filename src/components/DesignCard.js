@@ -1,118 +1,94 @@
-import React from 'react'
-//import Rx from 'rx'
+import Cycle from 'cycle-react'
+let React = Cycle.React
+let {Rx} = Cycle
+import Class from 'classnames'
 
-import EditableItem from './EditableItem'
-import {updateDesign$} from '../actions/designActions'
+import {trim} from '../utils/utils'
+import {preventDefault,isTextNotEmpty,formatData,exists} from '../utils/obsUtils'
+import EditableItem from './EditableItem2'
 
 
-export default class DesignCard extends React.Component{
-  constructor(props){
-    super(props)
-    this.state={
-      currentTagInput:"",
-      selectedLicense:undefined
-    }
-  }
-
-  setDesignData(field, value){
-    let data = {}
-    data[field] = value
-    updateDesign$(data)
-  }
-
-  addTag(value){
-    let self = this
-    let input = React.findDOMNode(this.refs.tagInput)
-    input = input.innerText
+function addTag(value, tags){
+  //input = input.innerText
     
-    //Rx.Observable.fromEvent  
-    //let input = this.state.currentTagInput
-    input = [input]
-    input
-      .filter(x=>x!=="")
-      .map(function(data){ return data.replace(/^\s+|\s+$/g, '') })
-      .map(x=>x.split(","))
-      .map(function(data){
-        let tags = self.props.design.tags
-        tags = tags.concat( data )
-        updateDesign$({tags:tags})
-        self.setState({currentTagInput:""})
-      })
-  }
-
-  removeTag(tag){
-    let idx = this.props.design.tags.indexOf(tag)
-    if(idx>-1){ 
-      let tags = Object.assign([],this.props.design.tags)
-      tags.splice(idx,1)
-      updateDesign$({tags:tags})
-    }
-  }
-
-  addLicense(){
-    let self = this
-    let input = React.findDOMNode(this.refs.licenseInput)
-    let selectedLicense = input.options[input.selectedIndex].value
-    //console.log("add license",input, input.selectedIndex, input.options[input.selectedIndex].value)
-
-    let licenses = Object.assign([], this.props.design.licenses)
-    if(licenses.indexOf(selectedLicense)===-1){
-      licenses.push(selectedLicense)
-      updateDesign$({licenses:licenses})
-    }
-
-    //let selectedLicense = selectedLicense
-  }
-
-  removeLicense(license){
-    console.log("remove license")
-    let idx = this.props.design.licenses.indexOf(license)
-    if(idx>-1){ 
-      let licenses = Object.assign([],this.props.design.licenses)
-      licenses.splice(idx,1)
-      updateDesign$({licenses:licenses})
-    }
-  }
-
-  addAuthor(){
-    let name = React.findDOMNode(this.refs.nAuthorName).value
-    let email= React.findDOMNode(this.refs.nAuthorEmail).value
-    let url  = React.findDOMNode(this.refs.nAuthorUrl).value
-    console.log(email,url,name)
-    
-    let authors = Object.assign([], this.props.design.authors)
-    authors.push({
-      name:name,
-      email:email,
-      url:url
+  //Rx.Observable.fromEvent  
+  //let input = this.state.currentTagInput
+  input = [input]
+  input
+    .filter(x=>x!=="")
+    .map(function(data){ return data.replace(/^\s+|\s+$/g, '') })
+    .map(x=>x.split(","))
+    .map(function(data){
+      tags = tags.concat( data )
+      //updateDesign$({tags:tags})
+      //self.setState({currentTagInput:""})
     })
-    updateDesign$({authors:authors})
+}
+
+function removeTag(tag, tags){
+  let idx = tags.indexOf(tag)
+  if(idx>-1){ 
+    let tags = Object.assign([],tags)
+    tags.splice(idx,1)
+    //updateDesign$({tags:tags})
+  }
+}
+
+function addLicense(license, licenses){
+  let selectedLicense = license//input.options[input.selectedIndex].value
+
+  let licenses = Object.assign([], licenses)
+  if(licenses.indexOf(selectedLicense)===-1){
+    licenses.push(selectedLicense)
+    //updateDesign$({licenses:licenses})
   }
 
-  removeAuthor(author){
-    let authors = Object.assign([], this.props.design.authors)
+  //let selectedLicense = selectedLicense
+}
 
-    authors = authors.filter(function(authorsEntry){
-      return !(
-        authorsEntry.name === author.name && 
-        authorsEntry.url  === author.url && 
-        authorsEntry.email=== author.email)
-    })
-
-    updateDesign$({authors:authors})
+function removeLicense(license, licenses){
+  console.log("remove license")
+  let idx = licenses.indexOf(license)
+  if(idx>-1){ 
+    let licenses = Object.assign([],licenses)
+    licenses.splice(idx,1)
+    //updateDesign$({licenses:licenses})
   }
+}
 
-  render() {
-    let self     = this
-    let design   = this.props.design
+function addAuthor(authors){
+  let name = React.findDOMNode(this.refs.nAuthorName).value
+  let email= React.findDOMNode(this.refs.nAuthorEmail).value
+  let url  = React.findDOMNode(this.refs.nAuthorUrl).value
+  console.log(email,url,name)
+  
+  let authors = Object.assign([], authors)
+  authors.push({
+    name:name,
+    email:email,
+    url:url
+  })
+  //updateDesign$({authors:authors})
+}
 
-    let persistentUrl = design.uri
-    let persistent    = (persistentUrl !== undefined)
-    let editable      = design.editable || true 
+function removeAuthor(author, authors){
+  let authors = Object.assign([], authors)
 
-    ///
-    let authorsList = []
-    design.authors.map(function(author){
+  authors = authors.filter(function(authorsEntry){
+    return !(
+      authorsEntry.name === author.name && 
+      authorsEntry.url  === author.url && 
+      authorsEntry.email=== author.email)
+  })
+
+  //updateDesign$({authors:authors})
+}
+
+
+
+function authors(authors, editable){
+  let authorsList = []
+    authors.map(function(author){
       let item = null
       if(editable){
         item = <button onClick={self.removeAuthor.bind(self,author)}>X</button>
@@ -140,10 +116,12 @@ export default class DesignCard extends React.Component{
         </div>
       )
     }
+}
 
-    /////////TAGS
+function tags(tags, editable){
+   /////////TAGS
     let tagsList = []
-    design.tags.map(function(tag){
+    tags.map(function(tag){
       let item = null
       if(editable){ 
         item = <button onClick={self.removeTag.bind(self,tag)}>X</button>
@@ -171,52 +149,52 @@ export default class DesignCard extends React.Component{
         </div>
       )
     }
+}
 
-    ///////
-    let licensesList = []
-    design.licenses.map(function(license){
-      let item = null
-      if(editable){ 
-        item = <button onClick={self.removeLicense.bind(self,license)}>X</button>
-      }
-      licensesList.push(
-        <li>
-          {license}
-          {item}
-        </li>)
-    })
-    licensesList = <ul>{licensesList}</ul>
-    //////
-  
-
-    let licensesEditor = null
-
-    if(editable){
-      let availableLicenses = ["MIT","GPLV3"]
-      let availableLicensesD  = []
-      availableLicenses.map(function(license){
-        availableLicensesD.push(<option>{license}</option>)
-      })
-
-      licensesEditor = (
-        <div>
-          <select ref="licenseInput">
-            {availableLicensesD}
-          </select>
-          <button onClick={this.addLicense.bind(this)} > Add</button>
-        </div>
-      )
+function licenses(licenses,editable){
+  ///////
+  let licensesList = []
+  licenses.map(function(license){
+    let item = null
+    if(editable){ 
+      item = <button onClick={self.removeLicense.bind(self,license)}>X</button>
     }
+    licensesList.push(
+      <li>
+        {license}
+        {item}
+      </li>)
+  })
+  licensesList = <ul>{licensesList}</ul>
+  //////
 
-    //versioning
-    let versionField = ""
-    if(design.version) versionField = <span className="version"> v {design.version} </span>
 
-    console.log("design", design)
+  let licensesEditor = null
 
-    return(
-      <div className="designCard" >
-        <h1>
+  if(editable){
+    let availableLicenses = ["MIT","GPLV3"]
+    let availableLicensesD  = []
+    availableLicenses.map(function(license){
+      availableLicensesD.push(<option>{license}</option>)
+    })
+
+    licensesEditor = (
+      <div>
+        <select ref="licenseInput">
+          {availableLicensesD}
+        </select>
+        <button onClick={this.addLicense.bind(this)} > Add</button>
+      </div>
+    )
+  }
+}
+
+
+function DesignCard(props,interactions){
+
+  function view(){
+    return <div> 
+      <h1>
           {design.name} 
           { versionField }
         </h1>
@@ -259,7 +237,16 @@ export default class DesignCard extends React.Component{
           Url : {persistentUrl}
           </div>
         </section>
-      </div>
-    )
+
+    </div>
   }
+
+
+  return Rx.Observable.just("").map(view)
+
 }
+
+
+
+let DesignCard = Cycle.component('DesignCard',DesignCard)
+export default DesignCard

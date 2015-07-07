@@ -5,7 +5,7 @@ import Class from 'classnames'
 
 import {preventDefault,isTextNotEmpty,formatData,exists} from '../utils/obsUtils'
 import {formatNumberTo, absSizeFromBBox} from '../utils/formatters'
-import EditableItem from './EditableItem2'
+import EditableItem from './EditableItem'
 
 //onChange={this.handleColorChange.bind(this)}
 
@@ -38,8 +38,6 @@ import EditableItem from './EditableItem2'
           </span>
         )
       }
-
-
 
 */
 function transformInputs(entity, fieldName, displayName, controlsStep, numberPrecision, changeHandler){

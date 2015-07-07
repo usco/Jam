@@ -13,8 +13,6 @@ function SettingsView(interactions, props) {
     .map(true)
     .scan((acc,val)=>!acc)
     .startWith(false)
-  
-
 
   let vtree$ = Rx.Observable
     .combineLatest(

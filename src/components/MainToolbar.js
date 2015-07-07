@@ -1,85 +1,80 @@
-import React from 'react'
+import Cycle from 'cycle-react'
+let React = Cycle.React
+let {Rx} = Cycle
+import Class from 'classnames'
 
-import Rx from 'rx'
-let Observable= Rx.Observable
-let fromEvent = Observable.fromEvent
+import {trim} from '../utils/utils'
+import {preventDefault,isTextNotEmpty,formatData,exists} from '../utils/obsUtils'
+import EditableItem from './EditableItem'
 
 import logger from '../utils/log'
-let log = logger("Jam-ToolBar")
+let log = logger("ToolBar")
 log.setLevel("info")
 
-import EditableItem from './EditableItem'
-import DesignCard   from './DesignCard'
+function MainToolbar(props,interactions){
 
-import {newDesign$, updateDesign$} from '../actions/designActions'
-import {undo$,redo$,setDesignAsPersistent$,setSetting$} from '../actions/appActions'
-import {toggleNote$,toggleThicknessAnnot$,toggleDistanceAnnot$, toggleDiameterAnnot$, toggleAngleAnnot$,toggleAnnotation$} from '../actions/annotActions'
-
-
-//for future use
-let designNameInteraction$ = new Rx.Subject()
-designNameInteraction$
-  .debounce(800)
-  .subscribe(
-    updateDesign$
-  )
-
-class MainToolBar extends React.Component {
-  constructor(props) {
-    super(props)
-    this.state = {
-      appInfos:{
-        name:"bla",
-        version:"0.0.0"
-      },
-      designCardVisible:false,
-    }
-  }
-
-  handleClick(event){
-    console.log("state & props", this.state, this.props)
-  }
-
-  setDesignName(value){    
-    designNameInteraction$.onNext({name:value})
-    
-  }
-
-  toggleDesignCard(){
-    this.setState({
-      designCardVisible: !this.state.designCardVisible
-    })
-  }
-  
-  render() {
-    let fullTitle = `(${this.props.appInfos.name} v  ${this.props.appInfos.version})`
-    let history   = this.props.history
-
-    let titleStyle = {}
-
-    let fooStyle  = {
-      display: "inline-block"
-    }
-
+  function view(model$){
     let designCardWrapper = <div className="designCardWrapper fadesIn" />
-    
-    if(this.state.designCardVisible){
+    let designCardVisible = false
+    let mode = "editor"
+    let design = {name:"foo"}
+
+    let annotationTypes = [
+      "note",
+      "thickness",
+      "distance",
+      "angle"
+    ]
+
+    if(designCardVisible){
       designCardWrapper = (
       <div className="designCardWrapper fadesOut">
         <DesignCard design={this.props.design}/> 
       </div>)
     }
 
-    //console.log("this.props.undos.length===0",this.props.undos.length===0, this.props.undos.length, this.props.undos)
+    let editorElements = null
+    let annotations = null
+    if(mode !== "viewer"){
+      annotations =  annotationTypes
+        .map(type=>{
+          return <button className={`add-${type}`} disabled={false}> {type} </button>
+        })
 
-    let undosDisabled = this.props.undos.length<=1
-    let redosDisabled = this.props.redos.length===0
+      annotations = (
+        <span className="annotations">
+         {annotations}
+        </span>
+      )
 
-    let persistent    = this.props.design._persistent
+      editorElements = <span>
+        <h1>
+          <EditableItem 
+            data={design.name} 
+            placeholder="untitled design" 
+            className="designName"/> 
+        </h1>
+      </span>
+    }
+
+    return (
+      <div className="titleBar">
+        {editorElements}
+        {annotations}
+      </div>
+    )
+  }
+
+  return Rx.Observable.just("").map(view)
+}
 
 
 
-    let social = (
+let MainToolbar = Cycle.component('MainToolbar',MainToolbar)
+export default MainToolbar
+
+
+/* let social = (
       <span className="social"> 
         <span>
           <button onClick={this.handleClick.bind(this)} className="fork" disabled={true}> Fork </button>
@@ -106,103 +101,4 @@ class MainToolBar extends React.Component {
         <button onClick={this.handleClick.bind(this)} className="networkGraph" disabled={true}> NetworkGraph </button>
         <button onClick={this.handleClick.bind(this)} className="commit" disabled={true}> Commit (named save) </button>
       </span>
-    )
-    tools = null
-
-
-     /*var cx = React.addons.classSet
-        var classes = cx({
-          'message-important': this.props.isImportant,
-          'message-read': this.props.isRead
-        })*/
-        /*let noteClasses = cx({
-          'note':true
-          'active':true
-        })*/
-
-    function transform(e){
-      console.log(e.target.checked)
-      setSetting$({path:"annotations.show",value:e.target.checked})
-    }
-    let annotationTypes = [
-      "note",
-      "thickness",
-      "distance"
-    ]
-    let annotations = (
-      <span className="annotations">
-        <button onClick={toggleNote$} className="note" disabled={false}> Note </button>
-        <button onClick={toggleThicknessAnnot$} className="thickness" disabled={false}> thickness </button>
-        <button onClick={toggleDistanceAnnot$} className="distance" disabled={false}> Distance </button>
-        <button onClick={toggleDiameterAnnot$} className="diameter" disabled={false}> Diameter </button>
-        <button onClick={toggleAngleAnnot$} className="angle" disabled={true}> Angle </button>
-
-        <span>Show annotations</span>
-        <input type="checkbox" defaultChecked ={false} 
-          checked={this.props.settings.annotations.show} 
-          onChange={ transform }/>
-      </span>
-    )
-
-    let commonElements = null
-    /*commonElements = (
-      <span className="otherStuff">
-        <button onClick={this.handleClick.bind(this)} className="options" disabled={true}> options </button>
-      </span>
     )*/
-
-    let editorElements = null
-    if(this.props.mode !== "viewer"){
-
-      editorElements = (
-        <span>
-
-        <h1>
-          <EditableItem 
-            data={this.props.design.name} 
-            changeCallback={ this.setDesignName } 
-            placeholder="untitled design"
-            ref="title" className="designName"/> 
-        </h1>
-        <span ref="title" className="appInfos"> {fullTitle} </span>
-        <span>
-          Active Tool : {this.props.activeTool}
-        </span>
-        <span>
-          <button onClick={this.toggleDesignCard.bind(this)} className="details"> Details </button>
-          <button onClick={newDesign$.bind(null,null)} className="new"> New design</button>
-        </span>
-
-        <span>
-          <span>AutoSave online(temp btn?)</span>
-          <input type="checkbox" checked={persistent} onChange={setDesignAsPersistent$.bind(null,null)}> </input>
-        </span>
-
-        <span className="history">
-          <button disabled={undosDisabled} onClick={undo$} className="undo"> Undo </button> 
-          <button disabled={redosDisabled} onClick={redo$} className="redo"> Redo </button> 
-        </span>
-
-        {social}
-
-      
-        {designCardWrapper}
-        
-        {tools}
-
-        {annotations}
-
-      </span>)
-    }
-
-    
-    return (
-      <div className="titleBar" style={titleStyle}>
-        {commonElements}
-        {editorElements}
-      </div>
-    )
-  }
-}
-
-export default MainToolBar
