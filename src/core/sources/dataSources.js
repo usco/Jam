@@ -1,7 +1,6 @@
 import Rx from 'rx'
 let Observable= Rx.Observable
 let merge = Rx.Observable.merge
-import {observableDragAndDrop} from '../../interactions/interactions'
 import {first,toggleCursor,getEntity,hasEntity,extractMeshTransforms, getExtension} from '../../utils/otherUtils'
 
 import {meshExtensions} from '../extensions'
@@ -14,12 +13,12 @@ function validMeshExtension(entry){
   return meshExtensions.indexOf(getExtension(entry)) > -1
 }
 
-
+/*
+@param dndSources$: observable of drag and drops
+@params urlSources: observable of url sources
+*/
 export function getDataSources ( dndSources$, urlSources ){
   //drag & drop sources
-  //let dndSources$ = observableDragAndDrop(container)
-  //other sources (url, localstorage)
-
   let dndMeshFiles$  = dndSources$.filter(e=>e.type ==="file").pluck("data").flatMap(Observable.fromArray)
     .filter(file => validMeshExtension(file.name) )
 
