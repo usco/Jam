@@ -81,6 +81,15 @@ function intent(interactions){
   let deleteAllEntities$  = contextMenuActions$.filter(e=>e.action === "deleteAll").pluck("selections")
   let duplicateEntities$  = contextMenuActions$.filter(e=>e.action === "duplicate").pluck("selections")
 
+
+  //for annotations, should this be here ?
+  //heavy code smell  too
+  let addNote$          = contextMenuActions$.filter(e=>e.action === "addNote").pluck("selections")
+  let measureDistance$  = contextMenuActions$.filter(e=>e.action === "measureDistance").pluck("selections")
+  let measureThickness$ = contextMenuActions$.filter(e=>e.action === "measureThickness").pluck("selections")
+  let measureAngle$     = contextMenuActions$.filter(e=>e.action === "measureAngle").pluck("selections")
+
+
   //we need to "shut down the context menu after any click inside of it"
   contextTaps$ = contextTaps$.merge(
     contextMenuActions$.map(undefined)
@@ -139,6 +148,7 @@ function settingsM(interactions){
   
   let autoSelectNewEntities$ = Rx.Observable.just(true) //TODO: make settable
   let webglEnabled$ = Rx.Observable.just(true)
+  let appMode$ = Rx.Observable.just("editor")
 
   return Rx.Observable.combineLatest(
     showGrid$,
@@ -146,21 +156,25 @@ function settingsM(interactions){
     showAnnot$,
     autoSelectNewEntities$,
     webglEnabled$,
-    function(showGrid$, autoRotate$, showAnnot$, autoSelectNewEntities, webglEnabled){
+    appMode$,
+    function(showGrid, autoRotate, showAnnot, autoSelectNewEntities, webglEnabled, appMode){
       return (
         {
           autoSelectNewEntities:autoSelectNewEntities,
+          mode:appMode,
+          webglEnabled:webglEnabled,
+
           camera:{
-            autoRotate:autoRotate$
+            autoRotate:autoRotate
           },
           grid:{
-            show:showGrid$
+            show:showGrid
           },
           annotations:{
-            show:showAnnot$
-          },
+            show:showAnnot
+          }
 
-          webglEnabled:webglEnabled
+         
         }
       )
     }
@@ -234,30 +248,22 @@ function App(interactions) {
     //.subscribe(data=>console.log("mesh data",data))
 
   let intents = intent(interactions)  
-
   let contextTaps$ = intents.contextTaps$
 
-  let deleteEntities$ = intents.deleteEntities$
-
-  let deleteAllEntities$ = intents.deleteAllEntities$
-    //.subscribe(x=>console.log("contextMenu delete all")) 
-
-  let duplicateEntities$ = intents.duplicateEntities$
-    //.subscribe(x=>console.log("contextMenu duplicate")) 
-
-  let entities = require("./core/entityModel")
+  let entities = require("./core/entities")
 
   intents = {
     createEntityInstance$:new Rx.Subject(),//createEntityInstance$,
     addEntities$: newInstFromTypes$,//addEntityInstances$,
 
     updateEntities$: intents.selectionTransforms$,//
-    deleteEntities$:deleteEntities$, 
-    duplicateEntities$: duplicateEntities$,  
-    deleteAllEntities$: deleteAllEntities$, 
+    deleteEntities$: intents.deleteEntities$,
+    duplicateEntities$: intents.duplicateEntities$,  
+    deleteAllEntities$: intents.deleteAllEntities$, 
     selectEntities$: intents.selections$,
 
     newDesign$: new Rx.Subject(), 
+    settings$:settings$
   }
   let entities$ = entities(intents)
 
@@ -373,13 +379,13 @@ function App(interactions) {
           {text:"Duplicate", action:"duplicate"},
           {text:"Delete",action:"delete"},
           {text:"DeleteAll",action:"deleteAll"},
-          /*{text:"annotations",items:[
-            {text:"Add note"},
-            {text:"Measure thickness"},
-            {text:"Measure Diameter"},
-            {text:"Measure Distance"},
+          {text:"annotations",items:[
+            {text:"Add note", action:"addNote"},
+            {text:"Measure thickness",action:"measureThickness"},
+            {text:"Measure Diameter",action:"measureDiameter"},
+            {text:"Measure Distance",action:"measureDistance"},
             {text:"Measure Angle"}
-          ]}*/
+          ]}
         ]
 
         function createContextmenuItems(){
@@ -389,7 +395,6 @@ function App(interactions) {
         let selections = items.selectedIds.map( id=>items.byId[id] )
 
         //contextTaps = undefined
-
 
         function appCriticalErrorDisplay(){
           return (
@@ -407,7 +412,22 @@ function App(interactions) {
         }
         
         function normalContent(activeTool,settings,items, visualMappings,selections,contextTaps){
-            return(
+          let elements = (
+            <div>
+              <GlView 
+              activeTool={activeTool} 
+              settings={settings}
+              items={items} 
+              visualMappings={visualMappings}
+              className="glview"/>
+
+              <SettingsView settings={settings} ></SettingsView>
+            </div>
+          )
+
+
+          if(settings.mode === "editor"){
+            elements =(
               <div>
                 <GlView 
                 activeTool={activeTool} 
@@ -415,18 +435,19 @@ function App(interactions) {
                 items={items} 
                 visualMappings={visualMappings}
                 className="glview"/>
-
+                
+                <SettingsView settings={settings} ></SettingsView>
 
                 <MainToolbar />
-                <SettingsView settings={settings} ></SettingsView>
                 <FullScreenToggler/> 
                 <EntityInfos entities={selections} settings={settings} />
                 <ContextMenu position={contextTaps} items={contextMenuItems} selections={selections}/>
-              </div>
+              </div>  
             )
+          }
+          return elements
         }
 
-        console.log("settings",settings)
         let jamInner = normalContent(activeTool,settings,items, visualMappings,selections,contextTaps)
         if(!settings.webglEnabled){
             jamInner = appCriticalErrorDisplay()
