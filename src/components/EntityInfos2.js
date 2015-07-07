@@ -13,6 +13,34 @@ import EditableItem from './EditableItem2'
 
  in doubt about change handler
  onChange={self.handleChange.bind(self,"pos",index)}
+
+
+ //this one is for absolute sizing
+ let absSizeInputs = []
+      if(entity.bbox){
+        let absSize = absSizeFromBBox(entity.bbox)
+        absSize = absSize || {w:0,l:0,h:0}
+        //convert to array to keep logic the same for all fields
+        absSize = [absSize.w,absSize.l,absSize.h]
+        absSize.forEach(function(entry, index){
+          let entry = formatNumberTo(entry, numberPrecision)
+          absSizeInputs.push(
+            <input type="number" 
+            value={entry} 
+            step={controlsStep}
+            style={styles.numbers} onChange={self.handleSizeChange.bind(self,index)}/>
+          )
+        })
+
+        absSizeInputs = (
+          <span>
+            <span>D:</span> {absSizeInputs}
+          </span>
+        )
+      }
+
+
+
 */
 function transformInputs(entity, fieldName, displayName, controlsStep, numberPrecision, changeHandler){
   let inputs = []

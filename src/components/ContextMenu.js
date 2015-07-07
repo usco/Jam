@@ -1,111 +1,114 @@
-import React from 'react';
+import Cycle from 'cycle-react'
+let React = Cycle.React
+let {Rx} = Cycle
+import Class from "classnames"
+let combineLatest =Rx.Observable.combineLatest
 
-//TODO: make entries configurable etc..hence "CONTEXT"
+import combineTemplate from 'rx.observable.combinetemplate'
+import {exists} from '../utils/obsUtils'
 
-export default class ContextMenu extends React.Component {
- 
- constructor(props) {
-    super(props);
-    this.state = {
-      active:false,
-      position:{
-        x:0,
-        y:0
-      },
-      //too specific???
-      selectedEntities:[],
-      actions:[]
-    }
-  }
 
-  componentWillReceiveProps(props){
+function ContextMenuItems(interactions,props){
+  let active$ = props.get('active').startWith(true)
+  let items$  = props.get('items').startWith([])
 
-    const DEFAULTS = {
-      active:false,
-      position:{x:0,y:0},
-      actions:[],
-      selectedEntities:[]
-    }
+  let vtree$ = 
+    combineLatest(
+      active$,
+      items$,
+      function(active,items){
 
-    if("settings" in props){
-      if(props.settings){
-        let state = Object.assign({}, this.state, props.settings);
-        this.setState(state);
+        let itemsEls = null
+        itemsEls = items.map(function(item){
+          let itemEl= null
+          if("items" in item){
+            let style = { "paddingLeft":"20px" }
+
+            itemEl = ( <span> 
+              {item.text} >
+                <ContextMenuItems items={item.items} active={true} style={style}/> 
+            </span> )
+          }else
+          {
+            itemEl = item.text
+          }
+          return(
+            <li className={ `menuEntries ${item.action}` } data-action={item.action}>
+            {itemEl}
+            </li>
+          )
+        })
+
+        if(active){
+          return (
+            <ul className="menuEntries">
+              {itemsEls}
+            </ul>
+          )
+        }
       }
-    }
+  )
+
+  return {
+    view: vtree$
   }
-
-  //TODO: replace with RXJS stuff
-  handleEntryClick(entryAction){
-    console.log("here",entryAction, this.state, this.state.selectedEntities);
-
-
-    //no good, that is not generic
-    let action = entryAction;//this.state.actions[entryName];
-    action(this.state.selectedEntities);
-
-
-    let self = this;
-    this.setState({active:false});//why does this not work ? set state conflict ?render from above at the same time?
-    setTimeout(function() {self.setState({active:false})}, 100);
-
-  }
-
-  renderMenuEntries(actions= [], level=0){
-    let self = this;
-    let entriesDom = [];
-
-    let offsetStyle = {
-     paddingLeft:`${level*20}px`
-    };
-
-    // {entry.items ? self.renderMenuEntries(entry.items, 1) : ''}
-
-    actions.map(function(entry){
-      entriesDom.push(
-        <li style={offsetStyle}> 
-          <button onClick={self.handleEntryClick.bind(self,entry.action)}> {entry.name} </button> 
-          {entry.items ? '>' : ''}
-         
-        </li>
-      )
-    });
-
-    return entriesDom;
-  }
-
-  render() {
-
-    let style = {
-      left: this.state.position.x,
-      top: this.state.position.y,
-      position: 'fixed',
-    };
-
-    let menuEntriesStyle = {
-      /*listStyle: 'none',
-      padding:'5px',
-      margin:'2px'*/
-    }
-    
-    let menuEntries = this.renderMenuEntries(this.state.actions);
-    let content  = undefined;
-
-    //console.log("draw contextMenu",style)
-
-    if(this.state && this.state.active){
-      content = (
-        <ul style={menuEntriesStyle} className="menuEntries">
-          {menuEntries}
-        </ul>
-      );
-    }
-
-    return (
-      <div className="contextMenu" style={style}>
-        {content}
-      </div>
-    );
-  }
-
 }
+
+let ContextMenuItems = Cycle.component('ContextMenuItems', ContextMenuItems)
+
+//fyi for now, we hardcode some of the ui 
+function ContextMenu(interactions, props) {
+
+  let active$     = props.get('active').startWith(false)
+  let position$   = props.get('position').startWith({x:0,y:0})
+  let selections$ = props.get('selections').filter(exists).startWith([])
+  let items$      = props.get('items').filter(exists).startWith([])
+
+  let actionSelected$ = interactions.get(".contextMenu .menuEntries", "click")
+    .map(e=>e.target.attributes["data-action"])
+    .filter(exists)
+    .map(d=>d.value)
+    .combineLatest(selections$,function(action, selections){
+      return {action,selections}
+    })
+
+  let vtree$ = 
+    combineLatest(
+      active$,
+      position$,
+      selections$,
+      items$,
+      function(active,position,selections,items){
+        //console.log("showing ContextMenu", position)
+        let content = null
+        if(position){
+
+          let style = {
+            left: position.x,
+            top:  position.y,
+            position: 'fixed'
+          }
+
+          content =(
+            <div className="contextMenu" style={style}>
+              <ContextMenuItems items={items} active={true} />
+            </div>
+          )
+        }
+
+        return content
+      }
+    )
+
+  return {
+    view: vtree$,
+    events: {
+      actionSelected$
+    }
+  }
+}
+
+
+
+let ContextMenu = Cycle.component('ContextMenu',ContextMenu)
+export default ContextMenu
