@@ -286,7 +286,6 @@ function GlView(interactions, props, self){
           else{
             return {}
           }
-        
         }
       )
   }
@@ -317,7 +316,7 @@ function GlView(interactions, props, self){
         //console.log("data",data, tool, selections)
         transformControls.detach()
 
-        if(tool && selections)
+        if(tool && selections && ["translate","rotate","scale"].indexOf(tool)>-1 )
         {
           transformControls.attach(selections)
           transformControls.setMode(tool)
