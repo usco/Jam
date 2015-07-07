@@ -9,7 +9,7 @@ import {exists} from '../utils/obsUtils'
 
 
 function ContextMenuItems(interactions,props){
-  let active$ = props.get('active').startWith(true)
+  let active$ = props.get('active').startWith(false)
   let items$  = props.get('items').startWith([])
 
   let vtree$ = 
@@ -21,18 +21,22 @@ function ContextMenuItems(interactions,props){
         let itemsEls = null
         itemsEls = items.map(function(item){
           let itemEl= null
-          if("items" in item){
+          if("items" in item)//do we have sub items
+          {
             let style = { "paddingLeft":"20px" }
 
-            itemEl = ( <span> 
-              {item.text} >
+            itemEl = ( 
+              <ul className="menuHeader"> {item.text} >
                 <ContextMenuItems items={item.items} active={true} style={style}/> 
-            </span> )
-          }else
+              </ul> 
+            )
+          }
+          else //no sub items
           {
             itemEl = item.text
           }
           return(
+            //for each item
             <li className={ `menuEntries ${item.action}` } data-action={item.action}>
             {itemEl}
             </li>
@@ -41,7 +45,7 @@ function ContextMenuItems(interactions,props){
 
         if(active){
           return (
-            <ul className="menuEntries">
+            <ul className={ Class({ "menuEntries": true, "menuHeader": items.length>0 }) } >
               {itemsEls}
             </ul>
           )

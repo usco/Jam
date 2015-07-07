@@ -23,6 +23,9 @@ import {exists} from './utils/obsUtils'
 import {hasEntity,hasNoEntity,getEntity} from './utils/entityUtils'
 import {getXY} from './utils/uiUtils'
 
+import {first,toggleCursor} from './utils/otherUtils'
+
+
 
 let pjson = require('../package.json')
 let appMetadata$ = Rx.Observable.just({
@@ -80,18 +83,11 @@ function intent(interactions){
   let deleteAllEntities$  = contextMenuActions$.filter(e=>e.action === "deleteAll").pluck("selections")
   let duplicateEntities$  = contextMenuActions$.filter(e=>e.action === "duplicate").pluck("selections")
 
-  //for annotations, should this be here ?
-  //heavy code smell  too
-  let addNote$          = contextMenuActions$.filter(e=>e.action === "addNote").pluck("selections")
-  let measureDistance$  = contextMenuActions$.filter(e=>e.action === "measureDistance").pluck("selections")
-  let measureThickness$ = contextMenuActions$.filter(e=>e.action === "measureThickness").pluck("selections")
-  let measureAngle$     = contextMenuActions$.filter(e=>e.action === "measureAngle").pluck("selections")
 
   //we need to "shut down the context menu after any click inside of it"
   contextTaps$ = contextTaps$.merge(
     contextMenuActions$.map(undefined)
   )
-
 
   return {
     selections$,
@@ -102,6 +98,26 @@ function intent(interactions){
     deleteEntities$,
     deleteAllEntities$,
     duplicateEntities$,
+
+    /*addNote$,
+    measureDistance$,
+    measureThickness$,
+    measureAngle$*/
+  }
+}
+
+function annotIntents(interactions){
+  let shortSingleTaps$ = interactions.get(".glview","shortSingleTaps$")
+  //shortSingleTaps$.pluck("detail").subscribe(e=>console.log("FUUU",e.detail.pickingInfos[0].object.userData))
+
+  let annotationCreationStep$ = shortSingleTaps$.pluck("detail")
+    .map( (event)=>event.detail.pickingInfos)
+    .filter( (pickingInfos)=>pickingInfos.length>0)
+    .map(first)
+    .share()  
+
+  return {
+    creationStep$ : annotationCreationStep$
   }
 }
 
@@ -120,11 +136,19 @@ function settingsM(interactions){
   let showAnnot$  = interactions.get(".settingsView .showAnnot", "change").map(checked).startWith(false)
   let autoRotate$ = interactions.get(".settingsView .autoRotate", "change").map(checked).startWith(false)
 
-  /*function foobar(fieldName){
-    return interactions.get(".settingsView "+fieldName, "change").map(event => event.target.checked).startWith(false)
-  }
-  let fieldNames = [".showGrid",".showAnnot",".autoRotate"]
-  fieldNames.map(foobar)*/
+  //for annotations, should this be here ?
+  //heavy code smell  too
+  let contextMenuActions$ = interactions.get(".contextMenu", "actionSelected$").pluck("detail")
+  let activeTool$       = Rx.Observable.merge(
+    contextMenuActions$.filter(e=>e.action === "addNote").pluck("action"),
+    contextMenuActions$.filter(e=>e.action === "measureDistance").pluck("action"),
+    contextMenuActions$.filter(e=>e.action === "measureThickness").pluck("action"),
+    contextMenuActions$.filter(e=>e.action === "measureAngle").pluck("action"),
+
+    contextMenuActions$.filter(e=>e.action === "translate").pluck("action"),
+    contextMenuActions$.filter(e=>e.action === "rotate").pluck("action"),
+    contextMenuActions$.filter(e=>e.action === "scale").pluck("action")
+  ).startWith(undefined)
 
   /*let bla$= combineTemplate(
     {
@@ -139,12 +163,9 @@ function settingsM(interactions){
       }
     }
   )
-
-  //bla$.subscribe(bla=>console.log("lkjfdsfsfsd",bla))*/
-  //return bla$
+  */
   let webglEnabled$          = Rx.Observable.just(true)
   let appMode$               = Rx.Observable.just("editor")
-  let activeTool$            = Rx.Observable.just("translate")
   let autoSelectNewEntities$ = Rx.Observable.just(true) //TODO: make settable
   
 
@@ -233,13 +254,11 @@ function App(interactions) {
 
   //get new instances from "types"
   let newInstFromTypes$ = entityInstanceFromPartTypes(partTypes$)
-
   let intents = intent(interactions)  
   let contextTaps$ = intents.contextTaps$
 
-  let entities = require("./core/entities")
-
-  intents = {
+  //entities
+  intent = {
     createEntityInstance$:new Rx.Subject(),//createEntityInstance$,
     addEntities$: newInstFromTypes$,//addEntityInstances$,
 
@@ -252,12 +271,28 @@ function App(interactions) {
     newDesign$: new Rx.Subject(), 
     settings$:settings$
   }
-  let entities$ = entities(intents)
 
-  //entities$
-  //  .subscribe(data=>console.log("mesh data",data))
+  let entities = require("./core/entities")
+  let entities$ = entities(intent)
+
+  //annotations
+  let aIntents = annotIntents(interactions)
+  intent = {
+    addAnnotations$: new Rx.Subject(), 
+
+    deleteAnnots$: intents.deleteEntities$,
+    duplicateEntities$: intents.duplicateEntities$,  
+    deleteAllEntities$: intents.deleteAllEntities$, 
+    selectEntities$: intents.selections$,
+
+    creationStep$:aIntents.creationStep$,
+    settings$:settings$
+  }
+  let annotations = require("./core/annotations")
+  let annotations$ = annotations(intent)
+
+
   //what is my visual for any given entity
-
   let otherData$ = partTypes$
     .zip(meshResources$,function(types, meshResource){
 
@@ -333,6 +368,14 @@ function App(interactions) {
           {text:"Duplicate", action:"duplicate"},
           {text:"Delete",action:"delete"},
           {text:"DeleteAll",action:"deleteAll"},
+
+           {text:"transforms",items:[
+            {text:"translate", action:"translate"},
+            {text:"rotate",action:"rotate"},
+            {text:"scale",action:"scale"}
+          ]},
+
+
           {text:"annotations",items:[
             {text:"Add note", action:"addNote"},
             {text:"Measure thickness",action:"measureThickness"},
@@ -345,7 +388,7 @@ function App(interactions) {
         function createContextmenuItems(){
         }
 
-        let selections = items.selectedIds.map( id=>items.byId[id] )
+        
 
         //contextTaps = undefined
         let settingsMeta = [
@@ -369,7 +412,8 @@ function App(interactions) {
           )
         }
         
-        function normalContent(settings,items, visualMappings,selections,contextTaps){
+        function normalContent(settings,items, visualMappings,contextTaps){
+          let selections = items.selectedIds.map( id=>items.byId[id] )
           let elements = (
             <div>
               <GlView 
@@ -381,7 +425,6 @@ function App(interactions) {
               <SettingsView settings={settings} ></SettingsView>
             </div>
           )
-
 
           if(settings.mode === "editor"){
             elements =(
@@ -404,7 +447,7 @@ function App(interactions) {
           return elements
         }
 
-        let jamInner = normalContent(settings,items, visualMappings,selections,contextTaps)
+        let jamInner = normalContent(settings,items, visualMappings, contextTaps)
         if(!settings.webglEnabled){
             jamInner = appCriticalErrorDisplay()
         }
