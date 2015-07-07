@@ -101,7 +101,7 @@ function makeModification$(intent){
     })
 
 
-  /*save a new entity instance*/
+  /*add a new entity instance*/
   let _addEntities$ = intent.addEntities$
     .map((nentities) => (entitiesData) => {
       log.info("adding entity instance(s)", nentities)
@@ -167,6 +167,9 @@ function makeModification$(intent){
     .map((remEntitites) => (entitiesData) => {
       log.info("removing entities ", remEntitites)
 
+      //alternative, using the currently selected entities ?
+      //entitiesData.
+
       //FIXME: not sure...., duplication of the above again
       let nEntities  =  entitiesData.instances
       let _tmp = remEntitites.map(entity=>entity.iuid)
@@ -194,10 +197,13 @@ function makeModification$(intent){
 
   /*create duplicates of given entities*/
   let _duplicateEntities$  = intent.duplicateEntities$
-    .map((sources) => (entitiesData) => {
+    //splice in settings
+    .combineLatest(intent.settings$,function(data,settings){
+      return {sources:data,settings}
+    })
+    .map(({sources,settings}) => (entitiesData) => {
       log.info("duplicating entity instances", sources)
       let dupes = []
-
 
       function duplicate(original){
         let doNotCopy = ["iuid","name"]
@@ -219,6 +225,10 @@ function makeModification$(intent){
       dupes = sources.map(duplicate)
 
       entitiesData.instances = entitiesData.instances.concat(dupes)
+
+      //set selections, if need be
+      if(settings.autoSelectNewEntities) selectEntities$( entitiesData.instances.map(i=>i.iuid) )
+
       return entitiesData
     })
 
