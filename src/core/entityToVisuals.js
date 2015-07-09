@@ -75,7 +75,10 @@ function returnBlockOutAndThenMesh(entry){
   //send the blockout
   subJ.onNext(blockout)
 
-  Rx.Observable.timer(getRandomInt(150, 4000), 100).map({output:"triangle",entry:JSON.stringify(entry)}).take(1)
+  Rx.Observable
+    .timer(getRandomInt(150, 4000), 100)//simulate a response taking a random amount of time
+    .map({output:"triangle",entry:JSON.stringify(entry)})
+    .take(1)
     .subscribe( data => subJ.onNext(data) )
 
   return subJ
@@ -107,7 +110,6 @@ export function entityToVisuals(){
 
   //remoteMeshVisualProvider$.subscribe(data => console.log("remoteMeshVisualProvider will deal with ",data))
   remoteMeshVisualProvider$.subscribe(data => console.log("remoteMeshVisualProvider will output ",data))
-
 
 
   //------------------------------//

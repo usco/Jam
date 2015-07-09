@@ -19,6 +19,10 @@ import {observableDragAndDrop} from './interactions/dragAndDrop'
 //temporary
 import {makeInternals, meshResources, entityInstanceFromPartTypes} from './core/tbd0'
 import {entityToVisuals, meshInjectPostProcess, applyEntityPropsToMesh} from './core/entityToVisuals'
+import {getVisual,createVisualMapper} from './core/entitiesToVisuals'
+
+
+
 import {exists} from './utils/obsUtils'
 import {hasEntity,hasNoEntity,getEntity} from './utils/entityUtils'
 import {getXY} from './utils/uiUtils'
@@ -52,6 +56,9 @@ function dataFromMesh(objTransform$){
     })
     .shareReplay(1)
 }
+
+
+
 
 function intent(interactions){
   let glviewInit$ = interactions.get(".glview","initialized$")
@@ -194,7 +201,6 @@ function settingsM(interactions){
           annotations:{
             show:showAnnot
           }
-
          
         }
       )
@@ -235,6 +241,26 @@ function sources(urlSources$, dndSources$){
 
 
 function App(interactions) {
+  let meshFoo = new Rx.Subject()
+
+  /*class Entity(){
+
+    constructor(){
+
+      this.incompleteBuffer = []
+    }
+  }*/
+
+  meshFoo.subscribe(
+    x=>console.log("step in streaming mesh")
+    ,e=>e
+    ,f=>console.log("done"))
+
+  meshFoo.onNext("some mesh data")
+  meshFoo.onCompleted("some mesh is done")
+  ////////
+
+
   let dragOvers$  = interactions.subject("dragover")
   let drops$      = interactions.subject("drop")  
   let dndSources$ = observableDragAndDrop(dragOvers$, drops$)  
@@ -297,7 +323,6 @@ function App(interactions) {
     .zip(meshResources$,function(types, meshResource){
 
       console.log("types",types,"meshResource",meshResource)
-
       return {
         typeUid:types.meshNameToPartTypeUId[meshResource.resource.name],
         mesh:meshResource.mesh,
@@ -324,6 +349,31 @@ function App(interactions) {
       })
     })
 
+
+  //test
+  /*entities$
+    .pluck("instances")*/
+
+  let getVisual2 = createVisualMapper()
+
+  Rx.Observable.from([
+    {typeUid:0,iuid:5,name:"PART1"},
+    {typeUid:0,iuid:2,name:"PART2"},
+    {typeUid:0,iuid:7,name:"PART3"},
+    {typeUid:1,iuid:10,name:"ANNOT3",deps:[5,2,7]}
+  ])
+    .map(getVisual2)
+    .subscribe(function(vO){
+
+      vO.subscribe(v2=>console.log("visuals",v2),e=>e,v3=>console.log("visuals done",v3))
+    })
+
+  /*visualMappings$ = visualMappings$.merge(
+    entities
+  )*/
+  annotations$.subscribe(e=>console.log("annotations",e))
+
+
   //Experimental: system describing available actions by entity "category"
   let lookupByEntityCategory ={
     "common":[
@@ -345,7 +395,6 @@ function App(interactions) {
     .combineLatest(
       entities$.pluck("selectedIds").filter(exists).filter(x=>x.length>0),
       function(taps,selectedIds){
-
         /*selectedIds.map(function(id){
           //HOW THE HELL DO I DO ANYTHING NOW ??
         })*/
@@ -375,7 +424,6 @@ function App(interactions) {
             {text:"scale",action:"scale"}
           ]},
 
-
           {text:"annotations",items:[
             {text:"Add note", action:"addNote"},
             {text:"Measure thickness",action:"measureThickness"},
@@ -387,15 +435,11 @@ function App(interactions) {
 
         function createContextmenuItems(){
         }
-
         
-
         //contextTaps = undefined
         let settingsMeta = [
           {type:"checkbox", label:"Show Grid", className:"showGrid"}
         ]
-
-
 
         function appCriticalErrorDisplay(){
           return (
@@ -419,6 +463,7 @@ function App(interactions) {
               <GlView 
               settings={settings}
               items={items} 
+              selections={selections}
               visualMappings={visualMappings}
               className="glview"/>
 
@@ -432,6 +477,7 @@ function App(interactions) {
                 <GlView 
                 settings={settings}
                 items={items} 
+                selections={selections}
                 visualMappings={visualMappings}
                 className="glview"/>
                 
