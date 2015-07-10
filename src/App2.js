@@ -350,17 +350,18 @@ function App(interactions) {
     })
 
 
+
   //test
   /*entities$
     .pluck("instances")*/
 
-  let getVisual2 = createVisualMapper()
+  let getVisual2 = createVisualMapper(partTypes$)
 
   Rx.Observable.from([
-    {typeUid:0,iuid:5,name:"PART1"},
-    {typeUid:0,iuid:2,name:"PART2"},
-    {typeUid:0,iuid:7,name:"PART3"},
-    {typeUid:1,iuid:10,name:"ANNOT3",deps:[5,2,7]}
+    {typeUid:"A0",iuid:5,name:"PART1",pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]},
+    {typeUid:"A0",iuid:2,name:"PART2",pos:[0,0,40],rot:[0,45,0],sca:[1,1,1]},
+    {typeUid:"A0",iuid:7,name:"PART3",pos:[10,-20,0],rot:[0,0,0],sca:[1,1,1]},
+    {typeUid:"A1",iuid:10,name:"ANNOT3",deps:[5,2,7],pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]}
   ])
     .map(getVisual2)
     .subscribe(function(vO){

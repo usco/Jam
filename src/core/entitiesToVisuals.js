@@ -3,45 +3,70 @@
 function getEntityByIuid(iuid){
   let entitiesByIuids =
   {
-    5:{typeUid:0,iuid:5,name:"PART1"},
-    10:{typeUid:1,iuid:10,name:"ANNOT3",deps:[5,2,7]},
+    5:{typeUid:"A0",iuid:5,name:"PART1",pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]},
+    2: {typeUid:"A0",iuid:2,name:"PART2",pos:[0,0,40],rot:[0,45,0],sca:[1,1,1]},
+    7: {typeUid:"A0",iuid:7,name:"PART3",pos:[10,-20,0],rot:[0,0,0],sca:[1,1,1]},
 
-    2:{typeUid:0,iuid:2,name:"PART2"},
-    7:{typeUid:0,iuid:7,name:"PART3"},
+
+    10:{typeUid:"A1",iuid:10,name:"ANNOT3",deps:[5,2,7],                     pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]},
+    11:{typeUid:"A2",iuid:11,name:"Note ANNOT",value:"some text", deps:[2],  pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]},
   }
 
   return entitiesByIuids[iuid]
 }
 
-function remoteMeshVisualProvider(entity, subJ, getVisual){
-  //console.log("return mesh")
-  let typeUidToTemplateMesh = {}
-  
-  /*if(!typeUidToTemplateMesh)
-  {
-    let mesh = types.typeUidToTemplateMesh[entity.typeUid].clone() 
-  }
-  let mesh = types.typeUidToTemplateMesh[entity.typeUid].clone() 
-  mesh = meshInjectPostProcess(mesh)
-  subJ.onNext("in progress mesh for "+entity.name)*/
 
-  subJ.onNext("in progress mesh for "+entity.name)
+  
+//mesh insertion post process
+export function meshInjectPostProcess( mesh ){
+  //FIXME: not sure about these, they are used for selection levels
+  mesh.selectable      = true
+  mesh.selectTrickleUp = false
+  mesh.transformable   = true
+  //FIXME: not sure, these are very specific for visuals
+  mesh.castShadow      = true
+  //mesh.receiveShadow = true
+  return mesh
+}
+
+export function applyEntityPropsToMesh( inputs ){
+  let {entity, mesh} = inputs
+  mesh.userData.entity = entity//FIXME : should we have this sort of backlink ?
+  //FIXME/ make a list of all operations needed to be applied on part meshes
+  //computeObject3DBoundingSphere( meshInstance, true )
+  //centerMesh( meshInstance ) //FIXME do not use the "global" centerMesh
+  mesh.position.fromArray( entity.pos )
+  mesh.rotation.fromArray( entity.rot )
+  mesh.scale.fromArray(  entity.sca )
+  mesh.material.color.set( entity.color )
+  return mesh
+}
+
+
+function remoteMeshVisualProvider(entity, subJ, getVisual, types$){
+  //console.log("return mesh")
+  types$.subscribe(
+    function(types){
+      //console.log("TYPES",types)
+      let mesh = types.typeUidToTemplateMesh[entity.typeUid]
+      if(mesh){
+        mesh = mesh.clone()
+        mesh = meshInjectPostProcess(mesh)
+        mesh = applyEntityPropsToMesh({entity,mesh})
+        subJ.onNext(mesh)
+      }
+    },e=>console.error(e))
   //subJ.onCompleted("mesh completed")
 }
 
+/*this one is used for "static"/pre determined visuals, like for annotations*/
 function staticVisualProvider(entity, subJ, getVisual){
-  //console.log("staticVisualProvider",entity,subJ)
+  console.log("staticVisualProvider",entity,subJ)
 
   let observables = entity.deps
     .map(getEntityByIuid)
     .map(getVisual)
-
-    //.map( d=> Rx.Observable.just(d) ) 
-
-  /*console.log("observables",observables)
-  observables[0].subscribe(e=>console.log("first observable"))
-  observables[1].subscribe(e=>console.log("second observable"))
-  observables[2].subscribe(e=>console.log("third observable"))*/
+    .map(s=>s.take(1))//only need one, also, otherwise, forkjoin will not fire
 
 
   Rx.Observable.forkJoin( observables )    
@@ -56,7 +81,7 @@ function staticVisualProvider(entity, subJ, getVisual){
 
 
 //wrapper function
-export function createVisualMapper(types){
+export function createVisualMapper(types$){
 
   //ugh !! this is needed to be OUTSIDE the scope of "getVisual" otherwise, each call returns a new instance
   //of the cache : ie NO CACHE
@@ -66,30 +91,30 @@ export function createVisualMapper(types){
   function getVisual2(entity){
     console.log("getting visual")
     
+    //now each resolver that it applies to needs to fire "onNext on this subject"
     let subJ = new Rx.ReplaySubject()
 
     let {iuid, typeUid} = entity
-    //now each resolver that it applies to needs to fire "onNext on this subject"
-
+   
     //what we want as "user" is a refined, updated result
     //note: is this always the case or only with geometry?
     function mod(mesh){
       console.log("oh great a mesh to change")
-      return mesh //applyEntityPropsToMesh({entity,mesh})
+      return mesh
     }
 
     function cache(mesh){
       //needed ?
       if(!iuidToMesh[iuid]){
-        console.log("caching mesh",mesh)
+        console.log("caching mesh",mesh, "total cache",iuidToMesh)
         iuidToMesh[entity.iuid] = mesh
       }
     }
 
     if(!iuidToMesh[iuid]){
       //entity.filter(e=> types.indexOf(x.type) > -1 )
-      if(entity.typeUid === 0) remoteMeshVisualProvider(entity,subJ, getVisual2)
-      if(entity.typeUid === 1) staticVisualProvider(entity,subJ, getVisual2)    
+      if(entity.typeUid === "A0") remoteMeshVisualProvider(entity,subJ, getVisual2,types$)
+      if(entity.typeUid === "A1") staticVisualProvider(entity,subJ, getVisual2)    
     }else{
       console.log("reusing mesh from cache by iuid",iuid)
       subJ.onNext(iuidToMesh[iuid])
@@ -103,24 +128,31 @@ export function createVisualMapper(types){
 
 
 /*
-//for "remote/dynamic visuals"
-  function remoteMeshVisualProvider(entity, types){
-    let {iuid, typeUid} = entity
+function makeNoteVisual(){
+  console.log("note annot",entry)
 
-    if(!iuidToMesh[iuid])
-    {
-     
-      let mesh = types.typeUidToTemplateMesh[entity.typeUid].clone() 
-      mesh = meshInjectPostProcess(mesh)
-      
-      iuidToMesh[typeUid] = mesh
-    }else{
-      mesh = iuidToMesh[typeUid]
-    }
+  let point = entry.target.point
+  let entity = data.filter(function(data){return data.iuid === entry.target.iuid})
+  entity = entity.pop()
 
-    mesh = applyEntityPropsToMesh({entity,mesh})
-  }
-*/
+  if(!entity) return
+  let mesh = __localCache[entity.iuid]
+  if(!mesh) return
+
+  //mesh.updateMatrix()
+  //mesh.updateMatrixWorld()
+  let pt = new THREE.Vector3().fromArray(point)//.add(mesh.position)
+  pt = mesh.localToWorld(pt)
+
+  let params = {
+    point:pt,
+    object:mesh}
+  params = Object.assign(params,annotStyle)
+  
+  visual = new annotations.NoteVisual(params)
+
+}*/
+
 //annotations require 1...n preloaded meshes
 //how about sorting them by required meshes?
 //alt: promises
