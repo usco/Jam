@@ -9,7 +9,9 @@ function getEntityByIuid(iuid){
 
 
     10:{typeUid:"A1",iuid:10,name:"ANNOT3",deps:[5,2,7],                     pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]},
-    11:{typeUid:"A2",iuid:11,name:"Note ANNOT",value:"some text", deps:[2],  pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]},
+    11:{typeUid:"A2",iuid:11,name:"Note ANNOT",value:"some text", deps:[2],  pos:[0,0,0],rot:[0,0,0],sca:[1,1,1],
+      target:{point:[10,5,0],iuid:2}
+    },
   }
 
   return entitiesByIuids[iuid]
@@ -43,6 +45,18 @@ export function applyEntityPropsToMesh( inputs ){
 }
 
 
+function meshesFromDeps(deps, getVisual){
+  let observables = deps//entity.deps
+    .map(getEntityByIuid)
+    .map(getVisual)
+    .map(s=>s.take(1))//only need one, also, otherwise, forkjoin will not fire
+
+  return Rx.Observable.forkJoin( observables )    
+    //.subscribe(function(vO){
+}
+
+
+/*provides visual mapping to "arbitrary" 3d meshes*/
 function remoteMeshVisualProvider(entity, subJ, getVisual, types$){
   //console.log("return mesh")
   types$.subscribe(
@@ -63,14 +77,7 @@ function remoteMeshVisualProvider(entity, subJ, getVisual, types$){
 function staticVisualProvider(entity, subJ, getVisual){
   console.log("staticVisualProvider",entity,subJ)
 
-  let observables = entity.deps
-    .map(getEntityByIuid)
-    .map(getVisual)
-    .map(s=>s.take(1))//only need one, also, otherwise, forkjoin will not fire
-
-
-  Rx.Observable.forkJoin( observables )    
-    
+  meshesFromDeps(entity.deps, getVisual)
     .subscribe(function(vO){
       console.log("parallel observables result",vO)
       //vO.subscribe(function(depMesh){
@@ -127,18 +134,23 @@ export function createVisualMapper(types$){
 }
 
 
-/*
-function makeNoteVisual(){
+function makeNoteVisual(entry, entity){
+  let annotStyle = {
+    crossColor:"#000",
+    textColor:"#000",
+    lineColor:"#000",
+    arrowColor:"#000",
+    lineWidth:2.2,
+    highlightColor: "#60C4F8",//"#00F",
+    fontFace:"Open Sans"
+  }
+
   console.log("note annot",entry)
 
   let point = entry.target.point
-  let entity = data.filter(function(data){return data.iuid === entry.target.iuid})
-  entity = entity.pop()
+  let deps = [entry.target.iuid]
 
-  if(!entity) return
-  let mesh = __localCache[entity.iuid]
-  if(!mesh) return
-
+  
   //mesh.updateMatrix()
   //mesh.updateMatrixWorld()
   let pt = new THREE.Vector3().fromArray(point)//.add(mesh.position)
@@ -151,7 +163,8 @@ function makeNoteVisual(){
   
   visual = new annotations.NoteVisual(params)
 
-}*/
+}
+
 
 //annotations require 1...n preloaded meshes
 //how about sorting them by required meshes?
