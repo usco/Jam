@@ -361,7 +361,28 @@ function App(interactions) {
     {typeUid:"A0",iuid:5,name:"PART1",pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]},
     {typeUid:"A0",iuid:2,name:"PART2",pos:[0,0,40],rot:[0,45,0],sca:[1,1,1]},
     {typeUid:"A0",iuid:7,name:"PART3",pos:[10,-20,0],rot:[0,0,0],sca:[1,1,1]},
-    {typeUid:"A1",iuid:10,name:"ANNOT3",deps:[5,2,7],pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]}
+    
+    //{typeUid:"A1",iuid:10,name:"ANNOT3",deps:[5,2,7],pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]},
+
+    {typeUid:"A1",iuid:11,name:"Note ANNOT",value:"some text",
+      pos:[0,0,0],rot:[0,0,0],sca:[1,1,1],
+      target:{point:[10,5,0],iuid:2}
+    },
+    {typeUid:"A2",iuid:12,name:"thickness ANNOT",value:150.45,
+      pos:[0,0,0],rot:[0,0,0],sca:[1,1,1],
+      target:{entryPoint:[10,5,0], exitPoint:[0,-7.2,19],iuid:5}
+    },
+    {typeUid:"A3",iuid:13,name:"Diameter ANNOT",value:34.09,
+      pos:[0,0,0],rot:[0,0,0],sca:[1,1,1],
+      target:{point:[10,5,0],normal:[1,0,0],iuid:7}
+    },
+    {typeUid:"A4",iuid:14,name:"distance ANNOT",value:56.22,
+      pos:[0,0,0],rot:[0,0,0],sca:[1,1,1],
+      target:{
+        start:{point:[10,5,0],iuid:2}, 
+        end:{point:[0,-7.2,19],iuid:5}
+      }
+    }
   ])
     .map(getVisual2)
     .subscribe(function(vO){

@@ -1,3 +1,7 @@
+import helpers from 'glView-helpers'
+let annotations = helpers.annotations
+import THREE from 'three'
+
 
 //required "semi hack"
 function getEntityByIuid(iuid){
@@ -62,9 +66,10 @@ function remoteMeshVisualProvider(entity, subJ, getVisual, types$){
   types$.subscribe(
     function(types){
       //console.log("TYPES",types)
-      let mesh = types.typeUidToTemplateMesh[entity.typeUid]
-      if(mesh){
-        mesh = mesh.clone()
+      let originalMesh = types.typeUidToTemplateMesh[entity.typeUid]
+      if(originalMesh){
+        let mesh = originalMesh.clone()
+        mesh.boundingBox = originalMesh.boundingBox //because clone() does not clone custom attributes
         mesh = meshInjectPostProcess(mesh)
         mesh = applyEntityPropsToMesh({entity,mesh})
         subJ.onNext(mesh)
@@ -79,10 +84,7 @@ function staticVisualProvider(entity, subJ, getVisual){
 
   meshesFromDeps(entity.deps, getVisual)
     .subscribe(function(vO){
-      console.log("parallel observables result",vO)
-      //vO.subscribe(function(depMesh){
-        subJ.onNext("in progress static for "+entity.name+" based on "+entity.deps)
-      //}) 
+      subJ.onNext("in progress static for "+entity.name+" based on "+entity.deps)
     },e=>console.log("error",e),e=>console.log("DONE with observables"))
 }
 
@@ -121,20 +123,24 @@ export function createVisualMapper(types$){
     if(!iuidToMesh[iuid]){
       //entity.filter(e=> types.indexOf(x.type) > -1 )
       if(entity.typeUid === "A0") remoteMeshVisualProvider(entity,subJ, getVisual2,types$)
-      if(entity.typeUid === "A1") staticVisualProvider(entity,subJ, getVisual2)    
+      if(entity.typeUid === "A1") noteVisualProvider(entity, subJ, getVisual2) 
+      if(entity.typeUid === "A2") thicknessVisualProvider(entity, subJ, getVisual2) 
+      if(entity.typeUid === "A3") diameterVisualProvider(entity, subJ, getVisual2) 
+      if(entity.typeUid === "A4") distanceVisualProvider(entity, subJ, getVisual2) 
     }else{
       console.log("reusing mesh from cache by iuid",iuid)
       subJ.onNext(iuidToMesh[iuid])
     }
 
-    return subJ.do(cache).map(mod)
+    return subJ.do(cache)//.map(mod)
   }
 
   return getVisual2
 }
 
 
-function makeNoteVisual(entry, entity){
+//annotations require 1...n preloaded meshes
+
   let annotStyle = {
     crossColor:"#000",
     textColor:"#000",
@@ -145,169 +151,114 @@ function makeNoteVisual(entry, entity){
     fontFace:"Open Sans"
   }
 
-  console.log("note annot",entry)
+function noteVisualProvider(entity, subJ, getVisual){
+  console.log("note annot",entity)
+  let point = entity.target.point
+  let deps = [entity.target.iuid]
 
-  let point = entry.target.point
-  let deps = [entry.target.iuid]
+  function visual(mesh){
+    //mesh.updateMatrix()
+    //mesh.updateMatrixWorld()
+    let pt = new THREE.Vector3().fromArray(point)//.add(mesh.position)
+    pt = mesh.localToWorld(pt)
 
-  
-  //mesh.updateMatrix()
-  //mesh.updateMatrixWorld()
-  let pt = new THREE.Vector3().fromArray(point)//.add(mesh.position)
-  pt = mesh.localToWorld(pt)
+    let params = {
+      point:pt,
+      object:mesh}
+    params = Object.assign(params,annotStyle)
 
-  let params = {
-    point:pt,
-    object:mesh}
-  params = Object.assign(params,annotStyle)
-  
-  visual = new annotations.NoteVisual(params)
+    return new annotations.NoteVisual(params)
+  }
 
+  meshesFromDeps(deps, getVisual)
+    .subscribe(function(data){
+      subJ.onNext(visual(data[0]))
+    })
 }
 
-
-//annotations require 1...n preloaded meshes
-//how about sorting them by required meshes?
-//alt: promises
-
-/*
- //for annotations, overlays etc
-  function annotationVisualProvider(entity)
-  {
-    //console.log("drawing metadata",data)
-    let annotStyle = {
-      crossColor:"#000",
-      textColor:"#000",
-      lineColor:"#000",
-      arrowColor:"#000",
-      lineWidth:2.2,
-      highlightColor: "#60C4F8",//"#00F",
-      fontFace:"Open Sans"
-    }
-
-    let visual = undefined
-    if(entry.typeUid === "0"){
-      console.log("note annot",entry)
-
-      let point = entry.target.point
-      let entity = data.filter(function(data){return data.iuid === entry.target.iuid})
-      entity = entity.pop()
-
-      if(!entity) return
-      let mesh = __localCache[entity.iuid]
-      if(!mesh) return
-
-      //mesh.updateMatrix()
-      //mesh.updateMatrixWorld()
-      let pt = new THREE.Vector3().fromArray(point)//.add(mesh.position)
-      pt = mesh.localToWorld(pt)
-
-      let params = {
-        point:pt,
-        object:mesh}
-      params = Object.assign(params,annotStyle)
-      
-      visual = new annotations.NoteVisual(params)
-    }
-
-    if(entry.typeUid === "1"){
-      //Thickness
-      let entity = data.filter(function(data){return data.iuid === entry.target.iuid})
-      entity = entity.pop()
-
-      if(!entity) return
-      let mesh = __localCache[entity.iuid]
-      if(!mesh) return
-
-      let entryPoint = entry.target.entryPoint
-      let exitPoint  = entry.target.exitPoint
+function thicknessVisualProvider(entity, subJ, getVisual){
+  let deps = [entity.target.iuid]
+  let entryPoint = entity.target.entryPoint
+  let exitPoint  = entity.target.exitPoint
                     
-      entryPoint= new THREE.Vector3().fromArray(entryPoint)//.add(mesh.position)
-      exitPoint = new THREE.Vector3().fromArray(exitPoint)
+  function visual(mesh){
 
-      entryPoint = mesh.localToWorld(entryPoint)
-      exitPoint = mesh.localToWorld(exitPoint)
+    entryPoint= new THREE.Vector3().fromArray(entryPoint)
+    exitPoint = new THREE.Vector3().fromArray(exitPoint)
+    entryPoint = mesh.localToWorld(entryPoint)
+    exitPoint = mesh.localToWorld(exitPoint)
 
-      let params = {
-        entryPoint,
-        exitPoint,
-        object:mesh
-      }
-      params = Object.assign(params,annotStyle)
-      visual = new annotations.ThicknessVisual(params)
+    let params = {
+      entryPoint,
+      exitPoint,
+      object:mesh
     }
+    params = Object.assign(params,annotStyle)
+    return new annotations.ThicknessVisual(params)
+  }
 
-    if(entry.typeUid === "2"){
-      //distance
-      let start = entry.target.start
-      let startEntity = data.filter(function(data){return data.iuid === start.iuid})
-      startEntity = startEntity.pop()
+  meshesFromDeps(deps, getVisual)
+    .subscribe(function(data){
+      subJ.onNext(visual(data[0]))
+    })
+}
 
-      let end = entry.target.end
-      let endEntity = data.filter(function(data){return data.iuid === end.iuid})
-      endEntity = endEntity.pop()
+function distanceVisualProvider(entity, subJ, getVisual){
+  let start = entity.target.start
+  let end = entity.target.end
 
-      if(!startEntity || !endEntity) return
+  let deps = [start.iuid, end.iuid]
 
-      let startMesh = __localCache[startEntity.iuid]
-      let endMesh   = __localCache[endEntity.iuid]
-      if( startMesh && endMesh ){
-        let startPt = new THREE.Vector3().fromArray(start.point)
-        let endPt   = new THREE.Vector3().fromArray(end.point)
+  function visual(startMesh, endMesh){
+    let startPt = new THREE.Vector3().fromArray(start.point)
+    let endPt   = new THREE.Vector3().fromArray(end.point)
+    startMesh.localToWorld(startPt)
+    endMesh.localToWorld(endPt)
+    //startMesh.worldToLocal(startPt)
+    //endMesh.worldToLocal(endPt)
+
+    let params = {
+      start:startPt,
+      startObject:startMesh,
+      end: endPt,
+      endObject: endMesh
+    }
+    params = Object.assign(params, annotStyle)
+
+    return new annotations.DistanceVisual(params)
+  }
         
-        startMesh.localToWorld(startPt)
-        endMesh.localToWorld(endPt)
-        //startMesh.worldToLocal(startPt)
-        //endMesh.worldToLocal(endPt)
+  meshesFromDeps(deps, getVisual)
+    .subscribe(function(data){
+      subJ.onNext(visual(data[0],data[1]))
+    })
+}
 
-        let params = {
-          start:startPt,
-          startObject:startMesh,
-          end: endPt,
-          endObject: endMesh
-        }
-        params = Object.assign(params, annotStyle)
+function diameterVisualProvider(entity, subJ, getVisual){
+  let point = entity.target.point
+  let normal = entity.target.normal
+  let diameter = entity.value
+  let deps = [entity.target.iuid]
+  
+  function visual(mesh){
+    point    = new THREE.Vector3().fromArray(point)
+    normal   = new THREE.Vector3().fromArray(normal)
+    //mesh.updateMatrix()
+    //mesh.updateMatrixWorld()
+    point = mesh.localToWorld(point)
 
-        visual = new annotations.DistanceVisual(params)
-      }            
-    }
-
-    if(entry.typeUid === "3"){
-      //diameter
-      console.log("diameter annot",entry)
-
-      let point = entry.target.point
-      let entity = data.filter(function(data){return data.iuid === entry.target.iuid})
-      entity = entity.pop()
-
-      if(!entity) return
-      let mesh = __localCache[entity.iuid]
-      if(!mesh) return
-
-      //mesh.updateMatrix()
-      //mesh.updateMatrixWorld()
-      point        = new THREE.Vector3().fromArray(point)
-      let normal   = new THREE.Vector3().fromArray(entry.target.normal)
-      let diameter = entry.value
-     
-      if(!entity) return
-
-      point = mesh.localToWorld(point)
-
-      let params = {
+    let params = {
          center:point,
          diameter,
          orientation:normal
       }
-      params = Object.assign(params,annotStyle)
+    params = Object.assign(params,annotStyle)
 
-      visual = new annotations.DiameterVisual(params)
-  
-    }
-
-    if(visual){
-      visual.userData.entity = entry
-      dynamicInjector.add( visual )
-    }
-      return visual
-  })*/
+    return new annotations.DiameterVisual(params)
+  }
+     
+  meshesFromDeps(deps, getVisual)
+    .subscribe(function(data){
+      subJ.onNext(visual(data[0]))
+    })
+}
