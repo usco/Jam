@@ -39,8 +39,6 @@ export function applyEntityPropsToMesh( inputs ){
   let {entity, mesh} = inputs
   mesh.userData.entity = entity//FIXME : should we have this sort of backlink ?
   //FIXME/ make a list of all operations needed to be applied on part meshes
-  //computeObject3DBoundingSphere( meshInstance, true )
-  //centerMesh( meshInstance ) //FIXME do not use the "global" centerMesh
   mesh.position.fromArray( entity.pos )
   mesh.rotation.fromArray( entity.rot )
   mesh.scale.fromArray(  entity.sca )
@@ -69,7 +67,12 @@ function remoteMeshVisualProvider(entity, subJ, getVisual, types$){
       let originalMesh = types.typeUidToTemplateMesh[entity.typeUid]
       if(originalMesh){
         let mesh = originalMesh.clone()
+        let material = originalMesh.material.clone()
+
         mesh.boundingBox = originalMesh.boundingBox //because clone() does not clone custom attributes
+        mesh.boundingSphere = originalMesh.boundingSphere
+        mesh.material = material
+
         mesh = meshInjectPostProcess(mesh)
         mesh = applyEntityPropsToMesh({entity,mesh})
         subJ.onNext(mesh)
@@ -129,7 +132,9 @@ export function createVisualMapper(types$){
       if(entity.typeUid === "A4") distanceVisualProvider(entity, subJ, getVisual2) 
     }else{
       console.log("reusing mesh from cache by iuid",iuid)
-      subJ.onNext(iuidToMesh[iuid])
+      let mesh = iuidToMesh[iuid]
+      mesh = applyEntityPropsToMesh({entity,mesh})
+      subJ.onNext(mesh)
     }
 
     return subJ.do(cache)//.map(mod)
@@ -262,3 +267,37 @@ function diameterVisualProvider(entity, subJ, getVisual){
       subJ.onNext(visual(data[0]))
     })
 }
+
+/*for testing*/
+ /*let getVisual2 = createVisualMapper(partTypes$)
+
+  Rx.Observable.from([
+    {typeUid:"A0",iuid:5,name:"PART1",pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]},
+    {typeUid:"A0",iuid:2,name:"PART2",pos:[0,0,40],rot:[0,45,0],sca:[1,1,1]},
+    {typeUid:"A0",iuid:7,name:"PART3",pos:[10,-20,0],rot:[0,0,0],sca:[1,1,1]},
+    //{typeUid:"A1",iuid:10,name:"ANNOT3",deps:[5,2,7],pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]},
+    {typeUid:"A1",iuid:11,name:"Note ANNOT",value:"some text",
+      pos:[0,0,0],rot:[0,0,0],sca:[1,1,1],
+      target:{point:[10,5,0],iuid:2}
+    },
+    {typeUid:"A2",iuid:12,name:"thickness ANNOT",value:150.45,
+      pos:[0,0,0],rot:[0,0,0],sca:[1,1,1],
+      target:{entryPoint:[10,5,0], exitPoint:[0,-7.2,19],iuid:5}
+    },
+    {typeUid:"A3",iuid:13,name:"Diameter ANNOT",value:34.09,
+      pos:[0,0,0],rot:[0,0,0],sca:[1,1,1],
+      target:{point:[10,5,0],normal:[1,0,0],iuid:7}
+    },
+    {typeUid:"A4",iuid:14,name:"distance ANNOT",value:56.22,
+      pos:[0,0,0],rot:[0,0,0],sca:[1,1,1],
+      target:{
+        start:{point:[10,5,0],iuid:2}, 
+        end:{point:[0,-7.2,19],iuid:5}
+      }
+    }
+  ])
+    .map(getVisual2)
+    .subscribe(function(vO){
+
+      vO.subscribe(v2=>console.log("visuals",v2),e=>e,v3=>console.log("visuals done",v3))
+    })*/

@@ -79,6 +79,8 @@ function intent(interactions){
 
   let selections$ = interactions.get(".glview","selectedMeshes$")
     .pluck("detail")
+  //selections$.filter(hasEntity).subscribe(d=>console.log("selectedMeshes",d,d.userData.entity))
+  //selections$.filter(hasEntity).map(getEntity).subscribe(d=>console.log("selection",d))
 
   selections$ = Rx.Observable.merge(
     selections$.filter(hasEntity).map(getEntity).map(e=>e.iuid),
@@ -241,26 +243,6 @@ function sources(urlSources$, dndSources$){
 
 
 function App(interactions) {
-  let meshFoo = new Rx.Subject()
-
-  /*class Entity(){
-
-    constructor(){
-
-      this.incompleteBuffer = []
-    }
-  }*/
-
-  meshFoo.subscribe(
-    x=>console.log("step in streaming mesh")
-    ,e=>e
-    ,f=>console.log("done"))
-
-  meshFoo.onNext("some mesh data")
-  meshFoo.onCompleted("some mesh is done")
-  ////////
-
-
   let dragOvers$  = interactions.subject("dragover")
   let drops$      = interactions.subject("drop")  
   let dndSources$ = observableDragAndDrop(dragOvers$, drops$)  
@@ -335,66 +317,10 @@ function App(interactions) {
     },{})*/
   .subscribe(data=>console.log(" data",data))
 
-  let visualMappings$ = entities$
-    .pluck("instances")
-    .withLatestFrom(partTypes$,function(entries, types){
-
-      return entries.map(function(entity){
-        let mesh = types.typeUidToTemplateMesh[entity.typeUid].clone()
-        
-        mesh = meshInjectPostProcess(mesh)
-        mesh = applyEntityPropsToMesh({entity,mesh})
-
-        return mesh
-      })
-    })
-
-
-
-  //test
-  /*entities$
-    .pluck("instances")*/
-
   let getVisual2 = createVisualMapper(partTypes$)
 
-  Rx.Observable.from([
-    {typeUid:"A0",iuid:5,name:"PART1",pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]},
-    {typeUid:"A0",iuid:2,name:"PART2",pos:[0,0,40],rot:[0,45,0],sca:[1,1,1]},
-    {typeUid:"A0",iuid:7,name:"PART3",pos:[10,-20,0],rot:[0,0,0],sca:[1,1,1]},
-    
-    //{typeUid:"A1",iuid:10,name:"ANNOT3",deps:[5,2,7],pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]},
-
-    {typeUid:"A1",iuid:11,name:"Note ANNOT",value:"some text",
-      pos:[0,0,0],rot:[0,0,0],sca:[1,1,1],
-      target:{point:[10,5,0],iuid:2}
-    },
-    {typeUid:"A2",iuid:12,name:"thickness ANNOT",value:150.45,
-      pos:[0,0,0],rot:[0,0,0],sca:[1,1,1],
-      target:{entryPoint:[10,5,0], exitPoint:[0,-7.2,19],iuid:5}
-    },
-    {typeUid:"A3",iuid:13,name:"Diameter ANNOT",value:34.09,
-      pos:[0,0,0],rot:[0,0,0],sca:[1,1,1],
-      target:{point:[10,5,0],normal:[1,0,0],iuid:7}
-    },
-    {typeUid:"A4",iuid:14,name:"distance ANNOT",value:56.22,
-      pos:[0,0,0],rot:[0,0,0],sca:[1,1,1],
-      target:{
-        start:{point:[10,5,0],iuid:2}, 
-        end:{point:[0,-7.2,19],iuid:5}
-      }
-    }
-  ])
-    .map(getVisual2)
-    .subscribe(function(vO){
-
-      vO.subscribe(v2=>console.log("visuals",v2),e=>e,v3=>console.log("visuals done",v3))
-    })
-
-  /*visualMappings$ = visualMappings$.merge(
-    entities
-  )*/
   annotations$.subscribe(e=>console.log("annotations",e))
-
+  entities$.subscribe(e=>console.log("entities",e))
 
   //Experimental: system describing available actions by entity "category"
   let lookupByEntityCategory ={
@@ -430,10 +356,8 @@ function App(interactions) {
       appMetadata$,
       entities$,
       settings$,
-      visualMappings$,
       contextTaps$,
-      function(appMetadata, items, settings, visualMappings, contextTaps){
-
+      function(appMetadata, items, settings, contextTaps){
         //            
         let contextMenuItems = [
           {text:"Duplicate", action:"duplicate"},
@@ -445,7 +369,6 @@ function App(interactions) {
             {text:"rotate",action:"rotate"},
             {text:"scale",action:"scale"}
           ]},
-
           {text:"annotations",items:[
             {text:"Add note", action:"addNote"},
             {text:"Measure thickness",action:"measureThickness"},
@@ -478,15 +401,16 @@ function App(interactions) {
           )
         }
         
-        function normalContent(settings,items, visualMappings,contextTaps){
+        function normalContent(settings, items, contextTaps){
           let selections = items.selectedIds.map( id=>items.byId[id] )
+          console.log("selections",selections)
           let elements = (
             <div>
               <GlView 
               settings={settings}
-              items={items} 
+              items={items.instances} 
               selections={selections}
-              visualMappings={visualMappings}
+              visualMappings={getVisual2}
               className="glview"/>
 
               <SettingsView settings={settings} ></SettingsView>
@@ -498,9 +422,9 @@ function App(interactions) {
               <div>
                 <GlView 
                 settings={settings}
-                items={items} 
+                items={items.instances} 
                 selections={selections}
-                visualMappings={visualMappings}
+                visualMappings={getVisual2}
                 className="glview"/>
                 
                 <SettingsView settings={settings} ></SettingsView>
@@ -515,12 +439,11 @@ function App(interactions) {
           return elements
         }
 
-        let jamInner = normalContent(settings,items, visualMappings, contextTaps)
+        let jamInner = normalContent(settings, items, contextTaps)
         if(!settings.webglEnabled){
             jamInner = appCriticalErrorDisplay()
         }
         return (
-          
           <div className="jam" 
             onDragOver={interactions.subject('dragover').onEvent}
             onDrop={interactions.subject('drop').onEvent}>

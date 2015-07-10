@@ -33,7 +33,7 @@ let annotations = helpers.annotations
 let ZoomInOnObject= helpers.objectEffects.ZoomInOnObject
 
 import {selectionAt,meshFrom,isTransformTool,targetObject,
-  makeCamera, makeControls, makeLight
+  makeCamera, makeControls, makeLight, renderMeta
 } from './utils2'
 
 import {presets} from './presets' //default configuration for lighting, cameras etc
@@ -207,30 +207,61 @@ function GlView(interactions, props, self){
   //let reRender$ = Rx.Observable.just(0) //Rx.Observable.interval(16) //observable should be the merger of all observable that need to re-render the view?
 
   let settings$   = props.get('settings')//.startWith({camera:{autoRotate:false}})
-  let items$      = props.get('items').startWith([])
+  let items$      = props.get('items')//.startWith([])
   let selections$ = props.get('selections').startWith([]).filter(exists).distinctUntilChanged()
-  let visualMappings$ = props.get('visualMappings').startWith([])
+  let visualMappings$ = props.get('visualMappings')
   //every time either activeTool or selection changes, reset/update transform controls
 
   let activeTool$ = settings$.pluck("activeTool").startWith(undefined)
+
+  //selections$.subscribe(e=>console.log("selections",e))
 
   //debug only
   //settings$.subscribe(function(data){console.log("SETTINGS ",data)})
   //items$.subscribe(function(data){console.log("items ",data)})
   //activeTool$.subscribe((data)=>console.log("activeTool",data))
 
-   /*Rx.Observable.combineLatest(
-    items$.pluck("instances"),
-    visualMappings$,
-    function(instances,mappings){
+  //TODO: we need some diffing etc somewhere in here  
+  items$
+    .withLatestFrom( visualMappings$ ,function(items, mapper){
+      console.log("visualMappings",mapper, items)
+      if(scene){
+        if(scene.dynamicInjector){
+          scene.remove(scene.dynamicInjector)
+        }
+        let dynamicInjector = new THREE.Object3D()
+        scene.dynamicInjector = dynamicInjector
+        scene.add( dynamicInjector )
+      }
+      if(items){
+        let obs = items.map(mapper).map(s=>s.take(1))
+        Rx.Observable.forkJoin(obs).subscribe(function(meshes){
+          meshes.map(function(entry){
+            scene.dynamicInjector.add(entry)
+          })
+        })
+      }
+    })
+    .subscribe(e=>e)
 
-      console.log("trying to map instances to visuals")
-
-      return undefined
-    })*/
   /*visualMappings$
+    .do(function(){
+      scene.remove(scene.dynamicInjector)
+      let dynamicInjector = new THREE.Object3D()//all dynamic mapped objects reside here
+      scene.dynamicInjector = dynamicInjector
+      scene.add( dynamicInjector )
+    })
     .filter(exists)
-    .subscribe(data=>console.log("visualMappings 2",data))*/
+    .subscribe(function(data){
+
+      data.map(function(entry){
+        scene.dynamicInjector.add(entry)
+      })
+      console.log("meshCache",meshCache)
+    })
+  */
+
+ 
 
   let renderer = null
 
@@ -513,22 +544,7 @@ function GlView(interactions, props, self){
   //sorta hack ??
   scene.dynamicInjector = dynamicInjector
 
-  visualMappings$
-    .do(function(){
-      scene.remove(scene.dynamicInjector)
-      let dynamicInjector = new THREE.Object3D()//all dynamic mapped objects reside here
-      scene.dynamicInjector = dynamicInjector
-      scene.add( dynamicInjector )
-    })
-    .filter(exists)
-    .subscribe(function(data){
-
-      data.map(function(entry){
-        scene.dynamicInjector.add(entry)
-      })
-    })
-
-
+  
   let elapsed = 0
   //for now we use refs, but once in cycle, we should use virtual dom widgets & co
   let style = {width:"100%",height:"100%"}

@@ -121,7 +121,9 @@ function makeModification$(intent){
       
 
       //set selections, if need be
-      if(settings.autoSelectNewEntities) selectEntities$( entitiesData.instances.map(i=>i.iuid) )
+      if(settings.autoSelectNewEntities){
+        selectEntities$( entitiesData.instances.map(i=>i.iuid) )
+      }
 
       return entitiesData
     })
@@ -230,6 +232,11 @@ function makeModification$(intent){
       dupes = sources.map(duplicate)
 
       entitiesData.instances = entitiesData.instances.concat(dupes)
+
+      dupes.map(function(dupe){
+        entitiesData.byId[dupe.iuid] = dupe
+      })
+       
 
       //set selections, if need be
       if(settings.autoSelectNewEntities) selectEntities$( entitiesData.instances.map(i=>i.iuid) )
