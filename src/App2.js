@@ -317,7 +317,8 @@ function App(interactions) {
     },{})*/
   .subscribe(data=>console.log(" data",data))
 
-  let getVisual2 = createVisualMapper(partTypes$)
+
+  let {getVisual,addVisualProvider } = createVisualMapper(partTypes$, entities$)
 
   annotations$.subscribe(e=>console.log("annotations",e))
   entities$.subscribe(e=>console.log("entities",e))
@@ -410,7 +411,7 @@ function App(interactions) {
               settings={settings}
               items={items.instances} 
               selections={selections}
-              visualMappings={getVisual2}
+              visualMappings={getVisual}
               className="glview"/>
 
               <SettingsView settings={settings} ></SettingsView>
@@ -424,7 +425,7 @@ function App(interactions) {
                 settings={settings}
                 items={items.instances} 
                 selections={selections}
-                visualMappings={getVisual2}
+                visualMappings={getVisual}
                 className="glview"/>
                 
                 <SettingsView settings={settings} ></SettingsView>

@@ -2,27 +2,16 @@ import helpers from 'glView-helpers'
 let annotations = helpers.annotations
 import THREE from 'three'
 
-
-//required "semi hack"
-function getEntityByIuid(iuid){
-  let entitiesByIuids =
-  {
-    5:{typeUid:"A0",iuid:5,name:"PART1",pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]},
-    2: {typeUid:"A0",iuid:2,name:"PART2",pos:[0,0,40],rot:[0,45,0],sca:[1,1,1]},
-    7: {typeUid:"A0",iuid:7,name:"PART3",pos:[10,-20,0],rot:[0,0,0],sca:[1,1,1]},
-
-
-    10:{typeUid:"A1",iuid:10,name:"ANNOT3",deps:[5,2,7],                     pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]},
-    11:{typeUid:"A2",iuid:11,name:"Note ANNOT",value:"some text", deps:[2],  pos:[0,0,0],rot:[0,0,0],sca:[1,1,1],
-      target:{point:[10,5,0],iuid:2}
-    },
-  }
-
-  return entitiesByIuids[iuid]
+//method to filter the source data by types : types are arrays of typeUids
+export function obsByTypes(srcData, types){
+  return srcData
+    .flatMap(function(items){
+      //console.log("items",items)
+      return Rx.Observable.from(items)
+    })
+    .filter(x=> types.indexOf(x.type) > -1 )
 }
-
-
-  
+ 
 //mesh insertion post process
 export function meshInjectPostProcess( mesh ){
   //FIXME: not sure about these, they are used for selection levels
@@ -46,15 +35,28 @@ export function applyEntityPropsToMesh( inputs ){
   return mesh
 }
 
-
-function meshesFromDeps(deps, getVisual){
-  let observables = deps//entity.deps
+function meshesFromDeps(deps, getVisual, entities$){
+  /*let observables = deps
     .map(getEntityByIuid)
     .map(getVisual)
     .map(s=>s.take(1))//only need one, also, otherwise, forkjoin will not fire
+  //return Rx.Observable.forkJoin( observables )*/
 
-  return Rx.Observable.forkJoin( observables )    
-    //.subscribe(function(vO){
+  return Rx.Observable.just(null)//how can I not use this one ?
+    .combineLatest(entities$.pluck("byId"),function(x,byId){
+      //console.log("byId",byId,deps)
+      return deps
+        .map(d=>byId[d])
+        .filter(x=>x!==undefined)
+        .map(getVisual)
+        .map(s=>s.take(1))
+    })
+    .do(e=>console.log("got some data",e))
+    .flatMap(Rx.Observable.forkJoin)
+    .do(e=>console.log("got some data2",e))
+    //.subscribe(x=>console.log("deps",x))
+
+  
 }
 
 
@@ -93,19 +95,18 @@ function staticVisualProvider(entity, subJ, getVisual){
 
 
 //wrapper function
-export function createVisualMapper(types$){
+export function createVisualMapper(types$, entities$){
 
   //ugh !! this is needed to be OUTSIDE the scope of "getVisual" otherwise, each call returns a new instance
   //of the cache : ie NO CACHE
   let iuidToMesh = {}
   let typeUidToTemplateMesh = {}
 
-  function getVisual2(entity){
+  function getVisual(entity){
     console.log("getting visual")
     
-    //now each resolver that it applies to needs to fire "onNext on this subject"
+    //now each resolver  needs to fire "onNext on this subject"
     let subJ = new Rx.ReplaySubject()
-
     let {iuid, typeUid} = entity
    
     //what we want as "user" is a refined, updated result
@@ -116,20 +117,22 @@ export function createVisualMapper(types$){
     }
 
     function cache(mesh){
-      //needed ?
-      if(!iuidToMesh[iuid]){
+      if(!iuidToMesh[iuid]){//needed ?
         console.log("caching mesh",mesh, "total cache",iuidToMesh)
         iuidToMesh[entity.iuid] = mesh
       }
     }
 
     if(!iuidToMesh[iuid]){
-      //entity.filter(e=> types.indexOf(x.type) > -1 )
-      if(entity.typeUid === "A0") remoteMeshVisualProvider(entity,subJ, getVisual2,types$)
-      if(entity.typeUid === "A1") noteVisualProvider(entity, subJ, getVisual2) 
-      if(entity.typeUid === "A2") thicknessVisualProvider(entity, subJ, getVisual2) 
-      if(entity.typeUid === "A3") diameterVisualProvider(entity, subJ, getVisual2) 
-      if(entity.typeUid === "A4") distanceVisualProvider(entity, subJ, getVisual2) 
+      let entities = [entity]
+
+      //obsByTypes(entities,["A0"]).map()
+      if(entity.typeUid === "A0") remoteMeshVisualProvider(entity, subJ, getVisual, types$)
+      if(entity.typeUid === "A1") noteVisualProvider(entity, subJ, getVisual, entities$) 
+      if(entity.typeUid === "A2") thicknessVisualProvider(entity, subJ, getVisual, entities$) 
+      if(entity.typeUid === "A3") diameterVisualProvider(entity, subJ, getVisual, entities$) 
+      if(entity.typeUid === "A4") distanceVisualProvider(entity, subJ, getVisual, entities$) 
+
     }else{
       console.log("reusing mesh from cache by iuid",iuid)
       let mesh = iuidToMesh[iuid]
@@ -140,7 +143,12 @@ export function createVisualMapper(types$){
     return subJ.do(cache)//.map(mod)
   }
 
-  return getVisual2
+
+  function addVisualProvider(types,provider,postProcesses){
+
+  }
+
+  return {getVisual,addVisualProvider}
 }
 
 
@@ -156,7 +164,7 @@ export function createVisualMapper(types$){
     fontFace:"Open Sans"
   }
 
-function noteVisualProvider(entity, subJ, getVisual){
+function noteVisualProvider(entity, subJ, getVisual, entities$){
   console.log("note annot",entity)
   let point = entity.target.point
   let deps = [entity.target.iuid]
@@ -175,13 +183,13 @@ function noteVisualProvider(entity, subJ, getVisual){
     return new annotations.NoteVisual(params)
   }
 
-  meshesFromDeps(deps, getVisual)
+  meshesFromDeps(deps, getVisual, entities$)
     .subscribe(function(data){
       subJ.onNext(visual(data[0]))
     })
 }
 
-function thicknessVisualProvider(entity, subJ, getVisual){
+function thicknessVisualProvider(entity, subJ, getVisual, entities$){
   let deps = [entity.target.iuid]
   let entryPoint = entity.target.entryPoint
   let exitPoint  = entity.target.exitPoint
@@ -202,13 +210,13 @@ function thicknessVisualProvider(entity, subJ, getVisual){
     return new annotations.ThicknessVisual(params)
   }
 
-  meshesFromDeps(deps, getVisual)
+  meshesFromDeps(deps, getVisual, entities$)
     .subscribe(function(data){
       subJ.onNext(visual(data[0]))
     })
 }
 
-function distanceVisualProvider(entity, subJ, getVisual){
+function distanceVisualProvider(entity, subJ, getVisual, entities$){
   let start = entity.target.start
   let end = entity.target.end
 
@@ -233,13 +241,13 @@ function distanceVisualProvider(entity, subJ, getVisual){
     return new annotations.DistanceVisual(params)
   }
         
-  meshesFromDeps(deps, getVisual)
+  meshesFromDeps(deps, getVisual, entities$)
     .subscribe(function(data){
       subJ.onNext(visual(data[0],data[1]))
     })
 }
 
-function diameterVisualProvider(entity, subJ, getVisual){
+function diameterVisualProvider(entity, subJ, getVisual, entities$){
   let point = entity.target.point
   let normal = entity.target.normal
   let diameter = entity.value
@@ -262,14 +270,29 @@ function diameterVisualProvider(entity, subJ, getVisual){
     return new annotations.DiameterVisual(params)
   }
      
-  meshesFromDeps(deps, getVisual)
+  meshesFromDeps(deps, getVisual, entities$)
     .subscribe(function(data){
       subJ.onNext(visual(data[0]))
     })
 }
 
-/*for testing*/
- /*let getVisual2 = createVisualMapper(partTypes$)
+/*for testing
+let fakeEntities$= Rx.Observable.just({
+    byId:{
+        5:{typeUid:"A0",iuid:5,name:"PART1",pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]},
+        2: {typeUid:"A0",iuid:2,name:"PART2",pos:[0,0,40],rot:[0,45,0],sca:[1,1,1]},
+        7: {typeUid:"A0",iuid:7,name:"PART3",pos:[10,-20,0],rot:[0,0,0],sca:[1,1,1]},
+
+
+        10:{typeUid:"A1",iuid:10,name:"ANNOT3",deps:[5,2,7],                     pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]},
+        11:{typeUid:"A2",iuid:11,name:"Note ANNOT",value:"some text", deps:[2],  pos:[0,0,0],rot:[0,0,0],sca:[1,1,1],
+          target:{point:[10,5,0],iuid:2}
+        },
+      }
+    })
+    .shareReplay(1)
+  
+  let {getVisual,addVisualProvider } = createVisualMapper(partTypes$, fakeEntities$)
 
   Rx.Observable.from([
     {typeUid:"A0",iuid:5,name:"PART1",pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]},
@@ -296,8 +319,8 @@ function diameterVisualProvider(entity, subJ, getVisual){
       }
     }
   ])
-    .map(getVisual2)
+    .map(getVisual)
     .subscribe(function(vO){
-
       vO.subscribe(v2=>console.log("visuals",v2),e=>e,v3=>console.log("visuals done",v3))
-    })*/
+    })
+ */
