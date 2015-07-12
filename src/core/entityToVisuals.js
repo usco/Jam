@@ -9,7 +9,6 @@ import Rx from 'rx'
 bom changes => remoteMeshVisualProvider  
 ie: the user can change the visuals given by the remoteMeshVisualProvider via the bom
 
-
 */
 
 //lazy load visual representation for each instance, based on type

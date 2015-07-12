@@ -19,13 +19,6 @@ function MainToolbar(props,interactions){
     let mode = "editor"
     let design = {name:"foo"}
 
-    let annotationTypes = [
-      "note",
-      "thickness",
-      "distance",
-      "angle"
-    ]
-
     if(designCardVisible){
       designCardWrapper = (
       <div className="designCardWrapper fadesOut">
@@ -34,8 +27,18 @@ function MainToolbar(props,interactions){
     }
 
     let editorElements = null
-    let annotations = null
+    let annotations    = null
+    let tools          = null
+
     if(mode !== "viewer"){
+
+      let annotationTypes = [
+        "note",
+        "thickness",
+        "distance",
+        "angle"
+      ]
+
       annotations =  annotationTypes
         .map(type=>{
           return <button className={`add-${type}`} disabled={false}> {type} </button>
@@ -46,6 +49,24 @@ function MainToolbar(props,interactions){
          {annotations}
         </span>
       )
+
+      let toolTypes = [
+        "move",
+        "rotate",
+        "scale"
+      ]
+
+      tools =  toolTypes
+        .map(type=>{
+          return <button className={`${type}`} disabled={false}> {type} </button>
+        })
+
+      tools = (
+        <span className="tools">
+         {tools}
+        </span>
+      )
+
 
       editorElements = <span>
         <h1>
@@ -60,6 +81,7 @@ function MainToolbar(props,interactions){
     return (
       <div className="titleBar">
         {editorElements}
+        {tools}
         {annotations}
       </div>
     )

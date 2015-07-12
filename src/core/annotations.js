@@ -4,10 +4,6 @@ import {getEntryExitThickness,
   getDistanceFromStartEnd
 } from '../components/webgl/utils'
 
-/*import {addNote$, addThicknessAnnot$, addDistanceAnnot$, addDiameterAnnot$,
-toggleNote$,toggleThicknessAnnot$,toggleDistanceAnnot$, toggleDiameterAnnot$, toggleAngleAnnot$} from '../actions/annotActions'
-import {setActiveTool$,clearActiveTool$} from '../actions/appActions'*/
-
 import {first,toggleCursor} from '../utils/otherUtils'
 import {generateUUID} from 'usco-kernel2/src/utils'
 import {exists} from '../utils/obsUtils'
