@@ -222,28 +222,34 @@ function GlView(interactions, props, self){
 
   //TODO: we need some diffing etc somewhere in here  
   //ie : which were added , which were removed, which ones were changed
+  function clearScene(){
+    if(scene){
+      if(scene.dynamicInjector){
+        scene.remove(scene.dynamicInjector)
+      }
+      let dynamicInjector = new THREE.Object3D()
+      scene.dynamicInjector = dynamicInjector
+      scene.add( dynamicInjector )
+    }
+  }
+  function addMeshToScene(mesh){
+     scene.dynamicInjector.add(mesh)
+  }
+
   items$
     .withLatestFrom( visualMappings$ ,function(items, mapper){
       //console.log("visualMappings",mapper, items)
-      if(scene){
-        if(scene.dynamicInjector){
-          scene.remove(scene.dynamicInjector)
-        }
-        let dynamicInjector = new THREE.Object3D()
-        scene.dynamicInjector = dynamicInjector
-        scene.add( dynamicInjector )
-      }
-      if(items){
-        let obs = items.map(mapper).map(s=>s.take(1))
-        Rx.Observable.forkJoin(obs).subscribe(function(meshes){
-          meshes.map(function(entry){
-            scene.dynamicInjector.add(entry)
-          })
-        })
-      }
+      return items
+        .filter(exists)
+        .map(mapper)
+        .map(s=>s.take(1))
     })
-    .subscribe(e=>e)
-
+    .do(clearScene)
+    .flatMap(Rx.Observable.forkJoin)
+    .subscribe(function(meshes){
+      meshes.map(addMeshToScene)
+    })
+   
   /*let jsondiffpatch = require('jsondiffpatch').create({})
   items$
     .withLatestFrom( visualMappings$ ,function(items, mapper){
@@ -259,27 +265,6 @@ function GlView(interactions, props, self){
       }
     })
     .subscribe(e=>e)*/
-
-    
-
-  /*visualMappings$
-    .do(function(){
-      scene.remove(scene.dynamicInjector)
-      let dynamicInjector = new THREE.Object3D()//all dynamic mapped objects reside here
-      scene.dynamicInjector = dynamicInjector
-      scene.add( dynamicInjector )
-    })
-    .filter(exists)
-    .subscribe(function(data){
-
-      data.map(function(entry){
-        scene.dynamicInjector.add(entry)
-      })
-      console.log("meshCache",meshCache)
-    })
-  */
-
- 
 
   let renderer = null
 
