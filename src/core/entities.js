@@ -104,7 +104,7 @@ function makeModification$(intent){
   /*add a new entity instance*/
   let _addEntities$ = intent.addEntities$
     //splice in settings
-    .combineLatest(intent.settings$,function(data,settings){
+    .withLatestFrom(intent.settings$,function(data,settings){
       return {nentities:data,settings}
     })
     .map(({nentities,settings}) => (entitiesData) => {
@@ -205,7 +205,7 @@ function makeModification$(intent){
   /*create duplicates of given entities*/
   let _duplicateEntities$  = intent.duplicateEntities$
     //splice in settings
-    .combineLatest(intent.settings$,function(data,settings){
+    .withLatestFrom(intent.settings$,function(data,settings){
       return {sources:data,settings}
     })
     .map(({sources,settings}) => (entitiesData) => {
@@ -294,6 +294,8 @@ function makeModification$(intent){
 
 function model(intent, source) {
   let source$ = source || Observable.just(defaults)
+
+  intent.selectEntities$ = intent.selectEntities$.merge(selectEntities$)
 
   let modification$ = makeModification$(intent)
 
