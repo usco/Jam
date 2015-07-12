@@ -18,6 +18,8 @@ import {windowResizes,elementResizes} from '../../interactions/sizing'
 import Selector from './deps/Selector'
 import {getCoordsFromPosSizeRect} from './deps/Selector'
 import {preventDefault,isTextNotEmpty,formatData,exists} from '../../utils/obsUtils'
+import {toArray} from '../../utils/utils'
+
 
 import OrbitControls from './deps/OrbitControls'
 import CombinedCamera from './deps/CombinedCamera'
@@ -420,12 +422,6 @@ function GlView(interactions, props, self){
     maskScene.remove(oData.maskMesh)
   }
 
-  function toArray(data){
-    if(!data) return []
-    if(data.constructor !== Array) return [data]
-    return data
-  }
-
   function makeFx(){
     let fxByObject = {}
 
@@ -451,7 +447,6 @@ function GlView(interactions, props, self){
     //return typeof(obj)+obj.name
   }
 
-
   let jsondiffpatch = require('jsondiffpatch').create({objectHash:compareHash})
 
   function extractChanges(prev, cur){
@@ -475,10 +470,6 @@ function GlView(interactions, props, self){
 
     return result
   }
-
-
-  
-
 
   /*selections$
     .withLatestFrom( visualMappings$ ,function(selections, mapper){   
