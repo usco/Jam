@@ -214,17 +214,17 @@ function GlView(interactions, props, self){
 
   let activeTool$ = settings$.pluck("activeTool").startWith(undefined)
 
-  //selections$.subscribe(e=>console.log("selections",e))
-
   //debug only
   //settings$.subscribe(function(data){console.log("SETTINGS ",data)})
   //items$.subscribe(function(data){console.log("items ",data)})
   //activeTool$.subscribe((data)=>console.log("activeTool",data))
+  //selections$.subscribe((data)=>console.log("selections",data))
 
   //TODO: we need some diffing etc somewhere in here  
+  //ie : which were added , which were removed, which ones were changed
   items$
     .withLatestFrom( visualMappings$ ,function(items, mapper){
-      console.log("visualMappings",mapper, items)
+      //console.log("visualMappings",mapper, items)
       if(scene){
         if(scene.dynamicInjector){
           scene.remove(scene.dynamicInjector)
@@ -243,6 +243,24 @@ function GlView(interactions, props, self){
       }
     })
     .subscribe(e=>e)
+
+  /*let jsondiffpatch = require('jsondiffpatch').create({})
+  items$
+    .withLatestFrom( visualMappings$ ,function(items, mapper){
+      console.log("visualMappings diff test",mapper, items)
+     
+      if(items){
+        let obs = items.map(mapper).map(s=>s.take(1))
+        Rx.Observable.forkJoin(obs)
+          .bufferWithTimeOrCount(16,2)
+          .subscribe(function(meshes){
+            console.log("meshes",meshes)
+        })
+      }
+    })
+    .subscribe(e=>e)*/
+
+    
 
   /*visualMappings$
     .do(function(){
@@ -357,20 +375,7 @@ function GlView(interactions, props, self){
       ,(err)=>console.log("error in stuff",err)
     )
 
-  //for outlines, experimental
-  selections2$.subscribe(function(mesh){
-    console.log("woooh selections", mesh)
-    outScene.children = []
-    maskScene.children = []
-
-    if(mesh){
-      let oData = makeOutlineFx(mesh)
-      outScene.add( oData.outlineMesh )
-      maskScene.add( oData.maskMesh )
-    }
-    
-  })
-
+  
   let selectedMeshes$ = selections2$
 
   //zoom with double tap
@@ -412,6 +417,36 @@ function GlView(interactions, props, self){
 
   //reRender$.subscribe( () => console.log("reRender"), (err)=>console.log("error in reRender",err))
   //actual 3d stuff
+
+
+
+  //for outlines, experimental
+  function removeOutline(){
+    if(outScene){
+      outScene.children = []
+      maskScene.children = []
+    }
+  }
+  function outlineMesh(mesh){
+    let oData = makeOutlineFx(mesh)
+    outScene.add( oData.outlineMesh )
+    maskScene.add( oData.maskMesh )
+  }
+
+  selections$
+    .withLatestFrom( visualMappings$ ,function(selections, mapper){   
+      return selections
+        .filter(exists)
+        .map(mapper)
+        .map(s=>s.take(1))
+    })
+    .do(removeOutline)
+    .flatMap(Rx.Observable.forkJoin)
+    //.flatMap(Rx.Observable.fromArray)
+    .subscribe(function(meshes){
+      console.log("meshes",meshes)
+      meshes.map(outlineMesh)
+    })
 
 
   //what are the active controls : camera, object tranforms, 
