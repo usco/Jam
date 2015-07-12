@@ -19,7 +19,6 @@ export function getXY(e){
   }
   // posx and posy contain the mouse position relative to the document
   // Do something with this information
-  console.log("e",e,"target",e.target)
   let {x,y} = getOffset(e.target)
 
   return {  x:x+posx, y:y+posy }

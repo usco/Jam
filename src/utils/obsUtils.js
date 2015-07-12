@@ -70,3 +70,8 @@ function wrapArrayParallel (items) {
   //let __items = Rx.Observable.from()
   return Rx.Observable.forkJoin.apply(null, items);
 }
+
+/*TODO: implement, we need to find a way to do inverted filtering*/
+function opposite(method){
+  
+}
