@@ -250,8 +250,8 @@ function GlView(interactions, props, self){
       meshes.map(addMeshToScene)
     })
    
-  /*let jsondiffpatch = require('jsondiffpatch').create({})
-  items$
+
+  /*items$
     .withLatestFrom( visualMappings$ ,function(items, mapper){
       console.log("visualMappings diff test",mapper, items)
      
@@ -332,17 +332,19 @@ function GlView(interactions, props, self){
   //activeTool$.skip(1).filter(isTransformTool).subscribe(transformControls.setMode)
 
   //hack/test
-  let selections2$ = merge(
+  let selectedMeshes$ = merge(
     _shortSingleTaps$.map( meshFrom ),
     _longTaps$)
   .shareReplay(1)
+
+  selectedMeshes$.subscribe(d=>console.log("selectedMeshes",d))
 
   //transformControls handling
   //we modify the transformControls mode based on the active tool
   //every time either activeTool or selection changes, reset/update transform controls
   combineTemplate({
     tool:activeTool$,  //.filter(isTransformTool)),
-    selections:selections2$
+    selections:selectedMeshes$
   })
     .subscribe( 
       function(data){
@@ -359,9 +361,6 @@ function GlView(interactions, props, self){
       } 
       ,(err)=>console.log("error in stuff",err)
     )
-
-  
-  let selectedMeshes$ = selections2$
 
   //zoom with double tap
   _shortDoubleTaps$
@@ -403,8 +402,6 @@ function GlView(interactions, props, self){
   //reRender$.subscribe( () => console.log("reRender"), (err)=>console.log("error in reRender",err))
   //actual 3d stuff
 
-
-
   //for outlines, experimental
   function removeOutline(){
     if(outScene){
@@ -416,9 +413,74 @@ function GlView(interactions, props, self){
     let oData = makeOutlineFx(mesh)
     outScene.add( oData.outlineMesh )
     maskScene.add( oData.maskMesh )
+    return oData
+  }
+  function unOutlineMesh(oData){
+    outScene.remove(oData.outlineMesh)
+    maskScene.remove(oData.maskMesh)
   }
 
-  selections$
+  function toArray(data){
+    if(!data) return []
+    if(data.constructor !== Array) return [data]
+    return data
+  }
+
+  function makeFx(){
+    let fxByObject = {}
+
+    function applyFx(fx,object){
+      console.log("applyFx")
+      let fxData = outlineMesh(object)
+      fxByObject[object]= fxData//"outline"
+    }
+
+    function removeFx(fx, object){
+      console.log("removeFx")
+      let fxData = fxByObject[object]
+      unOutlineMesh(fxData)
+      delete fxByObject[object]
+
+    }
+    return {applyFx,removeFx}
+  }
+
+  function compareHash(obj){
+    if(obj.uuid) return obj.uuid
+      //return JSON.stringify(obj)
+    //return typeof(obj)+obj.name
+  }
+
+
+  let jsondiffpatch = require('jsondiffpatch').create({objectHash:compareHash})
+
+  function extractChanges(prev, cur){
+    let delta = jsondiffpatch.diff(prev, cur)
+    console.log("delta",delta)
+    
+    let result = {added:[],removed:[],changed:[]}
+
+    if(delta && "_t" in delta){
+        
+        if("_0" in delta){
+          let oldItems = delta["_0"][0]//delta[0][0]
+          let newItems = delta[0][0]//delta[0][1]
+          //console.log("old",oldItems)
+          //console.log("new",newItems)
+
+          result.added = toArray(newItems)
+          result.removed = toArray(oldItems)
+        }
+    }
+
+    return result
+  }
+
+
+  
+
+
+  /*selections$
     .withLatestFrom( visualMappings$ ,function(selections, mapper){   
       return selections
         .filter(exists)
@@ -431,7 +493,42 @@ function GlView(interactions, props, self){
     .subscribe(function(meshes){
       console.log("meshes",meshes)
       meshes.map(outlineMesh)
+    })*/
+
+  let {applyFx,removeFx} = makeFx()
+
+   selections$
+    .withLatestFrom( visualMappings$ ,function(selections, mapper){   
+      return selections
+        .map(mapper)
+        .map(s=>s.take(1))
     })
+    .map(function(data){//do all this to handle empty arrays of selections
+      if(data && data.length>0) return data 
+      return [Rx.Observable.just([])]
+    })
+    .flatMap(Rx.Observable.forkJoin)
+    .bufferWithCount(2,1)
+    .subscribe(function(meshesBuff){
+      
+      //console.log("meshesBuff", meshesBuff)
+      let [prev,cur] = meshesBuff
+      console.log("meshesBuff: prev",prev,"cur",cur)
+      
+      let {added,removed,changed} = extractChanges(prev,cur)
+
+      added.map(function(item){
+        applyFx(null,item)
+      })
+
+      removed.map(function(item){
+        removeFx(null,item)
+      })  
+
+    },e=>console.log("error",e))
+
+
+
 
 
   //what are the active controls : camera, object tranforms, 
