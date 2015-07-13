@@ -30,3 +30,10 @@ let rxjsTrap = {
 
   }
 }*/
+
+
+export function isValidElementEvent(event)
+{
+  let element = event.srcElement
+  return !(element.tagName == 'INPUT' || element.tagName == 'SELECT' || element.tagName == 'TEXTAREA' || element.isContentEditable)
+}

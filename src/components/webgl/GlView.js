@@ -333,37 +333,6 @@ function GlView(interactions, props, self){
   //problem : this fires BEFORE the rest is ready
   //activeTool$.skip(1).filter(isTransformTool).subscribe(transformControls.setMode)
 
-  //hack/test
-  let selectedMeshes$ = merge(
-    _shortSingleTaps$.map( meshFrom ),
-    _longTaps$)
-  .shareReplay(1)
-
-  selectedMeshes$.subscribe(d=>console.log("selectedMeshes",d))
-
-  //transformControls handling
-  //we modify the transformControls mode based on the active tool
-  //every time either activeTool or selection changes, reset/update transform controls
-  combineTemplate({
-    tool:activeTool$,  //.filter(isTransformTool)),
-    selections:selectedMeshes$
-  })
-    .subscribe( 
-      function(data){
-        let {tool,selections} = data
-        //console.log("data",data, tool, selections)
-        transformControls.detach()
-
-        if(tool && selections && ["translate","rotate","scale"].indexOf(tool)>-1 )
-        {
-          transformControls.attach(selections)
-          transformControls.setMode(tool)
-        }
-        
-      } 
-      ,(err)=>console.log("error in stuff",err)
-    )
-
   //zoom with double tap
   _shortDoubleTaps$
     .map(e => e.detail.pickingInfos.shift())
@@ -426,13 +395,13 @@ function GlView(interactions, props, self){
     let fxByObject = {}
 
     function applyFx(fx,object){
-      console.log("applyFx")
+      //console.log("applyFx")
       let fxData = outlineMesh(object)
       fxByObject[object]= fxData//"outline"
     }
 
     function removeFx(fx, object){
-      console.log("removeFx")
+      //console.log("removeFx")
       let fxData = fxByObject[object]
       unOutlineMesh(fxData)
       delete fxByObject[object]
@@ -471,24 +440,10 @@ function GlView(interactions, props, self){
     return result
   }
 
-  /*selections$
-    .withLatestFrom( visualMappings$ ,function(selections, mapper){   
-      return selections
-        .filter(exists)
-        .map(mapper)
-        .map(s=>s.take(1))
-    })
-    .do(removeOutline)
-    .flatMap(Rx.Observable.forkJoin)
-    //.flatMap(Rx.Observable.fromArray)
-    .subscribe(function(meshes){
-      console.log("meshes",meshes)
-      meshes.map(outlineMesh)
-    })*/
 
   let {applyFx,removeFx} = makeFx()
 
-   selections$
+  let meshes$ = selections$
     .withLatestFrom( visualMappings$ ,function(selections, mapper){   
       return selections
         .map(mapper)
@@ -499,13 +454,14 @@ function GlView(interactions, props, self){
       return [Rx.Observable.just([])]
     })
     .flatMap(Rx.Observable.forkJoin)
+    //.shareReplay(1)
+
+  meshes$
     .bufferWithCount(2,1)
     .subscribe(function(meshesBuff){
-      
       //console.log("meshesBuff", meshesBuff)
       let [prev,cur] = meshesBuff
-      console.log("meshesBuff: prev",prev,"cur",cur)
-      
+      //console.log("meshesBuff: prev",prev,"cur",cur) 
       let {added,removed,changed} = extractChanges(prev,cur)
 
       added.map(function(item){
@@ -518,6 +474,40 @@ function GlView(interactions, props, self){
 
     },e=>console.log("error",e))
 
+
+  //Stream of selected meshes
+  let selectedMeshes$ = merge(
+    _shortSingleTaps$.map( meshFrom ),
+    _longTaps$
+    ,meshes$
+    )
+  .map(toArray)//important !!
+  .distinctUntilChanged()
+  .shareReplay(1)
+
+  //transformControls handling
+  //we modify the transformControls mode based on the active tool
+  //every time either activeTool or selection changes, reset/update transform controls
+  combineTemplate({
+    tool:activeTool$,  //.filter(isTransformTool)),
+    selections:selectedMeshes$
+  })
+    .subscribe( 
+      function(data){
+        let {tool,selections} = data
+        //console.log("data",data, tool, selections)
+        transformControls.detach()
+
+        selections.map(function(mesh){
+           if(tool && mesh && ["translate","rotate","scale"].indexOf(tool)>-1 )
+          {
+            transformControls.attach(mesh)
+            transformControls.setMode(tool)
+          }
+        })
+      } 
+      ,(err)=>console.log("error in setting transform",err)
+    )
 
 
 

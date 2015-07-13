@@ -15,6 +15,7 @@ import EntityInfos from './components/EntityInfos'
 import MainToolbar from './components/MainToolbar'
 
 import {observableDragAndDrop} from './interactions/dragAndDrop'
+import {isValidElementEvent} from './interactions/keyboard'
 
 //temporary
 import {makeInternals, meshResources, entityInstanceFromPartTypes} from './core/tbd0'
@@ -22,13 +23,11 @@ import {entityToVisuals, meshInjectPostProcess, applyEntityPropsToMesh} from './
 import {getVisual,createVisualMapper} from './core/entitiesToVisuals'
 
 
-
 import {exists} from './utils/obsUtils'
 import {hasEntity,hasNoEntity,getEntity} from './utils/entityUtils'
 import {getXY} from './utils/uiUtils'
 
 import {first,toggleCursor} from './utils/otherUtils'
-
 
 
 let pjson = require('../package.json')
@@ -57,9 +56,6 @@ function dataFromMesh(objTransform$){
     .shareReplay(1)
 }
 
-
-
-
 function intent(interactions){
   let glviewInit$ = interactions.get(".glview","initialized$")
   let shortSingleTaps$ = interactions.get(".glview","shortSingleTaps$")
@@ -79,13 +75,27 @@ function intent(interactions){
 
   let selections$ = interactions.get(".glview","selectedMeshes$")
     .pluck("detail")
+    //.map(e=>e.shift())
   //selections$.filter(hasEntity).subscribe(d=>console.log("selectedMeshes",d,d.userData.entity))
   //selections$.filter(hasEntity).map(getEntity).subscribe(d=>console.log("selection",d))
+  
+  /*selections$.subscribe(function(s){
+    console.log("selections",s)
+    console.log("result selection", s.filter(hasEntity).map(getEntity).map(e=>e.iuid) )
+  })*/
 
-  selections$ = Rx.Observable.merge(
-    selections$.filter(hasEntity).map(getEntity).map(e=>e.iuid),
-    selections$.filter(hasNoEntity).map([])
-  )
+  function ohhYeah(data){
+    return data.filter(hasEntity).map(getEntity).map(e=>e.iuid)
+  }
+
+  /*selections$ = Rx.Observable.merge(
+
+    //selections$.filter(hasEntity).map(getEntity).map(e=>e.iuid)
+    //,selections$.filter(hasNoEntity).map([])
+  ) */
+  selections$ = selections$.map(ohhYeah)
+  //selections$.subscribe(s=>console.log("selections after",s))
+  //selections$ = new Rx.Subject()
 
   let contextMenuActions$ = interactions.get(".contextMenu", "actionSelected$").pluck("detail")
   let deleteEntities$     = contextMenuActions$.filter(e=>e.action === "delete").pluck("selections")
@@ -145,6 +155,10 @@ function settingsM(interactions){
   let showAnnot$  = interactions.get(".settingsView .showAnnot", "change").map(checked).startWith(false)
   let autoRotate$ = interactions.get(".settingsView .autoRotate", "change").map(checked).startWith(false)
 
+  let keyUps$ = interactions.subject("keyup")
+    .filter(isValidElementEvent)// stop for input, select, and textarea etc 
+  let keycodes = {82: "r",83: "s",77: "m",84: "t"}
+
   //for annotations, should this be here ?
   //heavy code smell  too
   let contextMenuActions$ = interactions.get(".contextMenu", "actionSelected$").pluck("detail")
@@ -156,8 +170,29 @@ function settingsM(interactions){
 
     contextMenuActions$.filter(e=>e.action === "translate").pluck("action"),
     contextMenuActions$.filter(e=>e.action === "rotate").pluck("action"),
-    contextMenuActions$.filter(e=>e.action === "scale").pluck("action")
+    contextMenuActions$.filter(e=>e.action === "scale").pluck("action"),
+
+    keyUps$.map(e=>keycodes[e.keyCode]).filter(k=>k==="m").map("translate"),
+    keyUps$.map(e=>keycodes[e.keyCode]).filter(k=>k==="t").map("translate"),
+    keyUps$.map(e=>keycodes[e.keyCode]).filter(k=>k==="r").map("rotate"),
+    keyUps$.map(e=>keycodes[e.keyCode]).filter(k=>k==="s").map("scale")
+
   ).startWith(undefined)
+  .scan(function(seed,cur){
+    if(seed === cur) return undefined
+    return cur
+  })
+  //.do(e=>console.log("activeTool",e))
+
+  /*keyUps$.map(e=>keycodes[e.keyCode]).filter(k=>k==="r").map("rotate")
+    .startWith(undefined)
+    .scan(function(seed,cur){
+      if(seed === cur) return undefined
+      return cur
+    })
+    .subscribe(e=>console.log("keyUps",e))*/
+
+  
 
   /*let bla$= combineTemplate(
     {
@@ -243,6 +278,8 @@ function sources(urlSources$, dndSources$){
 
 
 function App(interactions) {
+  document.addEventListener("keyup", interactions.subject('keyup').onEvent)
+
   let dragOvers$  = interactions.subject("dragover")
   let drops$      = interactions.subject("drop")  
   let dndSources$ = observableDragAndDrop(dragOvers$, drops$)  
@@ -340,16 +377,14 @@ function App(interactions) {
     ]
   }
 
-  let contextMenuItems = contextTaps$
+  /*let contextMenuItems = contextTaps$
     .combineLatest(
       entities$.pluck("selectedIds").filter(exists).filter(x=>x.length>0),
       function(taps,selectedIds){
-        /*selectedIds.map(function(id){
           //HOW THE HELL DO I DO ANYTHING NOW ??
-        })*/
         return lookupByEntityCategory["annot"].concat(lookupByEntityCategory["common"])
       })
-    //.subscribe(data=>console.log("contextMenuItems",data))
+    //.subscribe(data=>console.log("contextMenuItems",data)) */
   
   
   return Rx.Observable
@@ -404,7 +439,7 @@ function App(interactions) {
         
         function normalContent(settings, items, contextTaps){
           let selections = items.selectedIds.map( id=>items.byId[id] )
-          console.log("selections",selections)
+          //console.log("selections",selections)
           let elements = (
             <div>
               <GlView 
