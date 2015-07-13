@@ -15,7 +15,7 @@ import EntityInfos from './components/EntityInfos'
 import MainToolbar from './components/MainToolbar'
 
 import {observableDragAndDrop} from './interactions/dragAndDrop'
-import {isValidElementEvent} from './interactions/keyboard'
+import {keycodes, isValidElementEvent} from './interactions/keyboard'
 
 //temporary
 import {makeInternals, meshResources, entityInstanceFromPartTypes} from './core/tbd0'
@@ -56,6 +56,10 @@ function dataFromMesh(objTransform$){
     .shareReplay(1)
 }
 
+function extractEntities(data){
+  return data.filter(hasEntity).map(getEntity).map(e=>e.iuid)
+}
+
 function intent(interactions){
   let glviewInit$ = interactions.get(".glview","initialized$")
   let shortSingleTaps$ = interactions.get(".glview","shortSingleTaps$")
@@ -75,27 +79,8 @@ function intent(interactions){
 
   let selections$ = interactions.get(".glview","selectedMeshes$")
     .pluck("detail")
-    //.map(e=>e.shift())
-  //selections$.filter(hasEntity).subscribe(d=>console.log("selectedMeshes",d,d.userData.entity))
-  //selections$.filter(hasEntity).map(getEntity).subscribe(d=>console.log("selection",d))
-  
-  /*selections$.subscribe(function(s){
-    console.log("selections",s)
-    console.log("result selection", s.filter(hasEntity).map(getEntity).map(e=>e.iuid) )
-  })*/
-
-  function ohhYeah(data){
-    return data.filter(hasEntity).map(getEntity).map(e=>e.iuid)
-  }
-
-  /*selections$ = Rx.Observable.merge(
-
-    //selections$.filter(hasEntity).map(getEntity).map(e=>e.iuid)
-    //,selections$.filter(hasNoEntity).map([])
-  ) */
-  selections$ = selections$.map(ohhYeah)
-  //selections$.subscribe(s=>console.log("selections after",s))
-  //selections$ = new Rx.Subject()
+    .map(extractEntities)
+ 
 
   let contextMenuActions$ = interactions.get(".contextMenu", "actionSelected$").pluck("detail")
   let deleteEntities$     = contextMenuActions$.filter(e=>e.action === "delete").pluck("selections")
@@ -157,7 +142,6 @@ function settingsM(interactions){
 
   let keyUps$ = interactions.subject("keyup")
     .filter(isValidElementEvent)// stop for input, select, and textarea etc 
-  let keycodes = {82: "r",83: "s",77: "m",84: "t"}
 
   //for annotations, should this be here ?
   //heavy code smell  too
@@ -183,17 +167,6 @@ function settingsM(interactions){
     return cur
   })
   //.do(e=>console.log("activeTool",e))
-
-  /*keyUps$.map(e=>keycodes[e.keyCode]).filter(k=>k==="r").map("rotate")
-    .startWith(undefined)
-    .scan(function(seed,cur){
-      if(seed === cur) return undefined
-      return cur
-    })
-    .subscribe(e=>console.log("keyUps",e))*/
-
-  
-
   /*let bla$= combineTemplate(
     {
       camera:{
@@ -211,7 +184,6 @@ function settingsM(interactions){
   let webglEnabled$          = Rx.Observable.just(true)
   let appMode$               = Rx.Observable.just("editor")
   let autoSelectNewEntities$ = Rx.Observable.just(true) //TODO: make settable
-  
 
   return Rx.Observable.combineLatest(
     showGrid$,
