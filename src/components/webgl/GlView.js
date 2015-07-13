@@ -387,8 +387,10 @@ function GlView(interactions, props, self){
     return oData
   }
   function unOutlineMesh(oData){
-    outScene.remove(oData.outlineMesh)
-    maskScene.remove(oData.maskMesh)
+    if(oData && outScene && maskScene){
+      outScene.remove(oData.outlineMesh)
+      maskScene.remove(oData.maskMesh)
+    }
   }
 
   function makeFx(){
