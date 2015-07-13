@@ -17,6 +17,7 @@ let Observable = Rx.Observable
 let merge = Rx.Observable.merge
 
 import {generateUUID} from 'usco-kernel2/src/utils'
+import {toArray} from '../utils/utils'
 
 ///defaults, what else ?
 const defaults = {
@@ -110,8 +111,7 @@ function makeModification$(intent){
     .map(({nentities,settings}) => (entitiesData) => {
       log.info("adding entity instance(s)", nentities)
 
-      let entities = nentities || []
-      if(entities.constructor !== Array) entities = [entities]
+      let entities = toArray(nentities)
 
       entitiesData.instances = entitiesData.instances.concat(entities)
       let entityIds = entities.map( function(entity) {
@@ -122,7 +122,7 @@ function makeModification$(intent){
 
       //set selections, if need be
       if(settings.autoSelectNewEntities){
-        selectEntities$( entitiesData.instances.map(i=>i.iuid) )
+        selectEntities$( entities.map(i=>i.iuid) )
       }
 
       return entitiesData
@@ -135,8 +135,7 @@ function makeModification$(intent){
       log.info("updating entities with data", nData)
 
       //FIXME , immutable
-      let newData = nData || []
-      if(newData.constructor !== Array) newData = [newData]
+      let newData = toArray(nData)
       
       let outputData = Object.assign({},entitiesData)
       if(!newData) return outputData
@@ -173,9 +172,6 @@ function makeModification$(intent){
   let _deleteEntities$ = intent.deleteEntities$
     .map((remEntitites) => (entitiesData) => {
       log.info("removing entities ", remEntitites)
-
-      //alternative, using the currently selected entities ?
-      //entitiesData.
 
       //FIXME: not sure...., duplication of the above again
       let nEntities  =  entitiesData.instances
@@ -250,10 +246,7 @@ function makeModification$(intent){
     .map((sentityIds) => (entitiesData) => {
       //log.info("selecting entitites",sentities)
 
-      let entityIds = sentityIds || []
-      if(entityIds.constructor !== Array) entityIds = [entityIds]
-
-      //let ids = entities.map( entity => entity.iuid)
+      let entityIds = toArray(sentityIds)
 
       ////TODO: should it be serialized in history ?
       entitiesData.selectedIds = entityIds
