@@ -61,7 +61,8 @@ function meshesFromDeps(deps, getVisual, entities$){
 
 
 /*provides visual mapping to "arbitrary" 3d meshes*/
-function remoteMeshVisualProvider(entity, subJ, getVisual, types$){
+function remoteMeshVisualProvider(entity, subJ, params){
+  let {types$} = params
   //console.log("return mesh")
   types$.subscribe(
     function(types){
@@ -101,6 +102,13 @@ export function createVisualMapper(types$, entities$){
   //of the cache : ie NO CACHE
   let iuidToMesh = {}
   let typeUidToTemplateMesh = {}
+  let visualProviders = {}
+
+  visualProviders["A0"] = remoteMeshVisualProvider //(entity, subJ, getVisual, types$)
+  visualProviders["A1"] = noteVisualProvider //(entity, subJ, getVisual, entities$) 
+  visualProviders["A2"] = thicknessVisualProvider //(entity, subJ, getVisual, entities$) 
+  visualProviders["A3"] = diameterVisualProvider //(entity, subJ, getVisual, entities$) 
+  visualProviders["A4"] = distanceVisualProvider //(entity, subJ, getVisual, entities$) 
 
   function getVisual(entity){
     console.log("getting visual")
@@ -125,13 +133,20 @@ export function createVisualMapper(types$, entities$){
 
     if(!iuidToMesh[iuid]){
       let entities = [entity]
+      let typeUid = entity.typeUid
+      let visualProvider = visualProviders[typeUid]
 
+      let params = {getVisual,types$,entities$}
+      //TODO: some providers need the "types$" , others need entities$, needs to be specifiable
+      if(visualProvider){
+        visualProvider(entity, subJ, params)
+      }
       //obsByTypes(entities,["A0"]).map()
-      if(entity.typeUid === "A0") remoteMeshVisualProvider(entity, subJ, getVisual, types$)
+      /*if(entity.typeUid === "A0") remoteMeshVisualProvider(entity, subJ, getVisual, types$)
       if(entity.typeUid === "A1") noteVisualProvider(entity, subJ, getVisual, entities$) 
       if(entity.typeUid === "A2") thicknessVisualProvider(entity, subJ, getVisual, entities$) 
       if(entity.typeUid === "A3") diameterVisualProvider(entity, subJ, getVisual, entities$) 
-      if(entity.typeUid === "A4") distanceVisualProvider(entity, subJ, getVisual, entities$) 
+      if(entity.typeUid === "A4") distanceVisualProvider(entity, subJ, getVisual, entities$) */
 
     }else{
       console.log("reusing mesh from cache by iuid",iuid)
@@ -144,8 +159,8 @@ export function createVisualMapper(types$, entities$){
   }
 
 
-  function addVisualProvider(types,provider,postProcesses){
-
+  function addVisualProvider(type,provider,extraParam){
+    visualProviders[type]=provider
   }
 
   return {getVisual,addVisualProvider}
@@ -164,8 +179,9 @@ export function createVisualMapper(types$, entities$){
     fontFace:"Open Sans"
   }
 
-function noteVisualProvider(entity, subJ, getVisual, entities$){
+function noteVisualProvider(entity, subJ, params){
   console.log("note annot",entity)
+  let {getVisual,entities$} = params
   let point = entity.target.point
   let deps = [entity.target.iuid]
 
@@ -189,7 +205,8 @@ function noteVisualProvider(entity, subJ, getVisual, entities$){
     })
 }
 
-function thicknessVisualProvider(entity, subJ, getVisual, entities$){
+function thicknessVisualProvider(entity, subJ, params){
+  let {getVisual,entities$} = params
   let deps = [entity.target.iuid]
   let entryPoint = entity.target.entryPoint
   let exitPoint  = entity.target.exitPoint
@@ -216,7 +233,8 @@ function thicknessVisualProvider(entity, subJ, getVisual, entities$){
     })
 }
 
-function distanceVisualProvider(entity, subJ, getVisual, entities$){
+function distanceVisualProvider(entity, subJ, params){
+  let {getVisual,entities$} = params
   let start = entity.target.start
   let end = entity.target.end
 
@@ -247,7 +265,8 @@ function distanceVisualProvider(entity, subJ, getVisual, entities$){
     })
 }
 
-function diameterVisualProvider(entity, subJ, getVisual, entities$){
+function diameterVisualProvider(entity, subJ, params){
+  let {getVisual,entities$} = params
   let point = entity.target.point
   let normal = entity.target.normal
   let diameter = entity.value
