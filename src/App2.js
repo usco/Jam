@@ -217,33 +217,24 @@ function settingsM(interactions){
   )
 }
 
+function hasModelUrl(data){
+  if(data && data.hasOwnProperty("modelUrl")) return true
+    return false
+}
 
 function sources(urlSources$, dndSources$){
-  //data sources
+  //data sources (drivers)
   let dataSources = require('./core/sources/dataSources').getDataSources
   let urlSources = require('./core/sources/urlSources')
-
-  //urlSources.appMode$.subscribe( appMode => setSetting$({path:"mode",value:appMode}) )
-  urlSources.settings$.subscribe(function(settings){
-    console.log("settings from old",settings)
-    const defaults = {
-      persistent:false,
-      lastDesignUri:undefined,
-      lastDesignName:undefined,
-
-      /*grid:{
-        show:false,
-      },
-      annotations{
-        show:false
-      }*/
-    }
-    let _settings = Object.assign({},defaults,settings)
-  })
 
   let {meshSources$, designSources$} = dataSources(dndSources$, urlSources)
 
   let settingsSources$ = urlSources.settings$
+
+  let postMessages$ = require('./core/postMessageDriver')( )
+  postMessages$.subscribe(e=>console.log("postMessageDriverMessage",e))
+  meshSources$ = meshSources$.merge( postMessages$.filter(hasModelUrl).pluck("modelUrl") )
+
 
   return {meshSources$, designSources$, settingsSources$}
 }  
@@ -259,7 +250,8 @@ function App(interactions) {
 
   let {meshSources$, designSources$, settingsSources$} = sources(urlSources$, dndSources$)
 
-  let settings$ = settingsM(interactions)
+  let settings$ = settingsM(interactions).merge(settingsSources$.filter(exists))
+
 
   let {kernel, assetManager} = makeInternals()
 
@@ -307,6 +299,14 @@ function App(interactions) {
   }
   let annotations = require("./core/annotations")
   let annotations$ = annotations(intent)
+
+
+  //output (USE DRIVER!!!!)
+  settings$.subscribe(function(settings){
+    console.log("settings, to save etc",settings)
+    localStorage.setItem("jam!-settings",JSON.stringify(settings) )
+  })
+     
 
 
   //what is my visual for any given entity
@@ -424,6 +424,8 @@ function App(interactions) {
               <SettingsView settings={settings} ></SettingsView>
             </div>
           )
+          //<MainToolbar />
+          //                <ContextMenu position={contextTaps} items={contextMenuItems} selections={selections}/>
 
           if(settings.mode === "editor"){
             elements =(
@@ -437,10 +439,9 @@ function App(interactions) {
                 
                 <SettingsView settings={settings} ></SettingsView>
 
-                <MainToolbar />
+                
                 <FullScreenToggler/> 
                 <EntityInfos entities={selections} settings={settings} />
-                <ContextMenu position={contextTaps} items={contextMenuItems} selections={selections}/>
               </div>  
             )
           }

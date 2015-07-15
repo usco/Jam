@@ -13,9 +13,33 @@
       <!--<iframe src="./?designUrl=http://www.goo.fr&meshUrl=foo&modelUrl=bar" style="width: 90%; height: 300px"
       scrolling="no" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0">
       </iframe>-->
-      <iframe src="./?modelUrl=http://localhost:3000/demo-data/UM2CableChain_BedEnd.STL" style="width: 90%; height: 300px"
-      scrolling="no" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0">
+      <iframe src="./" style="width: 90%; height: 300px"
+      scrolling="no" marginwidth="0" marginheight="0" frameborder="0" vspace="0" hspace="0"
+      id="embeded"
+      >
       </iframe>
     </div>
+
+
+    <script>
+      var embeded = document.getElementById("embeded").contentWindow
+
+        setTimeout(function() {
+          embeded.postMessage("hey yo","*")
+          embeded.postMessage({modelUrl:"http://localhost:3000/demo-data/UM2CableChain_BedEnd.STL"},"*")
+          embeded.postMessage({designUrl:"http://localhost:3000/demo-data/UM2CableChain_BedEnd.STL"},"*")
+          embeded.postMessage({clear:true},"*")
+
+        }, 1000)
+
+        
+
+    </script>
+
+
   </body>
 </html>
+
+
+
+
