@@ -388,26 +388,31 @@ function GlView(interactions, props, self){
   }
   function unOutlineMesh(oData){
     if(oData && outScene && maskScene){
+      console.log("actually removing stuff y know")
       outScene.remove(oData.outlineMesh)
       maskScene.remove(oData.maskMesh)
     }
   }
 
   function makeFx(){
-    let fxByObject = {}
+    let fxByObject = new WeakMap()
 
-    function applyFx(fx,object){
-      //console.log("applyFx")
-      let fxData = outlineMesh(object)
-      fxByObject[object]= fxData//"outline"
+    function applyFx(fx,objects){
+      //console.log("applyFx to",objects,"fxByObject",fxByObject)
+      objects.map(function(object){
+        let fxData = outlineMesh(object)
+        fxByObject.set( object, fxData )  //[object]= fxData//"outline"
+      })
     }
 
-    function removeFx(fx, object){
-      //console.log("removeFx")
-      let fxData = fxByObject[object]
-      unOutlineMesh(fxData)
-      delete fxByObject[object]
-
+    function removeFx(fx, objects){
+      //console.log("removeFx from",objects,"fxByObject",fxByObject)
+      objects.map(function(object){
+        let fxData = fxByObject.get(object)
+        unOutlineMesh(fxData)
+        fxByObject.delete(object)
+        //delete fxByObject[object]
+      })
     }
     return {applyFx,removeFx}
   }
@@ -453,7 +458,7 @@ function GlView(interactions, props, self){
     })
     .map(function(data){//do all this to handle empty arrays of selections
       if(data && data.length>0) return data 
-      return [Rx.Observable.just([])]
+      return [Rx.Observable.just(undefined)]
     })
     .flatMap(Rx.Observable.forkJoin)
     //.shareReplay(1)
@@ -461,18 +466,11 @@ function GlView(interactions, props, self){
   meshes$
     .bufferWithCount(2,1)
     .subscribe(function(meshesBuff){
-      //console.log("meshesBuff", meshesBuff)
       let [prev,cur] = meshesBuff
-      //console.log("meshesBuff: prev",prev,"cur",cur) 
       let {added,removed,changed} = extractChanges(prev,cur)
 
-      added.map(function(item){
-        applyFx(null,item)
-      })
-
-      removed.map(function(item){
-        removeFx(null,item)
-      })  
+      applyFx(null,added)
+      removeFx(null,removed)
 
     },e=>console.log("error",e))
 
@@ -510,8 +508,6 @@ function GlView(interactions, props, self){
       } 
       ,(err)=>console.log("error in setting transform",err)
     )
-
-
 
 
   //what are the active controls : camera, object tranforms, 
@@ -679,14 +675,14 @@ function GlView(interactions, props, self){
       if(initialized){
         render(scene,camera)
       }
-
+      //{reRender} {initialized}
       return ()=> (
       <div className="glView" style={style} >
         <div className="container" ref="container" autofocus/>  
         <div className="camViewControls" />
 
         <div className="overlayTest" style={overlayStyle}>
-          {reRender} {initialized}
+          
         </div>
       </div>)
     })
