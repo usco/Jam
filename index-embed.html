@@ -23,19 +23,24 @@
 
     <script>
       var embeded = document.getElementById("embeded").contentWindow
+      setTimeout(function() {
+        embeded.postMessage("hey yo","*")
+        embeded.postMessage({modelUrl:"http://localhost:3000/demo-data/UM2CableChain_BedEnd.STL"},"*")
+        embeded.postMessage({designUrl:"http://localhost:3000/xxx"},"*")
+        embeded.postMessage({clear:true},"*")//to clear jam
+      }, 1000)
 
-        setTimeout(function() {
-          embeded.postMessage("hey yo","*")
-          embeded.postMessage({modelUrl:"http://localhost:3000/demo-data/UM2CableChain_BedEnd.STL"},"*")
-          embeded.postMessage({designUrl:"http://localhost:3000/demo-data/UM2CableChain_BedEnd.STL"},"*")
-          embeded.postMessage({clear:true},"*")
 
-        }, 1000)
+      setTimeout(function() {
+        embeded.postMessage({clear:true},"*")
+      }, 5000)
 
-        
+       setTimeout(function() {
+        embeded.postMessage({modelUrl:"http://localhost:3000/demo-data/UM2CableChain_BedEnd.STL"},"*")
+      }, 10000)
+
 
     </script>
-
 
   </body>
 </html>

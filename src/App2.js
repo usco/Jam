@@ -93,15 +93,21 @@ function intent(interactions){
     contextMenuActions$.map(undefined)
   )
 
+  //get any "clear" message from post message
+  let postMessages$ = require('./core/postMessageDriver')( )
+  let newDesign$ = postMessages$.filter(hasClear).map(true)
+
   return {
-    selections$,
-    selectionTransforms$,
+    selections$
+    ,selectionTransforms$
 
-    contextTaps$,
+    ,contextTaps$
 
-    deleteEntities$,
-    deleteAllEntities$,
-    duplicateEntities$,
+    ,deleteEntities$
+    ,deleteAllEntities$
+    ,duplicateEntities$
+
+    ,newDesign$
 
     /*addNote$,
     measureDistance$,
@@ -221,6 +227,14 @@ function hasModelUrl(data){
   if(data && data.hasOwnProperty("modelUrl")) return true
     return false
 }
+function hasDesignUrl(data){
+  if(data && data.hasOwnProperty("designUrl")) return true
+    return false
+}
+function hasClear(data){
+  if(data && data.hasOwnProperty("clear")) return true
+    return false
+}
 
 function sources(urlSources$, dndSources$){
   //data sources (drivers)
@@ -233,8 +247,9 @@ function sources(urlSources$, dndSources$){
 
   let postMessages$ = require('./core/postMessageDriver')( )
   postMessages$.subscribe(e=>console.log("postMessageDriverMessage",e))
-  meshSources$ = meshSources$.merge( postMessages$.filter(hasModelUrl).pluck("modelUrl") )
-
+  
+  meshSources$   =  meshSources$.merge( postMessages$.filter(hasModelUrl).pluck("modelUrl") )
+  //designSources$ =  designSources$.merge( postMessages$.filter(hasDesignUrl).pluck("designUrl") )
 
   return {meshSources$, designSources$, settingsSources$}
 }  
@@ -277,7 +292,7 @@ function App(interactions) {
     deleteAllEntities$: intents.deleteAllEntities$, 
     selectEntities$: intents.selections$,
 
-    newDesign$: new Rx.Subject(), 
+    newDesign$: intents.newDesign$, 
     settings$:settings$
   }
 
