@@ -272,13 +272,20 @@ function App(interactions) {
 
   let meshResources$ = meshResources(meshSources$, assetManager)
 
+
+  let intents = intent(interactions)  
+
   //register meshes <=> types
   let partTypes = require('./core/partReg')
-  let partTypes$ = partTypes({combos$:meshResources$})
+  let partTypes$ = partTypes({
+    combos$:meshResources$
+    ,newDesign$: intents.newDesign$
+  })
+
+  partTypes$.subscribe(e=>console.log("fooType",e))
 
   //get new instances from "types"
   let newInstFromTypes$ = entityInstanceFromPartTypes(partTypes$)
-  let intents = intent(interactions)  
   let contextTaps$ = intents.contextTaps$
 
   //entities
@@ -322,7 +329,6 @@ function App(interactions) {
     localStorage.setItem("jam!-settings",JSON.stringify(settings) )
   })
      
-
 
   //what is my visual for any given entity
   let otherData$ = partTypes$

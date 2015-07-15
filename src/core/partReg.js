@@ -22,10 +22,9 @@ const defaults = {
 }
 
 function makeModifications(intent){
-  let bla$ = intent.combos$
+  let registerTypeFromMesh$ = intent.combos$
     .map((data) => (regData) => {
-
-      console.log("I would register something", data, regData)
+      log.info("I would register something", data, regData)
 
       //we do not return the shape since that becomes the "reference shape/mesh", not the
       //one that will be shown
@@ -44,7 +43,7 @@ function makeModifications(intent){
 
       //no typeUid was given, it means we have a mesh with no part (yet !)
       if( !typeUid ) {
-        typeUid = generateUUID()
+        typeUid = "A0"//generateUUID()
 
         //extract usefull information
         let mesh = data.mesh
@@ -81,10 +80,19 @@ function makeModifications(intent){
       }
   })
 
+
+  /*technically same as deleteAll , but kept seperate for clarity*/
+  let clearData$ = intent.newDesign$
+    .map(() => (regData) => {
+      log.info("New design, clearing registry",regData)
+      return Object.assign({},defaults)
+      //return regData
+  })
   
 
   return merge(
-    bla$
+    registerTypeFromMesh$
+    ,clearData$
   )
 }
 
