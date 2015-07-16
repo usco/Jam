@@ -14,19 +14,21 @@ import EntityInfos from './components/EntityInfos'
 import MainToolbar from './components/MainToolbar'
 
 import {observableDragAndDrop} from './interactions/dragAndDrop'
-import {keycodes, isValidElementEvent} from './interactions/keyboard'
 
+import {settingsIntent} from './core/settingsIntent'
 import {addAnnotationMod} from './core/annotations'
 
 //temporary
 import {makeInternals, meshResources, entityInstanceFromPartTypes} from './core/tbd0'
 import {getVisual,createVisualMapper} from './core/entitiesToVisuals'
 
-
 import {exists} from './utils/obsUtils'
 import {hasEntity,hasNoEntity,getEntity} from './utils/entityUtils'
 import {getXY} from './utils/uiUtils'
 import {first,toggleCursor} from './utils/otherUtils'
+
+//NEEDED because of circular dependency ...
+import {clearActiveTool$} from './actions/appActions'
 
 
 let pjson = require('../package.json')
@@ -130,98 +132,6 @@ function annotIntents(interactions){
   }
 }
 
-function settingsM(interactions){
-  //hack for firefox only as it does not correct get the "checked" value : note : this is not an issue in cycle.js
-  let is_firefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
-  function checked(event){
-    if(is_firefox) return ! event.target.checked
-      return event.target.checked
-  }
-
-  /*let showGrid$   = interactions.get(".settingsView .showGrid", "change").map(event => event.target.checked).startWith(false)
-  let showAnnot$  = interactions.get(".settingsView .showAnnot", "change").map(event => event.target.checked).startWith(false)
-  let autoRotate$ = interactions.get(".settingsView .autoRotate", "change").map(event => event.target.checked).startWith(false)*/
-  let showGrid$   = interactions.get(".settingsView .showGrid", "change").map(checked).startWith(false)
-  let showAnnot$  = interactions.get(".settingsView .showAnnot", "change").map(checked).startWith(false)
-  let autoRotate$ = interactions.get(".settingsView .autoRotate", "change").map(checked).startWith(false)
-
-  let keyUps$ = interactions.subject("keyup")
-    .filter(isValidElementEvent)// stop for input, select, and textarea etc 
-
-  //for annotations, should this be here ?
-  //heavy code smell  too
-  let contextMenuActions$ = interactions.get(".contextMenu", "actionSelected$").pluck("detail")
-  let activeTool$       = Rx.Observable.merge(
-    contextMenuActions$.filter(e=>e.action === "addNote").pluck("action"),
-    contextMenuActions$.filter(e=>e.action === "measureDistance").pluck("action"),
-    contextMenuActions$.filter(e=>e.action === "measureDiameter").pluck("action"),
-    contextMenuActions$.filter(e=>e.action === "measureThickness").pluck("action"),
-    contextMenuActions$.filter(e=>e.action === "measureAngle").pluck("action"),
-
-    contextMenuActions$.filter(e=>e.action === "translate").pluck("action"),
-    contextMenuActions$.filter(e=>e.action === "rotate").pluck("action"),
-    contextMenuActions$.filter(e=>e.action === "scale").pluck("action"),
-
-    keyUps$.map(e=>keycodes[e.keyCode]).filter(k=>k==="m").map("translate"),
-    keyUps$.map(e=>keycodes[e.keyCode]).filter(k=>k==="t").map("translate"),
-    keyUps$.map(e=>keycodes[e.keyCode]).filter(k=>k==="r").map("rotate"),
-    keyUps$.map(e=>keycodes[e.keyCode]).filter(k=>k==="s").map("scale")
-
-  ).startWith(undefined)
-  .scan(function(seed,cur){
-    if(seed === cur) return undefined
-    return cur
-  })
-  //.do(e=>console.log("activeTool",e))
-  /*let bla$= combineTemplate(
-    {
-      camera:{
-        autoRotate:autoRotate$
-      },
-      grid:{
-        show:showGrid$
-      },
-      annotations:{
-        show:showAnnot$
-      }
-    }
-  )
-  */
-  let webglEnabled$          = Rx.Observable.just(true)
-  let appMode$               = Rx.Observable.just("editor")
-  let autoSelectNewEntities$ = Rx.Observable.just(true) //TODO: make settable
-
-  return Rx.Observable.combineLatest(
-    showGrid$,
-    autoRotate$,
-    showAnnot$,
-    autoSelectNewEntities$,
-    webglEnabled$,
-    appMode$,
-    activeTool$,
-    function(showGrid, autoRotate, showAnnot, autoSelectNewEntities, webglEnabled, appMode, activeTool){
-      return (
-        {
-          webglEnabled:webglEnabled,
-          mode:appMode,
-          autoSelectNewEntities:autoSelectNewEntities,
-          activeTool:activeTool,
-
-          camera:{
-            autoRotate:autoRotate
-          },
-          grid:{
-            show:showGrid
-          },
-          annotations:{
-            show:showAnnot
-          }
-         
-        }
-      )
-    }
-  )
-}
 
 function hasModelUrl(data){
   if(data && data.hasOwnProperty("modelUrl")) return true
@@ -265,13 +175,13 @@ function App(interactions) {
 
   let {meshSources$, designSources$, settingsSources$} = sources(urlSources$, dndSources$)
 
-  let settings$ = settingsM(interactions).merge(settingsSources$.filter(exists))
+  let settings$ = settingsIntent(interactions)
+    .merge(settingsSources$.filter(exists))//restore old data
 
 
   let {kernel, assetManager} = makeInternals()
 
   let meshResources$ = meshResources(meshSources$, assetManager)
-
 
   let intents = intent(interactions)  
 
@@ -281,8 +191,7 @@ function App(interactions) {
     combos$:meshResources$
     ,newDesign$: intents.newDesign$
   })
-
-  partTypes$.subscribe(e=>console.log("fooType",e))
+  //partTypes$.subscribe(e=>console.log("fooType",e))
 
   //get new instances from "types"
   let newInstFromTypes$ = entityInstanceFromPartTypes(partTypes$)
@@ -294,9 +203,19 @@ function App(interactions) {
     creationStep$:aIntents.creationStep$,
     settings$:settings$
   }
-  //addAnnotationMod(intent).subscribe(e=>console.log("addAnnotations",e))
+  let addAnnotation$ = addAnnotationMod(intent)
 
-  let addEntities$ = newInstFromTypes$.merge(addAnnotationMod(intent))
+  addAnnotation$
+    .withLatestFrom(settings$,function(annotation,settings){
+      if(!settings.repeatTool){
+        clearActiveTool$()
+      }
+      //console.log("ok I am done with annotation",annotation,settings)
+    })
+    .subscribe(e=>e)
+
+  let addEntities$ = newInstFromTypes$.merge(addAnnotation$)
+  
 
   //entities
   intent = {
@@ -427,15 +346,8 @@ function App(interactions) {
         function normalContent(settings, items,contextTaps){
           let selections = items.selectedIds.map( id=>items.byId[id] )
           //console.log("selections",selections,"items",items,"annotations",annotations)
-          //FIXME: clunky !!!
-          /*let selectedAnnots = annotations.filter(function(annot){
-            return (items.selectedIds.indexOf(annot.iuid)> -1)
-          })
-          selections = selections.filter(exists).concat( selectedAnnots )*/
+          let _items = items.instances
 
-
-          let _items = items.instances//.concat(annotations)
-          console.log("full items",_items, "selections",selections)
           let elements = (
             <div>
               <GlView 
