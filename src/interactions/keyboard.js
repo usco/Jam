@@ -12,28 +12,7 @@ export let keycodes = {
 /*
 function setKeyBidings( element ){
   //based on http://qiita.com/jdeseno/items/72e12a5fa815b52f95e2
-  // US keyboard
-  
-  let source = Rx.Observable.fromEvent(element, 'keydown')
-  let subscription = source
-     .map(function(e) {
-        return keycodes[e.keyCode]
-      })
-     .filter(function(key) {
-       return !!key
-     })
-     .subscribe(function(key) {
-       console.log('keydown', key)
-     });
-
-}
-
-let rxjsTrap = {
-
-  bind(keyCombo){
-
-  }
-}*/
+ */
 
 
 export function isValidElementEvent(event)

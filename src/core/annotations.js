@@ -32,6 +32,7 @@ function generateNoteData(data){
     typeUid:"A1",
     iuid:generateUUID(),
     value:undefined,
+    comment:undefined,
     name:"notexx", 
     target:{
       point:point.toArray(), 
@@ -265,59 +266,7 @@ export function addAnnotationMod(intent){
     //.repeat()
     .share()
 
-  //clear currently active tool : is this a hack?
-  //additions$.subscribe(clearActiveTool$)
-
-  additions$.subscribe(e=>console.log("adding annotation"))
-
   return additions$
 }
 
-
-function makeModification$(intent){
-
-  let addAnnot$ = intent.addAnnotations$
-    .map((nData) => (annotList) => {
-      log.info("adding annotation(s)",nData)
-      //FIXME , immutable
-      let newData = nData || []
-      if(newData.constructor !== Array) newData = [newData]
-
-      annotList = annotList.concat( newData )
-      return annotList
-    })
-
-  let deleteAnnots$ = intent.deleteAnnots$
-    .map((annotData) => (annotList) => {
-      //let annotIndex = searchTodoIndex(todosData.list, todoid);
-      //annotList.splice(todoIndex, 1);
-      let nAnnots  = annotList
-      let _tmp2 = annotData.map(entity=>entity.iuid)
-      let outAnnotations = nAnnots.filter(function(entity){ return _tmp2.indexOf(entity.iuid)===-1})
-
-      return outAnnotations
-    })
-
-  return merge(
-    addAnnot$,
-    deleteAnnots$
-  )
-}
-
-
-function model(intent, source) {
-  let source$ = source || Observable.just([])
-  //hack
-  intent.addAnnotations$ = intent.addAnnotations$
-    .merge( addAnnotationMod(intent) )
-
-  let modification$ = makeModification$(intent)
-
-  return modification$
-    .merge(source$)
-    .scan((annotData, modFn) => modFn(annotData))//combine existing data with new one
-    .shareReplay(1)
-}
-
-export default model
 
