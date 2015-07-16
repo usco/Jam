@@ -18,18 +18,27 @@ function EditableItem(interactions, props) {
 
   let valueChange$ = interactions.subject('valueChange')
   //let changes$  = interactions.subject('valueChange').map(e=>e.target).map(eventer("changes$"))
-    //changes$.subscribe(data=>console.log("CHANGES",data))
+  //changes$.subscribe(data=>console.log("CHANGES",data))
 
   let editing$     = Rx.Observable.merge(
     interactions.subject('editing').map(true),//interactions.get('.textInput','click')
     interactions.subject('blur').map(false),//interactions.get('.textInput','blur')
-    keydowns$.map(e => e.keyCode).filter(k => k ===13).map(false) //if we press enter, stop editing
+    keydowns$.map(e => e.keyCode).filter(k => k ===13).map(false), //if we press enter, stop editing
+    keydowns$.map(e => e.keyCode).filter(k => k ===27).map(false) //if we press exit, stop editing
   ).startWith(false)
 
   //just a small helper
   function eventer(eventName, eventContent){
     return interactions.subject(eventName).onEvent //(eventContent)
   }
+
+  //FIXME: HAAAACK!
+  let changeHandler$ = props.get('changeHandler').startWith(undefined)
+  valueChange$
+    .withLatestFrom(changeHandler$ ,function(e,changeHandler){
+      if(changeHandler) changeHandler(e)
+  })
+  .subscribe(e=>e)
   
   let vtree$ = Rx.Observable
     .combineLatest(
@@ -39,10 +48,11 @@ function EditableItem(interactions, props) {
       editable$,
       data$,
       function(editing,multiline,placeholder,editable,data){
-
         let element =null
 
-        if(data || data !== "" ) placeholder = ""
+        if(data || data !== "" && data!==undefined && data !== null ){
+          placeholder = ""
+        }
 
         let value = data
         if(!value || trim(value) === ""){
@@ -50,7 +60,7 @@ function EditableItem(interactions, props) {
         }
         if(value) trim(value)
 
-         if (editing && editable) {
+        if (editing && editable) {
           if(multiline){
             element = <textarea 
             className="textInput"
@@ -77,7 +87,7 @@ function EditableItem(interactions, props) {
         else {
           element = <span className="textInput"
             onClick={eventer('editing')} >
-            {value}{placeholder}
+            {value} {placeholder}
           </span>
         }
 

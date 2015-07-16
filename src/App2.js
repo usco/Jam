@@ -81,13 +81,11 @@ function intent(interactions){
   let selections$ = interactions.get(".glview","selectedMeshes$")
     .pluck("detail")
     .map(extractEntities)
- 
 
   let contextMenuActions$ = interactions.get(".contextMenu", "actionSelected$").pluck("detail")
   let deleteEntities$     = contextMenuActions$.filter(e=>e.action === "delete").pluck("selections")
   let deleteAllEntities$  = contextMenuActions$.filter(e=>e.action === "deleteAll").pluck("selections")
   let duplicateEntities$  = contextMenuActions$.filter(e=>e.action === "duplicate").pluck("selections")
-
 
   //we need to "shut down the context menu after any click inside of it"
   contextTaps$ = contextTaps$.merge(
@@ -241,7 +239,7 @@ function App(interactions) {
     console.log("settings, to save etc",settings)
     localStorage.setItem("jam!-settings",JSON.stringify(settings) )
   })
-     
+
 
   //what is my visual for any given entity
   let otherData$ = partTypes$
@@ -260,11 +258,7 @@ function App(interactions) {
     },{})*/
   .subscribe(data=>console.log(" data",data))
 
-
   let {getVisual,addVisualProvider } = createVisualMapper(partTypes$, entities$)
-
-  
-  entities$.subscribe(e=>console.log("entities",e))
 
   //Experimental: system describing available actions by entity "category"
   let lookupByEntityCategory ={

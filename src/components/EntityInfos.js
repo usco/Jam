@@ -72,15 +72,43 @@ function colorInput(entity, changeHandler){
 
 function nameInput(entity,changeHandler){
   if(entity && entity.name){
-    return <EditableItem data={entity.name} changeHandler={changeHandler} />
+    let _changeHandler = changeHandler.bind(null,"name",null)
+    return <span> N:<EditableItem data={entity.name} id="name" changeHandler={_changeHandler}/> </span>
   }
 }
 
-function extraInput(entity, numberPrecision){
+function extraInputs(entity, numberPrecision, changeHandler){
   //this is used only for annotations I guess?
-  if(entity && entity.value){
+  //console.log("annotations",entity)
+  if(entity){
+    
+    let _changeHandler = changeHandler.bind(null,"comment",null)
+    let valueEdit = null
+
+    if( entity.hasOwnProperty("value") && entity.value ){
+      valueEdit = (
+        <span>
+          Value: <EditableItem data={entity.value} placeholder="..." editable={false} />  
+        </span>
+      )
+    }
+      
+    let comments = null
+    if( entity.hasOwnProperty("comment") ){
+      comments = (
+        <span> 
+          <EditableItem data={entity.comment} placeholder="add comment(s)..." id="comments" 
+          changeHandler={_changeHandler}
+          />  
+        </span>
+      )
+    }
+
     return(
-      <span> value:{ formatNumberTo(entity.value, numberPrecision) }</span>
+      <span>
+        {valueEdit}
+        {comments}
+      </span>
     )
   }
 }
@@ -107,7 +135,7 @@ function EntityInfos(interactions, props) {
   //  .subscribe(data=>console.log("textChanges"))
 
   //FIXME : HACK !
-  let nameChange$ = interactions.get(".textInput","valueChange$")
+  /*let nameChange$ = interactions.get(".textInput","valueChange$")
     .map(e => e.target.value)
     .combineLatest(
       entities$,
@@ -119,7 +147,7 @@ function EntityInfos(interactions, props) {
           interactions.subject('selectionTransforms$').onEvent(output)
         }
       })
-    .subscribe( function(){})
+    .subscribe(e=>e)*/
     
   let numberPrecision = 2
   let controlsStep = 0.1
@@ -137,10 +165,11 @@ function EntityInfos(interactions, props) {
         if(entities.length>0) entity = entities[0]
 
         function changeHandler(fieldName, index, event){
+          console.log("changeHandler",fieldName,index,event)
           let transforms = entity[fieldName]
           let value = event.target.value
 
-          if(fieldName!=="color" && fieldName !=="name"){
+          if(fieldName!=="color" && fieldName !=="name" && fieldName !=="comment"){
             value = parseFloat(value)
 
             //FIXME : needed because of side efect of mutability ugh
@@ -168,7 +197,7 @@ function EntityInfos(interactions, props) {
               {transformInputs(entity, "pos", "P", controlsStep, numberPrecision, changeHandler)}
               {transformInputs(entity, "rot", "R", controlsStep, numberPrecision, changeHandler)}
               {transformInputs(entity, "sca", "S", controlsStep, numberPrecision, changeHandler)}
-              {extraInput(entity,numberPrecision)}
+              {extraInputs(entity,numberPrecision,changeHandler)}
             </div>
           )
         }
