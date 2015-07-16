@@ -238,9 +238,11 @@ function GlView(interactions, props, self){
      scene.dynamicInjector.add(mesh)
   }
 
+  items$.subscribe(e=>console.log("items in glView updated",e))
+
   items$
     .withLatestFrom( visualMappings$ ,function(items, mapper){
-      //console.log("visualMappings",mapper, items)
+      console.log("MAPPING TO VISUALS",mapper, items)
       return items
         .filter(exists)
         .map(mapper)
@@ -400,20 +402,32 @@ function GlView(interactions, props, self){
     function applyFx(fx,objects){
       //console.log("applyFx to",objects,"fxByObject",fxByObject)
       objects.map(function(object){
-        let fxData = outlineMesh(object)
-        fxByObject.set( object, fxData )  //[object]= fxData//"outline"
+        if(!object.highlight)//FIXME: hack: only annotations have these
+        {
+          let fxData = outlineMesh(object)
+          fxByObject.set( object, fxData )  //[object]= fxData//"outline"
+        }
+        else{ object.highlight(true) }
+
       })
     }
 
     function removeFx(fx, objects){
       //console.log("removeFx from",objects,"fxByObject",fxByObject)
       objects.map(function(object){
-        let fxData = fxByObject.get(object)
-        unOutlineMesh(fxData)
-        fxByObject.delete(object)
-        //delete fxByObject[object]
+        if(!object.highlight)//FIXME: hack: only annotations have these
+        {
+          let fxData = fxByObject.get(object)
+          unOutlineMesh(fxData)
+          fxByObject.delete(object)
+          //delete fxByObject[object]
+        }
+        else{ object.highlight(false) }
       })
     }
+
+
+
     return {applyFx,removeFx}
   }
 
@@ -450,6 +464,7 @@ function GlView(interactions, props, self){
 
   let {applyFx,removeFx} = makeFx()
 
+  //TODO: only do once
   let meshes$ = selections$
     .withLatestFrom( visualMappings$ ,function(selections, mapper){   
       return selections
@@ -467,13 +482,14 @@ function GlView(interactions, props, self){
     .bufferWithCount(2,1)
     .subscribe(function(meshesBuff){
       let [prev,cur] = meshesBuff
-      let {added,removed,changed} = extractChanges(prev,cur)
 
+      let {added,removed,changed} = extractChanges(prev,cur)
       applyFx(null,added)
       removeFx(null,removed)
 
-    },e=>console.log("error",e))
 
+
+    },e=>console.log("error",e))
 
   //Stream of selected meshes
   let selectedMeshes$ = merge(
@@ -661,14 +677,14 @@ function GlView(interactions, props, self){
 
         //FIXME : needs to be done in a more coherent, reusable way
         //shut down "wobble effect if ANY user interaction takes place"
-        let wobble = cameraWobble3dHint(camera)
+        /*let wobble = cameraWobble3dHint(camera)
         merge(
           shortSingleTaps$,
           shortDoubleTaps$,
           longTaps$,
           zooms$,
           dragMoves$
-        ).subscribe(e=>wobble.stop())
+        ).subscribe(e=>wobble.stop())*/
         
       }
 
