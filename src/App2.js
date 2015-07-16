@@ -5,7 +5,6 @@ let React = require('react')
 import Rx from 'rx'
 import combineTemplate from 'rx.observable.combinetemplate'
 
-
 import GlView from './components/webgl/GlView'
 import BomView from './components/Bom/BomView'
 import SettingsView from './components/SettingsView'
@@ -17,6 +16,8 @@ import MainToolbar from './components/MainToolbar'
 import {observableDragAndDrop} from './interactions/dragAndDrop'
 import {keycodes, isValidElementEvent} from './interactions/keyboard'
 
+import {addAnnotationMod} from './core/annotations'
+
 //temporary
 import {makeInternals, meshResources, entityInstanceFromPartTypes} from './core/tbd0'
 import {getVisual,createVisualMapper} from './core/entitiesToVisuals'
@@ -25,7 +26,6 @@ import {getVisual,createVisualMapper} from './core/entitiesToVisuals'
 import {exists} from './utils/obsUtils'
 import {hasEntity,hasNoEntity,getEntity} from './utils/entityUtils'
 import {getXY} from './utils/uiUtils'
-
 import {first,toggleCursor} from './utils/otherUtils'
 
 
@@ -288,10 +288,20 @@ function App(interactions) {
   let newInstFromTypes$ = entityInstanceFromPartTypes(partTypes$)
   let contextTaps$ = intents.contextTaps$
 
+  //annotations
+  let aIntents = annotIntents(interactions)
+  intent = {
+    creationStep$:aIntents.creationStep$,
+    settings$:settings$
+  }
+  //addAnnotationMod(intent).subscribe(e=>console.log("addAnnotations",e))
+
+  let addEntities$ = newInstFromTypes$.merge(addAnnotationMod(intent))
+
   //entities
   intent = {
     createEntityInstance$:new Rx.Subject(),//createEntityInstance$,
-    addEntities$: newInstFromTypes$,//addEntityInstances$,
+    addEntities$: addEntities$,
 
     updateEntities$: intents.selectionTransforms$,//
     deleteEntities$: intents.deleteEntities$,
@@ -305,22 +315,6 @@ function App(interactions) {
 
   let entities = require("./core/entities")
   let entities$ = entities(intent)
-
-  //annotations
-  let aIntents = annotIntents(interactions)
-  intent = {
-    addAnnotations$: new Rx.Subject(), 
-
-    deleteAnnots$: intents.deleteEntities$,
-    duplicateEntities$: intents.duplicateEntities$,  
-    deleteAllEntities$: intents.deleteAllEntities$, 
-    selectEntities$: intents.selections$,
-
-    creationStep$:aIntents.creationStep$,
-    settings$:settings$
-  }
-  let annotations = require("./core/annotations")
-  let annotations$ = annotations(intent)
 
 
   //output (USE DRIVER!!!!)
@@ -350,7 +344,7 @@ function App(interactions) {
 
   let {getVisual,addVisualProvider } = createVisualMapper(partTypes$, entities$)
 
-  annotations$.subscribe(e=>console.log("annotations",e))
+  
   entities$.subscribe(e=>console.log("entities",e))
 
   //Experimental: system describing available actions by entity "category"
@@ -385,9 +379,8 @@ function App(interactions) {
       appMetadata$,
       entities$,
       settings$,
-      annotations$,
       contextTaps$,
-      function(appMetadata, items, settings, annotations, contextTaps){
+      function(appMetadata, items, settings, contextTaps){
         //            
         let contextMenuItems = [
           {text:"Duplicate", action:"duplicate"},
@@ -431,17 +424,17 @@ function App(interactions) {
           )
         }
         
-        function normalContent(settings, items, annotations, contextTaps){
+        function normalContent(settings, items,contextTaps){
           let selections = items.selectedIds.map( id=>items.byId[id] )
           //console.log("selections",selections,"items",items,"annotations",annotations)
           //FIXME: clunky !!!
-          let selectedAnnots = annotations.filter(function(annot){
+          /*let selectedAnnots = annotations.filter(function(annot){
             return (items.selectedIds.indexOf(annot.iuid)> -1)
           })
-          selections = selections.filter(exists).concat( selectedAnnots )
+          selections = selections.filter(exists).concat( selectedAnnots )*/
 
 
-          let _items = items.instances.concat(annotations)
+          let _items = items.instances//.concat(annotations)
           console.log("full items",_items, "selections",selections)
           let elements = (
             <div>
@@ -483,7 +476,7 @@ function App(interactions) {
           return elements
         }
 
-        let jamInner = normalContent(settings, items, annotations, contextTaps)
+        let jamInner = normalContent(settings, items, contextTaps)
         if(!settings.webglEnabled){
             jamInner = appCriticalErrorDisplay()
         }

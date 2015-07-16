@@ -8,6 +8,8 @@ import {first,toggleCursor} from '../utils/otherUtils'
 import {generateUUID} from 'usco-kernel2/src/utils'
 import {exists} from '../utils/obsUtils'
 
+//import {clearActiveTool$} from 
+
 
 import logger from '../utils/log'
 let log = logger("annotations")
@@ -198,7 +200,7 @@ function hasEntity(data){
 
 ///////////////
 //FIXME: is this more of an intent ??
-function addAnnotationMod$(intent){
+export function addAnnotationMod(intent){
 
   let activeTool$ = intent.settings$.pluck("activeTool")
   let baseStream$ = intent.creationStep$
@@ -307,7 +309,7 @@ function model(intent, source) {
   let source$ = source || Observable.just([])
   //hack
   intent.addAnnotations$ = intent.addAnnotations$
-    .merge( addAnnotationMod$(intent) )
+    .merge( addAnnotationMod(intent) )
 
   let modification$ = makeModification$(intent)
 
@@ -318,3 +320,4 @@ function model(intent, source) {
 }
 
 export default model
+
