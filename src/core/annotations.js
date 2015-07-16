@@ -18,6 +18,7 @@ let fromEvent = Rx.Observable.fromEvent
 let Observable = Rx.Observable
 let merge = Rx.Observable.merge
 
+
 //utilities
 /*generate note annotation data from input*/
 function generateNoteData(data){
@@ -26,7 +27,7 @@ function generateNoteData(data){
   let {object, point, normal} = data
   
   let annotation = {
-    typeUid:"0",
+    typeUid:"A1",
     iuid:generateUUID(),
     value:undefined,
     name:"notexx", 
@@ -53,7 +54,7 @@ function generateThicknessData(data){
   exitPoint  = exitPoint.toArray()
 
   let annotation = {
-    typeUid:"1",
+    typeUid:"A2",
     iuid:generateUUID(),
     name:"thicknessxx", 
     value:thickness,
@@ -78,7 +79,7 @@ function generateDistanceData(data){
   let distance = getDistanceFromStartEnd(start.point,end.point)
 
   let annotation = {
-    typeUid:"2",
+    typeUid:"A4",
     iuid:generateUUID(),
     name:"distance", 
     value:distance,
@@ -106,7 +107,7 @@ function generateDiameterData(data){
   let {center,diameter,normal} = computeCenterDiaNormalFromThreePoints(start.point,mid.point,end.point)
 
   let annotation = {
-    typeUid:"3",
+    typeUid:"A3",
     iuid:generateUUID(),
     name:"diameter", 
     value:diameter,
@@ -128,7 +129,7 @@ function generateAngleData(data){
   let [start,mid,end] = data
 
   let annotation = {
-    typeUid:"4",
+    typeUid:"A5",
     iuid:generateUUID(),
     name:"angle", 
     value:0,
@@ -190,6 +191,11 @@ function handleCursor(input){
     })
 }
 
+
+function hasEntity(data){
+  return (data.object.userData.entity && data.object.userData.entity.iuid)
+}
+
 ///////////////
 //FIXME: is this more of an intent ??
 function addAnnotationMod$(intent){
@@ -206,40 +212,44 @@ function addAnnotationMod$(intent){
 
   let noteAnnot$ = baseStream$
     .filter((data)=>data.activeTool === "addNote" )
-    .take(1)//only need one point
     .map(dataOnly)
     .map(getObjectPointNormal)
+    .filter(hasEntity)//we need data to have entity infos
+    //.take(1)//only need one point
     .map(generateNoteData)
-    .repeat()
 
   let thickessAnnot$ = baseStream$
-    .filter((data)=>data.activeTool === "addThickess" )
-    .take(1)//only need one point
+    .filter((data)=>data.activeTool === "measureThickness" )
     .map(dataOnly)
     .map(getEntryExitThickness)
+    .filter(hasEntity)//we need data to have entity infos
+    //.take(1)//only need one point
     .map(generateThicknessData)
 
   let distanceAnnot$ = baseStream$
-    .filter((data)=>data.activeTool === "addDistance" )
-    .take(1)//only need one point
+    .filter((data)=>data.activeTool === "measureDistance" )
     .map(dataOnly)
     .map(getObjectPointNormal)
+    .filter(hasEntity)//we need data to have entity infos
+    //.take(2)//only need two point
     .bufferWithCount(2)//we need 2 data points to generate a distance
     .map(generateDistanceData)
 
   let diameterAnnot$ = baseStream$
-    .filter((data)=>data.activeTool === "addDiameter" )
-    .take(3)//need three points
+    .filter((data)=>data.activeTool === "measureDiameter" )
     .map(dataOnly)
     .map(getObjectPointNormal)
+    .filter(hasEntity)//we need data to have entity infos
+    //.take(3)//need three points
     .bufferWithCount(3)//we need 3 data points to generate a diameter
     .map(generateDiameterData)
 
   let angleAnnot$ = baseStream$
     .filter((data)=>data.activeTool === "addAngle" )
-    .take(3)
     .map(dataOnly)
     .map(getObjectPointNormal)
+    .filter(hasEntity)//we need data to have entity infos
+    //.take(3)
     .bufferWithCount(3)//we need 3 data points to generate an angle
     .map(generateAngleData)
 
@@ -249,7 +259,9 @@ function addAnnotationMod$(intent){
     distanceAnnot$,
     diameterAnnot$,
     angleAnnot$
-    ).share()
+    )
+    //.repeat()
+    .share()
 
   //clear currently active tool : is this a hack?
   //additions$.subscribe(clearActiveTool$)
