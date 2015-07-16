@@ -131,6 +131,15 @@ export function createVisualMapper(types$, entities$){
       }
     }
 
+    function postProcess(entity,mesh){
+      if(entity.typeUid === "A0"){
+        mesh = applyEntityPropsToMesh({entity,mesh})
+      }else{
+        mesh.userData.entity = entity
+      }
+      return mesh
+    }
+
     if(!iuidToMesh[iuid]){
       let entities = [entity]
       let typeUid = entity.typeUid
@@ -151,11 +160,12 @@ export function createVisualMapper(types$, entities$){
     }else{
       console.log("reusing mesh from cache by iuid",iuid)
       let mesh = iuidToMesh[iuid]
-      mesh = applyEntityPropsToMesh({entity,mesh})
+      //FIXME: hack for now
       subJ.onNext(mesh)
+      postProcess(entity,mesh)
     }
 
-    return subJ.do(cache)//.map(mod)
+    return subJ.map(postProcess.bind(null,entity)).do(cache)//.map(mod)
   }
 
 
