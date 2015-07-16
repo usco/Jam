@@ -19,7 +19,6 @@ import {keycodes, isValidElementEvent} from './interactions/keyboard'
 
 //temporary
 import {makeInternals, meshResources, entityInstanceFromPartTypes} from './core/tbd0'
-import {entityToVisuals, meshInjectPostProcess, applyEntityPropsToMesh} from './core/entityToVisuals'
 import {getVisual,createVisualMapper} from './core/entitiesToVisuals'
 
 
@@ -155,6 +154,7 @@ function settingsM(interactions){
   let activeTool$       = Rx.Observable.merge(
     contextMenuActions$.filter(e=>e.action === "addNote").pluck("action"),
     contextMenuActions$.filter(e=>e.action === "measureDistance").pluck("action"),
+    contextMenuActions$.filter(e=>e.action === "measureDiameter").pluck("action"),
     contextMenuActions$.filter(e=>e.action === "measureThickness").pluck("action"),
     contextMenuActions$.filter(e=>e.action === "measureAngle").pluck("action"),
 
@@ -385,8 +385,9 @@ function App(interactions) {
       appMetadata$,
       entities$,
       settings$,
+      annotations$,
       contextTaps$,
-      function(appMetadata, items, settings, contextTaps){
+      function(appMetadata, items, settings, annotations, contextTaps){
         //            
         let contextMenuItems = [
           {text:"Duplicate", action:"duplicate"},
@@ -403,7 +404,7 @@ function App(interactions) {
             {text:"Measure thickness",action:"measureThickness"},
             {text:"Measure Diameter",action:"measureDiameter"},
             {text:"Measure Distance",action:"measureDistance"},
-            {text:"Measure Angle"}
+            {text:"Measure Angle",action:"measureAngle"}
           ]}
         ]
 
@@ -430,14 +431,23 @@ function App(interactions) {
           )
         }
         
-        function normalContent(settings, items, contextTaps){
+        function normalContent(settings, items, annotations, contextTaps){
           let selections = items.selectedIds.map( id=>items.byId[id] )
-          //console.log("selections",selections)
+          //console.log("selections",selections,"items",items,"annotations",annotations)
+          //FIXME: clunky !!!
+          let selectedAnnots = annotations.filter(function(annot){
+            return (items.selectedIds.indexOf(annot.iuid)> -1)
+          })
+          selections = selections.filter(exists).concat( selectedAnnots )
+
+
+          let _items = items.instances.concat(annotations)
+          console.log("full items",_items, "selections",selections)
           let elements = (
             <div>
               <GlView 
               settings={settings}
-              items={items.instances} 
+              items={_items} 
               selections={selections}
               visualMappings={getVisual}
               className="glview"/>
@@ -446,30 +456,34 @@ function App(interactions) {
             </div>
           )
           //<MainToolbar />
-          //                <ContextMenu position={contextTaps} items={contextMenuItems} selections={selections}/>
+          //               
 
           if(settings.mode === "editor"){
             elements =(
               <div>
                 <GlView 
                 settings={settings}
-                items={items.instances} 
+                items={_items} 
                 selections={selections}
                 visualMappings={getVisual}
                 className="glview"/>
                 
                 <SettingsView settings={settings} ></SettingsView>
 
-                
+                <ContextMenu position={contextTaps} items={contextMenuItems} selections={selections}/>
                 <FullScreenToggler/> 
                 <EntityInfos entities={selections} settings={settings} />
+
+                <div className="debugDisplay">
+                  {settings.activeTool}
+                </div>
               </div>  
             )
           }
           return elements
         }
 
-        let jamInner = normalContent(settings, items, contextTaps)
+        let jamInner = normalContent(settings, items, annotations, contextTaps)
         if(!settings.webglEnabled){
             jamInner = appCriticalErrorDisplay()
         }
