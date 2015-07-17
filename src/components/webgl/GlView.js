@@ -222,54 +222,6 @@ function GlView(interactions, props, self){
   //activeTool$.subscribe((data)=>console.log("activeTool",data))
   //selections$.subscribe((data)=>console.log("selections",data))
 
-  //TODO: we need some diffing etc somewhere in here  
-  //ie : which were added , which were removed, which ones were changed
-  function clearScene(){
-    if(scene){
-      if(scene.dynamicInjector){
-        scene.remove(scene.dynamicInjector)
-      }
-      let dynamicInjector = new THREE.Object3D()
-      scene.dynamicInjector = dynamicInjector
-      scene.add( dynamicInjector )
-    }
-  }
-  function addMeshToScene(mesh){
-     scene.dynamicInjector.add(mesh)
-  }
-
-  items$.subscribe(e=>console.log("items in glView updated",e))
-
-  items$
-    .withLatestFrom( visualMappings$ ,function(items, mapper){
-      console.log("MAPPING TO VISUALS",mapper, items)
-      return items
-        .filter(exists)
-        .map(mapper)
-        .map(s=>s.take(1))
-    })
-    .do(clearScene)
-    .flatMap(Rx.Observable.forkJoin)
-    .subscribe(function(meshes){
-      meshes.map(addMeshToScene)
-    })
-   
-
-  /*items$
-    .withLatestFrom( visualMappings$ ,function(items, mapper){
-      console.log("visualMappings diff test",mapper, items)
-     
-      if(items){
-        let obs = items.map(mapper).map(s=>s.take(1))
-        Rx.Observable.forkJoin(obs)
-          .bufferWithTimeOrCount(16,2)
-          .subscribe(function(meshes){
-            console.log("meshes",meshes)
-        })
-      }
-    })
-    .subscribe(e=>e)*/
-
   let renderer = null
 
   let composer = null
@@ -466,6 +418,8 @@ function GlView(interactions, props, self){
 
   //TODO: only do once
   let meshes$ = selections$
+    .debounce(200)
+    .distinctUntilChanged(null, comparer)
     .withLatestFrom( visualMappings$ ,function(selections, mapper){   
       return selections
         .map(mapper)
@@ -486,10 +440,105 @@ function GlView(interactions, props, self){
       let {added,removed,changed} = extractChanges(prev,cur)
       applyFx(null,added)
       removeFx(null,removed)
-
-
-
     },e=>console.log("error",e))
+
+
+
+  //TODO: we need some diffing etc somewhere in here  
+  //ie : which were added , which were removed, which ones were changed
+  function clearScene(){
+    if(scene){
+      if(scene.dynamicInjector){
+        scene.remove(scene.dynamicInjector)
+      }
+      let dynamicInjector = new THREE.Object3D()
+      scene.dynamicInjector = dynamicInjector
+      scene.add( dynamicInjector )
+    }
+  }
+  function addMeshToScene(mesh){
+     scene.dynamicInjector.add(mesh)
+  }
+
+  function transformEquals(a,b){
+    if(!a || !b) return true
+    for(let j=0;j<a.length;j++){
+      if(a[j]!==b[j]){
+        return false
+      }
+    }
+    return true
+  }
+
+  function comparer(prev,cur){
+    //console.log("prev",prev,"cur",cur)
+
+    if (!cur)
+      return false
+
+    // compare lengths - can save a lot of time 
+    if (cur.length != prev.length)
+      return false
+
+    let sortedCur  = cur.sort()
+    let sortedPrev = prev.sort()
+    for(var i=0;i<cur.length;i++){
+      if(sortedCur[i].typeUid !== sortedPrev[i].typeUid) 
+        return false
+
+      if(sortedCur[i].iuid !== sortedPrev[i].iuid) 
+        return false
+
+     
+      let curVal = sortedCur[i]
+      let preVal = sortedPrev[i]
+
+      /*
+        sortedCur[i].color === sortedPrev[i].color
+        )*/
+
+
+      let posEq = transformEquals( curVal.pos, preVal.pos )
+      let rotEq = transformEquals( curVal.rot, preVal.rot )
+      let scaEq = transformEquals( curVal.sca, preVal.sca )
+      let allEqual = (posEq && rotEq && scaEq)
+      if(!allEqual) return false
+    }
+
+    return true 
+  }
+
+
+  items$
+    .debounce(200)
+    .distinctUntilChanged(null, comparer)
+    .withLatestFrom( visualMappings$ ,function(items, mapper){
+      console.log("MAPPING TO VISUALS",mapper, items)
+      return items
+        .filter(exists)
+        .map(mapper)
+        .map(s=>s.take(1))
+    })
+    .do(clearScene)
+    .flatMap(Rx.Observable.forkJoin)
+    .subscribe(function(meshes){
+      meshes.map(addMeshToScene)
+    })
+   
+  /*items$
+    .withLatestFrom( visualMappings$ ,function(items, mapper){
+      console.log("visualMappings diff test",mapper, items)
+     
+      if(items){
+        let obs = items.map(mapper).map(s=>s.take(1))
+        Rx.Observable.forkJoin(obs)
+          .bufferWithTimeOrCount(16,2)
+          .subscribe(function(meshes){
+            console.log("meshes",meshes)
+        })
+      }
+    })
+    .subscribe(e=>e)*/
 
   //Stream of selected meshes
   let selectedMeshes$ = merge(
