@@ -33,7 +33,7 @@ function generateNoteData(data){
     iuid:generateUUID(),
     value:undefined,
     comment:undefined,
-    name:"notexx", 
+    name:"note", 
     target:{
       point:point.toArray(), 
       normal:normal.toArray(),
@@ -59,7 +59,7 @@ function generateThicknessData(data){
   let annotation = {
     typeUid:"A2",
     iuid:generateUUID(),
-    name:"thicknessxx", 
+    name:"thickness", 
     value:thickness,
     target:{
       entryPoint:entryPoint, 
