@@ -88,7 +88,7 @@ function extraInputs(entity, numberPrecision, changeHandler){
     if( entity.hasOwnProperty("value") && entity.value ){
       valueEdit = (
         <span>
-          Value: <EditableItem data={entity.value} placeholder="..." editable={false} />  
+          Value: <EditableItem data={formatNumberTo(entity.value, numberPrecision)} placeholder="..." editable={false} />  
         </span>
       )
     }

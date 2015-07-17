@@ -2,6 +2,7 @@ import Cycle from 'cycle-react'
 let React = Cycle.React
 let {Rx} = Cycle
 import Class from "classnames"
+let fromEvent = Rx.Observable.fromEvent
 
 
 //fyi for now, we hardcode some of the ui 
@@ -13,6 +14,17 @@ function SettingsView(interactions, props) {
     .map(true)
     .scan((acc,val)=>!acc)
     .startWith(false)
+
+  //any outside taps close the settings
+  let outsideTaps$     = fromEvent(window,"click")
+    .map(e=>e.target)
+    .map(function(target){
+      return document.querySelector(".settings").contains(target)
+    })
+    .filter(x=>(x===false))//we only care if it was clicked outside, not in
+
+  toggled$ = toggled$.merge( outsideTaps$ )
+  
 
   let vtree$ = Rx.Observable
     .combineLatest(
