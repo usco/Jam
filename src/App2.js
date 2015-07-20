@@ -197,11 +197,11 @@ function App(interactions) {
 
   //annotations
   let aIntents = annotIntents(interactions)
-  intent = {
+  let aIntent = {
     creationStep$:aIntents.creationStep$,
     settings$:settings$
   }
-  let addAnnotation$ = addAnnotationMod(intent)
+  let addAnnotation$ = addAnnotationMod(aIntent)
 
   addAnnotation$
     .withLatestFrom(settings$,function(annotation,settings){
@@ -216,7 +216,7 @@ function App(interactions) {
   
 
   //entities
-  intent = {
+  let iIntent = {
     createEntityInstance$:new Rx.Subject(),//createEntityInstance$,
     addEntities$: addEntities$,
 
@@ -231,7 +231,7 @@ function App(interactions) {
   }
 
   let entities = require("./core/entities")
-  let entities$ = entities(intent)
+  let entities$ = entities(iIntent)
 
 
   //output (USE DRIVER!!!!)
@@ -239,24 +239,6 @@ function App(interactions) {
     console.log("settings, to save etc",settings)
     localStorage.setItem("jam!-settings",JSON.stringify(settings) )
   })
-
-
-  //what is my visual for any given entity
-  let otherData$ = partTypes$
-    .zip(meshResources$,function(types, meshResource){
-
-      console.log("types",types,"meshResource",meshResource)
-      return {
-        typeUid:types.meshNameToPartTypeUId[meshResource.resource.name],
-        mesh:meshResource.mesh,
-        resource:meshResource.resource
-      }
-    })
-    /*.scan(function(acc,val){
-      console.lot("acc",acc,"val",val)
-      return acc[val.typeUid] = val.mesh
-    },{})*/
-  .subscribe(data=>console.log(" data",data))
 
   let {getVisual,addVisualProvider } = createVisualMapper(partTypes$, entities$)
 
