@@ -574,6 +574,20 @@ function GlView(interactions, props, self){
       ,(err)=>console.log("error in setting transform",err)
     )
 
+  
+  selectedMeshes$ =
+    selectedMeshes$.
+    withLatestFrom(activeTool$,function(meshes,tool)
+      {
+        let idx = ["translate","rotate","scale",undefined].indexOf(tool)
+        if(idx > -1)
+        {
+          return meshes
+        }else{
+          return []
+        }
+      })
+
 
   //what are the active controls : camera, object tranforms, 
   let tControlsActive$ = merge(
