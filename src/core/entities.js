@@ -285,7 +285,7 @@ function makeModification$(intent){
   )
 }
 
-function model(intent, source) {
+function entities(intent, source) {
   let source$ = source || Observable.just(defaults)
 
   intent.selectEntities$ = intent.selectEntities$.merge(selectEntities$)
@@ -299,7 +299,7 @@ function model(intent, source) {
     .shareReplay(1)
 }
 
-export default model
+export default entities
 
 
 
