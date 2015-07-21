@@ -96,6 +96,12 @@ function intent(interactions){
   let postMessages$ = require('./core/postMessageDriver')( )
   let newDesign$ = postMessages$.filter(hasClear).map(true)
 
+  //
+  let undo$ = interactions.get("#undo","click")
+    undo$.subscribe(e=>console.log("UNDO"))
+  let redo$ = interactions.get("#redo","click")
+    redo$.subscribe(e=>console.log("REDO"))
+
   return {
     selections$
     ,selectionTransforms$
@@ -108,6 +114,8 @@ function intent(interactions){
 
     ,newDesign$
 
+    ,undo$
+    ,redo$
     /*addNote$,
     measureDistance$,
     measureThickness$,
@@ -242,6 +250,71 @@ function App(interactions) {
 
   let {getVisual,addVisualProvider } = createVisualMapper(partTypes$, entities$)
 
+
+  let history$ = new Rx.BehaviorSubject({
+    undos:[],
+    redos:[]
+  })
+
+
+  entities$.pluck("instances").distinctUntilChanged()
+    .withLatestFrom(history$,function(entities,history){
+      history.undos.push(entities)
+    })
+    .subscribe(e=>e)
+
+
+  Rx.Observable.merge(
+    intents.undo$.map(true),
+    intents.redo$.map(false)
+  )
+    .withLatestFrom(history$,function(u,history){
+      let {undos,redos} = history
+
+      let source = undos//either undo or redo
+      let target = redos//either redo or undo 
+      if(!u){ 
+        console.log("redoing")
+        source = redos 
+        target = undos
+      }else{
+        console.log("undoing")
+      }
+
+      let last = source.pop()
+      if(last){
+        target.push(last)
+        history$.onNext({
+          undos
+          ,redos
+        })
+      }
+      //TODO: how do we set the entities data ?
+    })
+    .subscribe(e=>e)
+
+  /*intents.redo$
+    .withLatestFrom(history$,function(u,history){
+      let {undos,redos} = history
+
+      console.log("Redoing")
+      let r = redos.pop()
+      if(r){
+        undos.push(r)
+        history$.onNext({
+          undos
+          ,redos
+        })
+      }
+      //TODO: how do we set the entities data ?
+    })
+    .subscribe(e=>e)*/
+
+ 
+
+
+
+
   //Experimental: system describing available actions by entity "category"
   let lookupByEntityCategory ={
     "common":[
@@ -275,7 +348,10 @@ function App(interactions) {
       entities$,
       settings$,
       contextTaps$,
-      function(appMetadata, items, settings, contextTaps){
+      history$,
+      function(appMetadata, items, settings, contextTaps,undoRedos){
+
+        let {undos,redos} = undoRedos
         //            
         let contextMenuItems = [
           {text:"Duplicate", action:"duplicate"},
@@ -357,6 +433,8 @@ function App(interactions) {
 
                 <div className="debugDisplay">
                   {settings.activeTool}
+                  <button id="undo" disabled={undos.length===0}>Undo</button>
+                  <button id="redo" disabled={redos.length===0}>Redo</button>
                 </div>
               </div>  
             )
