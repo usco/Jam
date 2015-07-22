@@ -125,6 +125,37 @@ function debugItems(entity,debug){
 }
 
 
+function comments(comments){
+  let comments = "bla"
+  let commentText = "Bla bla details"
+  let commentElement = null
+
+  if(comments){
+    commentElement = <span>
+      <EditableItem data={commentText} />
+    </span>
+  }
+
+  return (
+      <span>
+        <a className="tooltips" href="#">
+          <svg className="icon" version="1.1" id="Message" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
+             viewBox="0 0 20 20" enable-background="new 0 0 20 20" >
+            <path fill="#FFFFFF" d="M18,6v7c0,1.1-0.9,2-2,2h-4v3l-4-3H4c-1.101,0-2-0.9-2-2V6c0-1.1,0.899-2,2-2h12C17.1,4,18,4.9,18,6z"/>
+          </svg>
+          <span>
+            See/add comments
+          </span>
+        </a>
+        <div className="commentDetails">
+          {commentElement}
+        </div>
+      </span>
+
+  )
+}
+
+
 function EntityInfos(interactions, props) {
   let settings$ = props.get('settings').filter(exists).startWith([])
   let entities$ = props.get('entities').filter(exists).startWith([])
@@ -198,6 +229,8 @@ function EntityInfos(interactions, props) {
               {transformInputs(entity, "rot", "R", controlsStep, numberPrecision, changeHandler)}
               {transformInputs(entity, "sca", "S", controlsStep, numberPrecision, changeHandler)}
               {extraInputs(entity,numberPrecision,changeHandler)}
+
+              {comments()}
             </div>
           )
         }

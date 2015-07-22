@@ -98,9 +98,10 @@ function intent(interactions){
 
   //
   let undo$ = interactions.get("#undo","click")
-    undo$.subscribe(e=>console.log("UNDO"))
   let redo$ = interactions.get("#redo","click")
-    redo$.subscribe(e=>console.log("REDO"))
+
+  //stand in for future use (circular depency problem !)
+  let replaceAll$ = new Rx.Subject()
 
   return {
     selections$
@@ -114,6 +115,7 @@ function intent(interactions){
 
     ,newDesign$
 
+    ,replaceAll$
     ,undo$
     ,redo$
     /*addNote$,
@@ -135,6 +137,12 @@ function annotIntents(interactions){
 
   return {
     creationStep$ : annotationCreationStep$
+  }
+}
+
+function commentsIntents(interactions){
+  return {
+    addComments$ : new Rx.Subject()
   }
 }
 
@@ -222,7 +230,6 @@ function App(interactions) {
 
   let addEntities$ = newInstFromTypes$.merge(addAnnotation$)
   
-
   //entities
   let iIntent = {
     createEntityInstance$:new Rx.Subject(),//createEntityInstance$,
@@ -235,12 +242,17 @@ function App(interactions) {
     selectEntities$: intents.selections$,
 
     newDesign$: intents.newDesign$, 
+    replaceAll$:intents.replaceAll$,
     settings$:settings$
   }
 
   let entities = require("./core/entities")
   let entities$ = entities(iIntent)
 
+
+
+  let comments = require("./core/comments")
+  let comments$ = comments(commentsIntents(interactions))
 
   //output (USE DRIVER!!!!)
   settings$.subscribe(function(settings){
@@ -256,10 +268,12 @@ function App(interactions) {
     redos:[]
   })
 
-
-  entities$.pluck("instances").distinctUntilChanged()
+  entities$
+    //.pluck("instances")
+    //.distinctUntilChanged()
     .withLatestFrom(history$,function(entities,history){
-      history.undos.push(entities)
+      //console.log("updating history")
+      //history.undos.push(entities)
     })
     .subscribe(e=>e)
 
@@ -274,11 +288,11 @@ function App(interactions) {
       let source = undos//either undo or redo
       let target = redos//either redo or undo 
       if(!u){ 
-        console.log("redoing")
+        console.log("redoing", redos)
         source = redos 
         target = undos
       }else{
-        console.log("undoing")
+        console.log("undoing", undos)
       }
 
       let last = source.pop()
@@ -288,32 +302,13 @@ function App(interactions) {
           undos
           ,redos
         })
+
+        //TODO: how do we set the entities data ?
+        intents.replaceAll$.onNext(last)
       }
-      //TODO: how do we set the entities data ?
+
     })
     .subscribe(e=>e)
-
-  /*intents.redo$
-    .withLatestFrom(history$,function(u,history){
-      let {undos,redos} = history
-
-      console.log("Redoing")
-      let r = redos.pop()
-      if(r){
-        undos.push(r)
-        history$.onNext({
-          undos
-          ,redos
-        })
-      }
-      //TODO: how do we set the entities data ?
-    })
-    .subscribe(e=>e)*/
-
- 
-
-
-
 
   //Experimental: system describing available actions by entity "category"
   let lookupByEntityCategory ={
@@ -369,7 +364,8 @@ function App(interactions) {
             {text:"Measure Diameter",action:"measureDiameter"},
             {text:"Measure Distance",action:"measureDistance"},
             {text:"Measure Angle",action:"measureAngle"}
-          ]}
+          ]},
+          {text:"comment",action:"addComment"}
         ]
 
         function createContextmenuItems(){

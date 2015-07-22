@@ -16,7 +16,7 @@ const defaults = {
 
 //comments[key]= "some quite long text, with markdown support "
 
-function makeModification(){
+function makeModification(intent){
   /*add comments*/
   let addComments$ = intent.addComments$
     .withLatestFrom(intent.settings$,function(newData,settings){
@@ -36,8 +36,6 @@ function makeModification(){
         updatedData[key] = text
 
       })
-
-      
       return updatedData
     })
   
