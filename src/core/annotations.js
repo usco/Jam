@@ -31,6 +31,7 @@ function generateNoteData(data){
   let annotation = {
     typeUid:"A1",
     iuid:generateUUID(),
+    cid:1,
     value:undefined,
     comment:undefined,
     name:"note", 
@@ -59,6 +60,7 @@ function generateThicknessData(data){
   let annotation = {
     typeUid:"A2",
     iuid:generateUUID(),
+    cid:2,
     name:"thickness", 
     value:thickness,
     target:{
@@ -84,6 +86,7 @@ function generateDistanceData(data){
   let annotation = {
     typeUid:"A4",
     iuid:generateUUID(),
+    cid:3,//categoryId
     name:"distance", 
     value:distance,
     target:{
@@ -112,6 +115,7 @@ function generateDiameterData(data){
   let annotation = {
     typeUid:"A3",
     iuid:generateUUID(),
+    cid:4,//categoryId
     name:"diameter", 
     value:diameter,
     target:{
@@ -134,6 +138,7 @@ function generateAngleData(data){
   let annotation = {
     typeUid:"A5",
     iuid:generateUUID(),
+    cid:5,//categoryId
     name:"angle", 
     value:0,
     target:{

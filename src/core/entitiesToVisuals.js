@@ -55,15 +55,13 @@ function meshesFromDeps(deps, getVisual, entities$){
     .flatMap(Rx.Observable.forkJoin)
     .do(e=>console.log("got some data2",e))
     //.subscribe(x=>console.log("deps",x))
-
-  
 }
 
 
 /*provides visual mapping to "arbitrary" 3d meshes*/
 function remoteMeshVisualProvider(entity, subJ, params){
   let {types$} = params
-  //console.log("return mesh")
+
   types$.subscribe(
     function(types){
       //console.log("TYPES",types)
@@ -94,6 +92,19 @@ function staticVisualProvider(entity, subJ, getVisual){
     },e=>console.log("error",e),e=>console.log("DONE with observables"))
 }
 
+function annotationVisualProvider(entity, subJ, getVisual, entities){
+
+  /*switch(entity.typeUid){
+    case "A1":
+      noteVisualProvider()
+    break;
+  }*/
+
+  //visualProviders["A1"] = noteVisualProvider 
+  //visualProviders["A2"] = thicknessVisualProvider 
+  //visualProviders["A3"] = diameterVisualProvider 
+  //visualProviders["A4"] = distanceVisualProvider 
+}
 
 //wrapper function
 export function createVisualMapper(types$, entities$){
@@ -104,14 +115,15 @@ export function createVisualMapper(types$, entities$){
   let typeUidToTemplateMesh = {}
   let visualProviders = {}
 
-  visualProviders["A0"] = remoteMeshVisualProvider //(entity, subJ, getVisual, types$)
-  visualProviders["A1"] = noteVisualProvider //(entity, subJ, getVisual, entities$) 
-  visualProviders["A2"] = thicknessVisualProvider //(entity, subJ, getVisual, entities$) 
-  visualProviders["A3"] = diameterVisualProvider //(entity, subJ, getVisual, entities$) 
-  visualProviders["A4"] = distanceVisualProvider //(entity, subJ, getVisual, entities$) 
+  visualProviders[0] = remoteMeshVisualProvider //(entity, subJ, getVisual, types$)
+  //visualProviders[1] = annotationVisualProvider
+  visualProviders[1] = noteVisualProvider //(entity, subJ, getVisual, entities$) 
+  visualProviders[2] = thicknessVisualProvider //(entity, subJ, getVisual, entities$) 
+  visualProviders[4] = diameterVisualProvider //(entity, subJ, getVisual, entities$) 
+  visualProviders[3] = distanceVisualProvider //(entity, subJ, getVisual, entities$)*/
 
   function getVisual(entity){
-    console.log("getting visual")
+    console.log("getting visual for",entity)
     
     //now each resolver  needs to fire "onNext on this subject"
     let subJ = new Rx.ReplaySubject()
@@ -132,7 +144,7 @@ export function createVisualMapper(types$, entities$){
     }
 
     function postProcess(entity,mesh){
-      if(entity.typeUid === "A0"){
+      if(entity.cid === 0){
         mesh = applyEntityPropsToMesh({entity,mesh})
       }else{
         mesh.userData.entity = entity
@@ -142,8 +154,9 @@ export function createVisualMapper(types$, entities$){
 
     if(!iuidToMesh[iuid]){
       let entities = [entity]
-      let typeUid = entity.typeUid
-      let visualProvider = visualProviders[typeUid]
+      let typeUid  = entity.typeUid
+      let cid      = entity.cid
+      let visualProvider = visualProviders[cid]
 
       let params = {getVisual,types$,entities$}
       //TODO: some providers need the "types$" , others need entities$, needs to be specifiable
@@ -151,11 +164,6 @@ export function createVisualMapper(types$, entities$){
         visualProvider(entity, subJ, params)
       }
       //obsByTypes(entities,["A0"]).map()
-      /*if(entity.typeUid === "A0") remoteMeshVisualProvider(entity, subJ, getVisual, types$)
-      if(entity.typeUid === "A1") noteVisualProvider(entity, subJ, getVisual, entities$) 
-      if(entity.typeUid === "A2") thicknessVisualProvider(entity, subJ, getVisual, entities$) 
-      if(entity.typeUid === "A3") diameterVisualProvider(entity, subJ, getVisual, entities$) 
-      if(entity.typeUid === "A4") distanceVisualProvider(entity, subJ, getVisual, entities$) */
 
     }else{
       console.log("reusing mesh from cache by iuid",iuid)

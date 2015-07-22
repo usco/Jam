@@ -104,6 +104,7 @@ export function entityInstanceFromPartTypes(partTypes$)
             name: name,
             iuid: generateUUID(),
             typeUid: typeUid,
+            cid:0,//categoryId
             color: "#07a9ff",
             pos: [0,0,h/2],
             rot: [0,0,0],
