@@ -125,14 +125,56 @@ function debugItems(entity,debug){
 }
 
 
+function commentsList (comments) {
+  let listElements = comments.map(function(comment){
+    return <li className="item"> 
+        <header>
+          <svg className="icon" version="1.1" id="Message" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
+             viewBox="0 0 20 20" enable-background="new 0 0 20 20" >
+            <path fill="#FFFFFF" d="M18,6v7c0,1.1-0.9,2-2,2h-4v3l-4-3H4c-1.101,0-2-0.9-2-2V6c0-1.1,0.899-2,2-2h12C17.1,4,18,4.9,18,6z"/>
+          </svg>
+          {comment.author} commented 0.5h ago
+        </header>
+        <div className="content">
+          <EditableItem data={comment.text} />
+        </div>
+      </li>
+  })
+  console.log("listElements",listElements)
+  return <ul className="commentsList">
+    {listElements}
+  </ul>
+
+}
+
 function comments(comments){
-  let comments = "bla"
-  let commentText = "Bla bla details"
+  let comments = [
+    {text:"bla bla details",author:"foo"},
+    {text:"oh yes cool ",author:"bar"},
+  ]
+  let newComment = {
+    text:""
+  }
   let commentElement = null
 
   if(comments){
     commentElement = <span>
-      <EditableItem data={commentText} />
+      { commentsList(comments) }
+
+      <div className="item new">
+        <header>
+            <svg className="icon" version="1.1" id="Message" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
+               viewBox="0 0 20 20" enable-background="new 0 0 20 20" >
+              <path fill="#FFFFFF" d="M18,6v7c0,1.1-0.9,2-2,2h-4v3l-4-3H4c-1.101,0-2-0.9-2-2V6c0-1.1,0.899-2,2-2h12C17.1,4,18,4.9,18,6z"/>
+            </svg>
+            Leave a comment
+        </header>
+        <div className="content">
+          <EditableItem data={newComment.text}  placeholder="what are your thoughts..." multiline="true"/>
+        </div>
+        <button>Add comment</button>
+      </div>
+      
     </span>
   }
 
