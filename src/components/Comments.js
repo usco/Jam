@@ -28,25 +28,37 @@ function commentsList (comments) {
         </div>
       </li>
   })
-  console.log("listElements",listElements)
   return <ul className="commentsList">
     {listElements}
   </ul>
+}
 
+function createComment (newComment,  changeHandler){
+  return  (
+    <div className="item new">
+      <header>
+          <svg className="icon" version="1.1" id="Message" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
+             viewBox="0 0 20 20" enable-background="new 0 0 20 20" >
+            <path fill="#FFFFFF" d="M18,6v7c0,1.1-0.9,2-2,2h-4v3l-4-3H4c-1.101,0-2-0.9-2-2V6c0-1.1,0.899-2,2-2h12C17.1,4,18,4.9,18,6z"/>
+          </svg>
+          Leave a comment
+      </header>
+      <div className="content">
+        <EditableItem id="newComment" 
+          data={newComment.text}  
+          placeholder="what are your thoughts..." 
+          multiline="true"
+          changeHandler={changeHandler}
+        />
+      </div>
+      <button className="add">Add comment</button>
+    </div>
+  )
 }
 
 //FIXME : uppercased to avoid conflict with comments data
-function renderComments(comments, entity){
-  /*let comments = [
-    {text:"bla bla details",author:"foo"},
-    {text:"oh yes cool ",author:"bar"},
-  ]*/
-  console.log("comments",comments)
-  let newComment = {
-    text:""
-  }
+function renderComments(comments, entity, newComment, changeHandler){
   let commentDetails = null
-
   let commentsData = []
   if(comments) commentsData = comments.data
 
@@ -54,27 +66,13 @@ function renderComments(comments, entity){
     commentDetails = <div className="commentDetails">
       <span>
         { commentsList(commentsData) }
-
-        <div className="item new">
-          <header>
-              <svg className="icon" version="1.1" id="Message" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
-                 viewBox="0 0 20 20" enable-background="new 0 0 20 20" >
-                <path fill="#FFFFFF" d="M18,6v7c0,1.1-0.9,2-2,2h-4v3l-4-3H4c-1.101,0-2-0.9-2-2V6c0-1.1,0.899-2,2-2h12C17.1,4,18,4.9,18,6z"/>
-              </svg>
-              Leave a comment
-          </header>
-          <div className="content">
-            <EditableItem data={newComment.text}  placeholder="what are your thoughts..." multiline="true"/>
-          </div>
-          <button className="add">Add comment</button>
-        </div>
-        
+        { createComment(newComment, changeHandler) }
       </span>
     </div>
   }
 
   return (
-      <span>
+      <span className="comments">
         <a className="tooltips" href="#">
           <svg className="icon" version="1.1" id="Message" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
              viewBox="0 0 20 20" enable-background="new 0 0 20 20" >
@@ -92,19 +90,51 @@ function renderComments(comments, entity){
 
 
 function Comments(interactions, props) {
-  let comments$ = props.get('comments')
-  let entity$   = props.get('entity')
+  let comments$   = props.get('comments')
+  let entity$     = props.get('entity')
+  let addComment$ = interactions.get(".add", "click")
+
+  //stream containing new comment, if any
+  let newComment$ = interactions.subject('newCommentContent$')
+    .map(e=>e.target.value)
+    .startWith(undefined)
+    .map(e=>{ return {text:e} })
+    .shareReplay(1)
+
+  //stream of new comments
+  addComment$ = addComment$
+    .withLatestFrom(
+      newComment$
+      ,entity$.filter(exists).map(e=>{return {typeUid:e.typeUid, iuid:e.iuid}  })
+      ,function(a,commentText,entityData){
+        return { text:commentText.text, target:entityData}
+      })
+    .shareReplay(1)
+
+  addComment$.subscribe(e=>console.log("addComment",e))
 
   let vtree$ = Rx.Observable
     .combineLatest(
       comments$
       ,entity$
-      ,renderComments
+      ,newComment$
+      ,function(comments,entity,newComment){
+
+        //FIXME: temp hack
+        function changeHandler(fieldName, index, event){
+          interactions.subject('newCommentContent$').onEvent(event)
+        }
+        let _changeHandler = changeHandler.bind(null,"comment",undefined)
+
+        return renderComments(comments,entity,newComment, _changeHandler)
+      }
     )
 
   return {
     view: vtree$,
-    events:{}
+    events:{
+      addComment$
+    }
   }
 }
 
