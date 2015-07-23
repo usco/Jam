@@ -13,11 +13,11 @@ import {toArray} from '../utils/utils'
 //"comments" system
 const defaults = {
   data:[
-     {text:"bla bla details",author:"foo"},
-     {text:"oh yes cool ",author:"bar"},
+     /*{text:"bla bla details",author:"foo"},
+     {text:"oh yes cool ",author:"bar"},*/
   ]
   ,bykey:{
-    
+
   }
 }
 
@@ -33,18 +33,22 @@ function makeModification(intent){
       log.info("adding comments", newData)
 
       let {data,bykey} = existingData
-      let comments = toArray(newData)
+      let newComments = toArray(newData)
       let updatedData = Object.assign({},existingData)
 
-      comments.map(function(comment){
-        let {iuid,tuid} = comment.target
+      newComments.map(function(comment){
+        let {iuid,typeUid} = comment.target
         let text = comment.text 
 
-        let key = {iUid:"xx",tUid:"xx", toString(){
+        let key = [iuid,typeUid] /*{iUid:"xx",tUid:"xx", toString(){
           iUid+tUid
-        }}
-        bykey[key] = text
+        }}*/
+        
+        //FIXME: how to deal with authors ? 
 
+        let entry = {text:text, author:"jon doe", iuid, typeUid}
+        updatedData.bykey[key] = entry
+        updatedData.data.push( entry )
       })
       return updatedData
     })

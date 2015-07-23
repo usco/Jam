@@ -141,8 +141,11 @@ function annotIntents(interactions){
 }
 
 function commentsIntents(interactions, settings$){
+  //interactions.get(".commentDetails","addComment$").subscribe(e=>console.log("gna",e))
+  //.subscribe(e=>console.log("gna",e))
+
   return {
-    addComments$ : new Rx.Subject()
+    addComments$ : interactions.get(".entityInfos","addComment$").pluck("detail")
     ,settings$
   }
 }
@@ -395,7 +398,7 @@ function App(interactions) {
           )
         }
         
-        function normalContent(settings, items,contextTaps){
+        function normalContent(settings, items, contextTaps, comments){
           let selections = items.selectedIds.map( id=>items.byId[id] )
           //console.log("selections",selections,"items",items,"annotations",annotations)
           let _items = items.instances
@@ -442,7 +445,7 @@ function App(interactions) {
           return elements
         }
 
-        let jamInner = normalContent(settings, items, contextTaps)
+        let jamInner = normalContent(settings, items, contextTaps, comments)
         if(!settings.webglEnabled){
             jamInner = appCriticalErrorDisplay()
         }
