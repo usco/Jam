@@ -132,6 +132,7 @@ function EntityInfos(interactions, props) {
   let comments$ = props.get('comments').filter(exists).startWith(undefined)
 
   let selectionTransforms$ = interactions.subject('selectionTransforms$')
+  let addComment$          = interactions.get(".comments","addComment$").pluck("detail")
 
   //interactions.subject("valueChange$")
   //  .subscribe(data=>console.log("textChanges"))
@@ -186,7 +187,7 @@ function EntityInfos(interactions, props) {
               {transformInputs(entity, "sca", "S", controlsStep, numberPrecision, changeHandler)}
               {extraInputs(entity,numberPrecision,changeHandler)}
 
-              <Comments comments={comments} entity={entity} />
+              <Comments className="comments" comments={comments} entity={entity} />
             </div>
           )
         }
@@ -198,6 +199,7 @@ function EntityInfos(interactions, props) {
     view: vtree$,
     events:{
       selectionTransforms$
+      ,addComment$
     }
   }
 }
