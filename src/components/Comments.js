@@ -111,6 +111,12 @@ function Comments(interactions, props) {
       })
     .shareReplay(1)
 
+  newComment$ = 
+    Rx.Observable.merge(
+      newComment$,
+      addComment$.map({text:undefined})
+    )
+
   addComment$.subscribe(e=>console.log("addComment",e))
 
   let vtree$ = Rx.Observable

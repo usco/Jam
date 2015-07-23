@@ -134,6 +134,8 @@ function EntityInfos(interactions, props) {
   let selectionTransforms$ = interactions.subject('selectionTransforms$')
   let addComment$          = interactions.get(".comments","addComment$").pluck("detail")
 
+  comments$.subscribe(e=>console.log("Comments",e))
+
   //interactions.subject("valueChange$")
   //  .subscribe(data=>console.log("textChanges"))
   let numberPrecision = 2
@@ -153,7 +155,7 @@ function EntityInfos(interactions, props) {
         if(entities.length>0) entity = entities[0]
 
         function changeHandler(fieldName, index, event){
-          console.log("changeHandler",fieldName,index,event)
+          //console.log("changeHandler",fieldName,index,event)
           let transforms = entity[fieldName]
           let value = event.target.value
 
