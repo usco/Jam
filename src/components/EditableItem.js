@@ -1,7 +1,7 @@
 import Cycle from 'cycle-react'
 let React = Cycle.React
 let {Rx} = Cycle
-import Class from 'classnames'
+import Classes from 'classnames'
 
 import {trim} from '../utils/utils'
 import {preventDefault,isTextNotEmpty,formatData,exists} from '../utils/obsUtils'
@@ -23,7 +23,7 @@ function EditableItem(interactions, props) {
   let editing$     = Rx.Observable.merge(
     interactions.subject('editing').map(true),//interactions.get('.textInput','click')
     interactions.subject('blur').map(false),//interactions.get('.textInput','blur')
-    keydowns$.map(e => e.keyCode).filter(k => k ===13).map(false), //if we press enter, stop editing
+    keydowns$.filter(e=>!e.shiftKey).map(e => e.keyCode).filter(k => k ===13).map(false), //if we press enter (not shift+enter), stop editing
     keydowns$.map(e => e.keyCode).filter(k => k ===27).map(false) //if we press exit, stop editing
   ).startWith(false)
 
@@ -49,21 +49,28 @@ function EditableItem(interactions, props) {
       data$,
       function(editing,multiline,placeholder,editable,data){
         let element =null
+        let placeholderMode = true
 
         if(data || data !== "" && data!==undefined && data !== null ){
           placeholder = ""
+          placeholderMode = false
         }
 
         let value = data
         if(!value || trim(value) === ""){
           value = undefined
         }
-        if(value) trim(value)
+
+        if(value) 
+          trim(value)
+
+
+        let classNames = Classes("textInput", { "placeholder": placeholderMode } )
 
         if (editing && editable) {
           if(multiline){
             element = <textarea 
-            className="textInput"
+            className= { classNames }
             autoFocus 
             value={value}
             onBlur={eventer('blur')}
@@ -73,7 +80,7 @@ function EditableItem(interactions, props) {
             /> 
           }else{
             element = <input type='text' 
-            className="textInput"
+            className= { classNames }
             autoFocus 
             value={value}
             placeholder={placeholder}
@@ -85,7 +92,7 @@ function EditableItem(interactions, props) {
           }
         }
         else {
-          element = <span className="textInput"
+          element = <span className= { classNames }
             onClick={eventer('editing')} >
             {value} {placeholder}
           </span>

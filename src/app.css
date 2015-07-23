@@ -497,6 +497,11 @@ div.largeIcon{
 
 /*-----------------*/
 
+.textInput.placeholder{
+  color:rgb(194, 194, 194);
+}
+
+/*-----------------*/
 .toolTips .icon{
   margin: -10px 0px;
 }
@@ -519,7 +524,7 @@ div.largeIcon{
 }
 
 .commentDetails .new {
-  padding-left: 20px ;
+  padding-left: 0px ;
 }
 
 .commentDetails .new .icon path{
@@ -542,7 +547,7 @@ div.largeIcon{
 
 /*for the list of comments*/
 .commentDetails header{
-  padding: 10px;
+    padding-bottom: 5px;
 }
 
 .commentDetails header .author{
@@ -566,7 +571,7 @@ div.largeIcon{
   background: white;
   border: 1px solid rgb(234, 231, 231);
   padding: 10px;
-  margin-left: 50px;
+  margin-left: 30px;
 }
 .commentDetails .textInput{
   padding: 15px;
@@ -578,11 +583,12 @@ div.largeIcon{
 
 .commentsList {
   list-style: none;
-  padding-left: 10px;
+  padding-left: 0px;
 }
 
 .commentsList .item{
-  padding: 10px;
+  padding-top: 10px;
+  padding-bottom: 5px;
 }
 
 
