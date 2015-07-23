@@ -12,6 +12,13 @@ import {toArray} from '../utils/utils'
 
 //"comments" system
 const defaults = {
+  data:[
+     {text:"bla bla details",author:"foo"},
+     {text:"oh yes cool ",author:"bar"},
+  ]
+  ,bykey:{
+    
+  }
 }
 
 //comments[key]= "some quite long text, with markdown support "
@@ -25,6 +32,7 @@ function makeModification(intent){
     .map(({newData,settings}) => (existingData) => {
       log.info("adding comments", newData)
 
+      let {data,bykey} = existingData
       let comments = toArray(newData)
       let updatedData = Object.assign({},existingData)
 
@@ -32,8 +40,10 @@ function makeModification(intent){
         let {iuid,tuid} = comment.target
         let text = comment.text 
 
-        let key = {iUid:"xx",tUid:"xx"}
-        updatedData[key] = text
+        let key = {iUid:"xx",tUid:"xx", toString(){
+          iUid+tUid
+        }}
+        bykey[key] = text
 
       })
       return updatedData

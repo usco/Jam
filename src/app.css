@@ -496,10 +496,17 @@ div.largeIcon{
 }
 
 /*-----------------*/
+
+.toolTips .icon{
+  margin: -10px 0px;
+}
+
 .commentDetails{
   position: absolute;
   left:20px;
   bottom:30px;
+  min-width: 280px;
+
   padding: 10px;
   background: rgb(244, 244, 244);
 }
@@ -538,6 +545,10 @@ div.largeIcon{
   padding: 10px;
 }
 
+.commentDetails header .author{
+  text-decoration: underline;
+}
+
 .commentDetails .icon {
   width: 16px;
   height: 16px;
@@ -545,6 +556,10 @@ div.largeIcon{
   margin: -5px 10px;
   border-radius: 50%;
   background: rgb(237, 230, 230);
+}
+
+.commentDetails .icon path{
+  fill:rgb(137, 137, 137);
 }
 
 .commentDetails .content {

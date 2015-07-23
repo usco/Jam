@@ -140,9 +140,10 @@ function annotIntents(interactions){
   }
 }
 
-function commentsIntents(interactions){
+function commentsIntents(interactions, settings$){
   return {
     addComments$ : new Rx.Subject()
+    ,settings$
   }
 }
 
@@ -249,10 +250,11 @@ function App(interactions) {
   let entities = require("./core/entities")
   let entities$ = entities(iIntent)
 
-
-
   let comments = require("./core/comments")
-  let comments$ = comments(commentsIntents(interactions))
+  let comments$ = comments(commentsIntents(interactions, settings$))
+
+  console.log("comments",comments$)
+  comments$.subscribe(e=>console.log(e))
 
   //output (USE DRIVER!!!!)
   settings$.subscribe(function(settings){
@@ -335,8 +337,7 @@ function App(interactions) {
         return lookupByEntityCategory["annot"].concat(lookupByEntityCategory["common"])
       })
     //.subscribe(data=>console.log("contextMenuItems",data)) */
-  
-  
+    
   return Rx.Observable
     .combineLatest(
       appMetadata$,
@@ -344,9 +345,12 @@ function App(interactions) {
       settings$,
       contextTaps$,
       history$,
-      function(appMetadata, items, settings, contextTaps,undoRedos){
+      comments$,
+      function(appMetadata, items, settings, contextTaps, history, comments){
 
-        let {undos,redos} = undoRedos
+        let {undos,redos} = history
+
+        console.log("comments",comments)
         //            
         let contextMenuItems = [
           {text:"Duplicate", action:"duplicate"},
@@ -425,7 +429,7 @@ function App(interactions) {
 
                 <ContextMenu position={contextTaps} items={contextMenuItems} selections={selections}/>
                 <FullScreenToggler/> 
-                <EntityInfos entities={selections} settings={settings} />
+                <EntityInfos entities={selections} settings={settings} comments={comments}/>
 
                 <div className="debugDisplay">
                   {settings.activeTool}
