@@ -60,9 +60,25 @@ function createComment (newComment,  changeHandler){
 function renderComments(comments, entity, newComment, changeHandler){
   let commentDetails = null
   let commentsData = []
-  if(comments) commentsData = comments.data
+  if(comments){
+    //commentsData = comments.data
+
+  
+
+
+    /*Object.keys(comments.bykey).forEach(function(key){
+      console.log("key",key)
+      let [iuid,typeUid] = key.split(',')
+    })*/
+  }
 
   if(entity){
+    let key = [entity.iuid,entity.typeUid]
+    commentsData = comments.bykey[key]
+    if(!commentsData)
+      commentsData = []
+
+
     commentDetails = <div className="commentDetails">
       <span>
         { commentsList(commentsData) }
