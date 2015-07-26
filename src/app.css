@@ -24,10 +24,10 @@
 }
 
 .jam input[type=text]{
-  background-color: #fff; /*#f5f5f5;*/
+  background-color: rgba(244, 244, 244, 0.25); /*#fff; #f5f5f5;*/
 }
 .jam input[type=number]{
-  background-color: #fff; /*#f5f5f5;*/
+  background-color: rgba(244, 244, 244, 0.25); /*#fff; #f5f5f5;*/
 }
 
 .titleBar{
@@ -508,12 +508,12 @@ div.largeIcon{
 
 .commentDetails{
   position: absolute;
-  left:20px;
+  left:5px;
   bottom:30px;
   min-width: 280px;
 
   padding: 10px;
-  background: rgb(244, 244, 244);
+  background: rgba(244, 244, 244, 0.25);
 }
 
 
