@@ -46,7 +46,7 @@ function makeModification(intent){
         
         //FIXME: how to deal with authors ? 
 
-        let entry = {text:text, author:"jon doe", iuid, typeUid}
+        let entry = {text, author:"jon doe", key}
         if(!updatedData.bykey[key])
           updatedData.bykey[key] = [] //we need LISTS of comments
 
