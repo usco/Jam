@@ -9,7 +9,7 @@ import EditableItem from './EditableItem'
 
 function commentsList (comments) {
   let listElements = comments.map(function(comment){
-    return <li className="item"> 
+    return <li className="item" > 
         <header>
          <svg className="icon" version="1.1" id="Pencil" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
              viewBox="0 0 20 20" enable-background="new 0 0 20 20" >
@@ -56,8 +56,8 @@ function createComment (newComment,  changeHandler){
   )
 }
 
-//FIXME : uppercased to avoid conflict with comments data
-function renderComments(comments, entity, newComment, changeHandler){
+//FIXME : uppercased to avoid conflict with comments "model"
+function renderComments(interactions, toggled, comments, entity, newComment, changeHandler){
   let commentDetails = null
   let commentsData = []
 
@@ -66,23 +66,26 @@ function renderComments(comments, entity, newComment, changeHandler){
     key = [entity.iuid,entity.typeUid]
   }
   
-  commentsData = comments.bykey[key]
-  if(!commentsData)
-    commentsData = []
+  if(toggled){
+    commentsData = comments.bykey[key]
+    if(!commentsData)
+      commentsData = []
 
-  commentDetails = <div className="commentDetails">
-    <span>
-      { commentsList(commentsData) }
-      { createComment(newComment, changeHandler) }
-    </span>
-  </div>
+    commentDetails = <div className="commentDetails fadesIn visible">
+      <span>
+        { commentsList(commentsData) }
+        { createComment(newComment, changeHandler) }
+      </span>
+    </div>
+  }
+ 
   
 
   return (
       <span className="comments">
-        <a className="tooltips" href="#">
+        <a className="tooltips" href="#" >
           <svg className="icon" version="1.1" id="Message" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
-             viewBox="0 0 20 20" enable-background="new 0 0 20 20" >
+             viewBox="0 0 20 20" enable-background="new 0 0 20 20" onClick={interactions.subject('toggle').onEvent}>
             <path fill="#FFFFFF" d="M18,6v7c0,1.1-0.9,2-2,2h-4v3l-4-3H4c-1.101,0-2-0.9-2-2V6c0-1.1,0.899-2,2-2h12C17.1,4,18,4.9,18,6z"/>
           </svg>
           <span>
@@ -108,7 +111,12 @@ function getIds(entity){
 function Comments(interactions, props) {
   let comments$   = props.get('comments')
   let entity$     = props.get('entity')
+
   let addComment$ = interactions.get(".add", "click")
+  let toggled$ =  interactions.subject("toggle")
+    .map(true)
+    .startWith(false)
+    .scan((acc,val)=>!acc)
 
   //stream containing new comment, if any
   let newComment$ = interactions.subject('newCommentContent$')
@@ -140,7 +148,8 @@ function Comments(interactions, props) {
       comments$
       ,entity$
       ,newComment$
-      ,function(comments,entity,newComment){
+      ,toggled$
+      ,function(comments,entity,newComment, toggled){
 
         //FIXME: temp hack
         function changeHandler(fieldName, index, event){
@@ -148,7 +157,7 @@ function Comments(interactions, props) {
         }
         let _changeHandler = changeHandler.bind(null,"comment",undefined)
 
-        return renderComments(comments,entity,newComment, _changeHandler)
+        return renderComments(interactions, toggled, comments, entity, newComment, _changeHandler)
       }
     )
 

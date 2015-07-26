@@ -209,6 +209,10 @@
   -webkit-transition: opacity 0.4s ease-out;
 }
 
+.visible{
+  opacity: 1;
+}
+
 .active{
   background: rgb(255, 223, 0);
 }
@@ -584,6 +588,9 @@ div.largeIcon{
 .commentsList {
   list-style: none;
   padding-left: 0px;
+
+  max-height: 300px;
+  overflow: auto;
 }
 
 .commentsList .item{
