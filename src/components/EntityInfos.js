@@ -8,39 +8,7 @@ import {formatNumberTo, absSizeFromBBox} from '../utils/formatters'
 import EditableItem from './EditableItem'
 import Comments from './Comments'
 
-//onChange={this.handleColorChange.bind(this)}
 
-/*creates markup to display / control object transforms: posistion,rotation,scale etc
-
- in doubt about change handler
- onChange={self.handleChange.bind(self,"pos",index)}
-
-
- //this one is for absolute sizing
- let absSizeInputs = []
-      if(entity.bbox){
-        let absSize = absSizeFromBBox(entity.bbox)
-        absSize = absSize || {w:0,l:0,h:0}
-        //convert to array to keep logic the same for all fields
-        absSize = [absSize.w,absSize.l,absSize.h]
-        absSize.forEach(function(entry, index){
-          let entry = formatNumberTo(entry, numberPrecision)
-          absSizeInputs.push(
-            <input type="number" 
-            value={entry} 
-            step={controlsStep}
-            style={styles.numbers} onChange={self.handleSizeChange.bind(self,index)}/>
-          )
-        })
-
-        absSizeInputs = (
-          <span>
-            <span>D:</span> {absSizeInputs}
-          </span>
-        )
-      }
-
-*/
 function transformInputs(entity, fieldName, displayName, controlsStep, numberPrecision, changeHandler){
   let inputs = []
   if(entity && entity[fieldName]){
@@ -60,6 +28,65 @@ function transformInputs(entity, fieldName, displayName, controlsStep, numberPre
   }
 }
 
+
+function absSizeInput(entity , controlsStep, numberPrecision, changeHandler){
+  /*display / control object transforms: posistion,rotation,scale etc
+  in doubt about change handler
+  onChange={self.handleChange.bind(self,"pos",index)}
+  onChange={self.handleSizeChange.bind(self,index)}
+  */
+
+  //TODO : do the "safing" of values better( no divisions by zero, nothing under 0 )
+  /*var minScale = 0.0001;
+  if(!value) return minScale;
+  
+  if(value <= 0) value = minScale;
+  //var foo = this.meshSize[axis];
+  var map = {"l":"x","w":"y","h":"z"};
+  var mapped = map[axis];
+  var axisScale = this.selectedObject.scale[ mapped ];
+  if( axisScale <= minScale ) axisScale = minScale;
+  
+  var scaling = 1/ axisScale;
+  
+  var meshSize = this.meshSize[axis];
+  if(meshSize <= minScale) meshSize = minScale;
+  
+  var originalSize = meshSize * scaling;
+  var targetScale = value/(originalSize);
+    
+  if(targetScale <= minScale) targetScale = minScale;
+  if(this.meshSize[axis] <= minScale) this.meshSize[axis] = minScale;
+  
+  this.selectedObject.scale[mapped] = targetScale;
+  return targetScale;*/
+
+
+  if(entity && entity["sca"]){
+    //this one is for absolute sizing
+    let absSizeInputs = []
+     if(entity.bbox){
+      let absSize = absSizeFromBBox(entity.bbox)
+      absSize = absSize || {w:0,l:0,h:0}
+      //convert to array to keep logic the same for all fields
+      absSize = [absSize.w,absSize.l,absSize.h]
+      absSize.forEach(function(entry, index){
+        let entry = formatNumberTo(entry, numberPrecision)
+        absSizeInputs.push(
+          <input type="number" value={entry} step={controlsStep}/>
+        )
+      })
+    }
+
+    return (
+      <span>
+        <span>D:</span> {absSizeInputs}
+      </span>
+    )
+
+  }
+}
+
 function colorInput(entity, changeHandler){
   if(entity && entity.color){
     return (
@@ -69,7 +96,6 @@ function colorInput(entity, changeHandler){
     )
   } 
 }
-
 
 function nameInput(entity,changeHandler){
   if(entity && entity.name){
@@ -182,14 +208,16 @@ function EntityInfos(interactions, props) {
         {
           element = (
             <div className="toolBarBottom entityInfos">
-              {nameInput(entity,changeHandler)}
+              <Comments className="comments" comments={comments} entity={entity} />
               {colorInput(entity, changeHandler)}
+              {nameInput(entity,changeHandler)}       
               {transformInputs(entity, "pos", "P", controlsStep, numberPrecision, changeHandler)}
               {transformInputs(entity, "rot", "R", controlsStep, numberPrecision, changeHandler)}
               {transformInputs(entity, "sca", "S", controlsStep, numberPrecision, changeHandler)}
+              {absSizeInput(entity,controlsStep,numberPrecision)}
               {extraInputs(entity,numberPrecision,changeHandler)}
 
-              <Comments className="comments" comments={comments} entity={entity} />
+              
             </div>
           )
         }
