@@ -60,32 +60,23 @@ function createComment (newComment,  changeHandler){
 function renderComments(comments, entity, newComment, changeHandler){
   let commentDetails = null
   let commentsData = []
-  if(comments){
-    //commentsData = comments.data
 
-  
-
-
-    /*Object.keys(comments.bykey).forEach(function(key){
-      console.log("key",key)
-      let [iuid,typeUid] = key.split(',')
-    })*/
-  }
-
+  let key = [undefined,undefined] //at design level ie :no entity 
   if(entity){
-    let key = [entity.iuid,entity.typeUid]
-    commentsData = comments.bykey[key]
-    if(!commentsData)
-      commentsData = []
-
-
-    commentDetails = <div className="commentDetails">
-      <span>
-        { commentsList(commentsData) }
-        { createComment(newComment, changeHandler) }
-      </span>
-    </div>
+    key = [entity.iuid,entity.typeUid]
   }
+  
+  commentsData = comments.bykey[key]
+  if(!commentsData)
+    commentsData = []
+
+  commentDetails = <div className="commentDetails">
+    <span>
+      { commentsList(commentsData) }
+      { createComment(newComment, changeHandler) }
+    </span>
+  </div>
+  
 
   return (
       <span className="comments">
@@ -105,6 +96,15 @@ function renderComments(comments, entity, newComment, changeHandler){
 }
 
 
+//helper function, tor return uids (type/instance)
+function getIds(entity){
+  console.log("getIds")
+  if(entity){
+    return {typeUid:entity.typeUid, iuid:entity.iuid}
+  }
+  return {typeUid:undefined, iuid:undefined}
+}
+
 function Comments(interactions, props) {
   let comments$   = props.get('comments')
   let entity$     = props.get('entity')
@@ -121,7 +121,7 @@ function Comments(interactions, props) {
   addComment$ = addComment$
     .withLatestFrom(
       newComment$
-      ,entity$.filter(exists).map(e=>{return {typeUid:e.typeUid, iuid:e.iuid}  })
+      ,entity$.map(getIds)
       ,function(a,commentText,entityData){
         return { text:commentText.text, target:entityData}
       })
