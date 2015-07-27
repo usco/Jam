@@ -4,20 +4,22 @@
   "description": "jam! experimental version",
   "main": "index.js",
   "scripts": {
-    "test": "",
+    "test": "mocha --compilers js:babel/register",
     "start": "NODE_ENV=dev node server.js",
     "build": "NODE_ENV=production webpack -p",
     "profile": "webpack --profile --json > stats.json"
   },
   "author": "Mark 'kaosat-dev' Moissette",
   "license": "GPL",
+  "repository": "usco/Jam",
   "devDependencies": {
-    "babel-core": "^4.7.4",
-    "babel-loader": "^4.1.0",
+    "babel": "^5.8.9",
+    "babel-loader": "^5.3.2",
     "compression-webpack-plugin": "^0.1.2",
     "css-loader": "^0.12.0",
     "json-loader": "^0.5.1",
     "lodash": "^3.9.3",
+    "mocha": "^2.2.5",
     "react-hot-loader": "^1.2.2",
     "style-loader": "^0.12.1",
     "webpack": "^1.7.2",
@@ -25,7 +27,7 @@
     "worker-loader": "^0.5.7"
   },
   "dependencies": {
-    "babel-runtime": "^4.7.16",
+    "babel-runtime": "^5.8.9",
     "classnames": "^1.2.0",
     "cycle-react": "^0.27.0",
     "deep-diff": "^0.3.2",
