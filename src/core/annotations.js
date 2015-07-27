@@ -33,7 +33,6 @@ function generateNoteData(data){
     iuid:generateUUID(),
     cid:1,
     value:undefined,
-    comment:undefined,
     name:"note", 
     target:{
       point:point.toArray(), 

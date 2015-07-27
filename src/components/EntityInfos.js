@@ -107,9 +107,7 @@ function nameInput(entity,changeHandler){
 function extraInputs(entity, numberPrecision, changeHandler){
   //this is used only for annotations I guess?
   //console.log("annotations",entity)
-  if(entity){
-    
-    let _changeHandler = changeHandler.bind(null,"comment",null)
+  if(entity){    
     let valueEdit = null
 
     if( entity.hasOwnProperty("value") && entity.value ){
@@ -120,21 +118,9 @@ function extraInputs(entity, numberPrecision, changeHandler){
       )
     }
       
-    let comments = null
-    if( entity.hasOwnProperty("comment") ){
-      comments = (
-        <span> 
-          <EditableItem data={entity.comment} placeholder="add comment(s)..." id="comments" 
-          changeHandler={_changeHandler}
-          />  
-        </span>
-      )
-    }
-
     return(
       <span>
         {valueEdit}
-        {comments}
       </span>
     )
   }
