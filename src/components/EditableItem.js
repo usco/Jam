@@ -110,5 +110,5 @@ function EditableItem(interactions, props) {
   }
 }
 
-let EditableItem = Cycle.component('EditableItem',EditableItem)
+EditableItem = Cycle.component('EditableItem',EditableItem)
 export default EditableItem

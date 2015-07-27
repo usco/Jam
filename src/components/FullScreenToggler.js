@@ -49,5 +49,5 @@ function FullScreenToggler(interactions, props) {
 }
 
 
-let FullScreenToggler = Cycle.component('FullScreenToggler',FullScreenToggler)
+FullScreenToggler = Cycle.component('FullScreenToggler',FullScreenToggler)
 export default FullScreenToggler

@@ -14,7 +14,7 @@ function transformInputs(entity, fieldName, displayName, controlsStep, numberPre
   if(entity && entity[fieldName]){
 
     entity[fieldName].forEach(function(entry, index){
-      let entry = formatNumberTo(entry, numberPrecision)
+      entry = formatNumberTo(entry, numberPrecision)
       inputs.push(
         <input type="number" value={entry} step={controlsStep} onChange={changeHandler.bind(null,fieldName,index)}/>
       )
@@ -71,7 +71,7 @@ function absSizeInput(entity , controlsStep, numberPrecision, changeHandler){
       //convert to array to keep logic the same for all fields
       absSize = [absSize.w,absSize.l,absSize.h]
       absSize.forEach(function(entry, index){
-        let entry = formatNumberTo(entry, numberPrecision)
+        entry = formatNumberTo(entry, numberPrecision)
         absSizeInputs.push(
           <input type="number" value={entry} step={controlsStep}/>
         )

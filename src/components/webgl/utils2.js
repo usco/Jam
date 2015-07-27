@@ -58,7 +58,7 @@ export function makeCamera( cameraData ){
     up:[0,0,1],
     pos:[0,0,0]
   }
-  let cameraData = Object.assign({}, DEFAULTS, cameraData)
+  cameraData = Object.assign({}, DEFAULTS, cameraData)
 
 
   let camera = new CombinedCamera(
@@ -80,7 +80,7 @@ export function makeCamera( cameraData ){
 export function makeControls( controlsData ){
   let up = new THREE.Vector3().fromArray( controlsData.up )
 
-  let controlsData = controlsData//TODO: merge with defaults using object.assign
+  //controlsData = controlsData//TODO: merge with defaults using object.assign
   let controls = new OrbitControls(undefined, undefined, up )
   controls.upVector = up
   
@@ -102,7 +102,7 @@ export function makeLight( lightData ){
     intensity:1,
     pos: [0,0,0]
   }
-  let lightData = Object.assign({}, DEFAULTS, lightData)
+  lightData = Object.assign({}, DEFAULTS, lightData)
 
   switch(lightData.type){
     case "light":

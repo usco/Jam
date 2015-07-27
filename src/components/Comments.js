@@ -170,5 +170,5 @@ function Comments(interactions, props) {
 }
 
 
-let Comments = Cycle.component('Comments',Comments)
+Comments = Cycle.component('Comments',Comments)
 export default Comments

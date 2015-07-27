@@ -92,7 +92,7 @@ function MainToolbar(props,interactions){
 
 
 
-let MainToolbar = Cycle.component('MainToolbar',MainToolbar)
+MainToolbar = Cycle.component('MainToolbar',MainToolbar)
 export default MainToolbar
 
 

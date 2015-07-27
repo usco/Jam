@@ -93,5 +93,5 @@ function SettingsView(interactions, props) {
   }
 }
 
-let SettingsView = Cycle.component('SettingsView',SettingsView)
+SettingsView = Cycle.component('SettingsView',SettingsView)
 export default SettingsView

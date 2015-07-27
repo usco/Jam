@@ -107,8 +107,8 @@ class Selector{
   } 
   
   _pickInner( x, y, isOrtho, camera ){
-    let isOrtho = isOrtho || this.isOrtho
-    let camera  = camera  || this.camera
+    isOrtho = isOrtho || this.isOrtho
+    camera  = camera  || this.camera
     var mousecoords = new THREE.Vector3(x,y,0.5)
 
     let intersects = []

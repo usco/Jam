@@ -17,7 +17,7 @@ export function getUriQuery(uri){
   
 export function setWindowPathAndTitle(urlPath, title=""){
   //clear url related stuff
-  let urlPath   = urlPath || (location.protocol + '//' + location.host + location.pathname)
+  urlPath   = urlPath || (location.protocol + '//' + location.host + location.pathname)
   let pageTitle = title
   document.title = pageTitle
   window.history.pushState({"pageTitle":pageTitle},"", urlPath)

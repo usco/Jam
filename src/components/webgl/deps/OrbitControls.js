@@ -64,7 +64,8 @@ var OrbitControls = function ( object, domElement, upVector ) {
     this.addObject = function( object, options){
       if(this.objects.indexOf(object) != -1) return
       const DEFAULTS = {userZoom:true, userPan:true, userRotate:true} 
-      let options = Object.assign({}, DEFAULTS, options)
+      options = Object.assign({}, DEFAULTS, options)
+      
       this.objects.push( object )
       this.objectOptions.push(options)
       this.centers.push( new THREE.Vector3() )
