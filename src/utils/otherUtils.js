@@ -73,13 +73,3 @@ export function isNoToolSelected(activeTool){
 
 
 /////////////////////////////////
-//ui utils
-export function toggleCursor(toggle, cursorName, element=document.body){
-  if(toggle)
-  {
-    element.style.cursor = cursorName
-  }else{
-    element.style.cursor = 'default'
-  }
-  return toggle
-}

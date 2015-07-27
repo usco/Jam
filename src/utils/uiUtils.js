@@ -2,6 +2,16 @@ export function clearCursor(element=document.body){
   element.style.cursor = 'default' 
 }
 
+//ui utils
+export function toggleCursor(toggle, cursorName, element=document.body){
+  if(toggle)
+  {
+    element.style.cursor = cursorName
+  }else{
+    element.style.cursor = 'default'
+  }
+  return toggle
+}
 
 export function getXY(e){
   var posx = 0;
