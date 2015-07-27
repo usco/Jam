@@ -78,7 +78,7 @@ var config= {
     loaders: [
       { test: /\.json$/,   loader: "json-loader" },
       { test: /-worker*\.js$/, loader: "worker-loader",include : pathsToInclude},//if any module does "require(XXX-worker)" it converts to a web worker
-      { test: /\.js?$/, loaders: ['react-hot', 'babel?experimental&optional=runtime'],include : pathsToInclude},
+      { test: /\.js?$/, loaders: ['react-hot', 'babel?optional[]=runtime&optional=es6.blockScoping'],include : pathsToInclude},
       { test: /\.css$/, loader: "style-loader!css-loader" }
     ],
     noParse: /\.min\.js/
