@@ -50,6 +50,11 @@ import FXAAShader     from './deps/post-process/FXAAShader'
 import vignetteShader from './deps/post-process/vignetteShader'
 
 
+import EdgeShader3 from './deps/post-process/EdgeShader3'
+import AdditiveBlendShader from './deps/post-process/AdditiveBlendShader'
+
+
+
 function cameraWobble3dHint(camera, time=1500){
   let camPos = camera.position.clone()
   let target = camera.position.clone().add(new THREE.Vector3(-5,-10,-5))
@@ -120,13 +125,78 @@ function setupPostProcess(camera, renderer, scene){
     vignettePass.uniforms[ "offset" ].value = 0.95
     vignettePass.uniforms[ "darkness" ].value = 0.9
 
+
+    /*for generic outlines etc*/
+    let edgeDetectPass = new THREE.ShaderPass(EdgeShader3)
+
+    //depth data generation
+    let width = window.innerWidth
+    let height = window.innerHeight
+    let depthTarget = new THREE.WebGLRenderTarget(width, height, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat } )
+    let depthMaterial = new THREE.MeshDepthMaterial()
+    let depthPass = new THREE.RenderPass(scene, camera, depthMaterial)
+
+    let depthComposer = new THREE.EffectComposer( renderer, depthTarget )
+    depthComposer.setSize( width, height )
+    depthComposer.addPass( depthPass )
+    depthComposer.addPass( edgeDetectPass )
+    depthComposer.addPass( copyPass )
+
+
+    //normal data generation
+    let normalTarget = new THREE.WebGLRenderTarget(width, height, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat } )
+    let normalMaterial = new THREE.MeshNormalMaterial()
+    let normalPass = new THREE.RenderPass(scene, camera, normalMaterial)
+        
+    let normalComposer = new THREE.EffectComposer( renderer, normalTarget )
+    normalComposer.setSize(width, height)
+    normalComposer.addPass( normalPass )
+    normalComposer.addPass( edgeDetectPass )
+    normalComposer.addPass( copyPass )
+
+    /*final compositing
+      steps:
+      render default to @colorTarget
+      render depth
+      render normal
+    */
+
+    let renderPass = new THREE.RenderPass(scene, camera)
+
+    renderTargetParameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBFormat, stencilBuffer: false };
+    renderTarget = new THREE.WebGLRenderTarget( width , height, renderTargetParameters )
+        
+    let finalComposer = new THREE.EffectComposer( renderer , renderTarget )
+    finalComposer.setSize(width, height)
+    //prepare the final render passes
+    finalComposer.addPass( renderPass )
+    //finalComposer.addPass( normalPass)
+
+    finalComposer.addPass(fxaaPass)
+    //blend in the edge detection results
+    let effectBlend = new THREE.ShaderPass( AdditiveBlendShader, "tDiffuse1" )
+    effectBlend.uniforms[ 'tDiffuse2' ].value = normalComposer.renderTarget2
+    effectBlend.uniforms[ 'tDiffuse3' ].value = depthComposer.renderTarget2
+    effectBlend.uniforms[ 'normalThreshold' ].value = 0.05
+    effectBlend.uniforms[ 'depthThreshold' ].value = 0.005
+    effectBlend.uniforms[ 'strengh' ].value = 0.9
+
+
+    finalComposer.addPass( effectBlend )
+    
+    //finalComposer.addPass( vignettePass )
+    finalComposer.passes[finalComposer.passes.length-1].renderToScreen = true
+
+
+    ///////////////////////////////////
+
     renderer.autoClear = false
     //renderer.autoClearStencil = false
     
     outline.clear = false  
     //normal.clear = false    
 
-    composer.addPass(normal)
+    /*composer.addPass(normal)
     composer.addPass(maskPass)
     composer.addPass(outline)
     
@@ -138,7 +208,9 @@ function setupPostProcess(camera, renderer, scene){
     let lastPass = composer.passes[composer.passes.length-1]
     lastPass.renderToScreen = true
     
-    return {composer, fxaaPass, outScene, maskScene}
+    return {composer, fxaaPass, outScene, maskScene}*/
+    return {composer:finalComposer, fxaaPass, outScene, maskScene, composers:[normalComposer,depthComposer,finalComposer]}
+
   }
 
 
@@ -225,6 +297,7 @@ function GlView(interactions, props, self){
   let renderer = null
 
   let composer = null
+  let composers = []
   let fxaaPass = null
   let outScene = null
   let maskScene = null
@@ -470,6 +543,11 @@ function GlView(interactions, props, self){
     return true
   }
 
+  function colorsEqual(a,b){
+    if(!a || !b) return true
+    return a===b
+  }
+
   function comparer(prev,cur){
     //console.log("prev",prev,"cur",cur)
 
@@ -497,11 +575,11 @@ function GlView(interactions, props, self){
         sortedCur[i].color === sortedPrev[i].color
         )*/
 
-
       let posEq = transformEquals( curVal.pos, preVal.pos )
       let rotEq = transformEquals( curVal.rot, preVal.rot )
       let scaEq = transformEquals( curVal.sca, preVal.sca )
-      let allEqual = (posEq && rotEq && scaEq)
+      let colEq = colorsEqual( curVal.color, preVal.color )
+      let allEqual = (posEq && rotEq && scaEq && colEq)
       if(!allEqual) return false
     }
 
@@ -575,6 +653,7 @@ function GlView(interactions, props, self){
     )
 
   
+  //this limits "selectability" to transforms & default 
   selectedMeshes$ =
     selectedMeshes$.
     withLatestFrom(activeTool$,function(meshes,tool)
@@ -625,7 +704,12 @@ function GlView(interactions, props, self){
     
   function render(scene, camera){
     //renderer.render( scene, camera )
-    composer.render()
+    //composer.render()
+    composers.forEach(c=>c.render())
+
+
+    composer.passes[composer.passes.length-1].uniforms[ 'tDiffuse2' ].value = composers[0].renderTarget2
+    composer.passes[composer.passes.length-1].uniforms[ 'tDiffuse3' ].value = composers[1].renderTarget2
   }
 
   function update(){
@@ -671,9 +755,12 @@ function GlView(interactions, props, self){
 
     let ppData = setupPostProcess(camera, renderer, scene)
     composer = ppData.composer
+    composers = ppData.composers
     fxaaPass = ppData.fxaaPass
     outScene = ppData.outScene
     maskScene = ppData.maskScene
+
+    console.log("composers",composers)
   }
 
   function handleResize (sizeInfos){
@@ -690,8 +777,11 @@ function GlView(interactions, props, self){
       let pixelRatio = window.devicePixelRatio || 1
 
       composer.reset()
+
       fxaaPass.uniforms[ 'resolution' ].value.set (1 / (width * pixelRatio), 1 / (height * pixelRatio))
-      composer.setSize(width * pixelRatio, height * pixelRatio)
+      
+      //composer.setSize(width * pixelRatio, height * pixelRatio)
+      composers.forEach( c=>c.setSize(width * pixelRatio, height * pixelRatio) )
 
       render()
     }
