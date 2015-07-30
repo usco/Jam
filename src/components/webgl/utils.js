@@ -1,6 +1,6 @@
 import THREE from 'three'
 
-export function getEntryExitThickness(entryInteresect, normalType){
+export function getEntryExitThickness(entryInteresect, normalType="face"){
   let normal  = entryInteresect.face.normal.clone()
   switch(normalType)
   {
@@ -44,6 +44,7 @@ export function getEntryExitThickness(entryInteresect, normalType){
    
   //FIXME: todo or not ??
   object.worldToLocal( entryPoint )
+
   object.worldToLocal( exitPoint )
   
   //compute actual thickness
@@ -57,7 +58,7 @@ export function getEntryExitThickness(entryInteresect, normalType){
 export function getObjectPointNormal(pickingInfos){
   let point = pickingInfos.point//closest point
   let object= pickingInfos.object//closest point
-  let face  = pickingInfos.face//closes face
+  let face  = pickingInfos.face//closest face
   let normal= face.normal
 
   //set point coordinates to be local , not global
