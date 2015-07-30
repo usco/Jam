@@ -127,7 +127,7 @@ function setupPostProcess(camera, renderer, scene){
 
 
     /*for generic outlines etc*/
-    let edgeDetectPass = new THREE.ShaderPass(EdgeShader3)
+    /*let edgeDetectPass = new THREE.ShaderPass(EdgeShader3)
 
     //depth data generation
     let width = window.innerWidth
@@ -154,13 +154,12 @@ function setupPostProcess(camera, renderer, scene){
     normalComposer.addPass( edgeDetectPass )
     normalComposer.addPass( copyPass )
 
-    /*final compositing
-      steps:
-      render default to @colorTarget
-      render depth
-      render normal
-    */
-
+    //final compositing
+    //  steps:
+    //  render default to @colorTarget
+    //  render depth
+    //  render normal
+    
     let renderPass = new THREE.RenderPass(scene, camera)
 
     renderTargetParameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBFormat, stencilBuffer: false };
@@ -172,20 +171,19 @@ function setupPostProcess(camera, renderer, scene){
     finalComposer.addPass( renderPass )
     //finalComposer.addPass( normalPass)
 
-    finalComposer.addPass(fxaaPass)
+    //finalComposer.addPass(fxaaPass)
     //blend in the edge detection results
     let effectBlend = new THREE.ShaderPass( AdditiveBlendShader, "tDiffuse1" )
     effectBlend.uniforms[ 'tDiffuse2' ].value = normalComposer.renderTarget2
     effectBlend.uniforms[ 'tDiffuse3' ].value = depthComposer.renderTarget2
     effectBlend.uniforms[ 'normalThreshold' ].value = 0.05
-    effectBlend.uniforms[ 'depthThreshold' ].value = 0.005
-    effectBlend.uniforms[ 'strengh' ].value = 0.9
-
+    effectBlend.uniforms[ 'depthThreshold' ].value = 0.05
+    effectBlend.uniforms[ 'strengh' ].value = 0.4
 
     finalComposer.addPass( effectBlend )
     
     //finalComposer.addPass( vignettePass )
-    finalComposer.passes[finalComposer.passes.length-1].renderToScreen = true
+    finalComposer.passes[finalComposer.passes.length-1].renderToScreen = true*/
 
 
     ///////////////////////////////////
@@ -196,7 +194,7 @@ function setupPostProcess(camera, renderer, scene){
     outline.clear = false  
     //normal.clear = false    
 
-    /*composer.addPass(normal)
+    composer.addPass(normal)
     composer.addPass(maskPass)
     composer.addPass(outline)
     
@@ -208,8 +206,9 @@ function setupPostProcess(camera, renderer, scene){
     let lastPass = composer.passes[composer.passes.length-1]
     lastPass.renderToScreen = true
     
-    return {composer, fxaaPass, outScene, maskScene}*/
-    return {composer:finalComposer, fxaaPass, outScene, maskScene, composers:[normalComposer,depthComposer,finalComposer]}
+    return {composers:[composer], fxaaPass, outScene, maskScene}
+    
+    //return {composer:finalComposer, fxaaPass, outScene, maskScene, composers:[normalComposer,depthComposer,finalComposer]}
 
   }
 
@@ -382,23 +381,6 @@ function GlView(interactions, props, self){
     //.shareReplay(1)
 
 
-  //hande all the cases where events require re-rendering
-  let reRender$ = merge(
-    //ready$,
-    //fromEvent(controls,'change'),
-    update$
-    //Rx.Observable.timer(200, 100).map(2).take(3)
-    //fromEvent(controls,'change'), 
-    //fromEvent(transformControls,'change'), 
-    //fromEvent(camViewControls,'change'),
-    //selectedMeshes$, 
-    //selectionsTransforms$
-    )
-    .shareReplay(1)
-  
-
-  //reRender$.subscribe( () => console.log("reRender"), (err)=>console.log("error in reRender",err))
-  //actual 3d stuff
 
   //for outlines, experimental
   function removeOutline(){
@@ -409,8 +391,11 @@ function GlView(interactions, props, self){
   }
   function outlineMesh(mesh){
     let oData = makeOutlineFx(mesh)
-    outScene.add( oData.outlineMesh )
-    maskScene.add( oData.maskMesh )
+    if(outScene)
+      outScene.add( oData.outlineMesh )
+
+    if(maskScene)
+      maskScene.add( oData.maskMesh )
     return oData
   }
   function unOutlineMesh(oData){
@@ -477,7 +462,6 @@ function GlView(interactions, props, self){
           let newItems = delta[0][0]//delta[0][1]
           //console.log("old",oldItems)
           //console.log("new",newItems)
-
           result.added = toArray(newItems)
           result.removed = toArray(oldItems)
         }
@@ -526,6 +510,8 @@ function GlView(interactions, props, self){
       }
       let dynamicInjector = new THREE.Object3D()
       scene.dynamicInjector = dynamicInjector
+
+      console.log("blabdbdf")
       scene.add( dynamicInjector )
     }
   }
@@ -685,6 +671,33 @@ function GlView(interactions, props, self){
 
   let filteredInteractions$ = {dragMoves$:fDragMoves$, zooms$}
 
+
+  //hande all the cases where events require re-rendering
+  let reRender$ = merge(
+    initialized$
+    //update$
+    //,Rx.Observable.timer(2000).take(1)
+    
+    ,fromEvent(controls,'change')
+    ,fromEvent(transformControls,'change')
+    //,fromEvent(camViewControls,'change')
+    //,selectedMeshes$ 
+    //,selectionsTransforms$
+    ,selections$
+    //,items$
+    ,meshes$
+    ,dragMoves$
+    )
+    .sample(15)
+    .shareReplay(1)
+  
+
+  //reRender$.subscribe( () => console.log("reRender"), (err)=>console.log("error in reRender",err))
+  //actual 3d stuff
+  reRender$.subscribe(e=>render())
+
+
+
   function setupScene(){
     var sphereGeometry = new THREE.SphereGeometry( 20, 32, 16 ) 
     var sphereMaterial = new THREE.MeshLambertMaterial( {color: 0x8888ff} );
@@ -704,12 +717,10 @@ function GlView(interactions, props, self){
     
   function render(scene, camera){
     //renderer.render( scene, camera )
-    //composer.render()
     composers.forEach(c=>c.render())
 
-
-    composer.passes[composer.passes.length-1].uniforms[ 'tDiffuse2' ].value = composers[0].renderTarget2
-    composer.passes[composer.passes.length-1].uniforms[ 'tDiffuse3' ].value = composers[1].renderTarget2
+    //composer.passes[composer.passes.length-1].uniforms[ 'tDiffuse2' ].value = composers[0].renderTarget2
+    //composer.passes[composer.passes.length-1].uniforms[ 'tDiffuse3' ].value = composers[1].renderTarget2
   }
 
   function update(){
@@ -754,13 +765,12 @@ function GlView(interactions, props, self){
     scene.add(transformControls)
 
     let ppData = setupPostProcess(camera, renderer, scene)
-    composer = ppData.composer
+    //composer = ppData.composer
     composers = ppData.composers
     fxaaPass = ppData.fxaaPass
     outScene = ppData.outScene
     maskScene = ppData.maskScene
 
-    console.log("composers",composers)
   }
 
   function handleResize (sizeInfos){
@@ -776,12 +786,12 @@ function GlView(interactions, props, self){
 
       let pixelRatio = window.devicePixelRatio || 1
 
-      composer.reset()
-
       fxaaPass.uniforms[ 'resolution' ].value.set (1 / (width * pixelRatio), 1 / (height * pixelRatio))
       
-      //composer.setSize(width * pixelRatio, height * pixelRatio)
-      composers.forEach( c=>c.setSize(width * pixelRatio, height * pixelRatio) )
+      composers.forEach( c=> {
+        c.reset()
+        c.setSize(width * pixelRatio, height * pixelRatio)
+      } )
 
       render()
     }
