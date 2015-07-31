@@ -15,6 +15,9 @@ const defaults = {
 }
 
 function makeModifications(intent){
+  //intent.partTypes$.subscribe(e=>console.log("partTypes in BOM"))
+  //intent.combos$.subscribe(e=>console.log("combos in BOM"))
+
   let _addEntries$ = intent.addBomEntries$
     .map((nData) => (bomData) => {
       console.log("ADDING BOM entries")
@@ -77,7 +80,6 @@ function makeModifications(intent){
     })*/
 
   let select$ = intent.selectBomEntries$
-    .merge(intent.selectBomEntries2$)
     .map((data) => (bomData) => {
       //console.log("select",data)
       bomData.selectedEntries = data
@@ -92,7 +94,7 @@ function makeModifications(intent){
   )
 }
 
-function model(intent, source) {
+function Bom(intent, source) {
   console.log("seting up bom model")
   let source$ = source || Observable.just(defaults)
   
@@ -104,4 +106,4 @@ function model(intent, source) {
     .shareReplay(1)
 }
 
-export default model
+export default Bom

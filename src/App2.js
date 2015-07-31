@@ -17,6 +17,7 @@ import {observableDragAndDrop} from './interactions/dragAndDrop'
 
 import {settingsIntent} from './core/settingsIntent'
 import {addAnnotationMod} from './core/annotations'
+import Bom from './core/bom'
 
 //temporary
 import {makeInternals, meshResources, entityInstanceFromPartTypes} from './core/tbd0'
@@ -31,11 +32,7 @@ import {first,toggleCursor} from './utils/otherUtils'
 import {clearActiveTool$} from './actions/appActions'
 
 
-let pjson = require('../package.json')
-let appMetadata$ = Rx.Observable.just({
-  name: pjson.name,
-  version:pjson.version 
-})
+import appMetadata$ from './core/drivers/appMetaDriver'
 
  
 function dataFromMesh(objTransform$){
@@ -93,7 +90,7 @@ function intent(interactions){
   )
 
   //get any "clear" message from post message
-  let postMessages$ = require('./core/postMessageDriver')( )
+  let postMessages$ = require('./core/drivers/postMessageDriver')( )
   let newDesign$ = postMessages$.filter(hasClear).map(true)
 
   //
@@ -122,6 +119,14 @@ function intent(interactions){
     measureDistance$,
     measureThickness$,
     measureAngle$*/
+  }
+}
+
+function bomIntents(interactions){
+  let selectBomEntries$ = interactions.get(".bom","entryTaps$").pluck("detail")
+
+  return {
+    selectBomEntries$
   }
 }
 
@@ -173,7 +178,7 @@ function sources(urlSources$, dndSources$){
 
   let settingsSources$ = urlSources.settings$
 
-  let postMessages$ = require('./core/postMessageDriver')( )
+  let postMessages$ = require('./core/drivers/postMessageDriver')( )
   postMessages$.subscribe(e=>console.log("postMessageDriverMessage",e))
   
   meshSources$   =  meshSources$.merge( postMessages$.filter(hasModelUrl).pluck("modelUrl") )
@@ -214,6 +219,20 @@ function App(interactions) {
   //get new instances from "types"
   let newInstFromTypes$ = entityInstanceFromPartTypes(partTypes$)
   let contextTaps$ = intents.contextTaps$
+
+  partTypes$.subscribe(e=>console.log("partTypes",e))
+
+  //bom
+  let bomIntent = bomIntents(interactions)
+  bomIntent = {
+    addBomEntries$:new Rx.Subject()
+    ,partTypes$
+    ,combos$:meshResources$
+    ,selectBomEntries$:bomIntent.selectBomEntries$
+  }
+  let bom$ = Bom(bomIntent)
+  bom$.subscribe(e=>console.log("bom",e))
+
 
   //annotations
   let aIntents = annotIntents(interactions)
@@ -343,15 +362,22 @@ function App(interactions) {
     
   return Rx.Observable
     .combineLatest(
-      appMetadata$,
       entities$,
+      bom$,
       settings$,
       contextTaps$,
       history$,
       comments$,
-      function(appMetadata, items, settings, contextTaps, history, comments){
+      function(items, bom, settings, contextTaps, history, comments){
 
         let {undos,redos} = history
+
+        //for bom
+        let fieldNames = ["name","qty","unit","version"]
+        let sortableFields = ["id","name","qty","unit"]
+        let entries = bom.entries
+        let selectedEntries = bom.selectedEntries
+
 
         console.log("comments",comments)
         //            
@@ -429,16 +455,25 @@ function App(interactions) {
                 className="glview"/>
                 
                 <SettingsView settings={settings} ></SettingsView>
-
                 <ContextMenu position={contextTaps} items={contextMenuItems} selections={selections}/>
                 <FullScreenToggler/> 
                 <EntityInfos entities={selections} settings={settings} comments={comments}/>
+
+                <BomView 
+                  entries={entries} 
+                  selectedEntries = {selectedEntries}
+                  fieldNames={fieldNames} 
+                  sortableFields={sortableFields}/>
 
                 <div className="debugDisplay">
                   {settings.activeTool}
                   <button id="undo" disabled={undos.length===0}>Undo</button>
                   <button id="redo" disabled={redos.length===0}>Redo</button>
+
+                  <button id="bom">Bom</button>
                 </div>
+
+
               </div>  
             )
           }

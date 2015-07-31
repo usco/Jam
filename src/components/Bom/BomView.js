@@ -3,9 +3,22 @@ let React = Cycle.React
 let {Rx} = Cycle
 
 import Class from "classnames"
-import {selectBomEntries$, selectBomEntries2$} from '../../actions/bomActions'
-//stop-gap, not sure this is needed
+import {selectBomEntries$, selectBomEntries2$} from '../../actions/bomActions'//stop-gap, not sure this is needed
+import {exists} from '../../utils/obsUtils'
 
+
+function sortBy(fieldName){
+  return function(a,b){
+    if (a[fieldName] > b[fieldName]) {
+      return 1
+    }
+    if (a[fieldName] < b[fieldName]) {
+      return -1
+    }
+    // a must be equal to b
+    return 0
+  }
+}
 
 function BomView(drivers, props) {
   //let removeEntry$ = drivers.get('DOM', '.remove-btn', 'click')
@@ -15,10 +28,10 @@ function BomView(drivers, props) {
   //interactions
   let headerTaps$ = drivers.getEventSubject('onClickHeader')
 
-  let fieldNames$      = props.get('fieldNames').startWith([])
-  let entries$         = props.get('entries').startWith([])
-  let selectedEntries$ = props.get('selectedEntries').startWith([])
-  let sortableFields$  = props.get('sortableFields').startWith([])
+  let fieldNames$      = props.get('fieldNames').startWith([]).filter(exists)
+  let entries$         = props.get('entries').startWith([]).filter(exists)
+  let selectedEntries$ = props.get('selectedEntries').startWith([]).filter(exists)
+  let sortableFields$  = props.get('sortableFields').startWith([]).filter(exists)
 
   //observable of current sorting field (what field do we sort by)
   let sortFieldName$ = headerTaps$
@@ -34,19 +47,6 @@ function BomView(drivers, props) {
       return !acc
     })
     .startWith(undefined)
-
-  function sortBy(fieldName){
-    return function(a,b){
-      if (a[fieldName] > b[fieldName]) {
-        return 1
-      }
-      if (a[fieldName] < b[fieldName]) {
-        return -1
-      }
-      // a must be equal to b
-      return 0
-    }
-  }
 
   entries$ = entries$
     .combineLatest(sortFieldName$, sortablesDirection$, function(entries, sortFieldName, direction){
@@ -77,9 +77,10 @@ function BomView(drivers, props) {
 
   let entryTaps$ = drivers.getEventSubject('onClickEntry')
     .map( e => e.currentTarget.dataset.uuid )
-    .subscribe(function(data){
+    
+    /*.subscribe(function(data){
       selectBomEntries$([data])
-    })
+    })*/
 
   let vtree$ = 
     Rx.Observable.combineLatest(
@@ -90,7 +91,8 @@ function BomView(drivers, props) {
       sortablesDirection$,
 
       function(fieldNames, entries, selectedEntries, sortFieldName, direction){
-
+        console.log("selectedEntries",selectedEntries)
+        
         let headers = fieldNames.map( function(name){
           let sortArrow = undefined
 
@@ -149,6 +151,7 @@ function BomView(drivers, props) {
   return {
     view: vtree$,
     events: {
+      entryTaps$
     }
   }
 }
