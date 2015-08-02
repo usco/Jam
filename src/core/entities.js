@@ -249,7 +249,8 @@ function makeModification$(intent){
       let entityIds = toArray(sentityIds)
 
       ////TODO: should it be serialized in history ?
-      entitiesData.selectedIds = entityIds
+      //entitiesData.selectedIds = entityIds
+      selectEntities$(entityIds)
       return entitiesData
     })
 
@@ -258,16 +259,28 @@ function makeModification$(intent){
     .map((sentities) => (entitiesData) => {
       entitiesData.instances = []
       entitiesData.byId = {}
+
+
       //set selections
-      entitiesData.selectedIds = []
+      //entitiesData.selectedIds = []
+      selectEntities$([])
       return entitiesData
     })
 
-  /*let bla$ = intent.loadDesign$
-    .map((sentities) => (entitiesData) => {
-      console.log("testing")
-      return entitiesData
-    })*/
+  //replace all existing data with new one: can be used in case of undo redos, loading etc
+  let _replaceAll$ = intent.replaceAll$
+    .map((newData) => (existingData) => {
+      log.info("replacing entities data with",newData)
+
+      let outputData = newData
+
+      //existingData.instances = newData.instances
+      //existingData.byId      = newData.byId
+      //set selections
+      //outputData.selectedIds = []
+      selectEntities$([])
+      return outputData
+    })
 
   return merge(
     _addEntities$,
@@ -276,12 +289,12 @@ function makeModification$(intent){
     _deleteAllEntities$,
     _duplicateEntities$,
     
-
-    _createEntityInstance$,
-    _resetEntities$,
+    _createEntityInstance$
+    ,_resetEntities$
+    ,_replaceAll$
 
     //selection "state" is different
-    _selectEntities$
+    ,_selectEntities$
   )
 }
 

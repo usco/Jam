@@ -75,10 +75,6 @@ function intent(interactions){
     ,interactions.get(".entityInfos","selectionTransforms$").pluck("detail")
   )
 
-  let selections$ = interactions.get(".glview","selectedMeshes$")
-    .pluck("detail")
-    .map(extractEntities)
-
   let contextMenuActions$ = interactions.get(".contextMenu", "actionSelected$").pluck("detail")
   let deleteEntities$     = contextMenuActions$.filter(e=>e.action === "delete").pluck("selections")
   let deleteAllEntities$  = contextMenuActions$.filter(e=>e.action === "deleteAll").pluck("selections")
@@ -101,8 +97,8 @@ function intent(interactions){
   let replaceAll$ = new Rx.Subject()
 
   return {
-    selections$
-    ,selectionTransforms$
+    
+    selectionTransforms$
 
     ,contextTaps$
 
@@ -119,6 +115,17 @@ function intent(interactions){
     measureDistance$,
     measureThickness$,
     measureAngle$*/
+  }
+}
+
+
+function selectionsIntents(interactions){
+  let selectEntities$ = interactions.get(".glview","selectedMeshes$")
+    .pluck("detail")
+    .map(extractEntities)
+
+  return{
+    selectEntities$
   }
 }
 
@@ -220,7 +227,36 @@ function App(interactions) {
   let newInstFromTypes$ = entityInstanceFromPartTypes(partTypes$)
   let contextTaps$ = intents.contextTaps$
 
-  partTypes$.subscribe(e=>console.log("partTypes",e))
+
+  //attempt at selection "reconciler"
+  let selectionResolver = require('./core/selectionsResolver')
+
+  function selectionTest(interactions){
+    let selectEntities$ = interactions.get(".glview","selectedMeshes$")
+      .pluck("detail")
+      .map(extractEntities)
+
+
+    let selectBomEntries$ = interactions.get(".bom","entryTaps$")
+      .pluck("detail")
+
+    //bom entries ....=> types ?
+
+    //Also
+    /*selectedBomEntries2$ = selectEntities$
+      .map(getBomEntriesFromIuids)
+
+    selectendEntities2$ = selectBomEntries$
+      .map(getEntitiesFromBomEntries)*/
+
+
+    selectEntities$.subscribe(e=>console.log("selectEntities",e))    
+    selectBomEntries$.subscribe(e=>console.log("selectBomEntries",e))
+  }
+  selectionTest(interactions)
+
+  //selections
+  selectionsIntents(interactions)
 
   //bom
   let bomIntent = bomIntents(interactions)
