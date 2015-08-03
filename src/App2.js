@@ -18,7 +18,9 @@ import {observableDragAndDrop} from './interactions/dragAndDrop'
 import {settingsIntent} from './core/settingsIntent'
 import {addAnnotationMod} from './core/annotations'
 import Bom from './core/bom'
-import selections from './core/selections'
+
+import {selectionsIntents,reverseSelections} from './core/selections/intents'
+import selections from './core/selections/selections'
 
 //temporary
 import {makeInternals, meshResources, entityInstanceFromPartTypes} from './core/tbd0'
@@ -32,7 +34,6 @@ import {first,toggleCursor} from './utils/otherUtils'
 //NEEDED because of circular dependency ...
 import {clearActiveTool$} from './actions/appActions'
 
-import {toArray} from './utils/utils'
 
 import appMetadata$ from './core/drivers/appMetaDriver'
 
@@ -56,9 +57,7 @@ function dataFromMesh(objTransform$){
     .shareReplay(1)
 }
 
-function extractEntities(data){
-  return data.filter(hasEntity).map(getEntity).map(e=>e.iuid)
-}
+
 
 function intent(interactions){
   let glviewInit$ = interactions.get(".glview","initialized$")
@@ -121,20 +120,7 @@ function intent(interactions){
 }
 
 
-function selectionsIntents(interactions){
-  let selectEntities$ = interactions.get(".glview","selectedMeshes$")
-    .pluck("detail")
-    .map(extractEntities)
 
-  let selectBomEntries$ = interactions.get(".bom","entryTaps$")
-    .pluck("detail")
-    .map(toArray)
-
-  return{
-    selectEntities$
-    ,selectBomEntries$
-  }
-}
 
 function bomIntents(interactions){
  
@@ -293,48 +279,9 @@ function App(interactions) {
 
   let {getVisual,addVisualProvider } = createVisualMapper(partTypes$, entities$)
 
-
-  function blaSelections(intents,entities$){
-    Array.prototype.flatMap = function(lambda) { 
-      return Array.prototype.concat.apply([], this.map(lambda)) 
-    }
-
-    let selectBomEntries$ = intents
-      .selectEntities$
-      .withLatestFrom(entities$,function(entityIds,entities){
-        return entityIds.map(id=>entities.byId[id].typeUid)
-      })
-      
-
-    let selectEntities$ = intents
-      .selectBomEntries$
-      .withLatestFrom(entities$,function(bomIds,entities){
-        console.log("bomIds",bomIds)
-        return bomIds.flatMap(function(typeUid){
-          return entities.instances.filter( i => i.typeUid === typeUid ).map( i => i.iuid )
-        })
-      })
-      
-
-
-    selectEntities$.subscribe(e=>console.log("for these bomEntries, instIds are",e))
-    selectBomEntries$.subscribe(e=>console.log("for these entities, typeUids are",e))
-
-    selectEntities$   = selectEntities$.merge(intents.selectEntities$)
-    selectBomEntries$ = selectBomEntries$.merge(intents.selectBomEntries$)
-
-    return{
-      selectEntities$
-      ,selectBomEntries$
-    }
-  }
-
   
-  //selectionsIntents(interactions)
   //selections 
-  let selections$ = selections( blaSelections(selectionsIntents(interactions),entities$) )
-
-
+  let selections$ = selections( reverseSelections(selectionsIntents(interactions),entities$) )
 
 
   let history$ = new Rx.BehaviorSubject({
