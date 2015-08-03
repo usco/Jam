@@ -125,17 +125,20 @@ function selectionsIntents(interactions){
     .pluck("detail")
     .map(extractEntities)
 
+  let selectBomEntries$ = interactions.get(".bom","entryTaps$")
+    .pluck("detail")
+
   return{
     selectEntities$
+    ,selectBomEntries$
   }
 }
 
 function bomIntents(interactions){
-  let selectBomEntries$ = interactions.get(".bom","entryTaps$").pluck("detail")
-
+ 
   return {
-    selectBomEntries$
-  }
+
+  } 
 }
 
 function annotIntents(interactions){
@@ -228,44 +231,12 @@ function App(interactions) {
   let newInstFromTypes$ = entityInstanceFromPartTypes(partTypes$)
   let contextTaps$ = intents.contextTaps$
 
-
-  //attempt at selection "reconciler"
-  let selectionResolver = require('./core/selectionsResolver')
-
-  function selectionTest(interactions){
-    let selectEntities$ = interactions.get(".glview","selectedMeshes$")
-      .pluck("detail")
-      .map(extractEntities)
-
-
-    let selectBomEntries$ = interactions.get(".bom","entryTaps$")
-      .pluck("detail")
-
-    //bom entries ....=> types ?
-
-    //Also
-    /*selectedBomEntries2$ = selectEntities$
-      .map(getBomEntriesFromIuids)
-
-    selectendEntities2$ = selectBomEntries$
-      .map(getEntitiesFromBomEntries)*/
-
-
-    selectEntities$.subscribe(e=>console.log("selectEntities",e))    
-    selectBomEntries$.subscribe(e=>console.log("selectBomEntries",e))
-  }
-  selectionTest(interactions)
-
-  //selections 
-  let selections$ = selections( selectionsIntents(interactions) )
-
   //bom
   let bomIntent = bomIntents(interactions)
   bomIntent = {
     addBomEntries$:new Rx.Subject()
     ,partTypes$
     ,combos$:meshResources$
-    ,selectBomEntries$:bomIntent.selectBomEntries$
   }
   let bom$ = Bom(bomIntent)
   bom$.subscribe(e=>console.log("bom",e))
@@ -310,8 +281,6 @@ function App(interactions) {
 
   let comments = require("./core/comments")
   let comments$ = comments(commentsIntents(interactions, settings$))
-
-  console.log("comments",comments$)
   comments$.subscribe(e=>console.log(e))
 
   //output (USE DRIVER!!!!)
@@ -321,6 +290,41 @@ function App(interactions) {
   })
 
   let {getVisual,addVisualProvider } = createVisualMapper(partTypes$, entities$)
+
+
+  //attempt at selection "reconciler"
+  let selectionResolver = require('./core/selectionsResolver')
+
+  function selectionTest(interactions){
+    let selectEntities$ = interactions.get(".glview","selectedMeshes$")
+      .pluck("detail")
+      .map(extractEntities)
+
+
+    let selectBomEntries$ = interactions.get(".bom","entryTaps$")
+      .pluck("detail")
+
+    //bom entries ....=> types ?
+
+    //Also
+    /*selectedBomEntries2$ = selectEntities$
+      .map(getBomEntriesFromIuids)
+
+    selectendEntities2$ = selectBomEntries$
+      .map(getEntitiesFromBomEntries)*/
+
+
+    selectEntities$.subscribe(e=>console.log("selectEntities",e))    
+    selectBomEntries$.subscribe(e=>console.log("selectBomEntries",e))
+  }
+  selectionTest(interactions)
+
+  //function blaSelections()
+
+  //selections 
+  let selections$ = selections( selectionsIntents(interactions) )
+
+
 
 
   let history$ = new Rx.BehaviorSubject({
@@ -413,9 +417,11 @@ function App(interactions) {
         let fieldNames = ["name","qty","unit","version"]
         let sortableFields = ["id","name","qty","unit"]
         let entries = bom.entries
-        let selectedEntries = bom.selectedEntries
-
+        
         console.log("selections",selections)
+        let selectedEntries = selections.bomIds
+
+
         //            
         let contextMenuItems = [
           {text:"Duplicate", action:"duplicate"},

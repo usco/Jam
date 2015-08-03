@@ -9,9 +9,8 @@ log.setLevel("debug")
 
 
 const defaults = {
-  entries:[],
-  byId:{},
-  selectedEntries:[]
+  entries:[]
+  ,byId:{}
 }
 
 function makeModifications(intent){
@@ -68,29 +67,13 @@ function makeModifications(intent){
         byId[typeUid].qty +=1
 
       }
-      return { entries, byId, selectedEntries:bomData.selectedEntries }
+      return { entries, byId }
      })
 
-  console.log("intent",intent)
-  /*let bla$ = intent.entities$ 
-    .map((data) => (bomData) => {
-      console.log("foo",data)
-
-      return bomData
-    })*/
-
-  let select$ = intent.selectBomEntries$
-    .map((data) => (bomData) => {
-      //console.log("select",data)
-      bomData.selectedEntries = data
-      return bomData
-    })
 
   return merge(
-    _addEntries$,
-    newType$,
-    //bla$,
-    select$
+    _addEntries$
+    ,newType$
   )
 }
 

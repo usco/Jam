@@ -9,7 +9,8 @@ import {toArray} from '../utils/utils'
 
 ///defaults, what else ?
 const defaults = {
-  selectedIds:[],
+  selectedIds:[]
+  ,bomIds:[]
 }
 
 
@@ -27,8 +28,21 @@ function makeModification$(intent){
       return selections
     })
 
+  let _selectBomEntries$ = intent.selectBomEntries$
+    .distinctUntilChanged()
+    .map((sBomIds) => (selections) => {
+      //log.info("selecting bom entries",sBomIds)
+
+      let bomIds = toArray(sBomIds)
+      console.log("bomIds",bomIds)
+
+      selections.bomIds = bomIds
+      return selections
+    })
+
   return merge(
     _selectEntities$
+    ,_selectBomEntries$
   )
 
 }
