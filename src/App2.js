@@ -18,6 +18,7 @@ import {observableDragAndDrop} from './interactions/dragAndDrop'
 import {settingsIntent} from './core/settingsIntent'
 import {addAnnotationMod} from './core/annotations'
 import Bom from './core/bom'
+import selections from './core/selections'
 
 //temporary
 import {makeInternals, meshResources, entityInstanceFromPartTypes} from './core/tbd0'
@@ -255,8 +256,8 @@ function App(interactions) {
   }
   selectionTest(interactions)
 
-  //selections
-  selectionsIntents(interactions)
+  //selections 
+  let selections$ = selections( selectionsIntents(interactions) )
 
   //bom
   let bomIntent = bomIntents(interactions)
@@ -298,7 +299,6 @@ function App(interactions) {
     deleteEntities$: intents.deleteEntities$,
     duplicateEntities$: intents.duplicateEntities$,  
     deleteAllEntities$: intents.deleteAllEntities$, 
-    selectEntities$: intents.selections$,
 
     newDesign$: intents.newDesign$, 
     replaceAll$:intents.replaceAll$,
@@ -401,10 +401,11 @@ function App(interactions) {
       entities$,
       bom$,
       settings$,
-      contextTaps$,
-      history$,
-      comments$,
-      function(items, bom, settings, contextTaps, history, comments){
+      contextTaps$
+      ,history$
+      ,comments$
+      ,selections$
+      ,function(items, bom, settings, contextTaps, history, comments, selections){
 
         let {undos,redos} = history
 
@@ -414,8 +415,7 @@ function App(interactions) {
         let entries = bom.entries
         let selectedEntries = bom.selectedEntries
 
-
-        console.log("comments",comments)
+        console.log("selections",selections)
         //            
         let contextMenuItems = [
           {text:"Duplicate", action:"duplicate"},
@@ -461,7 +461,7 @@ function App(interactions) {
         }
         
         function normalContent(settings, items, contextTaps, comments){
-          let selections = items.selectedIds.map( id=>items.byId[id] )
+          let _selections = selections.selectedIds.map( id=>items.byId[id] )
           //console.log("selections",selections,"items",items,"annotations",annotations)
           let _items = items.instances
 
@@ -470,7 +470,7 @@ function App(interactions) {
               <GlView 
               settings={settings}
               items={_items} 
-              selections={selections}
+              selections={_selections}
               visualMappings={getVisual}
               className="glview"/>
 
@@ -486,14 +486,14 @@ function App(interactions) {
                 <GlView 
                 settings={settings}
                 items={_items} 
-                selections={selections}
+                selections={_selections}
                 visualMappings={getVisual}
                 className="glview"/>
                 
                 <SettingsView settings={settings} ></SettingsView>
-                <ContextMenu position={contextTaps} items={contextMenuItems} selections={selections}/>
+                <ContextMenu position={contextTaps} items={contextMenuItems} selections={_selections}/>
                 <FullScreenToggler/> 
-                <EntityInfos entities={selections} settings={settings} comments={comments}/>
+                <EntityInfos entities={_selections} settings={settings} comments={comments}/>
 
                 <BomView 
                   entries={entries} 

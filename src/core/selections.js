@@ -1,8 +1,11 @@
 import Rx from 'rx'
+let Observable = Rx.Observable
 let merge = Rx.Observable.merge
 
 
 import {selectEntities$} from '../actions/entityActions'
+import {toArray} from '../utils/utils'
+
 
 ///defaults, what else ?
 const defaults = {
@@ -21,9 +24,8 @@ function makeModification$(intent){
       let entityIds = toArray(sentityIds)
 
       selections.selectedIds = entityIds
-      return entitiesData
+      return selections
     })
-
 
   return merge(
     _selectEntities$

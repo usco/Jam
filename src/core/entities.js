@@ -241,7 +241,7 @@ function makeModification$(intent){
     })
 
   /*select given entities*/
-  let _selectEntities$ = intent.selectEntities$ 
+  /*let _selectEntities$ = intent.selectEntities$ 
     .distinctUntilChanged()//we do not want to be notified multiple times in a row for the same selections
     .map((sentityIds) => (entitiesData) => {
       //log.info("selecting entitites",sentities)
@@ -252,7 +252,7 @@ function makeModification$(intent){
       //entitiesData.selectedIds = entityIds
       selectEntities$(entityIds)
       return entitiesData
-    })
+    })*/
 
   /*technically same as deleteAll , but kept seperate for clarity*/
   let _resetEntities$ = intent.newDesign$
@@ -293,15 +293,13 @@ function makeModification$(intent){
     ,_resetEntities$
     ,_replaceAll$
 
-    //selection "state" is different
-    ,_selectEntities$
   )
 }
 
 function entities(intent, source) {
   let source$ = source || Observable.just(defaults)
 
-  intent.selectEntities$ = intent.selectEntities$.merge(selectEntities$)
+  //intent.selectEntities$ = intent.selectEntities$.merge(selectEntities$)
 
   let modification$ = makeModification$(intent)
 
