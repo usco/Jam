@@ -2,16 +2,16 @@ import {getEntryExitThickness,
   getObjectPointNormal,
   computeCenterDiaNormalFromThreePoints,
   getDistanceFromStartEnd
-} from '../components/webgl/utils'
+} from '../../components/webgl/utils'
 
-import {first,toggleCursor} from '../utils/otherUtils'
+import {first,toggleCursor} from '../../utils/otherUtils'
 import {generateUUID} from 'usco-kernel2/src/utils'
-import {exists} from '../utils/obsUtils'
+import {exists} from '../../utils/obsUtils'
 
 //import {clearActiveTool$} from 
 
 
-import logger from '../utils/log'
+import logger from '../../utils/log'
 let log = logger("annotations")
 log.setLevel("info")
 

@@ -16,132 +16,35 @@ import MainToolbar from './components/MainToolbar'
 import {observableDragAndDrop} from './interactions/dragAndDrop'
 
 import {settingsIntent} from './core/settingsIntent'
-import {addAnnotationMod} from './core/annotations'
 import Bom from './core/bom'
 
+
+//entities
+import {entityIntents, annotationIntents} from './core/entities/intents'
+import entities from './core/entities/entities'
+import {addAnnotationMod} from './core/entities/annotations'
+
+
+//selections
 import {selectionsIntents,reverseSelections} from './core/selections/intents'
 import selections from './core/selections/selections'
 
 //temporary
 import {makeInternals, meshResources, entityInstanceFromPartTypes} from './core/tbd0'
-import {getVisual,createVisualMapper} from './core/entitiesToVisuals'
+import {getVisual,createVisualMapper} from './core/entities/entitiesToVisuals'
 
 import {exists} from './utils/obsUtils'
-import {hasEntity,hasNoEntity,getEntity} from './utils/entityUtils'
 import {getXY} from './utils/uiUtils'
-import {first,toggleCursor} from './utils/otherUtils'
 
 //NEEDED because of circular dependency ...
 import {clearActiveTool$} from './actions/appActions'
 
-
 import appMetadata$ from './core/drivers/appMetaDriver'
 
  
-function dataFromMesh(objTransform$){
-  function toArray (vec){
-    return vec.toArray().slice(0,3)
-  }
-
-  return objTransform$
-    .filter(hasEntity)
-    .map(
-      function(m){ 
-        return {
-          iuids:m.userData.entity.iuid, 
-          pos:toArray(m.position),
-          rot:toArray(m.rotation),
-          sca:toArray(m.scale)
-        } 
-    })
-    .shareReplay(1)
-}
-
-
-
-function intent(interactions){
-  let glviewInit$ = interactions.get(".glview","initialized$")
-  let shortSingleTaps$ = interactions.get(".glview","shortSingleTaps$")
-  let shortDoubleTaps$ = interactions.get(".glview","shortDoubleTaps$")
-  let contextTaps$ = interactions.get(".glview","longTaps$").pluck("detail")
-    .map(function(e){
-      if(!e) return undefined
-      return getXY(e)
-    }).startWith(undefined)
-
-  let selectionTransforms$ = Rx.Observable.merge(
-    //interactions.get(".glview","selectionsTransforms$").pluck("detail").filter(hasEntity)
-    //  .map(function(m){ return {iuids:m.userData.entity.iuid, pos:m.position,rot:m.rot,sca:m.sca} })
-    dataFromMesh( interactions.get(".glview","selectionsTransforms$").pluck("detail") )
-    ,interactions.get(".entityInfos","selectionTransforms$").pluck("detail")
-  )
-
-  let contextMenuActions$ = interactions.get(".contextMenu", "actionSelected$").pluck("detail")
-  let deleteEntities$     = contextMenuActions$.filter(e=>e.action === "delete").pluck("selections")
-  let deleteAllEntities$  = contextMenuActions$.filter(e=>e.action === "deleteAll").pluck("selections")
-  let duplicateEntities$  = contextMenuActions$.filter(e=>e.action === "duplicate").pluck("selections")
-
-  //we need to "shut down the context menu after any click inside of it"
-  contextTaps$ = contextTaps$.merge(
-    contextMenuActions$.map(undefined)
-  )
-
-  //get any "clear" message from post message
-  let postMessages$ = require('./core/drivers/postMessageDriver')( )
-  let newDesign$ = postMessages$.filter(hasClear).map(true)
-
-  //
-  let undo$ = interactions.get("#undo","click")
-  let redo$ = interactions.get("#redo","click")
-
-  //stand in for future use (circular depency problem !)
-  let replaceAll$ = new Rx.Subject()
-
-  return {
-    
-    selectionTransforms$
-
-    ,contextTaps$
-
-    ,deleteEntities$
-    ,deleteAllEntities$
-    ,duplicateEntities$
-
-    ,newDesign$
-
-    ,replaceAll$
-    ,undo$
-    ,redo$
-    /*addNote$,
-    measureDistance$,
-    measureThickness$,
-    measureAngle$*/
-  }
-}
-
-
-
-
 function bomIntents(interactions){
- 
   return {
-
   } 
-}
-
-function annotIntents(interactions){
-  let shortSingleTaps$ = interactions.get(".glview","shortSingleTaps$")
-  //shortSingleTaps$.pluck("detail").subscribe(e=>console.log("FUUU",e.detail.pickingInfos[0].object.userData))
-
-  let annotationCreationStep$ = shortSingleTaps$.pluck("detail")
-    .map( (event)=>event.detail.pickingInfos)
-    .filter( (pickingInfos)=>pickingInfos.length>0)
-    .map(first)
-    .share()  
-
-  return {
-    creationStep$ : annotationCreationStep$
-  }
 }
 
 function commentsIntents(interactions, settings$){
@@ -154,17 +57,12 @@ function commentsIntents(interactions, settings$){
   }
 }
 
-
 function hasModelUrl(data){
   if(data && data.hasOwnProperty("modelUrl")) return true
     return false
 }
 function hasDesignUrl(data){
   if(data && data.hasOwnProperty("designUrl")) return true
-    return false
-}
-function hasClear(data){
-  if(data && data.hasOwnProperty("clear")) return true
     return false
 }
 
@@ -200,12 +98,11 @@ function App(interactions) {
   let settings$ = settingsIntent(interactions)
     .merge(settingsSources$.filter(exists))//restore old data
 
-
   let {kernel, assetManager} = makeInternals()
 
   let meshResources$ = meshResources(meshSources$, assetManager)
 
-  let intents = intent(interactions)  
+  let intents = entityIntents(interactions)  
 
   //register meshes <=> types
   let partTypes = require('./core/partReg')
@@ -213,7 +110,6 @@ function App(interactions) {
     combos$:meshResources$
     ,newDesign$: intents.newDesign$
   })
-  //partTypes$.subscribe(e=>console.log("fooType",e))
 
   //get new instances from "types"
   let newInstFromTypes$ = entityInstanceFromPartTypes(partTypes$)
@@ -231,7 +127,7 @@ function App(interactions) {
 
 
   //annotations
-  let aIntents = annotIntents(interactions)
+  let aIntents = annotationIntents(interactions)
   let aIntent = {
     creationStep$:aIntents.creationStep$,
     settings$:settings$
@@ -263,8 +159,6 @@ function App(interactions) {
     replaceAll$:intents.replaceAll$,
     settings$:settings$
   }
-
-  let entities = require("./core/entities")
   let entities$ = entities(iIntent)
 
   let comments = require("./core/comments")

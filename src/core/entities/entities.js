@@ -5,9 +5,9 @@ import {
   duplicateEntities$, 
   deleteAllEntities$,
   selectEntities$
-   } from '../actions/entityActions'
+   } from '../../actions/entityActions'
 
-import logger from '../utils/log'
+import logger from '../../utils/log'
 let log = logger("entities")
 log.setLevel("info")
 
@@ -17,7 +17,7 @@ let Observable = Rx.Observable
 let merge = Rx.Observable.merge
 
 import {generateUUID} from 'usco-kernel2/src/utils'
-import {toArray} from '../utils/utils'
+import {toArray} from '../../utils/utils'
 
 ///defaults, what else ?
 const defaults = {
