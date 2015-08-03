@@ -24,10 +24,13 @@ import {entityIntents, annotationIntents} from './core/entities/intents'
 import entities from './core/entities/entities'
 import {addAnnotationMod} from './core/entities/annotations'
 
-
 //selections
 import {selectionsIntents,reverseSelections} from './core/selections/intents'
 import selections from './core/selections/selections'
+
+//history
+import {historyIntents} from './core/historyIntents'
+
 
 //temporary
 import {makeInternals, meshResources, entityInstanceFromPartTypes} from './core/tbd0'
@@ -108,7 +111,7 @@ function App(interactions) {
   let partTypes = require('./core/partReg')
   let partTypes$ = partTypes({
     combos$:meshResources$
-    ,newDesign$: intents.newDesign$
+    ,deleteAllEntities$: intents.deleteAllEntities$
   })
 
   //get new instances from "types"
@@ -155,7 +158,6 @@ function App(interactions) {
     duplicateEntities$: intents.duplicateEntities$,  
     deleteAllEntities$: intents.deleteAllEntities$, 
 
-    newDesign$: intents.newDesign$, 
     replaceAll$:intents.replaceAll$,
     settings$:settings$
   }
@@ -177,7 +179,7 @@ function App(interactions) {
   //selections 
   let selections$ = selections( reverseSelections(selectionsIntents(interactions),entities$) )
 
-
+  let _historyIntents = historyIntents(interactions)
   let history$ = new Rx.BehaviorSubject({
     undos:[],
     redos:[]
@@ -194,8 +196,8 @@ function App(interactions) {
 
 
   Rx.Observable.merge(
-    intents.undo$.map(true),
-    intents.redo$.map(false)
+    _historyIntents.undo$.map(true),
+    _historyIntents.redo$.map(false)
   )
     .withLatestFrom(history$,function(u,history){
       let {undos,redos} = history

@@ -58,10 +58,13 @@ export function entityIntents(interactions){
 
   //get any "clear" message from post message
   let postMessages$ = require('../drivers/postMessageDriver')( )
-  let newDesign$ = postMessages$.filter(hasClear).map(true)
-
-  let undo$ = interactions.get("#undo","click")
-  let redo$ = interactions.get("#redo","click")
+  deleteAllEntities$ = 
+    deleteAllEntities$
+    .merge(
+      postMessages$
+      .filter(hasClear)
+      .map(true)
+    )
 
   //stand in for future use (circular depency problem !)
   let replaceAll$ = new Rx.Subject()
@@ -76,17 +79,15 @@ export function entityIntents(interactions){
     ,deleteAllEntities$
     ,duplicateEntities$
 
-    ,newDesign$
-
     ,replaceAll$
-    ,undo$
-    ,redo$
+    
     /*addNote$,
     measureDistance$,
     measureThickness$,
     measureAngle$*/
   }
 }
+
 
 export function annotationIntents(interactions){
   let shortSingleTaps$ = interactions.get(".glview","shortSingleTaps$")

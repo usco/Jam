@@ -43,7 +43,8 @@ function makeModifications(intent){
 
       //no typeUid was given, it means we have a mesh with no part (yet !)
       if( !typeUid ) {
-        typeUid = "A0"//generateUUID()
+        typeUid = generateUUID()
+        //typeUid = "A0"
 
         //extract usefull information
         let mesh = data.mesh
@@ -82,7 +83,7 @@ function makeModifications(intent){
 
 
   /*technically same as deleteAll , but kept seperate for clarity*/
-  let clearData$ = intent.newDesign$
+  let clearData$ = intent.deleteAllEntities$
     .map(() => (regData) => {
       log.info("New design, clearing registry",regData)
       return Object.assign({},defaults)

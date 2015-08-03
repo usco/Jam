@@ -240,20 +240,6 @@ function makeModification$(intent){
       return entitiesData
     })
 
-  
-  /*technically same as deleteAll , but kept seperate for clarity*/
-  let _resetEntities$ = intent.newDesign$
-    .map((sentities) => (entitiesData) => {
-      entitiesData.instances = []
-      entitiesData.byId = {}
-
-
-      //set selections
-      //entitiesData.selectedIds = []
-      selectEntities$([])
-      return entitiesData
-    })
-
   //replace all existing data with new one: can be used in case of undo redos, loading etc
   let _replaceAll$ = intent.replaceAll$
     .map((newData) => (existingData) => {
@@ -277,7 +263,6 @@ function makeModification$(intent){
     ,_duplicateEntities$
     
     ,_createEntityInstance$
-    ,_resetEntities$
     ,_replaceAll$
 
   )
