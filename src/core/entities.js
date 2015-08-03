@@ -22,8 +22,6 @@ import {toArray} from '../utils/utils'
 ///defaults, what else ?
 const defaults = {
   instances:[],
-  selectedIds:[],
-
   //secondary storage of instances, for (flat) faster/simpler access
   byId:{}
 }
@@ -183,7 +181,7 @@ function makeModification$(intent){
       remEntitites.map(entity=>{ delete entitiesData.byId[entity.iuid] })
 
       //set selections
-      entitiesData.selectedIds = []
+      selectEntities$([])
 
       return entitiesData
     })
@@ -193,8 +191,10 @@ function makeModification$(intent){
     .map(() => (entitiesData) => {
       entitiesData.instances = []
       entitiesData.byId = {}
+
       //set selections
-      entitiesData.selectedIds = []
+      selectEntities$([])
+
       return entitiesData
     })
 
@@ -240,20 +240,7 @@ function makeModification$(intent){
       return entitiesData
     })
 
-  /*select given entities*/
-  /*let _selectEntities$ = intent.selectEntities$ 
-    .distinctUntilChanged()//we do not want to be notified multiple times in a row for the same selections
-    .map((sentityIds) => (entitiesData) => {
-      //log.info("selecting entitites",sentities)
-
-      let entityIds = toArray(sentityIds)
-
-      ////TODO: should it be serialized in history ?
-      //entitiesData.selectedIds = entityIds
-      selectEntities$(entityIds)
-      return entitiesData
-    })*/
-
+  
   /*technically same as deleteAll , but kept seperate for clarity*/
   let _resetEntities$ = intent.newDesign$
     .map((sentities) => (entitiesData) => {
@@ -283,13 +270,13 @@ function makeModification$(intent){
     })
 
   return merge(
-    _addEntities$,
-    _updateEntities$,
-    _deleteEntities$,
-    _deleteAllEntities$,
-    _duplicateEntities$,
+    _addEntities$
+    ,_updateEntities$
+    ,_deleteEntities$
+    ,_deleteAllEntities$
+    ,_duplicateEntities$
     
-    _createEntityInstance$
+    ,_createEntityInstance$
     ,_resetEntities$
     ,_replaceAll$
 
@@ -298,9 +285,6 @@ function makeModification$(intent){
 
 function entities(intent, source) {
   let source$ = source || Observable.just(defaults)
-
-  //intent.selectEntities$ = intent.selectEntities$.merge(selectEntities$)
-
   let modification$ = makeModification$(intent)
 
   return modification$
@@ -311,8 +295,6 @@ function entities(intent, source) {
 }
 
 export default entities
-
-
 
 
  //just an idea: for context menu etc

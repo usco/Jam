@@ -36,6 +36,7 @@ function makeModification$(intent){
 function selections(intent, source) {
   let source$ = source || Observable.just(defaults)
 
+  //not sure about this one
   intent.selectEntities$ = intent.selectEntities$.merge(selectEntities$)
 
   let modification$ = makeModification$(intent)
