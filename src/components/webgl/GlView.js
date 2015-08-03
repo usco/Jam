@@ -440,13 +440,7 @@ function GlView(interactions, props, self){
     return {applyFx,removeFx}
   }
 
-  function compareHash(obj){
-    if(obj.uuid) return obj.uuid
-      //return JSON.stringify(obj)
-    //return typeof(obj)+obj.name
-  }
 
-  let jsondiffpatch = require('jsondiffpatch').create({objectHash:compareHash})
 
 
 
