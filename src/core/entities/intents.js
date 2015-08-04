@@ -45,6 +45,13 @@ export function entityIntents(interactions){
     dataFromMesh( interactions.get(".glview","selectionsTransforms$").pluck("detail") )
     ,interactions.get(".entityInfos","selectionTransforms$").pluck("detail")
   )
+  
+  /*let absSize$ = interactions.get(".entityInfos","selectionTransforms$")
+    .pluck("detail")
+    .pluck("absSize")
+    .subscribe(e=>console.log("selectionTransforms",e))*/
+
+
 
   let contextMenuActions$ = interactions.get(".contextMenu", "actionSelected$").pluck("detail")
   let deleteEntities$     = contextMenuActions$.filter(e=>e.action === "delete").pluck("selections")

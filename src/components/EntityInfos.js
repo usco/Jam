@@ -59,21 +59,40 @@ function absSizeInput(entity , controlsStep, numberPrecision, changeHandler){
   if(this.meshSize[axis] <= minScale) this.meshSize[axis] = minScale;
   
   this.selectedObject.scale[mapped] = targetScale;
-  return targetScale;*/
+  return targetScale;
+
+
+  absSize = originalSize * scale
+  scale   =
+  */
 
 
   if(entity && entity["sca"]){
     //this one is for absolute sizing
+
+    function innerChangeHandler(fieldName, index, absSize, event){  
+      let value = event.target.value
+      let originalValue = absSize[index]
+      let scaleChange = value/originalValue
+      //console.log("changeHandler for absSize fieldName",fieldName,"index",index,"value",value,"originalValue",originalValue ,"absSize", absSize )
+      console.log("value",value, "originalValue",originalValue,scaleChange)
+
+      changeHandler("sca",index,{target:{value:value}})
+    }
+
     let absSizeInputs = []
      if(entity.bbox){
       let absSize = absSizeFromBBox(entity.bbox)
       absSize = absSize || {w:0,l:0,h:0}
       //convert to array to keep logic the same for all fields
-      absSize = [absSize.w,absSize.l,absSize.h]
+      absSize = [absSize.l,absSize.w,absSize.h]
+      //onChange={innerChangeHandler.bind(null,"absSize",index ,absSize)} 
+
       absSize.forEach(function(entry, index){
         entry = formatNumberTo(entry, numberPrecision)
         absSizeInputs.push(
-          <input type="number" value={entry} step={controlsStep}/>
+          <input type="number" value={entry} step={controlsStep} 
+          onChange={changeHandler.bind(null,"absSize",index)} />
         )
       })
     }
@@ -200,7 +219,7 @@ function EntityInfos(interactions, props) {
               {transformInputs(entity, "pos", "P", controlsStep, numberPrecision, changeHandler)}
               {transformInputs(entity, "rot", "R", controlsStep, numberPrecision, changeHandler)}
               {transformInputs(entity, "sca", "S", controlsStep, numberPrecision, changeHandler)}
-              {absSizeInput(entity,controlsStep,numberPrecision)}
+              {absSizeInput(entity,controlsStep,numberPrecision,changeHandler)}
               {extraInputs(entity,numberPrecision,changeHandler)}
 
               
