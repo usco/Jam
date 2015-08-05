@@ -81,6 +81,41 @@ function sources(urlSources$, dndSources$){
 }  
 
 
+function getEntitiesMenuItems(entities){
+ let menuItems = [
+    {text:"Duplicate", action:"duplicate"}
+    ,{text:"Delete",action:"delete"}
+    ,{text:"DeleteAll",action:"deleteAll"}
+  ]
+
+  let hasParts = ( entities.filter(e=>e.cid === 0) ) .length > 0
+  let hasAnnots= ( entities.filter(e=>e.cid !== 0) ) .length > 0
+
+  if(hasParts && !hasAnnots){
+    menuItems= menuItems.concat(
+      [
+        {text:"transforms",items:[
+          {text:"translate", action:"translate"}
+          ,{text:"rotate",action:"rotate"}
+          ,{text:"scale",action:"scale"}
+        ]}
+        ,
+
+        {text:"annotations",items:[
+        {text:"Add note", action:"addNote"},
+        {text:"Measure thickness",action:"measureThickness"},
+        {text:"Measure Diameter",action:"measureDiameter"},
+        {text:"Measure Distance",action:"measureDistance"},
+        {text:"Measure Angle",action:"measureAngle"}
+        ]}
+      ]
+    )
+  }
+
+  return menuItems
+}
+
+
 function App(interactions) {
   document.addEventListener("keyup", interactions.subject('keyup').onEvent)
 
@@ -247,31 +282,11 @@ function App(interactions) {
         let sortableFields = ["id","name","qty","unit"]
         let entries = bom.entries
         let selectedEntries = selections.bomIds
-        
-        //            
-        let contextMenuItems = [
-          {text:"Duplicate", action:"duplicate"},
-          {text:"Delete",action:"delete"},
-          {text:"DeleteAll",action:"deleteAll"},
 
-           {text:"transforms",items:[
-            {text:"translate", action:"translate"},
-            {text:"rotate",action:"rotate"},
-            {text:"scale",action:"scale"}
-          ]},
-          {text:"annotations",items:[
-            {text:"Add note", action:"addNote"},
-            {text:"Measure thickness",action:"measureThickness"},
-            {text:"Measure Diameter",action:"measureDiameter"},
-            {text:"Measure Distance",action:"measureDistance"},
-            {text:"Measure Angle",action:"measureAngle"}
-          ]},
-        ]
+        //deal with context menu entries
+        let selectedEntities = selections.selectedIds.map( id=>items.byId[id] )       
+        let contextMenuItems = getEntitiesMenuItems(selectedEntities)
 
-        function createContextmenuItems(){
-        }
-        
-        //contextTaps = undefined
         let settingsMeta = [
           {type:"checkbox", label:"Show Grid", className:"showGrid"}
         ]
