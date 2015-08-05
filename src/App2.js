@@ -83,13 +83,19 @@ function sources(urlSources$, dndSources$){
 
 function getEntitiesMenuItems(entities){
  let menuItems = [
-    {text:"Duplicate", action:"duplicate"}
-    ,{text:"Delete",action:"delete"}
-    ,{text:"DeleteAll",action:"deleteAll"}
+    {text:"DeleteAll",action:"deleteAll"}
   ]
 
   let hasParts = ( entities.filter(e=>e.cid === 0) ) .length > 0
   let hasAnnots= ( entities.filter(e=>e.cid !== 0) ) .length > 0
+
+  if(hasParts || hasAnnots){
+    menuItems= menuItems.concat([
+        {text:"Duplicate", action:"duplicate"}
+        ,{text:"Delete",action:"delete"}
+
+      ])
+  }
 
   if(hasParts && !hasAnnots){
     menuItems= menuItems.concat(
