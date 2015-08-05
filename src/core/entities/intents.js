@@ -1,6 +1,7 @@
 import Rx from 'rx'
 import {hasEntity,hasNoEntity,getEntity} from '../../utils/entityUtils'
 import {first,toggleCursor} from '../../utils/otherUtils'
+import {getXY} from '../../utils/uiUtils'
 
 
 function dataFromMesh(objTransform$){
