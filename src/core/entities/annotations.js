@@ -252,11 +252,10 @@ export function addAnnotationMod(intent){
     .map(generateDiameterData)
 
   let angleAnnot$ = baseStream$
-    .filter((data)=>data.activeTool === "addAngle" )
+    .filter((data)=>data.activeTool === "measureAngle" )
     .map(dataOnly)
     .map(getObjectPointNormal)
     .filter(hasEntity)//we need data to have entity infos
-    //.take(3)
     .bufferWithCount(3)//we need 3 data points to generate an angle
     .map(generateAngleData)
 
@@ -272,5 +271,8 @@ export function addAnnotationMod(intent){
 
   return additions$
 }
+
+
+
 
 

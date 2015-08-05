@@ -119,8 +119,9 @@ export function createVisualMapper(types$, entities$){
   //visualProviders[1] = annotationVisualProvider
   visualProviders[1] = noteVisualProvider //(entity, subJ, getVisual, entities$) 
   visualProviders[2] = thicknessVisualProvider //(entity, subJ, getVisual, entities$) 
-  visualProviders[4] = diameterVisualProvider //(entity, subJ, getVisual, entities$) 
   visualProviders[3] = distanceVisualProvider //(entity, subJ, getVisual, entities$)*/
+  visualProviders[4] = diameterVisualProvider //(entity, subJ, getVisual, entities$) 
+  visualProviders[5] = angleVisualProvider
 
   function getVisual(entity){
     console.log("getting visual for",entity)
@@ -283,6 +284,7 @@ function distanceVisualProvider(entity, subJ, params){
     })
 }
 
+
 function diameterVisualProvider(entity, subJ, params){
   let {getVisual,entities$} = params
   let point = entity.target.point
@@ -310,6 +312,45 @@ function diameterVisualProvider(entity, subJ, params){
   meshesFromDeps(deps, getVisual, entities$)
     .subscribe(function(data){
       subJ.onNext(visual(data[0]))
+    })
+}
+
+
+function angleVisualProvider(entity, subJ, params){
+  let {getVisual,entities$} = params
+  let start = entity.target.start
+  let mid   = entity.target.mid
+  let end   = entity.target.end
+  let angle = entity.value
+
+  let deps = [start, mid, end].map(d=>d.iuid)
+  console.log("angleVisualProvider",entity, params)
+  
+  function visual(startObject, midObject, endObject){
+    let startPt = new THREE.Vector3().fromArray(start.point)
+    let midPt   = new THREE.Vector3().fromArray(mid.point)
+    let endPt   = new THREE.Vector3().fromArray(end.point)
+
+
+    let params = {
+         start:startPt
+         ,mid:midPt
+         ,end:endPt
+
+         ,startObject
+         ,midObject
+         ,endObject
+
+         ,angle
+      }
+    params = Object.assign(params,annotStyle)
+
+    return new annotations.AngleVisual(params)
+  }
+     
+  meshesFromDeps(deps, getVisual, entities$)
+    .subscribe(function(data){
+      subJ.onNext(visual(data[0],data[1],data[2]))
     })
 }
 
