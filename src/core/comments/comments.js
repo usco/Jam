@@ -3,12 +3,12 @@ let fromEvent = Rx.Observable.fromEvent
 let Observable = Rx.Observable
 let merge = Rx.Observable.merge
 
-import logger from '../utils/log'
+import logger from '../../utils/log'
 let log = logger("comments")
 log.setLevel("info")
 
 import {generateUUID} from 'usco-kernel2/src/utils'
-import {toArray} from '../utils/utils'
+import {toArray} from '../../utils/utils'
 
 //"comments" system
 const defaults = {

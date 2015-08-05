@@ -24,6 +24,10 @@ import {entityIntents, annotationIntents} from './core/entities/intents'
 import entities from './core/entities/entities'
 import {addAnnotationMod} from './core/entities/annotations'
 
+//comments
+import {commentsIntents} from './core/comments/intents'
+import comments from './core/comments/comments'
+
 //selections
 import {selectionsIntents,reverseSelections} from './core/selections/intents'
 import selections from './core/selections/selections'
@@ -37,7 +41,6 @@ import {makeInternals, meshResources, entityInstanceFromPartTypes} from './core/
 import {getVisual,createVisualMapper} from './core/entities/entitiesToVisuals'
 
 import {exists} from './utils/obsUtils'
-import {getXY} from './utils/uiUtils'
 
 //NEEDED because of circular dependency ...
 import {clearActiveTool$} from './actions/appActions'
@@ -48,16 +51,6 @@ import appMetadata$ from './core/drivers/appMetaDriver'
 function bomIntents(interactions){
   return {
   } 
-}
-
-function commentsIntents(interactions, settings$){
-  //interactions.get(".commentDetails","addComment$").subscribe(e=>console.log("gna",e))
-  //.subscribe(e=>console.log("gna",e))
-
-  return {
-    addComments$ : interactions.get(".entityInfos","addComment$").pluck("detail")
-    ,settings$
-  }
 }
 
 function hasModelUrl(data){
@@ -163,7 +156,6 @@ function App(interactions) {
   }
   let entities$ = entities(iIntent)
 
-  let comments = require("./core/comments")
   let comments$ = comments(commentsIntents(interactions, settings$))
   comments$.subscribe(e=>console.log(e))
 
@@ -227,23 +219,7 @@ function App(interactions) {
     })
     .subscribe(e=>e)
 
-  //Experimental: system describing available actions by entity "category"
-  let lookupByEntityCategory ={
-    "common":[
-      "delete",
-      "deleteAll",
-      "duplicate"
-    ],
-    "part": [   
-    ],
-    "annot":[
-      "add note",
-      "measure thickness",
-      "measure Diameter",
-      "measure Distance"
-    ]
-  }
-
+  
   /*let contextMenuItems = contextTaps$
     .combineLatest(
       entities$.pluck("selectedIds").filter(exists).filter(x=>x.length>0),
@@ -270,11 +246,8 @@ function App(interactions) {
         let fieldNames = ["name","qty","unit","version"]
         let sortableFields = ["id","name","qty","unit"]
         let entries = bom.entries
-        
-        console.log("selections",selections)
         let selectedEntries = selections.bomIds
-
-
+        
         //            
         let contextMenuItems = [
           {text:"Duplicate", action:"duplicate"},
@@ -293,7 +266,6 @@ function App(interactions) {
             {text:"Measure Distance",action:"measureDistance"},
             {text:"Measure Angle",action:"measureAngle"}
           ]},
-          {text:"comment",action:"addComment"}
         ]
 
         function createContextmenuItems(){
@@ -367,8 +339,6 @@ function App(interactions) {
 
                   <button id="bom">Bom</button>
                 </div>
-
-
               </div>  
             )
           }
