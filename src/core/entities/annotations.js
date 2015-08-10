@@ -1,7 +1,8 @@
 import {getEntryExitThickness,
   getObjectPointNormal,
   computeCenterDiaNormalFromThreePoints,
-  getDistanceFromStartEnd
+  getDistanceFromStartEnd,
+  computeAngleFromThreePoints
 } from '../../components/webgl/utils'
 
 import {first,toggleCursor} from '../../utils/otherUtils'
@@ -133,13 +134,15 @@ function generateAngleData(data){
   
   console.log("hey yo, add an angle",data)
   let [start,mid,end] = data
+  let angle = computeAngleFromThreePoints(start.point,mid.point,end.point)
+  angle = angle * 180/ Math.PI
 
   let annotation = {
     typeUid:"A5",
     iuid:generateUUID(),
     cid:5,//categoryId
     name:"angle", 
-    value:0,
+    value:angle,
     target:{
       start:{
         point  : start.point.toArray(), 

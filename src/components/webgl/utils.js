@@ -110,3 +110,10 @@ export function computeCenterDiaNormalFromThreePoints(pointA,pointB,pointC){
   return {center,diameter,normal}
 }
 
+
+export function computeAngleFromThreePoints(pointA,pointB,pointC){
+  let v1 = pointA.clone().sub( pointB )
+  let v2 = pointC.clone().sub( pointB )
+  let angle = v1.angleTo( v2 )
+  return angle
+}
