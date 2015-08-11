@@ -17,7 +17,7 @@ function makeModifications(intent){
   //intent.partTypes$.subscribe(e=>console.log("partTypes in BOM"))
   //intent.combos$.subscribe(e=>console.log("combos in BOM"))
 
-  let _addEntries$ = intent.addBomEntries$
+  let addEntries$ = intent.addBomEntries$
     .map((nData) => (bomData) => {
       console.log("ADDING BOM entries")
       //FIXME , immutable
@@ -71,8 +71,14 @@ function makeModifications(intent){
      })
 
 
+  let removeEntries$ = intent.removeEntries$
+    .map((data) => (bomData) => {
+
+    })
+
   return merge(
-    _addEntries$
+    addEntries$
+    ,removeEntries$
     ,newType$
   )
 }

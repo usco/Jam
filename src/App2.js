@@ -16,8 +16,10 @@ import MainToolbar from './components/MainToolbar'
 import {observableDragAndDrop} from './interactions/dragAndDrop'
 
 import {settingsIntent} from './core/settingsIntent'
-import Bom from './core/bom'
 
+//bom
+import Bom from './core/bom/bom'
+import {bomIntents} from './core/bom/intents'
 
 //entities
 import {entityIntents, annotationIntents} from './core/entities/intents'
@@ -48,10 +50,7 @@ import {clearActiveTool$} from './actions/appActions'
 import appMetadata$ from './core/drivers/appMetaDriver'
 
  
-function bomIntents(interactions){
-  return {
-  } 
-}
+
 
 function hasModelUrl(data){
   if(data && data.hasOwnProperty("modelUrl")) return true
@@ -156,12 +155,12 @@ function App(interactions) {
   let bomIntent = bomIntents(interactions)
   bomIntent = {
     addBomEntries$:new Rx.Subject()
+    ,removeEntries$:new Rx.Subject()//bomIntent.removeEntries$
     ,partTypes$
     ,combos$:meshResources$
+
   }
   let bom$ = Bom(bomIntent)
-  bom$.subscribe(e=>console.log("bom",e))
-
 
   //annotations
   let aIntents = annotationIntents(interactions)
@@ -208,10 +207,10 @@ function App(interactions) {
 
   let {getVisual,addVisualProvider } = createVisualMapper(partTypes$, entities$)
 
-  
   //selections 
   let selections$ = selections( reverseSelections(selectionsIntents(interactions),entities$) )
 
+  //undo redo
   let _historyIntents = historyIntents(interactions)
   let history$ = new Rx.BehaviorSubject({
     undos:[],
