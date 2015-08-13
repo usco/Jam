@@ -17,14 +17,28 @@ export function extractChanges(prev, cur){
 
     if(delta && "_t" in delta){
         
-        if("_0" in delta){
-          let oldItems = delta["_0"][0]//delta[0][0]
-          let newItems = delta[0][0]//delta[0][1]
-          //console.log("old",oldItems)
-          //console.log("new",newItems)
-          result.added = toArray(newItems)
-          result.removed = toArray(oldItems)
-        }
+        let oldItems = []//delta["_0"][0]//delta[0][0]
+        let newItems = []//delta[0][0]//delta[0][1]
+
+        Object.keys(delta).map(function(key){
+          console.log("AAA",key)
+          if(key[0]=="_"){
+            if(key!=="_a" && key !=="_t")
+            {
+              oldItems.push(delta[key][0])
+            }
+          }else{
+            newItems.push(delta[key][0])
+          }
+
+        })
+        
+        result.added = toArray(newItems).filter(i=>i!==undefined)
+        result.removed = toArray(oldItems).filter(i=>i!==undefined)
+
+        console.log("added",result.added)
+        console.log("removed",result.removed)
+        
     }
 
     return result
