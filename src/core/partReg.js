@@ -97,7 +97,7 @@ function makeModifications(intent){
   )
 }
 
-function model(intent, source) {
+function partReg(intent, source) {
   let source$ = source || Observable.just(defaults)
   
   let modification$ = makeModifications(intent)
@@ -108,4 +108,4 @@ function model(intent, source) {
     .shareReplay(1)
 }
 
-export default model
+export default partReg
