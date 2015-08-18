@@ -71,10 +71,13 @@ function makeModifications(intent){
      })
 
 
+  //this means ALL instances represented by bom entries need to be removed!
   let removeEntries$ = intent.removeEntries$
     .map((data) => (bomData) => {
-
+      console.log("removeEntries from BOM", data, bomData)
     })
+
+
 
   return merge(
     addEntries$
