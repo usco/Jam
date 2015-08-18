@@ -7,6 +7,9 @@ import {
   selectEntities$
    } from '../../actions/entityActions'
 
+
+import {exists} from '../../utils/obsUtils'
+
 import logger from '../../utils/log'
 let log = logger("entities")
 log.setLevel("info")
@@ -102,6 +105,7 @@ function makeModification$(intent){
 
   /*add a new entity instance*/
   let _addEntities$ = intent.addEntities$
+    .filter(exists)
     //splice in settings
     .withLatestFrom(intent.settings$,function(data,settings){
       return {nentities:data,settings}

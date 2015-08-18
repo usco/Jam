@@ -166,8 +166,8 @@ function App(interactions) {
   let intents = entityIntents(interactions)  
 
   //register meshes <=> types
-  let partTypes = require('./core/partReg')
-  let partTypes$ = partTypes({
+  let partRegistry = require('./core/partReg')
+  let partTypes$ = partRegistry({
     combos$:meshResources$
     ,deleteAllEntities$: intents.deleteAllEntities$
   })
@@ -176,7 +176,6 @@ function App(interactions) {
   let newInstFromTypes$ = entityInstanceFromPartTypes(partTypes$)
   let contextTaps$ = intents.contextTaps$
   ///////////////
-
 
 
   //annotations
@@ -198,20 +197,23 @@ function App(interactions) {
 
   let addEntities$ = newInstFromTypes$.merge(addAnnotation$)
   
-  //entities
-  let iIntent = {
-    createEntityInstance$:new Rx.Subject(),//createEntityInstance$,
-    addEntities$: addEntities$,
+  function remapEntityIntents(intent, addEntities$, settings$){
+    return  {
+      createEntityInstance$:new Rx.Subject(),//createEntityInstance$,
+      addEntities$: addEntities$,
 
-    updateEntities$: intents.selectionTransforms$,//
-    deleteEntities$: intents.deleteEntities$,
-    duplicateEntities$: intents.duplicateEntities$,  
-    deleteAllEntities$: intents.deleteAllEntities$, 
+      updateEntities$: intent.selectionTransforms$,//
+      deleteEntities$: intent.deleteEntities$,
+      duplicateEntities$: intent.duplicateEntities$,  
+      deleteAllEntities$: intent.deleteAllEntities$, 
 
-    replaceAll$:intents.replaceAll$,
-    settings$:settings$
+      replaceAll$:intent.replaceAll$,
+      settings$:settings$
+    }
   }
-  let entities$ = entities(iIntent)
+  //entities
+  
+  let entities$ = entities(remapEntityIntents(intents,addEntities$,settings$))
 
   let comments$ = comments(commentsIntents(interactions, settings$))
   comments$.subscribe(e=>console.log(e))
@@ -219,13 +221,9 @@ function App(interactions) {
 
   //bom
   let bomIntent = entriesFromEntities( bomIntents(interactions), entities$ )
-  bomIntent = {
-    addBomEntries$:new Rx.Subject()
-    ,removeEntries$: bomIntent.removeEntries$
-    ,partTypes$
-    ,combos$:meshResources$
-
-  }
+  bomIntent.partTypes$ = partTypes$
+  bomIntent.combos$    = meshResources$
+ 
   let bom$ = Bom(bomIntent)
 
 

@@ -89,32 +89,31 @@ export function entityInstanceFromPartTypes(partTypes$)
   return partTypes$
     .skip(1)
     .map(function(partTypes){
-      let idx = 0//Object.keys(entities.byId).length
+      let idx = 0//Object.keys(entities.byId).length  
       let typeUid = partTypes.latest
-      let name = partTypes.typeUidToMeshName[typeUid]+idx
+      if( typeUid ){
+        let name = partTypes.typeUidToMeshName[typeUid]+idx
+        let typeData = partTypes.typeData[typeUid]
+        if(typeData){
+          let bbox = typeData.bbox
+        
+          let h = bbox.max[2]  - bbox.min[2]
 
-      let typeData = partTypes.typeData[typeUid]
-      if(typeData){
-        let bbox = typeData.bbox
-      
-        let h = bbox.max[2]  - bbox.min[2]
-
-        let instance =
-        {
-            name: name,
-            iuid: generateUUID(),
-            typeUid: typeUid,
-            cid:0,//categoryId
-            color: "#07a9ff",
-            pos: [0,0,h/2],
-            rot: [0,0,0],
-            sca: [1,1,1],
-            bbox:bbox
+          let instance =
+          {
+              name: name,
+              iuid: generateUUID(),
+              typeUid: typeUid,
+              cid:0,//categoryId
+              color: "#07a9ff",
+              pos: [0,0,h/2],
+              rot: [0,0,0],
+              sca: [1,1,1],
+              bbox:bbox
+          }
+          return instance
         }
-        return instance
-
       }
-     
     })
 
   //we observe changes to partTypes to add new instances

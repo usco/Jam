@@ -3,6 +3,8 @@ let fromEvent = Rx.Observable.fromEvent
 let Observable = Rx.Observable
 let merge = Rx.Observable.merge
 
+import {exists} from '../../utils/obsUtils'
+
 import logger from 'log-minim'
 let log = logger("app")
 log.setLevel("debug")
@@ -18,6 +20,7 @@ function makeModifications(intent){
   //intent.combos$.subscribe(e=>console.log("combos in BOM"))
 
   let addEntries$ = intent.addBomEntries$
+    .filter(exists)
     .map((nData) => (bomData) => {
       console.log("ADDING BOM entries")
       //FIXME , immutable
@@ -41,32 +44,35 @@ function makeModifications(intent){
 
       let {entries,byId} = bomData
 
-      let typeUid = types.latest
-      let entryName = types.typeData[typeUid].name
-      let meshName = types.typeUidToMeshName[typeUid]
+      let typeUid   = types.latest
+      let type      = types.typeData[typeUid]
+      let entryName =  (type !== undefined ? type.name : undefined) 
+      let meshName  = types.typeUidToMeshName[typeUid]
 
-      if(! byId[typeUid]){
-        let newEntry={
-          qty: 1,
-          phys_qty: undefined,
-          unit: "EA",
-          description: undefined,
-          uuid: typeUid,
-          implementations: {
-              "default": meshName
-          },
-          name: entryName,
-          version: "0.0.0"
+      if(type){
+        if(! byId[typeUid]){
+          let newEntry={
+            qty: 1,
+            phys_qty: undefined,
+            unit: "EA",
+            description: undefined,
+            uuid: typeUid,
+            implementations: {
+                "default": meshName
+            },
+            name: entryName,
+            version: "0.0.0"
+          }
+          
+          entries = entries.concat( [newEntry] )
+          byId[typeUid] = newEntry
         }
-        
-        entries = entries.concat( [newEntry] )
-        byId[typeUid] = newEntry
+        else
+        {
+          byId[typeUid].qty +=1
+        }
       }
-      else
-      {
-        byId[typeUid].qty +=1
-
-      }
+      
       return { entries, byId }
      })
 
@@ -77,10 +83,17 @@ function makeModifications(intent){
       console.log("removeEntries from BOM", data, bomData)
     })
 
+  //clear it all
+  let clearEntries$ = intent.clearEntries$
+    .map((data) => (bomData) => {
+      console.log("clear BOM", data, bomData)
 
+      return Object.assign({},defaults)
+    })
 
   return merge(
     addEntries$
+    ,clearEntries$
     ,removeEntries$
     ,newType$
   )

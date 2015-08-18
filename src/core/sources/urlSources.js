@@ -27,8 +27,6 @@ let appMode$ = Rx.Observable
 //let uri  = localStorage.getItem("jam!-lastDesignUri") || undefined
 
 
-
-
 let settings$ = Rx.Observable.combineLatest(appMode$,function(){
   return {mode:appMode}
 })
