@@ -645,6 +645,12 @@ var TransformControls = function ( camera, domElement ) {
 		domElement.addEventListener( "touchleave", onPointerUp, true );
 	} 
 
+  this.setObservables=function(observables){
+  	console.log("setting observables")
+  	let {dragMoves$, zooms$} = observables
+
+  }
+
 
 	this.attach = function ( object ) {
 		scope.object = object;
@@ -780,6 +786,7 @@ var TransformControls = function ( camera, domElement ) {
 
 			if ( intersect ) {
 
+				console.log("intersected")
 				scope.dispatchEvent( mouseDownEvent );
 
 				scope.axis = intersect.object.name;

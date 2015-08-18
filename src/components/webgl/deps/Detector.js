@@ -3,8 +3,8 @@
  * @author mr.doob / http://mrdoob.com/
  */
 
-var window = window || {CanvasRenderingContext2D:false,WebGLRenderingContext:false,Worker:undefined,File:undefined,
-FileReader:undefined,FileList:undefined, Blob:undefined }
+/*var window = window || {CanvasRenderingContext2D:false,WebGLRenderingContext:false,Worker:undefined,File:undefined,
+FileReader:undefined,FileList:undefined, Blob:undefined }*/
 
 var Detector = {
 
