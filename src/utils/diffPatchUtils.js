@@ -11,33 +11,33 @@ let jsondiffpatch = require('jsondiffpatch').create({objectHash:compareHash})
 
 export function extractChanges(prev, cur){
     let delta = jsondiffpatch.diff(prev, cur)
-    console.log("delta",delta)
+    //console.log("delta",delta)
     
     let result = {added:[],removed:[],changed:[]}
 
     if(delta && "_t" in delta){
         
-        let oldItems = []//delta["_0"][0]//delta[0][0]
-        let newItems = []//delta[0][0]//delta[0][1]
+        let removed = []//delta["_0"][0]//delta[0][0]
+        let added = []//delta[0][0]//delta[0][1]
 
         Object.keys(delta).map(function(key){
-          console.log("AAA",key)
+          //console.log("AAA",key)
           if(key[0]=="_"){
             if(key!=="_a" && key !=="_t")
             {
-              oldItems.push(delta[key][0])
+              removed.push(delta[key][0])
             }
           }else{
-            newItems.push(delta[key][0])
+            added.push(delta[key][0])
           }
 
         })
         
-        result.added = toArray(newItems).filter(i=>i!==undefined)
-        result.removed = toArray(oldItems).filter(i=>i!==undefined)
+        result.added = toArray(added).filter(i=>i!==undefined)
+        result.removed = toArray(removed).filter(i=>i!==undefined)
 
-        console.log("added",result.added)
-        console.log("removed",result.removed)
+        //console.log("added",result.added)
+        //console.log("removed",result.removed)
         
     }
 
