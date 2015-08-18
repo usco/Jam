@@ -255,6 +255,13 @@ function makeModification$(intent){
       return outputData
     })
 
+  //FIXME : in parts ?
+  /*let foo$ = new Rx.Subject()
+  let rescaleBBox$ = foo$
+    .map((newData) => (existingData) => {
+      //let rescaleVertices = require('rescale-vertices')
+    })*/
+
   return merge(
     _addEntities$
     ,_updateEntities$
@@ -282,12 +289,11 @@ function entities(intent, source) {
 export default entities
 
 
- //just an idea: for context menu etc
-/*let availableActions = {
-  "select"   :selectEntities$,
-  "delete"   :deleteEntities$,
-  "deleteAll":deleteAllEntities$,
-  "duplicate":duplicateEntities$
+//just an idea: listing of available actions
+let availableActions = {
+  "delete"   :deleteEntities$
+  ,"deleteAll":deleteAllEntities$
+  ,"duplicate":duplicateEntities$
 }
 
-export {availableActions}*/
+export {availableActions}
