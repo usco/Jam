@@ -51,7 +51,7 @@ export function entityIntents(interactions){
     .pluck("detail")
     .pluck("absSize")
     .subscribe(e=>console.log("selectionTransforms",e))*/
-
+  //http://stack.gl/packages/#thibauts/rescale-vertices
 
 
   let contextMenuActions$ = interactions.get(".contextMenu", "actionSelected$").pluck("detail")
