@@ -1,6 +1,6 @@
 //NEEDED because of circular dependency in annotations...
-import {clearActiveTool$} from '../actions/appActions'
-import {keycodes, isValidElementEvent} from '../interactions/keyboard'
+import {clearActiveTool$} from '../../actions/appActions'
+import {keycodes, isValidElementEvent} from '../../interactions/keyboard'
 
 export function settingsIntent(interactions){
   //hack for firefox only as it does not correct get the "checked" value : note : this is not an issue in cycle.js

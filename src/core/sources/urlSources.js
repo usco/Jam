@@ -5,7 +5,7 @@ import {exists} from '../../utils/obsUtils'
 
 let mainUri    = window.location.href 
 let uriQuery   = getUriQuery(mainUri)
-let designUri = fetchUriParams(mainUri, "designUrl").pop()
+let designUri  = fetchUriParams(mainUri, "designUrl").pop()
 let meshUris   = fetchUriParams(mainUri, "modelUrl")
 let appMode    = fetchUriParams(mainUri, "appMode").pop()
 
@@ -23,16 +23,15 @@ let appMode$ = Rx.Observable
   //.subscribe( setSetting$({path:"mode",value:appMode}) )
 
 //load from localstorage in case all else failed
-
 //let name = localStorage.getItem("jam!-lastDesignName") || undefined
 //let uri  = localStorage.getItem("jam!-lastDesignUri") || undefined
 
 
-let settings$ = Rx.Observable.just(
-  JSON.parse( localStorage.getItem("jam!-settings")  )
-).shareReplay(1)
 
 
+let settings$ = Rx.Observable.combineLatest(appMode$,function(){
+  return {mode:appMode}
+})
 
 
 //on second thought, that does not fit, as it merges the results back together
@@ -87,4 +86,4 @@ let designUri$ = Rx.Observable.merge(
   .take(1)
  
 
-export {designUri$,meshUris$,settings$, appMode$}
+export {designUri$, meshUris$, settings$, appMode$}

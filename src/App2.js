@@ -15,11 +15,11 @@ import MainToolbar from './components/MainToolbar'
 
 import {observableDragAndDrop} from './interactions/dragAndDrop'
 
-import {settingsIntent} from './core/settingsIntent'
+import {settingsIntent} from './core/settings/settingsIntent'
 
 //bom
 import Bom from './core/bom/bom'
-import {bomIntents} from './core/bom/intents'
+import {bomIntents, entriesFromEntities} from './core/bom/intents'
 
 //entities
 import {entityIntents, annotationIntents} from './core/entities/intents'
@@ -68,11 +68,34 @@ function sources(urlSources$, dndSources$){
 
   let {meshSources$, designSources$} = dataSources(dndSources$, urlSources)
 
-  let settingsSources$ = urlSources.settings$
+  let lsSettings$ = Rx.Observable.just(
+    JSON.parse( localStorage.getItem("jam!-settings")  )
+  )
 
-  let postMessages$ = require('./core/drivers/postMessageDriver')( )
-  postMessages$.subscribe(e=>console.log("postMessageDriverMessage",e))
-  
+  const settingDefaults = {
+    webglEnabled:true,
+    mode:"viewer",
+    autoSelectNewEntities:true,
+    activeTool:undefined,
+    repeatTool:false,
+
+    camera:{
+      autoRotate:false
+    },
+    grid:{
+      show:true
+    },
+    annotations:{
+      show:true
+    }
+  }
+
+  let settingsSources$ = urlSources.settings$.combineLatest(lsSettings$,function(settingsSources,lsSettings){
+    let output = Object.assign({},settingDefaults,lsSettings,settingsSources)
+    return output //FIXME : hack !!
+  })
+
+  let postMessages$ = require('./core/drivers/postMessageDriver')( )  
   meshSources$   =  meshSources$.merge( postMessages$.filter(hasModelUrl).pluck("modelUrl") )
   //designSources$ =  designSources$.merge( postMessages$.filter(hasDesignUrl).pluck("designUrl") )
 
@@ -134,7 +157,9 @@ function App(interactions) {
   let settings$ = settingsIntent(interactions)
     .merge(settingsSources$.filter(exists))//restore old data
 
-  let {kernel, assetManager} = makeInternals()
+    settings$.subscribe(e=>console.log("settings$",e))
+  ///////////////
+  let {assetManager} = makeInternals()
 
   let meshResources$ = meshResources(meshSources$, assetManager)
 
@@ -150,17 +175,9 @@ function App(interactions) {
   //get new instances from "types"
   let newInstFromTypes$ = entityInstanceFromPartTypes(partTypes$)
   let contextTaps$ = intents.contextTaps$
+  ///////////////
 
-  //bom
-  let bomIntent = bomIntents(interactions)
-  bomIntent = {
-    addBomEntries$:new Rx.Subject()
-    ,removeEntries$:new Rx.Subject()//bomIntent.removeEntries$
-    ,partTypes$
-    ,combos$:meshResources$
 
-  }
-  let bom$ = Bom(bomIntent)
 
   //annotations
   let aIntents = annotationIntents(interactions)
@@ -198,6 +215,19 @@ function App(interactions) {
 
   let comments$ = comments(commentsIntents(interactions, settings$))
   comments$.subscribe(e=>console.log(e))
+
+
+  //bom
+  let bomIntent = entriesFromEntities( bomIntents(interactions), entities$ )
+  bomIntent = {
+    addBomEntries$:new Rx.Subject()
+    ,removeEntries$: bomIntent.removeEntries$
+    ,partTypes$
+    ,combos$:meshResources$
+
+  }
+  let bom$ = Bom(bomIntent)
+
 
   //output (USE DRIVER!!!!)
   settings$.subscribe(function(settings){
