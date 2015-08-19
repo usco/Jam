@@ -11,7 +11,6 @@ import {generateUUID, nameCleanup} from 'usco-kernel2/src/utils'
 import {computeBoundingBox,computeBoundingSphere} from 'glView-helpers/src/meshTools/computeBounds'
 
 const defaults = {
-  partTypes:[],
   meshNameToPartTypeUId:{},
   typeUidToMeshName:{},
   typeData:{},
@@ -21,7 +20,62 @@ const defaults = {
   typeUidToTemplateMesh:{}
 }
 
-function makeModifications(intent){
+
+
+function typeUidFromMeshName(meshName){
+
+  return meshNameToPartTypeUId[ meshName ]
+}
+
+
+function typeFromMeshData(data){
+  let typeData = regData.typeData || {}
+
+  let meshName      = data.resource.name || ""
+  let cleanedName   = nameCleanup(meshName)
+
+  let typeUid = typeUidFromMeshName(meshName)
+
+  //no typeUid was given, it means we have a mesh with no part (yet !)
+  if( !typeUid ) {
+    typeUid = generateUUID()
+
+    //extract usefull information
+    let templateMesh = data.mesh
+    computeBoundingSphere(templateMesh)
+    computeBoundingBox(templateMesh)
+
+    typeData[typeUid]={
+      name:cleanedName,
+      bbox:{
+        min: templateMesh.boundingBox.min.toArray(),
+        max: templateMesh.boundingBox.max.toArray()
+      }
+    }
+  }
+
+    return {typeUid, meshName, templateMesh}
+
+}
+
+function updateTypesData(newTypeData, currentData){
+  //save new data
+  let regData = currentData
+  //partKlass = this.makeNamedPartKlass( cleanedName, typeUid )
+  //& register class
+  let meshNameToPartTypeUId = regData.meshNameToPartTypeUId || {}
+  let typeUidToMeshName = regData.typeUidToMeshName || {}
+  let typeUidToTemplateMesh = regData.typeUidToTemplateMesh || {}
+
+  meshNameToPartTypeUId[meshName] = typeUid
+  typeUidToMeshName[typeUid] = meshName
+  typeUidToTemplateMesh[typeUid] = mesh
+}
+
+
+
+function modifications(intent){
+
   let registerTypeFromMesh$ = intent.combos$
     .map((data) => (regData) => {
       log.info("I would register something", data, regData)
@@ -29,8 +83,6 @@ function makeModifications(intent){
       //we do not return the shape since that becomes the "reference shape/mesh", not the
       //one that will be shown
       //return partKlass
-
-      let partTypes = regData.partTypes || []
       let meshNameToPartTypeUId = regData.meshNameToPartTypeUId || {}
       let typeUidToMeshName = regData.typeUidToMeshName || {}
       let typeData = regData.typeData || {}
@@ -62,8 +114,6 @@ function makeModifications(intent){
         //create ...
         //partKlass = this.makeNamedPartKlass( cleanedName, typeUid )
         //& register class
-        
-        partTypes.push(typeUid)
         meshNameToPartTypeUId[meshName] = typeUid
         typeUidToMeshName[typeUid] = meshName
 
@@ -71,7 +121,6 @@ function makeModifications(intent){
       } 
 
       return {
-        partTypes, 
         meshNameToPartTypeUId,
         typeUidToMeshName, 
         typeData,
@@ -82,25 +131,24 @@ function makeModifications(intent){
   })
 
 
-  /*technically same as deleteAll , but kept seperate for clarity*/
-  let clearData$ = intent.deleteAllEntities$
+  /*reset all the data to nothing*/
+  let reset$ = intent.reset$
     .map(() => (regData) => {
       log.info("New design, clearing registry",regData)
       return Object.assign({},defaults)
-      //return regData
   })
   
 
   return merge(
     registerTypeFromMesh$
-    ,clearData$
+    ,reset$
   )
 }
 
-function partReg(intent, source) {
+function partRegistry(intent, source) {
   let source$ = source || Observable.just(defaults)
   
-  let modification$ = makeModifications(intent)
+  let modification$ = modifications(intent)
 
   return modification$
     .merge(source$)
@@ -108,4 +156,4 @@ function partReg(intent, source) {
     .shareReplay(1)
 }
 
-export default partReg
+export default partRegistry

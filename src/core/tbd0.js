@@ -23,27 +23,7 @@ export function makeInternals(){
   assetManager.addStore( "desktop", new DesktopStore() )
   assetManager.addStore( "xhr"    , new XhrStore() )
 
-  let kernel = new Kernel()
-
-  return {kernel, assetManager}
-}
-
-
-Array.prototype.flatMap = function(lambda) { 
-  return Array.prototype.concat.apply([], this.map(lambda)) 
-}
-
-
-function stuff(){
-  //this one takes care of adding templatemeshes
-  combos$
-    .zip(partTypes$.skip(1).map( x=>x.latest ),function(cb, typeUid){
-      kernel.partRegistry.addTemplateMeshForPartType( cb.mesh.clone(), typeUid )
-    })
-    .subscribe(function(data){
-      console.log("templatemeshes",data)
-    })
-
+  return {assetManager}
 }
 
 

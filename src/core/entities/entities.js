@@ -35,27 +35,26 @@ const partTemplate = {
       iuid: generateUUID(),
       typeUid: undefined,
       color: "#07a9ff",
-      pos: [
-          0,
-          0,
-          0,
-      ],
-      rot: [
-          0,
-          0,
-          0
-      ],
-      sca: [
-          1,
-          1,
-          1
-      ],
-      bbox:{
-        min:[0,0,0],
-        max:[0,0,0]
-      }
+      components:{}
   }*/
 
+//just experimenting with thoughts about component based system
+let partComponents = []
+
+function makeTransformComponent(){
+  return  {
+    pos: [ 0, 0, 0 ],
+    rot: [ 0, 0, 0 ],
+    sca: [ 1, 1, 1 ]
+  }
+}
+
+function makeBoundingComponent(){
+  return {
+    min:[0,0,0],
+    max:[0,0,0]
+  }
+}
 
 
 ///helper methods
@@ -82,24 +81,11 @@ function makeModification$(intent){
             iuid: generateUUID(),
             typeUid: data.typeUid,
             color: "#07a9ff",
-            pos: [
-                0,
-                0,
-                h/2
-            ],
-            rot: [
-                0,
-                0,
-                0
-            ],
-            sca: [
-                1,
-                1,
-                1
-            ],
+            pos: [ 0, 0, h/2 ],
+            rot: [ 0, 0, 0 ],
+            sca: [ 1, 1, 1 ],
             bbox:data.bbox
         }
-
     })
 
 

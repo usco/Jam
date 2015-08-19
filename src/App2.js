@@ -143,7 +143,6 @@ function getEntitiesMenuItems(entities){
   return menuItems
 }
 
-
 function App(interactions) {
   document.addEventListener("keyup", interactions.subject('keyup').onEvent)
 
@@ -166,17 +165,15 @@ function App(interactions) {
   let intents = entityIntents(interactions)  
 
   //register meshes <=> types
-  let partRegistry = require('./core/partReg')
+  let partRegistry = require('./core/entities/partRegistry')
   let partTypes$ = partRegistry({
     combos$:meshResources$
-    ,deleteAllEntities$: intents.deleteAllEntities$
+    ,reset$: intents.deleteAllEntities$
   })
 
   //get new instances from "types"
   let newInstFromTypes$ = entityInstanceFromPartTypes(partTypes$)
-  let contextTaps$ = intents.contextTaps$
   ///////////////
-
 
   //annotations
   let aIntents = annotationIntents(interactions)
@@ -212,12 +209,10 @@ function App(interactions) {
     }
   }
   //entities
-  
   let entities$ = entities(remapEntityIntents(intents,addEntities$,settings$))
 
+  //comments
   let comments$ = comments(commentsIntents(interactions, settings$))
-  comments$.subscribe(e=>console.log(e))
-
 
   //bom
   let bomIntent = entriesFromEntities( bomIntents(interactions), entities$ )
@@ -287,15 +282,8 @@ function App(interactions) {
     })
     .subscribe(e=>e)
 
-  
-  /*let contextMenuItems = contextTaps$
-    .combineLatest(
-      entities$.pluck("selectedIds").filter(exists).filter(x=>x.length>0),
-      function(taps,selectedIds){
-          //HOW THE HELL DO I DO ANYTHING NOW ??
-        return lookupByEntityCategory["annot"].concat(lookupByEntityCategory["common"])
-      })
-    //.subscribe(data=>console.log("contextMenuItems",data)) */
+  let contextTaps$ = intents.contextTaps$
+
     
   return Rx.Observable
     .combineLatest(
