@@ -8,7 +8,7 @@ import PlyParser    from 'usco-ply-parser'
 import Kernel       from 'usco-kernel2'
 /////////
 
-import postProcessMesh from '../meshpp/postProcessMesh'
+import postProcessMesh from '../utils/meshUtils'
 import helpers         from 'glView-helpers'
 let centerMesh         = helpers.mesthTools.centerMesh
 import {generateUUID} from 'usco-kernel2/src/utils'
@@ -23,7 +23,7 @@ export function makeInternals(){
   assetManager.addStore( "desktop", new DesktopStore() )
   assetManager.addStore( "xhr"    , new XhrStore() )
 
-  return {assetManager}
+  return assetManager
 }
 
 
@@ -39,28 +39,36 @@ export function meshResources(meshSources$, assetManager){
   //mesh + resource data together
   let combos$ =
     resources$.map(function(resource){
-      let mesh = postProcessMesh(resource)
+      let mesh = postProcessMesh(resource.data)
       mesh=centerMesh(mesh)
       return {mesh, resource}
     })
     .shareReplay(1)
 
-
-  //stream of processed meshes
-  /*let meshes$ = res$
-    .map( postProcessMesh )
-    .map( centerMesh )
-
-  //mesh + resource data together
-  let combos$ = meshes$
-    .zip(res$, function(mesh,resource){
-      return {mesh,resource}
-    })
-    .shareReplay(1)*/
-
   return combos$
 }
 
+
+function instanceFromTypeData(name, typeData){
+  //let name = 
+  let bbox = typeData.bbox
+  let h = bbox.max[2]  - bbox.min[2]
+
+  let instance =
+  {
+      name: name,
+      iuid: generateUUID(),
+      typeUid: typeData.typeUid,
+      cid:0,//categoryId
+      color: "#07a9ff",
+      pos: [0,0,h/2],
+      rot: [0,0,0],
+      sca: [1,1,1],
+      bbox:bbox
+  }
+
+  return instance
+}
 
 export function entityInstanceFromPartTypes(partTypes$)
 {
@@ -75,23 +83,7 @@ export function entityInstanceFromPartTypes(partTypes$)
         let name = partTypes.typeUidToMeshName[typeUid]+idx
         let typeData = partTypes.typeData[typeUid]
         if(typeData){
-          let bbox = typeData.bbox
-        
-          let h = bbox.max[2]  - bbox.min[2]
-
-          let instance =
-          {
-              name: name,
-              iuid: generateUUID(),
-              typeUid: typeUid,
-              cid:0,//categoryId
-              color: "#07a9ff",
-              pos: [0,0,h/2],
-              rot: [0,0,0],
-              sca: [1,1,1],
-              bbox:bbox
-          }
-          return instance
+          return instanceFromTypeData(name,typeData)
         }
       }
     })

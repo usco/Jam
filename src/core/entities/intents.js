@@ -29,7 +29,6 @@ function hasClear(data){
 }
 
 
-
 export function entityIntents(interactions){
   let glviewInit$ = interactions.get(".glview","initialized$")
   let shortSingleTaps$ = interactions.get(".glview","shortSingleTaps$")

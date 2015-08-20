@@ -158,7 +158,7 @@ function App(interactions) {
 
     settings$.subscribe(e=>console.log("settings$",e))
   ///////////////
-  let {assetManager} = makeInternals()
+  let assetManager = makeInternals()
 
   let meshResources$ = meshResources(meshSources$, assetManager)
 
