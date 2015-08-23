@@ -4,6 +4,8 @@ import {first,toggleCursor} from '../../utils/otherUtils'
 import {getXY} from '../../utils/uiUtils'
 
 
+
+
 function dataFromMesh(objTransform$){
   function toArray (vec){
     return vec.toArray().slice(0,3)
@@ -54,9 +56,9 @@ export function entityIntents(interactions){
 
 
   let contextMenuActions$ = interactions.get(".contextMenu", "actionSelected$").pluck("detail")
-  let deleteEntities$     = contextMenuActions$.filter(e=>e.action === "delete").pluck("selections")
-  let deleteAllEntities$  = contextMenuActions$.filter(e=>e.action === "deleteAll").pluck("selections")
-  let duplicateEntities$  = contextMenuActions$.filter(e=>e.action === "duplicate").pluck("selections")
+  let deleteInstances$     = contextMenuActions$.filter(e=>e.action === "delete").pluck("selections")
+  let deleteAllInstances$  = contextMenuActions$.filter(e=>e.action === "deleteAll").pluck("selections")
+  let duplicateInstances$  = contextMenuActions$.filter(e=>e.action === "duplicate").pluck("selections")
 
   //we need to "shut down the context menu after any click inside of it"
   contextTaps$ = contextTaps$.merge(
@@ -65,8 +67,8 @@ export function entityIntents(interactions){
 
   //get any "clear" message from post message
   let postMessages$ = require('../drivers/postMessageDriver')( )
-  deleteAllEntities$ = 
-    deleteAllEntities$
+  deleteAllInstances$ = 
+    deleteAllInstances$
     .merge(
       postMessages$
       .filter(hasClear)
@@ -82,9 +84,9 @@ export function entityIntents(interactions){
 
     ,contextTaps$
 
-    ,deleteEntities$
-    ,deleteAllEntities$
-    ,duplicateEntities$
+    ,deleteInstances$
+    ,deleteAllInstances$
+    ,duplicateInstances$
 
     ,replaceAll$
     

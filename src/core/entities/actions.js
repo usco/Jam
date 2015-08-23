@@ -1,7 +1,7 @@
 import Rx from 'rx'
 let Observable= Rx.Observable
 let Subject   = Rx.Subject
-import {createAction} from '../utils/obsUtils'
+import {createAction} from '../../utils/obsUtils'
 
 /*set bounding box of given entity
 in the form : {entity:entity,bbox:bbox}
@@ -18,14 +18,14 @@ export let addEntityInstances$ = createAction()
 export let addEntityType$ = createAction()
 
 /*delete given entities*/
-export let deleteEntities$ = createAction()
+export let deleteInstances$ = createAction()
 
 /*delete all entities in assembly*/
-export let deleteAllEntities$ = createAction()
+export let deleteAllInstances$ = createAction()
 
 /*duplicate given entitites*/
-export let duplicateEntities$ = createAction()
+export let duplicateInstances$ = createAction()
 
 /*set entity data : FIXME : merge all the above ?*/
-export let updateEntities$ = createAction()
+export let updateInstance$ = createAction()
 

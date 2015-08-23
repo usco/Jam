@@ -3,7 +3,7 @@ let Observable = Rx.Observable
 let merge = Rx.Observable.merge
 
 
-import {selectEntities$} from '../../actions/entityActions'
+import {selectEntities$} from '../entities/actions'
 import {toArray} from '../../utils/utils'
 
 

@@ -168,7 +168,7 @@ function App(interactions) {
   let partRegistry = require('./core/entities/partRegistry')
   let partTypes$ = partRegistry({
     combos$:meshResources$
-    ,reset$: intents.deleteAllEntities$
+    ,reset$: intents.deleteAllInstances$
   })
 
   //get new instances from "types"
@@ -192,24 +192,24 @@ function App(interactions) {
     })
     .subscribe(e=>e)
 
-  let addEntities$ = newInstFromTypes$.merge(addAnnotation$)
+  let addInstance$ = newInstFromTypes$.merge(addAnnotation$)
   
-  function remapEntityIntents(intent, addEntities$, settings$){
+  function remapEntityIntents(intent, addInstance$, settings$){
     return  {
-      createEntityInstance$:new Rx.Subject(),//createEntityInstance$,
-      addEntities$: addEntities$,
+      createInstance$:new Rx.Subject(),//createInstance$,
+      addInstances$: addInstance$,
 
-      updateEntities$: intent.selectionTransforms$,//
-      deleteEntities$: intent.deleteEntities$,
-      duplicateEntities$: intent.duplicateEntities$,  
-      deleteAllEntities$: intent.deleteAllEntities$, 
+      updateInstance$: intent.selectionTransforms$,//
+      deleteInstances$: intent.deleteInstances$,
+      duplicateInstances$: intent.duplicateInstances$,  
+      deleteAllInstances$: intent.deleteAllInstances$, 
 
       replaceAll$:intent.replaceAll$,
       settings$:settings$
     }
   }
   //entities
-  let entities$ = entities(remapEntityIntents(intents,addEntities$,settings$))
+  let entities$ = entities(remapEntityIntents(intents,addInstance$,settings$))
 
   //comments
   let comments$ = comments(commentsIntents(interactions, settings$))

@@ -1,11 +1,11 @@
 import {
   addEntityInstances$, 
-  updateEntities$, 
-  deleteEntities$, 
-  duplicateEntities$, 
-  deleteAllEntities$,
+  updateInstance$, 
+  deleteInstances$, 
+  duplicateInstances$, 
+  deleteAllInstances$,
   selectEntities$
-   } from '../../actions/entityActions'
+   } from './actions'
 
 
 import {exists} from '../../utils/obsUtils'
@@ -70,7 +70,7 @@ function makeModification$(intent){
 
   }*/
 
-  let _createEntityInstance$ = intent.createEntityInstance$
+  let _createInstance$ = intent.createInstance$
     .map((data) => (entitiesData) => {
 
       let h = data.bbox.max[2]  - data.bbox.min[2]
@@ -90,7 +90,7 @@ function makeModification$(intent){
 
 
   /*add a new entity instance*/
-  let _addEntities$ = intent.addEntities$
+  let _addInstances$ = intent.addInstances$
     .filter(exists)
     //splice in settings
     .withLatestFrom(intent.settings$,function(data,settings){
@@ -117,7 +117,7 @@ function makeModification$(intent){
     })
 
   /*set entites properties*/
-  let _updateEntities$ = intent.updateEntities$
+  let _updateInstance$ = intent.updateInstance$
     .debounce(3)
     .map((nData) => (entitiesData) => {
       log.info("updating entities with data", nData)
@@ -157,7 +157,7 @@ function makeModification$(intent){
 
   /*remove an entity : it actually only 
   removes it from the active assembly*/
-  let _deleteEntities$ = intent.deleteEntities$
+  let _deleteInstances$ = intent.deleteInstances$
     .map((remEntitites) => (entitiesData) => {
       log.info("removing entities ", remEntitites)
 
@@ -177,7 +177,7 @@ function makeModification$(intent){
     })
 
   /*delete all entities from current entities*/
-  let _deleteAllEntities$ = intent.deleteAllEntities$
+  let _deleteAllInstances$ = intent.deleteAllInstances$
     .map(() => (entitiesData) => {
       entitiesData.instances = []
       entitiesData.byId = {}
@@ -189,7 +189,7 @@ function makeModification$(intent){
     })
 
   /*create duplicates of given entities*/
-  let _duplicateEntities$  = intent.duplicateEntities$
+  let _duplicateInstances$  = intent.duplicateInstances$
     //splice in settings
     .withLatestFrom(intent.settings$,function(data,settings){
       return {sources:data,settings}
@@ -253,13 +253,13 @@ function makeModification$(intent){
     })*/
 
   return merge(
-    _addEntities$
-    ,_updateEntities$
-    ,_deleteEntities$
-    ,_deleteAllEntities$
-    ,_duplicateEntities$
+    _addInstances$
+    ,_updateInstance$
+    ,_deleteInstances$
+    ,_deleteAllInstances$
+    ,_duplicateInstances$
     
-    ,_createEntityInstance$
+    ,_createInstance$
     ,_replaceAll$
 
   )
@@ -281,9 +281,9 @@ export default entities
 
 //just an idea: listing of available actions
 let availableActions = {
-  "delete"   :deleteEntities$
-  ,"deleteAll":deleteAllEntities$
-  ,"duplicate":duplicateEntities$
+  "delete"   :deleteInstances$
+  ,"deleteAll":deleteAllInstances$
+  ,"duplicate":duplicateInstances$
 }
 
 export {availableActions}
