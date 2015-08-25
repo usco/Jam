@@ -3,8 +3,11 @@ import {clearActiveTool$} from '../../actions/appActions'
 import {keycodes, isValidElementEvent} from '../../interactions/keyboard'
 
 export function settingsIntent(interactions){
+  let urlSources = require('../sources/urlSources')
+
+
   //hack for firefox only as it does not correct get the "checked" value : note : this is not an issue in cycle.js
-  let is_firefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1;
+  let is_firefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1
   function checked(event){
     if(is_firefox) return ! event.target.checked
       return event.target.checked
@@ -46,27 +49,17 @@ export function settingsIntent(interactions){
       return cur
     })
     .merge( clearActiveTool$.map(undefined) )
-  //.do(e=>console.log("activeTool",e))
-  /*let bla$= combineTemplate(
-    {
-      camera:{
-        autoRotate:autoRotate$
-      },
-      grid:{
-        show:showGrid$
-      },
-      annotations:{
-        show:showAnnot$
-      }
-    }
-  )
-  */
+
+  
   let webglEnabled$          = Rx.Observable.just(true)
-  let appMode$               = Rx.Observable.just("editor")//what mode is the app in ? ("editor" or "viewer" only for now)
+  let appMode$               = urlSources.appMode$//Rx.Observable.just("editor")//what mode is the app in ? ("editor" or "viewer" only for now)
   let autoSelectNewEntities$ = Rx.Observable.just(true) //TODO: make settable
   let repeatTool$            = Rx.Observable.just(false) // does a tool gets stopped after a single use or not
 
-  return Rx.Observable.combineLatest(
+  return {showGrid$,showAnnot$,autoRotate$,activeTool$,appMode$}
+
+  
+  /*return Rx.Observable.combineLatest(
     showGrid$,
     autoRotate$,
     showAnnot$,
@@ -98,5 +91,5 @@ export function settingsIntent(interactions){
         }
       )
     }
-  )
+  )*/
 }

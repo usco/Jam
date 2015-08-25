@@ -15,7 +15,9 @@ import MainToolbar from './components/MainToolbar'
 
 import {observableDragAndDrop} from './interactions/dragAndDrop'
 
+import settings from './core/settings/settings'
 import {settingsIntent} from './core/settings/settingsIntent'
+
 
 //bom
 import Bom from './core/bom/bom'
@@ -71,29 +73,9 @@ function sources(urlSources$, dndSources$){
   let lsSettings$ = Rx.Observable.just(
     JSON.parse( localStorage.getItem("jam!-settings")  )
   )
+  
+  let settingsSources$ = lsSettings$
 
-  const settingDefaults = {
-    webglEnabled:true,
-    mode:"viewer",
-    autoSelectNewEntities:true,
-    activeTool:undefined,
-    repeatTool:false,
-
-    camera:{
-      autoRotate:false
-    },
-    grid:{
-      show:true
-    },
-    annotations:{
-      show:true
-    }
-  }
-
-  let settingsSources$ = urlSources.settings$.combineLatest(lsSettings$,function(settingsSources,lsSettings){
-    let output = Object.assign({},settingDefaults,lsSettings,settingsSources)
-    return output //FIXME : hack !!
-  })
 
   let postMessages$ = require('./core/drivers/postMessageDriver')( )  
   meshSources$   =  meshSources$.merge( postMessages$.filter(hasModelUrl).pluck("modelUrl") )
@@ -153,10 +135,9 @@ function App(interactions) {
 
   let {meshSources$, designSources$, settingsSources$} = sources(urlSources$, dndSources$)
 
-  let settings$ = settingsIntent(interactions)
-    .merge(settingsSources$.filter(exists))//restore old data
+  let settings$ = settings( settingsIntent(interactions), settingsSources$ )  
+  settings$.subscribe(e=>console.log("settings$",e))
 
-    settings$.subscribe(e=>console.log("settings$",e))
   ///////////////
   let assetManager = makeInternals()
 
@@ -165,8 +146,8 @@ function App(interactions) {
   let intents = entityIntents(interactions)  
 
   //register meshes <=> types
-  let partRegistry = require('./core/entities/partRegistry')
-  let partTypes$ = partRegistry({
+  let registry = require('./core/entities/registry')
+  let partTypes$ = registry({
     combos$:meshResources$
     ,reset$: intents.deleteAllInstances$
   })
@@ -284,6 +265,9 @@ function App(interactions) {
 
   let contextTaps$ = intents.contextTaps$
 
+
+  console.log("---READY TO START JAM!---v 0.2.0")
+
     
   return Rx.Observable
     .combineLatest(
@@ -342,6 +326,7 @@ function App(interactions) {
               className="glview"/>
 
               <SettingsView settings={settings} ></SettingsView>
+              <FullScreenToggler/> 
             </div>
           )
           //<MainToolbar />
@@ -359,7 +344,7 @@ function App(interactions) {
                 
                 <SettingsView settings={settings} ></SettingsView>
                 <ContextMenu position={contextTaps} items={contextMenuItems} selections={_selections}/>
-                <FullScreenToggler/> 
+                
                 <EntityInfos entities={_selections} settings={settings} comments={comments}/>
 
                 <BomView 
