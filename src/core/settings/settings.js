@@ -41,27 +41,38 @@ function applyDefaults(data$){
   })
 }
 
-function modificationAlt(intent){
-  console.log("here")
-  let appMode$ = intent.sing$
-    .map((mode) => (settingsData) => {
-      settingsData.mode = mode
-      return settingsData
-    })
+function modificationAlt(actions){  
+  //actions.changeSetting$.subscribe(e=>console.log("changeSetting",e))
 
-  /*let showGrid$ = intent.showGrid$
-    .map((showGrid) => (settingsData) => {
+  function remapStrcture(input){
+
+    if(input.showGrid !==undefined ) return {grid:{show:input.showGrid}}
+    if(input.showAnnot !==undefined ) return {annotations:{show:input.showAnnot}}
+    if(input.autoRotate !==undefined ) return {camera:{autoRotate:input.autoRotate}}
+
+    /*let output = {
+      grid:{show:input.showGrid}
+      ,annotations:{show:input.showAnnot}
+      ,camera:{ autoRotate:input.autoRotate}
+
+      ,mode:input.appMode
+    }*/
+    return input
+  }
+
+  let changeSetting$ = actions.changeSetting$.map(remapStrcture)
+    .map((settingData) => (currentData) => {
      
-      let output = Object.assign({},settingsData)
-
-      if(!output.grid) output.grid = {}
-      output.grid.show = showGrid
+      console.log("settingData",settingData)
+      let output = Object.assign({},currentData,settingData)
 
       return output
-      //return settingsData
-    })*/
+      //return currentData
+    })
 
-  return appMode$//, showGrid$)
+  return Observable.merge(
+    changeSetting$
+    ) 
 }
 
 
@@ -91,8 +102,8 @@ function modification(intent){
   )*/
 
   return Rx.Observable.combineLatest(
-      intent.appMode$,
-      intent.activeTool$,
+      intent.appMode$.startWith("editor"),
+      intent.activeTool$.startWith(undefined),
       intent.autoRotate$.startWith(false),
       intent.showGrid$.startWith(false),
       intent.showAnnot$.startWith(false),
@@ -220,68 +231,18 @@ function modification3(intent, source$){
 }
 
 
-function bla(source$){
-
-  //let k = Object.keys(source)
-  //console.log("k",k)
-  return source$.map(function(source){
-    let appMode$ = Rx.Observable.just( source["mode"] )
-    let activeTool$ = Rx.Observable.just( source["activeTool"] )
-    let autoRotate$ = Rx.Observable.just( source.camera.autoRotate )
-    let showGrid$ = Rx.Observable.just(source.grid.show)
-    let showAnnot$ = Rx.Observable.just(source.annotations.show)
-
-    let result = {appMode$,activeTool$,autoRotate$,showGrid$,showAnnot$}
-
-    return result
-  })
-  
-  //return result
-}
-
-
 
 function settings(intent, source) {
   let source$ = source || Observable.just(defaults)
   source$ = applyDefaults(source)
-  //let modifications$ = modification(intent)
 
-  //let fakeIntent = {sing$:Rx.Observable.just("viewer")}
-  let modifications$ = modification(intent)
+  let modifications$ = modificationAlt(intent)//modification(intent)
 
-  //let sourceIntent = source$.map(bla)
-  //intent = Object.assign(intent,sourceIntent)
-
-  /*return modifications$
+  return modifications$
     .merge(source$)
-    //.scan((entityData, modFn) => modFn(entityData))//combine existing data with new one
-    //.distinctUntilChanged()
-    .shareReplay(1)*/
-
-  return source$
-    .merge(modifications$)
-    //.scan((settingsData, modFn) => modFn(settingsData))//combine existing data with new one
-    //.distinctUntilChanged()
+    .scan((currentData, modFn) => modFn(currentData))//combine existing data with new one
     .shareReplay(1)
 
-  /*return source$
-    .merge(modifications$)
-    .scan((settingsData, modFn) => modFn(settingsData))//combine existing data with new one
-    .shareReplay(1)*/
-
-  /*return modifications$
-    .merge(source$)
-    .scan((settingsData, modFn) => modFn(settingsData))//combine existing data with new one
-    .shareReplay(1)*/
-
-   /*return modifications$
-    //.merge(source$)
-    .scan((entityData, modFn) => modFn(entityData))//combine existing data with new one
-    //.distinctUntilChanged()
-    .shareReplay(1)*/
-
-  /*return modifications$
-    .shareReplay(1)*/
 }
 
 export default settings

@@ -16,6 +16,7 @@ import MainToolbar from './components/MainToolbar'
 import {observableDragAndDrop} from './interactions/dragAndDrop'
 
 import settings from './core/settings/settings'
+
 import {settingsIntent} from './core/settings/settingsIntent'
 
 
@@ -139,6 +140,9 @@ function App(interactions) {
   let {meshSources$, designSources$, settingsSources$} = sources(urlSources$, dndSources$)
 
   let settings$ = settings( settingsIntent(interactions), settingsSources$ )  
+
+  //let settingsAlt$ = settingsAlt( settingsIntent(interactions), settingsSources$ )
+
   settings$.distinctUntilChanged().subscribe(e=>console.log("settings$DISTINCT",e))
   //settings$.subscribe(e=>console.log("settings$",e))
 
@@ -324,7 +328,7 @@ function App(interactions) {
         }
 
 
-        function appCriticalErrorDisplay(){
+        function renderWebglError(){
           return (
             <div className="mainError">
               <span>
@@ -398,9 +402,9 @@ function App(interactions) {
         jamInner = normalContent(settings, items, contextTaps, comments)
 
         if(!settings.webglEnabled){
-          jamInner = appCriticalErrorDisplay()
+          jamInner = renderWebglError()
         }
-        
+
         return (
           <div className="jam" 
             onDragOver={interactions.subject('dragover').onEvent}

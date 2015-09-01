@@ -56,9 +56,22 @@ export function settingsIntent(interactions){
   //let autoSelectNewEntities$ = Rx.Observable.just(true) //TODO: make settable
   //let repeatTool$            = Rx.Observable.just(false) // does a tool gets stopped after a single use or not
 
-  return {showGrid$,showAnnot$,autoRotate$,activeTool$,appMode$}
+  //return {showGrid$,showAnnot$,autoRotate$,activeTool$,appMode$}
 
-  
+
+  return {
+    changeSetting$:
+      Rx.Observable.merge(
+
+      showGrid$.map(e=>({showGrid:e}))
+      ,showAnnot$.map(e=>({showAnnot:e}))
+      ,autoRotate$.map(e=>({autoRotate:e}))
+      //,activeTool$.map(e=>({activeTool:e}))
+      ,appMode$.map(e=>({appMode:e}))
+    ),
+      showGrid$
+  }
+      
   /*return Rx.Observable.combineLatest(
     showGrid$,
     autoRotate$,
