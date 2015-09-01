@@ -70,11 +70,14 @@ function sources(urlSources$, dndSources$){
 
   let {meshSources$, designSources$} = dataSources(dndSources$, urlSources)
 
+  const safeJSONParse = str => JSON.parse(str) || {} //from cycle.js 
+
   let lsSettings$ = Rx.Observable.just(
-    JSON.parse( localStorage.getItem("jam!-settings")  )
+    localStorage.getItem("jam!-settings")
   )
+    .map(safeJSONParse)
   
-  let settingsSources$ = lsSettings$
+  let settingsSources$ = lsSettings$ //Rx.Observable.just({})//
 
 
   let postMessages$ = require('./core/drivers/postMessageDriver')( )  
@@ -136,7 +139,8 @@ function App(interactions) {
   let {meshSources$, designSources$, settingsSources$} = sources(urlSources$, dndSources$)
 
   let settings$ = settings( settingsIntent(interactions), settingsSources$ )  
-  settings$.subscribe(e=>console.log("settings$",e))
+  settings$.distinctUntilChanged().subscribe(e=>console.log("settings$DISTINCT",e))
+  //settings$.subscribe(e=>console.log("settings$",e))
 
   ///////////////
   let assetManager = makeInternals()
@@ -265,6 +269,16 @@ function App(interactions) {
 
   let contextTaps$ = intents.contextTaps$
 
+  //semi hack : used only for viewer mode for now
+  let loading$ = Rx.Observable.merge(
+      meshSources$
+        .map(true)
+      ,addInstance$
+        .map(false)
+    ).startWith(false)
+
+    
+  meshSources$.subscribe(e=>console.log("meshResources",meshResources))
 
   console.log("---READY TO START JAM!---v 0.2.0")
 
@@ -278,8 +292,10 @@ function App(interactions) {
       ,history$
       ,comments$
       ,selections$
-      ,function(items, bom, settings, contextTaps, history, comments, selections){
+      ,loading$
+      ,function(items, bom, settings, contextTaps, history, comments, selections,loading){
 
+        console.log("re-render")
         let {undos,redos} = history
 
         //for bom
@@ -295,6 +311,18 @@ function App(interactions) {
         let settingsMeta = [
           {type:"checkbox", label:"Show Grid", className:"showGrid"}
         ]
+
+
+        //spinner /loader
+        let loaderSpinner = null
+        console.log("LOADING",loading)
+       
+        let _loading = (loading && settings.mode === "viewer" && settings.webglEnabled)
+        if(_loading){
+          console.log("SPINNER")
+          loaderSpinner = <span className="spinner" /> 
+        }
+
 
         function appCriticalErrorDisplay(){
           return (
@@ -366,15 +394,21 @@ function App(interactions) {
           return elements
         }
 
-        let jamInner = normalContent(settings, items, contextTaps, comments)
+        let jamInner = null
+        jamInner = normalContent(settings, items, contextTaps, comments)
+
         if(!settings.webglEnabled){
-            jamInner = appCriticalErrorDisplay()
+          jamInner = appCriticalErrorDisplay()
         }
+        
         return (
           <div className="jam" 
             onDragOver={interactions.subject('dragover').onEvent}
             onDrop={interactions.subject('drop').onEvent}>
+              
               {jamInner}
+
+              {loaderSpinner}
           </div>
         )
       }
