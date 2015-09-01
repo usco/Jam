@@ -43,11 +43,11 @@ export function settingsIntent(interactions){
     keyUps$.map(e=>keycodes[e.keyCode]).filter(k=>k==="s").map("scale")
 
   )
-    .startWith(undefined)
+    /*.startWith(undefined)
     .scan(function(seed,cur){
       if(seed === cur) return undefined
       return cur
-    })
+    })*/
     .merge( clearActiveTool$.map(undefined) )
 
   
@@ -66,7 +66,7 @@ export function settingsIntent(interactions){
       showGrid$.map(e=>({showGrid:e}))
       ,showAnnot$.map(e=>({showAnnot:e}))
       ,autoRotate$.map(e=>({autoRotate:e}))
-      //,activeTool$.map(e=>({activeTool:e}))
+      ,activeTool$.map(e=>({activeTool:e}))
       ,appMode$.map(e=>({appMode:e}))
     ),
       showGrid$
