@@ -16,9 +16,9 @@ export function settingsIntent(interactions){
   /*let showGrid$   = interactions.get(".settingsView .showGrid", "change").map(event => event.target.checked).startWith(false)
   let showAnnot$  = interactions.get(".settingsView .showAnnot", "change").map(event => event.target.checked).startWith(false)
   let autoRotate$ = interactions.get(".settingsView .autoRotate", "change").map(event => event.target.checked).startWith(false)*/
-  let showGrid$   = interactions.get(".settingsView .showGrid", "change").map(checked).startWith(false)
-  let showAnnot$  = interactions.get(".settingsView .showAnnot", "change").map(checked).startWith(false)
-  let autoRotate$ = interactions.get(".settingsView .autoRotate", "change").map(checked).startWith(false)
+  let showGrid$   = interactions.get(".settingsView .showGrid", "change").map(checked)//.startWith(false)
+  let showAnnot$  = interactions.get(".settingsView .showAnnot", "change").map(checked)//.startWith(false)
+  let autoRotate$ = interactions.get(".settingsView .autoRotate", "change").map(checked)//.startWith(false)
 
   let keyUps$ = interactions.subject("keyup")
     .filter(isValidElementEvent)// stop for input, select, and textarea etc 
@@ -51,10 +51,10 @@ export function settingsIntent(interactions){
     .merge( clearActiveTool$.map(undefined) )
 
   
-  let webglEnabled$          = Rx.Observable.just(true)
+  //let webglEnabled$          = Rx.Observable.just(true)
   let appMode$               = urlSources.appMode$//Rx.Observable.just("editor")//what mode is the app in ? ("editor" or "viewer" only for now)
-  let autoSelectNewEntities$ = Rx.Observable.just(true) //TODO: make settable
-  let repeatTool$            = Rx.Observable.just(false) // does a tool gets stopped after a single use or not
+  //let autoSelectNewEntities$ = Rx.Observable.just(true) //TODO: make settable
+  //let repeatTool$            = Rx.Observable.just(false) // does a tool gets stopped after a single use or not
 
   return {showGrid$,showAnnot$,autoRotate$,activeTool$,appMode$}
 
