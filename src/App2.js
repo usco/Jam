@@ -223,7 +223,7 @@ function App(interactions) {
   let selections$ = selections( reverseSelections(selectionsIntents(interactions),entities$) )
 
   //undo redo
-  let _historyIntents = historyIntents(interactions)
+  let historyActions = historyIntents(interactions)
   let history$ = new Rx.BehaviorSubject({
     undos:[],
     redos:[]
@@ -233,15 +233,15 @@ function App(interactions) {
     //.pluck("instances")
     //.distinctUntilChanged()
     .withLatestFrom(history$,function(entities,history){
-      //console.log("updating history")
-      //history.undos.push(entities)
+      console.log("updating history",entities)
+      history.undos.push(entities)
     })
     .subscribe(e=>e)
 
 
   Rx.Observable.merge(
-    _historyIntents.undo$.map(true),
-    _historyIntents.redo$.map(false)
+    historyActions.undo$,
+    historyActions.redo$
   )
     .withLatestFrom(history$,function(u,history){
       let {undos,redos} = history
@@ -265,12 +265,14 @@ function App(interactions) {
         })
 
         //TODO: how do we set the entities data ?
-        intents.replaceAll$.onNext(last)
+        //intents.replaceAll$.onNext(last)
       }
 
     })
     .subscribe(e=>e)
 
+
+  //TODO:remove
   let contextTaps$ = intents.contextTaps$
 
   //semi hack : used only for viewer mode for now
@@ -319,11 +321,9 @@ function App(interactions) {
 
         //spinner /loader
         let loaderSpinner = null
-        console.log("LOADING",loading)
        
         let _loading = (loading && settings.mode === "viewer" && settings.webglEnabled)
         if(_loading){
-          console.log("SPINNER")
           loaderSpinner = <span className="spinner" /> 
         }
 
