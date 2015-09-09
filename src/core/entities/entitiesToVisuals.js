@@ -51,9 +51,9 @@ function meshesFromDeps(deps, getVisual, entities$){
         .map(getVisual)
         .map(s=>s.take(1))
     })
-    .do(e=>console.log("got some data",e))
+    //.do(e=>console.log("got some data",e))
     .flatMap(Rx.Observable.forkJoin)
-    .do(e=>console.log("got some data2",e))
+    //.do(e=>console.log("got some data2",e))
     //.subscribe(x=>console.log("deps",x))
 }
 
@@ -84,7 +84,7 @@ function remoteMeshVisualProvider(entity, subJ, params){
 
 /*this one is used for "static"/pre determined visuals, like for annotations*/
 function staticVisualProvider(entity, subJ, getVisual){
-  console.log("staticVisualProvider",entity,subJ)
+  //console.log("staticVisualProvider",entity,subJ)
 
   meshesFromDeps(entity.deps, getVisual)
     .subscribe(function(vO){
@@ -124,7 +124,7 @@ export function createVisualMapper(types$, entities$){
   visualProviders[5] = angleVisualProvider
 
   function getVisual(entity){
-    console.log("getting visual for",entity)
+    //console.log("getting visual for",entity)
     
     //now each resolver  needs to fire "onNext on this subject"
     let subJ = new Rx.ReplaySubject()
@@ -133,13 +133,13 @@ export function createVisualMapper(types$, entities$){
     //what we want as "user" is a refined, updated result
     //note: is this always the case or only with geometry?
     function mod(mesh){
-      console.log("oh great a mesh to change")
+      //console.log("oh great a mesh to change")
       return mesh
     }
 
     function cache(mesh){
       if(!iuidToMesh[iuid]){//needed ?
-        console.log("caching mesh",mesh, "total cache",iuidToMesh)
+        //console.log("caching mesh",mesh, "total cache",iuidToMesh)
         iuidToMesh[entity.iuid] = mesh
       }
     }
@@ -167,7 +167,7 @@ export function createVisualMapper(types$, entities$){
       //obsByTypes(entities,["A0"]).map()
 
     }else{
-      console.log("reusing mesh from cache by iuid",iuid)
+      //console.log("reusing mesh from cache by iuid",iuid)
       let mesh = iuidToMesh[iuid]
       //FIXME: hack for now
       subJ.onNext(mesh)

@@ -44,11 +44,13 @@ function applyDefaults(data$){
 function modificationAlt(actions){  
   //actions.changeSetting$.subscribe(e=>console.log("changeSetting",e))
 
-  function remapStrcture(input){
+  function remapStructure(input){
 
     if(input.showGrid !==undefined ) return {grid:{show:input.showGrid}}
     if(input.showAnnot !==undefined ) return {annotations:{show:input.showAnnot}}
     if(input.autoRotate !==undefined ) return {camera:{autoRotate:input.autoRotate}}
+
+    if(input.appMode !==undefined ) return {mode:input.appMode}
 
     /*let output = {
       grid:{show:input.showGrid}
@@ -60,7 +62,8 @@ function modificationAlt(actions){
     return input
   }
 
-  let changeSetting$ = actions.changeSetting$.map(remapStrcture)
+  let changeSetting$ = actions.changeSetting$
+    .map(remapStructure)
     .map((settingData) => (currentData) => {
      
       console.log("settingData",settingData)
@@ -240,7 +243,14 @@ function settings(intent, source) {
 
   return modifications$
     .merge(source$)
-    .scan((currentData, modFn) => modFn(currentData))//combine existing data with new one
+    //.scan((currentData, modFn) => modFn(currentData))//combine existing data with new one
+    .scan(function(currentData, modFn){
+      //console.log("currentData",currentData,"modFn",modFn)
+      //FIXME:awfull hack for sometimes inverted data / function ?? is it due to scan()  api changes?
+      if( typeof modFn === "function" ) return modFn(currentData)
+      if( typeof currentData === "function" ) return currentData(modFn)
+
+    })
     .shareReplay(1)
 
 }

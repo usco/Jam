@@ -116,6 +116,8 @@ function BomView(drivers, props) {
             return(<td className="bomEntry cell">{row[name]}</td>)
           })
 
+          cells.push(<td className="bomEntry cell"> <button>Change Model</button> </td>)
+
           let selected = selectedEntries.indexOf(row.uuid) > -1
           
           return(

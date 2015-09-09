@@ -89,7 +89,7 @@ function modifications(intent){
 
   let typeFromMesh$ = intent.combos$
     .map((data) => (regData) => {
-      log.info("I would register something", data, regData)
+      //log.info("I would register something", data, regData)
       //prepare lookup function for finding already registered meshes
       let typeUidLookup = typeUidFromMeshName.bind(null,regData.meshNameToPartTypeUId)
       //create new data
@@ -101,7 +101,7 @@ function modifications(intent){
   /*reset all the data to nothing*/
   let reset$ = intent.reset$
     .map(() => (regData) => {
-      log.info("New design, clearing registry",regData)
+      //log.info("New design, clearing registry",regData)
       return Object.assign({},defaults)
   })
 

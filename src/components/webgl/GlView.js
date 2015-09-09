@@ -94,7 +94,7 @@ function objectAndPosition(pickingInfo){
 }
 
 function setupPostProcess(camera, renderer, scene){
-  console.log("setupPostProcess")
+  //console.log("setupPostProcess")
     ////////post processing
     let renderTargetParameters = {
         minFilter: THREE.LinearFilter,
@@ -496,7 +496,6 @@ function GlView(interactions, props, self){
     .debounce(200)
     .distinctUntilChanged(null, entityVisualComparer)
     .withLatestFrom( visualMappings$ ,function(items, mapper){
-      console.log("MAPPING TO VISUALS",mapper, items)
       return items
         .filter(exists)
         .map(mapper)

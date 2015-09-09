@@ -22,7 +22,7 @@ function makeModifications(intent){
   let addEntries$ = intent.addBomEntries$
     .filter(exists)
     .map((nData) => (bomData) => {
-      console.log("ADDING BOM entries")
+      //console.log("ADDING BOM entries")
       //FIXME , immutable
       let newData = nData || []
       if(newData.constructor !== Array) newData = [newData]
@@ -40,7 +40,7 @@ function makeModifications(intent){
     .withLatestFrom(intent.combos$,function(types, combos){ return {combos,types}})
     .map((data) => (bomData) => {
       let {combos,types} = data
-      console.log("I would register something in BOM", data, bomData)
+      //console.log("I would register something in BOM", data, bomData)
 
       let {entries,byId} = bomData
 
@@ -80,13 +80,13 @@ function makeModifications(intent){
   //this means ALL instances represented by bom entries need to be removed!
   let removeEntries$ = intent.removeEntries$
     .map((data) => (bomData) => {
-      console.log("removeEntries from BOM", data, bomData)
+      //console.log("removeEntries from BOM", data, bomData)
     })
 
   //clear it all
   let clearEntries$ = intent.clearEntries$
     .map((data) => (bomData) => {
-      console.log("clear BOM", data, bomData)
+      //console.log("clear BOM", data, bomData)
 
       return Object.assign({},defaults)
     })
@@ -100,7 +100,7 @@ function makeModifications(intent){
 }
 
 function Bom(intent, source) {
-  console.log("seting up bom model")
+  //console.log("seting up bom model")
   let source$ = source || Observable.just(defaults)
   
   let modification$ = makeModifications(intent)

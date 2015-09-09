@@ -34,7 +34,6 @@ function makeModification$(intent){
       //log.info("selecting bom entries",sBomIds)
 
       let bomIds = toArray(sBomIds)
-      console.log("bomIds",bomIds)
 
       selections.bomIds = bomIds
       return selections

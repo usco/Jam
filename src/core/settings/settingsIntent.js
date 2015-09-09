@@ -68,8 +68,7 @@ export function settingsIntent(interactions){
       ,autoRotate$.map(e=>({autoRotate:e}))
       ,activeTool$.map(e=>({activeTool:e}))
       ,appMode$.map(e=>({appMode:e}))
-    ),
-      showGrid$
+    )
   }
       
   /*return Rx.Observable.combineLatest(

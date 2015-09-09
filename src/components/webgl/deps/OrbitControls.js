@@ -201,7 +201,6 @@ var OrbitControls = function ( object, domElement, upVector ) {
     } 
     
     this.setObservables=function(observables){
-      console.log("setting observables")
       let {dragMoves$, zooms$} = observables
 
       let self = this

@@ -1,3 +1,7 @@
+//partStream:
+//quadruplets? 
+//mesh(bin),source, params , metadata, 
+
 import {
   addEntityInstances$, 
   updateInstance$, 
@@ -97,7 +101,7 @@ function makeModification$(intent){
       return {nentities:data,settings}
     })
     .map(({nentities,settings}) => (entitiesData) => {
-      log.info("adding entity instance(s)", nentities)
+      //log.info("adding entity instance(s)", nentities)
 
       let entities = toArray(nentities)
 

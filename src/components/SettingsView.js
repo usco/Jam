@@ -9,11 +9,13 @@ let fromEvent = Rx.Observable.fromEvent
 
 function SettingsView(interactions, props) {
 
-  let settings$ = props.get('settings').startWith({})
+  let settings$ = props.get('settings').startWith({showGrid:false})
   let toggled$  = interactions.subject("toggle")//interactions.get(".toggler", "click")
     .map(true)
     .scan((acc,val)=>!acc)
     .startWith(false)
+
+
 
   //any outside taps close the settings
   let outsideTaps$     = fromEvent(window,"click")
@@ -24,7 +26,6 @@ function SettingsView(interactions, props) {
     .filter(x=>(x===false))//we only care if it was clicked outside, not in
 
   toggled$ = toggled$.merge( outsideTaps$ )
-  
 
   let vtree$ = Rx.Observable
     .combineLatest(
@@ -32,7 +33,6 @@ function SettingsView(interactions, props) {
       toggled$,
       function(settings , toggled){
         let fields = undefined
-        //console.log("settings",settings)
         let showGrid = settings.grid.show
         let showAnnot = settings.annotations.show
         let autoRotate = settings.camera.autoRotate
@@ -40,18 +40,25 @@ function SettingsView(interactions, props) {
           .map(function(){
             <input type="checkbox" >Foo </input> 
           })*/
+
+        /*              <section className="settingEntry">
+                <input className="showAnnot" type="checkbox" id="showAnnot" checked={showAnnot}> </input> 
+                <label htmlFor="showAnnot"> Show annotations </label>
+              </section> */
+      
+
         if(toggled)
         {
+          function fakeHandler(){}
+
           fields = (
             <div className="settingsView">
               <section className="settingEntry">
-                <input className="showGrid" type="checkbox" id="showGrid" checked={showGrid}> </input> 
+                <input className="showGrid" type="checkbox" id="showGrid" checked={showGrid} onChange={fakeHandler}> </input> 
                 <label htmlFor="showGrid"> Show grid </label>
               </section>
-              <section className="settingEntry">
-                <input className="showAnnot" type="checkbox" id="showAnnot" checked={showAnnot}> </input> 
-                <label htmlFor="showAnnot"> Show annotations </label>
-              </section>
+
+
               <section className="settingEntry">
                 <input className="autoRotate" type="checkbox" id="autoRotate" checked={autoRotate}> </input>
                 <label htmlFor="autoRotate"> Auto rotate camera </label>

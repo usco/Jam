@@ -72,7 +72,6 @@ function instanceFromTypeData(name, typeData){
 
 export function entityInstanceFromPartTypes(partTypes$)
 {
-  console.log("entityInstanceFromPartTypes")
   //alternative
   return partTypes$
     .skip(1)

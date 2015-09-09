@@ -141,11 +141,6 @@ function App(interactions) {
 
   let settings$ = settings( settingsIntent(interactions), settingsSources$ )  
 
-  //let settingsAlt$ = settingsAlt( settingsIntent(interactions), settingsSources$ )
-
-  settings$.distinctUntilChanged().subscribe(e=>console.log("settings$DISTINCT",e))
-  //settings$.subscribe(e=>console.log("settings$",e))
-
   ///////////////
   let assetManager = makeInternals()
 
@@ -213,7 +208,7 @@ function App(interactions) {
 
   //output (USE DRIVER!!!!)
   settings$.subscribe(function(settings){
-    console.log("settings, to save etc",settings)
+    //console.log("settings, to save etc",settings)
     localStorage.setItem("jam!-settings",JSON.stringify(settings) )
   })
 
@@ -229,11 +224,10 @@ function App(interactions) {
     redos:[]
   })
 
-  entities$
+  /*entities$
     //.pluck("instances")
     //.distinctUntilChanged()
     .withLatestFrom(history$,function(entities,history){
-      console.log("updating history",entities)
       history.undos.push(entities)
     })
     .subscribe(e=>e)
@@ -269,7 +263,7 @@ function App(interactions) {
       }
 
     })
-    .subscribe(e=>e)
+    .subscribe(e=>e)*/
 
 
   //TODO:remove
@@ -282,9 +276,6 @@ function App(interactions) {
       ,addInstance$
         .map(false)
     ).startWith(false)
-
-    
-  meshSources$.subscribe(e=>console.log("meshResources",meshResources))
 
   console.log("---READY TO START JAM!---v 0.2.0")
 
@@ -301,7 +292,6 @@ function App(interactions) {
       ,loading$
       ,function(items, bom, settings, contextTaps, history, comments, selections,loading){
 
-        console.log("re-render")
         let {undos,redos} = history
 
         //for bom
