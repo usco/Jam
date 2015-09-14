@@ -7,9 +7,10 @@ export function settingsIntent(interactions){
 
 
   //hack for firefox only as it does not correct get the "checked" value : note : this is not an issue in cycle.js
-  let is_firefox = navigator.userAgent.toLowerCase().indexOf('firefox') > -1
+  let is_firefox_or_chrome  = (navigator.userAgent.toLowerCase().indexOf('firefox') > -1 || 
+    navigator.userAgent.toLowerCase().indexOf('chrome') > -1 )
   function checked(event){
-    if(is_firefox) return ! event.target.checked
+    if(is_firefox_or_chrome) return ! event.target.checked
       return event.target.checked
   }
 
