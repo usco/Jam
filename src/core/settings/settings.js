@@ -41,7 +41,7 @@ function applyDefaults(data$){
   })
 }
 
-function modificationAlt(actions){  
+function modification(actions){  
   //actions.changeSetting$.subscribe(e=>console.log("changeSetting",e))
 
   function remapStructure(input){
@@ -66,7 +66,7 @@ function modificationAlt(actions){
     .map(remapStructure)
     .map((settingData) => (currentData) => {
      
-      console.log("settingData",settingData)
+      //console.log("settingData",settingData)
       let output = Object.assign({},currentData,settingData)
 
       return output
@@ -79,167 +79,12 @@ function modificationAlt(actions){
 }
 
 
-function modification(intent){
-  //Object.assign({},settingDefaults,lsSettings,settingsSources)
-  console.log("intent",intent)
-
-  /*return combineTemplate(
-    {
-      webglEnabled:true,
-      mode:intent.appMode$,
-
-      autoSelectNewEntities:true,
-      activeTool:intent.activeTool$,
-      repeatTool:false,
-
-      camera:{
-        autoRotate:intent.autoRotate$
-      },
-      grid:{
-        show:intent.showGrid$
-      },
-      annotations:{
-        show:intent.showAnnot$
-      }
-    }
-  )*/
-
-  return Rx.Observable.combineLatest(
-      intent.appMode$.startWith("editor"),
-      intent.activeTool$.startWith(undefined),
-      intent.autoRotate$.startWith(false),
-      intent.showGrid$.startWith(false),
-      intent.showAnnot$.startWith(false),
-      function(appMode$,activeTool$,autoRotate$,showGrid$,showAnnot$){
-        return {appMode$,activeTool$,autoRotate$,showGrid$,showAnnot$}
-      }
-    )
-
-  .map(
-    function(intent){
-      return {
-        webglEnabled:true,
-        mode:intent.appMode$,
-
-        autoSelectNewEntities:true,
-        activeTool:intent.activeTool$,
-        repeatTool:false,
-
-        camera:{
-          autoRotate:intent.autoRotate$
-        },
-        grid:{
-          show:intent.showGrid$
-        },
-        annotations:{
-          show:intent.showAnnot$
-        }
-      }
-
-    }
-  )//.startWith(Rx.Observable.just(defaults))
-}
-
-
-function modification2(intent, initialvalues$){
-  console.log("intent",intent)
-
-  let items = [
-    intent.appMode$,
-    intent.activeTool$,
-    intent.autoRotate$,
-    intent.showGrid$,
-    intent.showAnnot$,
-    initialvalues$
-  ]
-  return Rx.Observable.combineLatest(
-      
-      initialvalues$,
-      function(appMode$,activeTool$,autoRotate$,showGrid$,showAnnot$,initialvalues){
-        return {appMode$,activeTool$,autoRotate$,showGrid$,showAnnot$, initialvalues}
-      }
-    )
-
-  .map(
-    function(intent){
-      return {
-        webglEnabled:true,
-        mode:intent.appMode$,
-
-        autoSelectNewEntities:true,
-        activeTool:intent.activeTool$,
-        repeatTool:false,
-
-        camera:{
-          autoRotate:intent.autoRotate$
-        },
-        grid:{
-          show:intent.showGrid$
-        },
-        annotations:{
-          show:intent.showAnnot$
-        }
-      }
-
-    }
-  )
-}
-
-
-function modification3(intent, source$){
-  console.log("intent",intent)
-  //source$.subscribe(e=>console.log("source",e))
-
-  return Rx.Observable.combineLatest(
-      intent.appMode$,
-      intent.activeTool$,
-      intent.autoRotate$,
-      intent.showGrid$,
-      intent.showAnnot$,
-      source$,
-      function(appMode$,activeTool$,autoRotate$,showGrid$,showAnnot$,source){
-        return {appMode$,activeTool$,autoRotate$,showGrid$,showAnnot$,source}
-      }
-    )
-
-  .map(
-    function(intent){
-      console.log("intent showGrid",intent.showGrid$)
-      let source = intent.source
-      let showGrid$ = source.showGrid$.merge(Rx.Observable.just(intent.showGrid$)).shareReplay(1)
-      source.showGrid$.subscribe(e=>console.log("showGrid source",e))
-      showGrid$.subscribe(e=>console.log("showGrid final",e))
-
-      return {
-        webglEnabled:true,
-        mode:source.appMode$.merge(intent.appMode$),
-
-        autoSelectNewEntities:true,
-        activeTool:intent.activeTool$,
-        repeatTool:false,
-
-        camera:{
-          autoRotate:intent.autoRotate$
-        },
-        grid:{
-          show: showGrid$
-        },
-        annotations:{
-          show:intent.showAnnot$
-        }
-      }
-
-    }
-  )
-}
-
-
 
 function settings(intent, source) {
   let source$ = source || Observable.just(defaults)
   source$ = applyDefaults(source)
 
-  let modifications$ = modificationAlt(intent)//modification(intent)
+  let modifications$ = modification(intent)//modification(intent)
 
   return modifications$
     .merge(source$)
