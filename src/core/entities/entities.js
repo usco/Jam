@@ -35,6 +35,17 @@ const defaults = {
 }
 
 /*
+let partInstance = {
+    name: data.name,
+    iuid: generateUUID(),
+    typeUid: data.typeUid,
+    color: "#07a9ff",
+    pos: [ 0, 0, h/2 ],
+    rot: [ 0, 0, 0 ],
+    sca: [ 1, 1, 1 ],
+    bbox:data.bbox
+}*/
+/*
 const partTemplate = {
       name: "",
       iuid: generateUUID(),
@@ -47,22 +58,44 @@ const partTemplate = {
 let partComponents = []
 
 function makeTransformComponent(){
-  return  {
+  return  Rx.Observable.just({
     pos: [ 0, 0, 0 ],
     rot: [ 0, 0, 0 ],
     sca: [ 1, 1, 1 ]
-  }
+  })
 }
 
 function makeBoundingComponent(){
-  return {
+  return Rx.Observable.just({
     min:[0,0,0],
     max:[0,0,0]
-  }
+  })
 }
 
 
 ///helper methods
+
+function addInstances(state, {input,settings}){
+  log.info("adding entity instance(s)", input)
+
+  let entities = toArray(input)
+
+  let instances = state.instances.concat(entities)
+  let byId = instances.reduce(function(prev,cur){
+      prev[cur.iuid] = cur
+      return prev
+    },{})
+  
+  state = mergeData( state, {instances, byId} )
+
+  //set selections, if need be
+  if(settings.autoSelectNewEntities){
+    selectEntities$( entities.map(i=>i.iuid) )
+  }
+
+  return state
+
+}
 
 function deleteInstance(state, input){
   log.info("removing entities ", input)
@@ -71,7 +104,7 @@ function deleteInstance(state, input){
     .filter( entity => (input.indexOf(entity.iuid)===-1) )
   let byId = instances.map(i=>i.iuid)
 
-  state = mergeData( state, {instances,byId} )
+  state = mergeData( state, {instances, byId} )
 
   //set selections
   selectEntities$([])
@@ -82,7 +115,7 @@ function deleteInstance(state, input){
 function deleteAllInstances(state, input){
   log.info("removing all entities ")
 
-  state = mergeData( state, {instances:[],byId:{} } )
+  state = mergeData( state, {instances:[], byId:{} } )
   
   //set selections
   selectEntities$([])
@@ -96,49 +129,40 @@ function replaceInstances(state, input){
   state = mergeData( state, input )
 
   selectEntities$([])
-  return outputData
+  return state
 }
 
-function updateInstances(state, {input,settings}){
+function updateInstances(state, input){
   log.info("updating entities with data", input)
 
-  //FIXME , immutable
+  if(!input) return state
   let newData = toArray(input)
-  
-  let outputData = Object.assign({},state)
-  if(!newData) return outputData
 
-  let byId = outputData.byId
+  let updatedEntities = newData
+    .filter(e=>e.iuids !== undefined)
+    .map(function(entry){
+      let iuid = entry.iuids
+      let tgtEntity = state.byId[iuid]
+      tgtEntity = mergeData(tgtEntity, entry)
+      return tgtEntity
+    })
+    .reduce(function(prev,cur){
+      prev[cur.iuid] = cur
+      return prev
+    },{})
 
-  /*newData.map(function(entry){
-    let iuid = entry.iuids
-    if(!iuid){
-      return undefined
-    }
-    let tgtEntity    =  Object.assign({}, byId[iuid] )
-    if(!tgtEntity){
-      return undefined
-    }
+  let byId = mergeData(state.byId, updatedEntities)
+  let instances = Object.keys(byId).map(key=>byId[key])
 
-    for(let key in entry){
-      tgtEntity[key] = entry[key]
-    }
-
-    //why is this even needed ?
-    delete byId[iuid]
-    outputData.instances = outputData.instances.filter(inst => inst.iuid !== iuid)
-
-    outputData.instances.push( tgtEntity)
-    outputData.byId[iuid] = tgtEntity
-  })*/
+  state = mergeData( state, {instances, byId} )
 
   return state
 }
   
-function duplicateInstances(state, input){
-  let sources = input
-  log.info("duplicating entity instances", sources)
-  let dupes = []
+function duplicateInstances(state, {input,settings}){
+  log.info("duplicating entity instances", input)
+
+  let sources = toArray(input)
 
   function duplicate(original){
     let doNotCopy = ["iuid","name"]
@@ -156,18 +180,17 @@ function duplicateInstances(state, input){
     dupe.name = original.name + "" 
     return dupe
   }
-  dupes = sources.map(duplicate)
 
-  entitiesData.instances = entitiesData.instances.concat(dupes)
+  let dupes = sources.map(duplicate)
 
-  dupes.map(function(dupe){
-    entitiesData.byId[dupe.iuid] = dupe
-  })
+  let instances = entitiesData.instances.concat(dupes)
+  let byId = instances.map(i=>i.iuid)
+  state = mergeData( state, {instances, byId} )
    
   //set selections, if need be
-  if(settings.autoSelectNewEntities) selectEntities$( entitiesData.instances.map(i=>i.iuid) )
+  if(settings.autoSelectNewEntities) selectEntities$( dupes.map(i=>i.iuid) )
 
-  return entitiesData
+  return state
 }
 
 
@@ -180,27 +203,11 @@ function makeModification$(intent){
   /*let addEntityInstanceTo$ = intent.addEntityInstanceTo$
     ( instance , parent){
     let parent = parent || null
-
   }*/
 
   let _createInstance$ = intent.createInstance$
     .map((data) => (entitiesData) => {
-
-      let h = data.bbox.max[2]  - data.bbox.min[2]
-
-        let partInstance =
-        {
-            name: data.name,
-            iuid: generateUUID(),
-            typeUid: data.typeUid,
-            color: "#07a9ff",
-            pos: [ 0, 0, h/2 ],
-            rot: [ 0, 0, 0 ],
-            sca: [ 1, 1, 1 ],
-            bbox:data.bbox
-        }
     })
-
 
   /*add a new entity instance*/
   let _addInstances$ = intent.addInstances$
@@ -210,29 +217,23 @@ function makeModification$(intent){
       return {nentities:data,settings}
     })
     .map(({nentities,settings}) => (entitiesData) => {
-      //log.info("adding entity instance(s)", nentities)
-
+      //return addInstances(entitiesData,{input:nentities,settings})
       let entities = toArray(nentities)
 
       entitiesData.instances = entitiesData.instances.concat(entities)
-      let entityIds = entities.map( function(entity) {
-        entitiesData.byId[entity.iuid] = entity
-        return entity.iuid
-      })
-      
 
-      //set selections, if need be
-      if(settings.autoSelectNewEntities){
-        selectEntities$( entities.map(i=>i.iuid) )
-      }
+      //does not work ??
+      let instances = entitiesData.instances.concat(entities)
+      let state = mergeData( state, {instances} )
 
-      return entitiesData
+      return state
+
     })
 
   /*set entites properties*/
   let _updateInstance$ = intent.updateInstance$
     .map((nData) => (entitiesData) => {
-      return updateInstance(entitiesData,nData)
+      return updateInstances(entitiesData,nData)
     })
 
   /*remove an entity : it actually only 
