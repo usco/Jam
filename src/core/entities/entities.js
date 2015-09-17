@@ -13,6 +13,7 @@ import {
 
 
 import {exists} from '../../utils/obsUtils'
+import {mergeData} from '../../utils/modelUtils'
 
 import logger from '../../utils/log'
 let log = logger("entities")
@@ -62,6 +63,114 @@ function makeBoundingComponent(){
 
 
 ///helper methods
+
+function deleteInstance(state, input){
+  log.info("removing entities ", input)
+
+  let instances = state.instances
+    .filter( entity => (input.indexOf(entity.iuid)===-1) )
+  let byId = instances.map(i=>i.iuid)
+
+  state = mergeData( state, {instances,byId} )
+
+  //set selections
+  selectEntities$([])
+
+  return state
+}
+
+function deleteAllInstances(state, input){
+  log.info("removing all entities ")
+
+  state = mergeData( state, {instances:[],byId:{} } )
+  
+  //set selections
+  selectEntities$([])
+
+  return state
+}
+
+function replaceInstances(state, input){
+  log.info("replacing entities data with",input)
+
+  state = mergeData( state, input )
+
+  selectEntities$([])
+  return outputData
+}
+
+function updateInstances(state, {input,settings}){
+  log.info("updating entities with data", input)
+
+  //FIXME , immutable
+  let newData = toArray(input)
+  
+  let outputData = Object.assign({},state)
+  if(!newData) return outputData
+
+  let byId = outputData.byId
+
+  /*newData.map(function(entry){
+    let iuid = entry.iuids
+    if(!iuid){
+      return undefined
+    }
+    let tgtEntity    =  Object.assign({}, byId[iuid] )
+    if(!tgtEntity){
+      return undefined
+    }
+
+    for(let key in entry){
+      tgtEntity[key] = entry[key]
+    }
+
+    //why is this even needed ?
+    delete byId[iuid]
+    outputData.instances = outputData.instances.filter(inst => inst.iuid !== iuid)
+
+    outputData.instances.push( tgtEntity)
+    outputData.byId[iuid] = tgtEntity
+  })*/
+
+  return state
+}
+  
+function duplicateInstances(state, input){
+  let sources = input
+  log.info("duplicating entity instances", sources)
+  let dupes = []
+
+  function duplicate(original){
+    let doNotCopy = ["iuid","name"]
+    let onlyCopy = ["pos","rot","sca","color","typeUid"]
+
+    let dupe = {
+      iuid:generateUUID()
+    }
+    for(let key in original ){
+      if( onlyCopy.indexOf( key ) > -1 ){
+        dupe[key] = JSON.parse(JSON.stringify(original[key])) 
+      }
+    }
+    //FIXME : needs to work with all entity types
+    dupe.name = original.name + "" 
+    return dupe
+  }
+  dupes = sources.map(duplicate)
+
+  entitiesData.instances = entitiesData.instances.concat(dupes)
+
+  dupes.map(function(dupe){
+    entitiesData.byId[dupe.iuid] = dupe
+  })
+   
+  //set selections, if need be
+  if(settings.autoSelectNewEntities) selectEntities$( entitiesData.instances.map(i=>i.iuid) )
+
+  return entitiesData
+}
+
+
 
 //////
 
@@ -122,74 +231,21 @@ function makeModification$(intent){
 
   /*set entites properties*/
   let _updateInstance$ = intent.updateInstance$
-    .debounce(3)
     .map((nData) => (entitiesData) => {
-      log.info("updating entities with data", nData)
-
-      //FIXME , immutable
-      let newData = toArray(nData)
-      
-      let outputData = Object.assign({},entitiesData)
-      if(!newData) return outputData
-
-      let byId = outputData.byId
-
-      newData.map(function(entry){
-        let iuid = entry.iuids
-        if(!iuid){
-          return undefined
-        }
-        let tgtEntity    =  Object.assign({}, byId[iuid] )
-        if(!tgtEntity){
-          return undefined
-        }
-
-        for(let key in entry){
-          tgtEntity[key] = entry[key]
-        }
-
-        //why is this even needed ?
-        delete byId[iuid]
-        outputData.instances = outputData.instances.filter(inst => inst.iuid !== iuid)
-
-        outputData.instances.push( tgtEntity)
-        outputData.byId[iuid] = tgtEntity
-      })
-
-      return outputData
+      return updateInstance(entitiesData,nData)
     })
 
   /*remove an entity : it actually only 
   removes it from the active assembly*/
   let _deleteInstances$ = intent.deleteInstances$
     .map((remEntitites) => (entitiesData) => {
-      log.info("removing entities ", remEntitites)
-
-      //FIXME: not sure...., duplication of the above again
-      let nEntities  =  entitiesData.instances
-      let _tmp = remEntitites.map(entity=>entity.iuid)
-      let outNEntities = nEntities.filter(function(entity){ return _tmp.indexOf(entity.iuid)===-1})
-
-      entitiesData.instances = outNEntities
-
-      remEntitites.map(entity=>{ delete entitiesData.byId[entity.iuid] })
-
-      //set selections
-      selectEntities$([])
-
-      return entitiesData
+      return deleteInstance(entitiesData, remEntitites)
     })
 
   /*delete all entities from current entities*/
   let _deleteAllInstances$ = intent.deleteAllInstances$
     .map(() => (entitiesData) => {
-      entitiesData.instances = []
-      entitiesData.byId = {}
-
-      //set selections
-      selectEntities$([])
-
-      return entitiesData
+      return deleteAllInstances(entitiesData)
     })
 
   /*create duplicates of given entities*/
@@ -199,54 +255,13 @@ function makeModification$(intent){
       return {sources:data,settings}
     })
     .map(({sources,settings}) => (entitiesData) => {
-      log.info("duplicating entity instances", sources)
-      let dupes = []
-
-      function duplicate(original){
-        let doNotCopy = ["iuid","name"]
-        let onlyCopy = ["pos","rot","sca","color","typeUid"]
-
-        let dupe = {
-          iuid:generateUUID()
-        }
-        for(let key in original ){
-          if( onlyCopy.indexOf( key ) > -1 ){
-            dupe[key] = JSON.parse(JSON.stringify(original[key])) //Object.assign([], originalEntity[key] )
-          }
-        }
-        //FIXME : needs to work with all entity types
-        //dupe.typeName + "" + ( this.partRegistry.partTypeInstances[ dupe.typeUid ].length - 1)
-        dupe.name = original.name + "" //+ ( this.partRegistry.partTypeInstances[ dupe.typeUid ].length - 1)
-        return dupe
-      }
-      dupes = sources.map(duplicate)
-
-      entitiesData.instances = entitiesData.instances.concat(dupes)
-
-      dupes.map(function(dupe){
-        entitiesData.byId[dupe.iuid] = dupe
-      })
-       
-
-      //set selections, if need be
-      if(settings.autoSelectNewEntities) selectEntities$( entitiesData.instances.map(i=>i.iuid) )
-
-      return entitiesData
+      return duplicateInstances(entitiesData, {input:sources,settings})
     })
 
   //replace all existing data with new one: can be used in case of undo redos, loading etc
   let _replaceAll$ = intent.replaceAll$
     .map((newData) => (existingData) => {
-      log.info("replacing entities data with",newData)
-
-      let outputData = newData
-
-      //existingData.instances = newData.instances
-      //existingData.byId      = newData.byId
-      //set selections
-      //outputData.selectedIds = []
-      selectEntities$([])
-      return outputData
+      return replaceInstances(entitiesData, newData)
     })
 
   //FIXME : in parts ?

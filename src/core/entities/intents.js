@@ -57,6 +57,7 @@ export function entityIntents(interactions){
 
   let contextMenuActions$ = interactions.get(".contextMenu", "actionSelected$").pluck("detail")
   let deleteInstances$     = contextMenuActions$.filter(e=>e.action === "delete").pluck("selections")
+    .map(entities=> entities.map( e=>e.iuid) )
   let deleteAllInstances$  = contextMenuActions$.filter(e=>e.action === "deleteAll").pluck("selections")
   let duplicateInstances$  = contextMenuActions$.filter(e=>e.action === "duplicate").pluck("selections")
 
