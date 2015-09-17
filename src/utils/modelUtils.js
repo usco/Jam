@@ -9,7 +9,7 @@ export function mergeData(currentData,inputs){
   if("merge" in currentData){
     return currentData.merge(inputs)
   }
-  return Object.assign(currentData,inputs)
+  return Object.assign({}, currentData,inputs)
 }
 
 export function makeModel(updateFns,actions,defaults){
