@@ -45,17 +45,17 @@ let partInstance = {
     sca: [ 1, 1, 1 ],
     bbox:data.bbox
 }*/
-/*
-const partTemplate = {
-      name: "",
-      iuid: generateUUID(),
-      typeUid: undefined,
-      color: "#07a9ff",
-      components:{}
-  }*/
 
 //just experimenting with thoughts about component based system
 let partComponents = []
+function makeCoreComponent(typeUid){
+  return  Rx.Observable.just({
+    name: data.name,
+    iuid: generateUUID(),
+    typeUid: typeUid,
+    color: "#07a9ff"
+  })
+}
 
 function makeTransformComponent(){
   return  Rx.Observable.just({
@@ -72,66 +72,79 @@ function makeBoundingComponent(){
   })
 }
 
+let bounds$ = makeBoundingComponent()
+let transforms$ = makeTransformComponent()
+let combo = Rx.Observable.combineLatest(
+  transforms$
+  ,bounds$,function(transforms,bounds){
+    return {
+      transforms
+      ,bounds}
+  })
 
-///helper methods
 
+///helper functions
+function reduceToIuidBasedHash(instances){
+  return instances.reduce(function(prev,cur){
+      prev[cur.iuid] = cur
+      return prev
+    },{})
+}
+
+
+/*add a new entity instance*/
 function addInstances(state, {input,settings}){
   log.info("adding entity instance(s)", input)
 
   let entities = toArray(input)
 
   let instances = state.instances.concat(entities)
-  let byId = instances.reduce(function(prev,cur){
-      prev[cur.iuid] = cur
-      return prev
-    },{})
+  let byId = reduceToIuidBasedHash(instances)
   
   state = mergeData( state, {instances, byId} )
 
   //set selections, if need be
   if(settings.autoSelectNewEntities){
-    selectEntities$( entities.map(i=>i.iuid) )
+    //FIXME !! issue with ordering of things: at this stage, state is not updated !!
+    //selectEntities$( entities.map(i=>i.iuid) )
   }
-
   return state
-
 }
 
+/*remove an entity : it actually only 
+  removes it from the active assembly
+*/
 function deleteInstance(state, input){
   log.info("removing entities ", input)
 
   let instances = state.instances
     .filter( entity => (input.indexOf(entity.iuid)===-1) )
-  let byId = instances.map(i=>i.iuid)
+  let byId = reduceToIuidBasedHash(instances)
 
   state = mergeData( state, {instances, byId} )
-
-  //set selections
-  selectEntities$([])
 
   return state
 }
 
+/*delete all entities from current entities*/
 function deleteAllInstances(state, input){
   log.info("removing all entities ")
 
   state = mergeData( state, {instances:[], byId:{} } )
   
-  //set selections
-  selectEntities$([])
-
   return state
 }
 
+//replace all existing data with new one: can be used in case of undo redos, loading etc
 function replaceInstances(state, input){
   log.info("replacing entities data with",input)
 
   state = mergeData( state, input )
 
-  selectEntities$([])
   return state
 }
 
+/*set entites properties*/
 function updateInstances(state, input){
   log.info("updating entities with data", input)
 
@@ -158,7 +171,8 @@ function updateInstances(state, input){
 
   return state
 }
-  
+
+/*create duplicates of given entities*/
 function duplicateInstances(state, {input,settings}){
   log.info("duplicating entity instances", input)
 
@@ -166,7 +180,7 @@ function duplicateInstances(state, {input,settings}){
 
   function duplicate(original){
     let doNotCopy = ["iuid","name"]
-    let onlyCopy = ["pos","rot","sca","color","typeUid"]
+    let onlyCopy = ["cid","pos","rot","sca","color","typeUid"]
 
     let dupe = {
       iuid:generateUUID()
@@ -183,16 +197,15 @@ function duplicateInstances(state, {input,settings}){
 
   let dupes = sources.map(duplicate)
 
-  let instances = entitiesData.instances.concat(dupes)
-  let byId = instances.map(i=>i.iuid)
+  let instances = state.instances.concat(dupes)
+  let byId = reduceToIuidBasedHash(instances)
   state = mergeData( state, {instances, byId} )
    
   //set selections, if need be
-  if(settings.autoSelectNewEntities) selectEntities$( dupes.map(i=>i.iuid) )
+  //if(settings.autoSelectNewEntities) selectEntities$( dupes.map(i=>i.iuid) )
 
   return state
 }
-
 
 
 //////
@@ -209,7 +222,6 @@ function makeModification$(intent){
     .map((data) => (entitiesData) => {
     })
 
-  /*add a new entity instance*/
   let _addInstances$ = intent.addInstances$
     .filter(exists)
     //splice in settings
@@ -217,39 +229,26 @@ function makeModification$(intent){
       return {nentities:data,settings}
     })
     .map(({nentities,settings}) => (entitiesData) => {
-      //return addInstances(entitiesData,{input:nentities,settings})
-      let entities = toArray(nentities)
-
-      entitiesData.instances = entitiesData.instances.concat(entities)
-
-      //does not work ??
-      let instances = entitiesData.instances.concat(entities)
-      let state = mergeData( state, {instances} )
-
-      return state
-
+      return addInstances(entitiesData,{input:nentities,settings})
     })
 
-  /*set entites properties*/
   let _updateInstance$ = intent.updateInstance$
     .map((nData) => (entitiesData) => {
       return updateInstances(entitiesData,nData)
     })
 
-  /*remove an entity : it actually only 
-  removes it from the active assembly*/
   let _deleteInstances$ = intent.deleteInstances$
     .map((remEntitites) => (entitiesData) => {
       return deleteInstance(entitiesData, remEntitites)
     })
+    .do( selectEntities$([]) ) //set selections
 
-  /*delete all entities from current entities*/
   let _deleteAllInstances$ = intent.deleteAllInstances$
     .map(() => (entitiesData) => {
       return deleteAllInstances(entitiesData)
     })
+    .do( selectEntities$([]) ) //set selections
 
-  /*create duplicates of given entities*/
   let _duplicateInstances$  = intent.duplicateInstances$
     //splice in settings
     .withLatestFrom(intent.settings$,function(data,settings){
@@ -259,7 +258,6 @@ function makeModification$(intent){
       return duplicateInstances(entitiesData, {input:sources,settings})
     })
 
-  //replace all existing data with new one: can be used in case of undo redos, loading etc
   let _replaceAll$ = intent.replaceAll$
     .map((newData) => (existingData) => {
       return replaceInstances(entitiesData, newData)
@@ -281,7 +279,6 @@ function makeModification$(intent){
     
     ,_createInstance$
     ,_replaceAll$
-
   )
 }
 
