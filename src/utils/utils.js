@@ -16,3 +16,6 @@ export function toArray(data){
   if(data.constructor !== Array) return [data]
   return data
 }
+
+
+

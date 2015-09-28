@@ -139,7 +139,9 @@ function App(interactions) {
 
   let {meshSources$, designSources$, settingsSources$} = sources(urlSources$, dndSources$)
 
-  let settings$ = settings( settingsIntent(interactions), settingsSources$ )  
+  let settings$ = settings( settingsIntent(interactions), settingsSources$ ) 
+
+   
 
   ///////////////
   let assetManager = makeInternals()
@@ -224,48 +226,7 @@ function App(interactions) {
     redos:[]
   })
 
-  /*entities$
-    //.pluck("instances")
-    //.distinctUntilChanged()
-    .withLatestFrom(history$,function(entities,history){
-      history.undos.push(entities)
-    })
-    .subscribe(e=>e)
-
-
-  Rx.Observable.merge(
-    historyActions.undo$,
-    historyActions.redo$
-  )
-    .withLatestFrom(history$,function(u,history){
-      let {undos,redos} = history
-
-      let source = undos//either undo or redo
-      let target = redos//either redo or undo 
-      if(!u){ 
-        console.log("redoing", redos)
-        source = redos 
-        target = undos
-      }else{
-        console.log("undoing", undos)
-      }
-
-      let last = source.pop()
-      if(last){
-        target.push(last)
-        history$.onNext({
-          undos
-          ,redos
-        })
-
-        //TODO: how do we set the entities data ?
-        //intents.replaceAll$.onNext(last)
-      }
-
-    })
-    .subscribe(e=>e)*/
-
-
+  
   //TODO:remove
   let contextTaps$ = intents.contextTaps$
 
@@ -277,7 +238,7 @@ function App(interactions) {
         .map(false)
     ).startWith(false)
 
-  console.log("---READY TO START JAM!---v 0.2.0")
+  console.log("---READY TO START JAM!---v 0.2.2")
 
     
   return Rx.Observable
@@ -308,7 +269,6 @@ function App(interactions) {
           {type:"checkbox", label:"Show Grid", className:"showGrid"}
         ]
 
-
         //spinner /loader
         let loaderSpinner = null
        
@@ -316,7 +276,6 @@ function App(interactions) {
         if(_loading){
           loaderSpinner = <span className="spinner" /> 
         }
-
 
         function renderWebglError(){
           return (

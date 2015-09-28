@@ -12,10 +12,10 @@ export function mergeData(currentData,inputs){
   return Object.assign({}, currentData,inputs)
 }
 
-export function makeModel(updateFns,actions,defaults){
+export function makeModel(updateFns, actions, defaults){
   let mods$ =  makeModifications(actions,updateFns)
 
-  let source$ =  Rx.Observable.just( Immutable(defaults) )
+  let source$ =  Rx.Observable.just( defaults )//Immutable(defaults) )
 
   return mods$
     .merge(source$)
@@ -46,10 +46,10 @@ export function makeModifications(actions, updateFns){
     let mod$   = op
       .map((input) => ({state,history}) => {
 
-      history = logHistory(state, history)
+      history = {}//logHistory(state, history)
       state   = modFn(state, input)//call the adapted function
 
-      return Immutable({state,history})
+      return {state,history}//Immutable({state,history})
     })
 
     //console.log("op",op,"opName",opName,"modFn",modFn)
@@ -58,7 +58,7 @@ export function makeModifications(actions, updateFns){
     }
 
     //how to make this better? 
-    if(opName==="undo"){
+    /*if(opName==="undo"){
       return actions.undo$
         .map((toggleInfo) => ({state,history}) => {
           console.log("Undoing")
@@ -85,7 +85,8 @@ export function makeModifications(actions, updateFns){
 
           return Immutable({state:nState,history})
         })
-    }
+    }*/
+
   })
   .filter(e=>e!==undefined)
 
@@ -119,7 +120,7 @@ export function makeModifications(actions, updateFns){
       return Immutable({state:nState,history})
     })*/
 
-  return Rx.Observable.merge(
+  return merge(
     mods$
   )
 }

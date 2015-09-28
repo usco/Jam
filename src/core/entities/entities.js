@@ -82,7 +82,6 @@ let combo = Rx.Observable.combineLatest(
       ,bounds}
   })
 
-
 ///helper functions
 function reduceToIuidBasedHash(instances){
   return instances.reduce(function(prev,cur){
@@ -90,7 +89,6 @@ function reduceToIuidBasedHash(instances){
       return prev
     },{})
 }
-
 
 /*add a new entity instance*/
 function addInstances(state, {input,settings}){
