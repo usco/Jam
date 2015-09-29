@@ -17,10 +17,10 @@ export function toArray(data){
   return data
 }
 
+/* JSON parse that always returns an object*/
 export function safeJSONParse(str){
   return JSON.parse(str) || {} //from cycle.js
 }
-
 
 //file utils ??
 export function getExtension(fname){

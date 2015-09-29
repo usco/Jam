@@ -73,35 +73,42 @@ function view({DOM,props$}){
 
 
 /*
-@param dndSources$: observable of drag and drops
-@params urlSources: observable of url sources
+extract design source streams 
+
+@param rawSources$: hash of observables/drivers
 */
-export function extractDesignSources ( dndSources$, urlSources ){
+export function extractDesignSources ( rawSources ){
   
+  const {dnd$, addressbar} = rawSources
+
   //FIXME these are technically untrue, but still should work
-  let dndDesignUris$ = dndSources$
+  let dndDesignUris$ = dnd$
     .filter(e=> (e.type === "url" || e.type==="text") )
     .pluck("data")
     .flatMap(Observable.fromArray)
     //.filter(url => validMeshExtension(url) )
 
   let designSources$ = merge(
-    urlSources.designUri$,
-    dndDesignUris$
+    addressbar.get("designUrl")
+    ,dndDesignUris$
   )
 
-  return {meshSources$, designSources$}
+  return designSources$
 }
 
-
-function extractMeshSources(rawSources, extensions){
-  let _extensions = extensions || {
+/*
+extract mesh source streams 
+@param rawSources: hash of observables/drivers
+@param extensions: hash of mesh extensions 
+*/
+function extractMeshSources( rawSources, extensions ){
+  extensions = extensions || {
     meshes : ["stl","amf","obj","ctm","ply"]
   }
   const {dnd$, postMessages$, addressbar} = rawSources
 
   //only load meshes for resources that are ...mesh files
-  const validateMeshExtension = validateExtension.bind(null,_extensions.meshes)
+  const validateMeshExtension = validateExtension.bind(null,extensions.meshes)
 
   //drag & drop sources
   let dndMeshFiles$  = dnd$.filter(e=>e.type ==="file").pluck("data").flatMap(fromArray)
@@ -124,6 +131,20 @@ function extractMeshSources(rawSources, extensions){
   return meshSources$
 }
 
+/*
+extract source source streams (openscad, openjscad , freecad, etc)
+@param rawSources: hash of observables/drivers
+@param extensions: hash of mesh extensions 
+*/
+function extractSourceSources( rawSources, extensions){
+
+  extensions = extensions || {
+    meshes : ["scad","jscad","coffee"]
+  }
+  const {dnd$, postMessages$, addressbar} = rawSources
+
+}
+
 
 export function main(drivers) {
   let DOM      = drivers.DOM
@@ -142,6 +163,8 @@ export function main(drivers) {
 
   //Sources of settings
   localStorage.get("jam!-settings").subscribe(e=>console.log("localStorage",e))
+  //let appMode    = addressbar.get("appMode").map(d=>d.pop())
+
 
   const meshSources$ = extractMeshSources({dnd$, postMessages$, addressbar})
   meshSources$.subscribe(e=>console.log("mesh",e))
