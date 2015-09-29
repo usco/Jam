@@ -12,12 +12,10 @@ function isOriginValid(origins,event){
 }
 
 
-
-export default function postMessageDriver(outgoing$){
+export function postMessageDriver(outgoing$){
   if(outgoing$){
     outgoing$.subscribe(sendMessage)
   }
-
 
   return fromEvent(window,'message').pluck("data")//.filter( isOriginValid.bind(null,validOrigins) )
 }

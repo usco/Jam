@@ -29,6 +29,7 @@
   "dependencies": {
     "@cycle/core": "^3.1.0",
     "@cycle/dom": "^5.3.0",
+    "addressbar": "^0.2.3",
     "babel-runtime": "^5.8.9",
     "classnames": "^1.2.0",
     "cycle-react": "^0.27.0",

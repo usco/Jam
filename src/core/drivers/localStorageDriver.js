@@ -1,14 +1,30 @@
 import Rx from 'rx'
 let Observable= Rx.Observable
 let fromEvent = Observable.fromEvent
+let just      = Observable.just
 
+import {safeJSONParse} from '../../utils/utils'
 
-
-
-export default function localStorageDriver(outgoing$){
-  if(outgoing$){
-    outgoing$.subscribe(sendMessage)
+export function localStorageDriver(outgoing$){
+  function getItem(item){
+    return just( localStorage.getItem(item) ).map(safeJSONParse)
   }
 
-  return null
+  function setItem(key, value){
+    return localStorage.setItem(key,item)
+  }
+
+  function remove(item){
+    localStorage.removeItem(item)
+  }
+
+  if(outgoing$){
+    outgoing$.subscribe(setValue)
+  } 
+
+  return {
+    get: getItem
+    ,set: setItem
+    ,remove: remove
+  }
 }
