@@ -17,5 +17,12 @@ export function toArray(data){
   return data
 }
 
+export function safeJSONParse(str){
+  return JSON.parse(str) || {} //from cycle.js
+}
 
 
+//file utils ??
+export function getExtension(fname){
+  return fname.substr((~-fname.lastIndexOf(".") >>> 0) + 2).toLowerCase()
+}

@@ -11,11 +11,6 @@ export function flipValue__(newValue, oldValue){
   return outValue 
 }
 
-//file utils ??
-
-export function getExtension(fname){
-  return fname.substr((~-fname.lastIndexOf(".") >>> 0) + 2).toLowerCase()
-}
 
 /////
 
