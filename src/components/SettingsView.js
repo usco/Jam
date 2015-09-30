@@ -7,12 +7,8 @@ import Class from "classnames"
 let fromEvent = Rx.Observable.fromEvent
 import {combineLatestObj} from '../utils/obsUtils'
 
-//fyi for now, we hardcode some of the ui 
-function SettingsView({DOM, props$}, name = '') {
 
-  let settings$ = props$.pluck('settings')
-  let schema$   = props$.pluck('schema').startWith({})
-
+function intent(DOM){
   let toggled$  = DOM.select(".toggler").events("click")
     .map(true)
     .scan((acc,val)=>!acc)
@@ -28,8 +24,18 @@ function SettingsView({DOM, props$}, name = '') {
 
   toggled$ = toggled$.merge( outsideTaps$ )
 
+  return {toggled$}
+}
+
+//fyi for now, we hardcode some of the ui 
+function SettingsView({DOM, props$}, name = '') {
+
+  let settings$ = props$.pluck('settings')
+  let schema$   = props$.pluck('schema').startWith({})
+
+  let {toggled$} = intent(DOM)  
+
   let vtree$ = combineLatestObj({settings$,toggled$})
-    //.skip(2)
     .map( function({settings , toggled}){
       let fields = undefined
       let showGrid = settings.grid.show
