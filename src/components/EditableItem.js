@@ -1,6 +1,8 @@
-import Cycle from 'cycle-react'
-let React = Cycle.React
-let {Rx} = Cycle
+/** @jsx hJSX */
+import Cycle from '@cycle/core'
+import {Rx} from '@cycle/core'
+import {hJSX} from '@cycle/dom'
+
 import Classes from 'classnames'
 
 import {trim} from '../utils/utils'
@@ -8,32 +10,30 @@ import {preventDefault,isTextNotEmpty,formatData,exists} from '../utils/obsUtils
 
 
 function EditableItem(interactions, props) {
-  let multiline$   = props.get('multiline').filter(exists).startWith(false)
-  let placeholder$ = props.get('placeholder').startWith("")
-  let editable$    = props.get('editable').filter(exists).startWith(true)
-  let data$        = props.get('data').startWith("")
+  let multiline$   = props$.map('multiline').filter(exists).startWith(false)
+  let placeholder$ = props$.map('placeholder').startWith("")
+  let editable$    = props$.map('editable').filter(exists).startWith(true)
+  let data$        = props$.map('data').startWith("")
 
-  let keydowns$ = interactions.subject('keydown')//.get('.textInput','keydown')
-  let keyups$   = interactions.subject('keyup') //.get('.textInput','keyups')
+  let keydowns$ = DOM.select('.textInput').events('keydown')
+  let keyups$   = DOM.select('.textInput').events('keyup')
 
-  let valueChange$ = interactions.subject('valueChange')
-  //let changes$  = interactions.subject('valueChange').map(e=>e.target).map(eventer("changes$"))
-  //changes$.subscribe(data=>console.log("CHANGES",data))
+  let valueChange$ = DOM.select('valueChange')
 
   let editing$     = Rx.Observable.merge(
-    interactions.subject('editing').map(true),//interactions.get('.textInput','click')
-    interactions.subject('blur').map(false),//interactions.get('.textInput','blur')
+    DOM.select('editing').map(true),//interactions.get('.textInput','click')
+    DOM.select('blur').map(false),//interactions.get('.textInput','blur')
     keydowns$.filter(e=>!e.shiftKey).map(e => e.keyCode).filter(k => k ===13).map(false), //if we press enter (not shift+enter), stop editing
     keydowns$.map(e => e.keyCode).filter(k => k ===27).map(false) //if we press exit, stop editing
   ).startWith(false)
 
   //just a small helper
   function eventer(eventName, eventContent){
-    return interactions.subject(eventName).onEvent //(eventContent)
+    return DOM.select(eventName).onEvent //(eventContent)
   }
 
   //FIXME: HAAAACK!
-  let changeHandler$ = props.get('changeHandler').startWith(undefined)
+  let changeHandler$ = props$.map('changeHandler').startWith(undefined)
   valueChange$
     .withLatestFrom(changeHandler$ ,function(e,changeHandler){
       if(changeHandler) changeHandler(e)
@@ -103,12 +103,11 @@ function EditableItem(interactions, props) {
       })
 
   return {
-    view: vtree$,
+    DOM: vtree$,
     events:{
       valueChange$
     }
   }
 }
 
-EditableItem = Cycle.component('EditableItem',EditableItem)
 export default EditableItem
