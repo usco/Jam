@@ -120,7 +120,7 @@ function extractMeshSources( rawSources, extensions ){
   let addressbarMeshUris$ = addressbar.get("modelUrl")
 
   //sources of meshes
-  //meshSources is either url or file (direct data, passed by drag & drop etc)
+  //meshSources are either urls or files (direct data, passed by drag & drop etc)
   const meshSources$ = merge(
     dndMeshFiles$
     ,dndMeshUris$
@@ -143,20 +143,42 @@ function extractSourceSources( rawSources, extensions){
   }
   const {dnd$, postMessages$, addressbar} = rawSources
 
+
+  //only load meshes for resources that are ...mesh files
+  const validateSourceExtension = validateExtension.bind(null,extensions.meshes)
+
+  //drag & drop sources
+  let dndSourceFiles$  = dnd$.filter(e=>e.type ==="file").pluck("data").flatMap(fromArray)
+    .filter(file => validateSourceExtension(file.name) )
+
+  let dndSourceUris$    = dnd$.filter(e=> (e.type === "url") ).pluck("data").flatMap(fromArray)
+    .filter(url => validateSourceExtension(url) )
+
+  let addressbarSourceUris$ = addressbar.get("sourceUrl")
+
+  //sources of meshes
+  //meshSources are either urls or files (direct data, passed by drag & drop etc)
+  const soureSources$ = merge(
+    dndSourceFiles$
+    ,dndSourceUris$
+    ,postMessages$.filter(hasModelUrl).pluck("sourceUrl") //url sent by postMessage
+    ,addressbarSourceUris$
+  )
+
+  return soureSources$
 }
 
 
 export function main(drivers) {
   let DOM      = drivers.DOM
+  let localStorage = drivers.localStorage
+  let addressbar   = drivers.addressbar
+  let postMessage  = drivers.postMessage
+  //const {DOM,localStorage,addressbar} = drivers
 
   let dragOvers$  = DOM.select("#root").events("dragover")
   let drops$      = DOM.select("#root").events("drop")  
   let dnd$        = observableDragAndDrop(dragOvers$, drops$) 
-
-  //other drivers
-  let postMessages$ = postMessageDriver( )  
-  let localStorage = localStorageDriver( )
-  let addressbar   = addressbarDriver( )
 
   //console.log("DOM",DOM,"localStorage",localStorage)
   //addressbar.get("modelUrl").subscribe(e=>console.log("addressbar",e))
@@ -165,16 +187,28 @@ export function main(drivers) {
   localStorage.get("jam!-settings").subscribe(e=>console.log("localStorage",e))
   //let appMode    = addressbar.get("appMode").map(d=>d.pop())
 
-
+  let postMessages$ = postMessage
   const meshSources$ = extractMeshSources({dnd$, postMessages$, addressbar})
+  const srcSources$  = extractSourceSources({dnd$, postMessages$, addressbar})
+
   meshSources$.subscribe(e=>console.log("mesh",e))
 
 
   let model$ = model(intent(DOM))
   let v = view({DOM})
 
+
+  //output to localStorage
+  //in our case, settings ?
+  const localStorage$ = Rx.Observable.just([
+    {"foo": 980},
+    {bar: "value2"}
+  ])  
+
+  //return anything you want to output to drivers
   return {
       DOM: v
+      ,localStorage:localStorage$
   }
 }
 

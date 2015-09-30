@@ -8,11 +8,22 @@ import {makeDOMDriver, hJSX} from '@cycle/dom'
 
 import {main} from './App3'
 
+import {postMessageDriver}  from './core/drivers/postMessageDriver'
+import {localStorageDriver} from './core/drivers/localStorageDriver'
+import {addressbarDriver} from './core/drivers/addressbarDriver'
+
 //////////setup drivers
 let domDriver      = makeDOMDriver('#root')
+//other drivers
+let postMessage = postMessageDriver  
+let localStorage = localStorageDriver
+let addressbar   = addressbarDriver
 
 let drivers = {
    DOM: domDriver
+   ,localStorage
+   ,postMessage
+   ,addressbar
 }
 
 Cycle.run(main, drivers)

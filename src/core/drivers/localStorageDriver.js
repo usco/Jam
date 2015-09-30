@@ -11,15 +11,26 @@ export function localStorageDriver(outgoing$){
   }
 
   function setItem(key, value){
-    return localStorage.setItem(key,item)
+    return localStorage.setItem(key,value)
   }
 
   function remove(item){
     localStorage.removeItem(item)
   }
 
+  function formatOutput(output){
+    output.map(function(item){
+      Object.keys(item).map(function(key){
+        setItem(key,item[key])
+      })
+    })
+  }
+
   if(outgoing$){
-    outgoing$.subscribe(setValue)
+    //outgoing$.subscribe(setItem)
+    outgoing$
+      .distinctUntilChanged()
+      .subscribe(formatOutput)
   } 
 
   return {
