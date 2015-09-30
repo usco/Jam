@@ -54,23 +54,18 @@ function renderSettingsToggler(){
 }
 
 
-function view({DOM,props$}){
-  const settingProps$ = just({
-    settings:{
-      grid:{show:true}
-      ,annotations:{show:true}
-      ,camera:{autoRotate:true}
-    }
+function view(state$, DOM, name){
+  const settingProps$ = state$//.map(s=>s.settings)
+  /*just({
     ,schema : {
       showGrid:{type:"checkbox",path:"grid.show"}
       ,autoRotate:{type:"checkbox",path:"camera.autoRotate"}
       //,annotations:{type:"checkbox",path:"grid.show"}
     }
-  })
+  })*/
 
-  let settingsUi = SettingsView({DOM, props$:settingProps$}, "settingsView")
+  let settingsUi = SettingsView({DOM, props$:settingProps$})
   let settings$ = settingsUi.DOM
-
 
   let fsTogglerUi = FullScreenToggler({DOM})
   let fsToggler$ = fsTogglerUi.DOM
@@ -98,7 +93,6 @@ export function extractDesignSources ( rawSources ){
     .filter(e=> (e.type === "url" || e.type==="text") )
     .pluck("data")
     .flatMap(Observable.fromArray)
-    //.filter(url => validMeshExtension(url) )
 
   let designSources$ = merge(
     addressbar.get("designUrl")
@@ -192,13 +186,9 @@ export function main(drivers) {
   let drops$      = DOM.select("#root").events("drop")  
   let dnd$        = observableDragAndDrop(dragOvers$, drops$) 
 
-  //console.log("DOM",DOM,"localStorage",localStorage)
-  //addressbar.get("modelUrl").subscribe(e=>console.log("addressbar",e))
-
   //Sources of settings
   const settingsSources$ = localStorage.get("jam!-settings")
   const settings$ = settings( settingsIntent(drivers), settingsSources$ ) 
-
 
   let postMessages$ = postMessage
   const meshSources$ = extractMeshSources({dnd$, postMessages$, addressbar})
@@ -207,7 +197,9 @@ export function main(drivers) {
   meshSources$.subscribe(e=>console.log("mesh",e))
 
   let model$ = model(intent(DOM))
-  let v = view({DOM})
+
+  let state$ = combineLatestObj({settings$})
+  let view$ = view(state$, DOM)
 
   //output to localStorage
   //in our case, settings
@@ -216,7 +208,7 @@ export function main(drivers) {
 
   //return anything you want to output to drivers
   return {
-      DOM: v
+      DOM: view$
       ,localStorage:localStorage$
   }
 }

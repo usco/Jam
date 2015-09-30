@@ -11,7 +11,7 @@ import {combineLatestObj} from '../utils/obsUtils'
 //fyi for now, we hardcode some of the ui 
 function SettingsView({DOM, props$}, name = '') {
 
-  let settings$ = props$.pluck('settings').startWith({})
+  let settings$ = props$.pluck('settings')
   let schema$   = props$.pluck('schema').startWith({})
 
   let toggled$  = DOM.select(".toggler").events("click")
@@ -30,6 +30,7 @@ function SettingsView({DOM, props$}, name = '') {
   toggled$ = toggled$.merge( outsideTaps$ )
 
   let vtree$ = combineLatestObj({settings$,toggled$})
+    //.skip(2)
     .map( function({settings , toggled}){
       let fields = undefined
       let showGrid = settings.grid.show
