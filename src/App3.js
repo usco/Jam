@@ -22,6 +22,10 @@ import {localStorageDriver} from './core/drivers/localStorageDriver'
 import {addressbarDriver} from './core/drivers/addressbarDriver'
 
 import {getExtension} from './utils/utils'
+import {combineLatestObj} from './utils/obsUtils'
+
+
+import FullScreenToggler from './components/FullScreenToggler'
 
 
 function hasModelUrl(data){
@@ -46,6 +50,10 @@ function model(){
 
 
 
+function renderSettingsToggler(){
+}
+
+
 function view({DOM,props$}){
   const settingProps$ = just({
     settings:{
@@ -61,20 +69,24 @@ function view({DOM,props$}){
   })
 
   let settingsUi = SettingsView({DOM, props$:settingProps$}, "settingsView")
-  let settingsView$ = settingsUi.DOM
+  let settings$ = settingsUi.DOM
 
-  return  Rx.Observable.combineLatest(settingsView$,function(settingsView){
-    return <div>
-      <span> sttuff </span>
-      {settingsView}
-    </div>
-  })
+
+  let fsTogglerUi = FullScreenToggler({DOM})
+  let fsToggler$ = fsTogglerUi.DOM
+
+  return combineLatestObj({settings$,fsToggler$})
+    .map(function({settings,fsToggler}){
+      return <div>
+        {settings}
+        {fsToggler}
+      </div>
+    })
 }
 
 
 /*
 extract design source streams 
-
 @param rawSources$: hash of observables/drivers
 */
 export function extractDesignSources ( rawSources ){
