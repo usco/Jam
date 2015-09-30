@@ -7,8 +7,8 @@ import logger from '../../utils/log'
 let log = logger("comments")
 log.setLevel("info")
 
-import {generateUUID} from 'usco-kernel2/src/utils'
-import {toArray} from '../../utils/utils'
+import {toArray, generateUUID} from '../../utils/utils'
+import {mergeData} from '../../utils/modelUtils'
 
 //"comments" system
 const defaults = {
@@ -20,8 +20,34 @@ const defaults = {
 
   }
 }
-
 //comments[key]= "some quite long text, with markdown support "
+
+function addComments(state, {input,settings}){
+
+  log.info("adding comments", input)
+
+  let {data,bykey} = state
+  let newComments = toArray(input)
+  let updatedData = mergeData({},state)
+
+  newComments.map(function(comment){
+    let {iuid,typeUid} = comment.target
+    let text = comment.text 
+
+    let key = [iuid,typeUid]
+    
+    //FIXME: how to deal with authors ? 
+    let entry = {text, author:"jon doe", key}
+    if(!updatedData.bykey[key]){
+      updatedData.bykey[key] = [] //we need LISTS of comments
+    }
+
+    updatedData.bykey[key].push( entry )
+    updatedData.data.push( entry )
+  })
+  return updatedData
+
+}
 
 function makeModification(intent){
   /*add comments*/
@@ -30,37 +56,13 @@ function makeModification(intent){
       return {newData, settings}
     })
     .map(({newData,settings}) => (existingData) => {
-      log.info("adding comments", newData)
-
-      let {data,bykey} = existingData
-      let newComments = toArray(newData)
-      let updatedData = Object.assign({},existingData)
-
-      newComments.map(function(comment){
-        let {iuid,typeUid} = comment.target
-        let text = comment.text 
-
-        let key = [iuid,typeUid] /*{iUid:"xx",tUid:"xx", toString(){
-          iUid+tUid
-        }}*/
-        
-        //FIXME: how to deal with authors ? 
-
-        let entry = {text, author:"jon doe", key}
-        if(!updatedData.bykey[key])
-          updatedData.bykey[key] = [] //we need LISTS of comments
-
-        updatedData.bykey[key].push( entry )
-        updatedData.data.push( entry )
-      })
-      return updatedData
+      addComments(existingData,{input:newData,settings})
     })
   
   return merge(
     addComments$
   )
 }
-
 
 
 function comments(intent, source) {
