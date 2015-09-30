@@ -17,15 +17,16 @@ import settings from './core/settings/settings'
 import {settingsIntent} from './core/settings/settingsIntent'
 import SettingsView from './components/SettingsView'
 
-import {postMessageDriver}  from './core/drivers/postMessageDriver'
-import {localStorageDriver} from './core/drivers/localStorageDriver'
-import {addressbarDriver} from './core/drivers/addressbarDriver'
+import FullScreenToggler from './components/FullScreenToggler'
+
+import comments from './core/comments/comments'
+import {commentsIntents} from './core/comments/intents'
+
 
 import {getExtension} from './utils/utils'
 import {combineLatestObj} from './utils/obsUtils'
 
 
-import FullScreenToggler from './components/FullScreenToggler'
 
 
 function hasModelUrl(data){
@@ -190,14 +191,17 @@ export function main(drivers) {
   const settingsSources$ = localStorage.get("jam!-settings")
   const settings$ = settings( settingsIntent(drivers), settingsSources$ ) 
 
+  //data sources for our main model
   let postMessages$ = postMessage
   const meshSources$ = extractMeshSources({dnd$, postMessages$, addressbar})
   const srcSources$  = extractSourceSources({dnd$, postMessages$, addressbar})
 
-  meshSources$.subscribe(e=>console.log("mesh",e))
+  //comments system
+  const comments$ = comments(commentsIntents(DOM,settings$))
+
+  //meshSources$.subscribe(e=>console.log("mesh",e))
 
   let model$ = model(intent(DOM))
-
   let state$ = combineLatestObj({settings$})
   let view$ = view(state$, DOM)
 
