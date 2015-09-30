@@ -11,19 +11,23 @@ import {main} from './App3'
 import {postMessageDriver}  from './core/drivers/postMessageDriver'
 import {localStorageDriver} from './core/drivers/localStorageDriver'
 import {addressbarDriver} from './core/drivers/addressbarDriver'
+import browserCapsDriver from './core/drivers/browserCapabilities'
+
 
 //////////setup drivers
 let domDriver      = makeDOMDriver('#root')
 //other drivers
-let postMessage = postMessageDriver  
+let postMessage  = postMessageDriver  
 let localStorage = localStorageDriver
 let addressbar   = addressbarDriver
+let browserCaps  = browserCapsDriver
 
 let drivers = {
    DOM: domDriver
    ,localStorage
    ,postMessage
    ,addressbar
+   ,browserCaps
 }
 
 Cycle.run(main, drivers)
