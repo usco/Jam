@@ -2,6 +2,8 @@ import {Rx} from '@cycle/core'
 let merge = Rx.Observable.merge
 let fromArray = Rx.Observable.fromArray
 
+import {getExtension} from '../../utils/utils'
+
 
 function hasModelUrl(data){
   if(data && data.hasOwnProperty("modelUrl")) return true
