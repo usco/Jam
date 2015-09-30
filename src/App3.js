@@ -22,6 +22,8 @@ import FullScreenToggler from './components/FullScreenToggler'
 import comments from './core/comments/comments'
 import {commentsIntents} from './core/comments/intents'
 
+import BomView from './components/Bom/BomView'
+
 
 import {getExtension} from './utils/utils'
 import {combineLatestObj} from './utils/obsUtils'
@@ -43,6 +45,19 @@ function model(){
 function renderSettingsToggler(){
 }
 
+function prepForRender(params)
+{
+
+  const DOMS = Object.keys(params)
+    .reduce(function(prev,cur){
+      let key = cur.replace("Ui","")
+      prev[key] = params[cur].DOM
+      return prev
+    },{})
+  console.log("DOMS",DOMS)
+  return combineLatestObj(DOMS)
+}
+
 
 function view(state$, DOM, name){
   const settingProps$ = state$//.map(s=>s.settings)
@@ -55,21 +70,28 @@ function view(state$, DOM, name){
   })*/
 
   let settingsUi = SettingsView({DOM, props$:settingProps$})
-  let settings$ = settingsUi.DOM
 
   let fsTogglerUi = FullScreenToggler({DOM})
-  let fsToggler$ = fsTogglerUi.DOM
 
-  return combineLatestObj({settings$,fsToggler$})
-    .map(function({settings,fsToggler}){
+
+  //for bom
+  let fieldNames = ["name","qty","unit","version"]
+  let sortableFields = ["id","name","qty","unit"]
+  let entries = [{id:0,name:"foo",qty:2,version:"0.0.1",unit:"QA"}]
+  //let selectedEntries = selections.bomIds
+  
+  let bomProps$ = just({fieldNames,sortableFields,entries})
+  let bomUi     = BomView({DOM,props$:bomProps$})
+
+  return prepForRender({fsTogglerUi,settingsUi,bomUi})
+    .map(function({settings,fsToggler,bom}){
       return <div>
         {settings}
         {fsToggler}
+        {bom}
       </div>
     })
 }
-
-
 
 
 
@@ -96,7 +118,7 @@ export function main(drivers) {
   //comments system
   const comments$ = comments(commentsIntents(DOM,settings$))
 
-  //meshSources$.subscribe(e=>console.log("mesh",e))
+  meshSources$.subscribe(e=>console.log("mesh",e))
 
   let model$ = model(intent(DOM))
   let state$ = combineLatestObj({settings$})
