@@ -1,4 +1,4 @@
-import Rx from 'rx'
+import {Rx} from '@cycle/core'
 let fromEvent = Rx.Observable.fromEvent
 let Observable = Rx.Observable
 let merge = Rx.Observable.merge
@@ -41,9 +41,23 @@ function applyDefaults(data$){
   })
 }
 
+    /*let output = {
+      grid:{show:input.showGrid}
+      ,annotations:{show:input.showAnnot}
+      ,camera:{ autoRotate:input.autoRotate}
+
+      ,mode:input.appMode
+    }*/
+
+
+function updateSettings(currentData,nData){
+  console.log("currentData",currentData,nData)
+  let output = Object.assign({},currentData,nData)
+  return output
+}
+
 function modification(actions){  
   //actions.changeSetting$.subscribe(e=>console.log("changeSetting",e))
-
   function remapStructure(input){
 
     if(input.showGrid !==undefined ) return {grid:{show:input.showGrid}}
@@ -52,52 +66,32 @@ function modification(actions){
 
     if(input.appMode !==undefined ) return {mode:input.appMode}
 
-    /*let output = {
-      grid:{show:input.showGrid}
-      ,annotations:{show:input.showAnnot}
-      ,camera:{ autoRotate:input.autoRotate}
-
-      ,mode:input.appMode
-    }*/
     return input
   }
 
-  let changeSetting$ = actions.changeSetting$
+  let _changeSetting$ = actions.changeSetting$
     .map(remapStructure)
-    .map((settingData) => (currentData) => {
-     
-      //console.log("settingData",settingData)
-      let output = Object.assign({},currentData,settingData)
-
-      return output
-      //return currentData
+    .map((newData) => (existingData) => {
+      return updateSettings(existingData, newData)
     })
 
-  return Observable.merge(
-    changeSetting$
-    ) 
+  return merge(
+    _changeSetting$
+  )
 }
-
 
 
 function settings(intent, source) {
   let source$ = source || Observable.just(defaults)
   source$ = applyDefaults(source)
 
-  let modifications$ = modification(intent)//modification(intent)
+  let modifications$ = modification(intent)
 
   return modifications$
     .merge(source$)
-    //.scan((currentData, modFn) => modFn(currentData))//combine existing data with new one
-    .scan(function(currentData, modFn){
-      //console.log("currentData",currentData,"modFn",modFn)
-      //FIXME:awfull hack for sometimes inverted data / function ?? is it due to scan()  api changes?
-      if( typeof modFn === "function" ) return modFn(currentData)
-      if( typeof currentData === "function" ) return currentData(modFn)
-
-    })
+    .scan((entityData, modFn) => modFn(entityData))//combine existing data with new one
+    .distinctUntilChanged()
     .shareReplay(1)
-
 }
 
 export default settings

@@ -3,7 +3,8 @@ let Observable= Rx.Observable
 let fromEvent = Observable.fromEvent
 let just      = Observable.just
 
-import {safeJSONParse} from '../../utils/utils'
+import {safeJSONParse, toArray} from '../../utils/utils'
+
 
 export function localStorageDriver(outgoing$){
   function getItem(item){
@@ -19,10 +20,12 @@ export function localStorageDriver(outgoing$){
   }
 
   function formatOutput(output){
-    output.map(function(item){
+    toArray(output).map(function(item){
       Object.keys(item).map(function(key){
         setItem(key,item[key])
+        //console.log(item,key)
       })
+     
     })
   }
 

@@ -13,6 +13,8 @@ let fromArray = Rx.Observable.fromArray
 
 import {observableDragAndDrop} from './interactions/dragAndDrop'
 
+import settings from './core/settings/settings'
+import {settingsIntent} from './core/settings/settingsIntent'
 import SettingsView from './components/SettingsView'
 
 import {postMessageDriver}  from './core/drivers/postMessageDriver'
@@ -68,8 +70,6 @@ function view({DOM,props$}){
     </div>
   })
 }
-
-
 
 
 /*
@@ -171,9 +171,9 @@ function extractSourceSources( rawSources, extensions){
 
 export function main(drivers) {
   let DOM      = drivers.DOM
-  let localStorage = drivers.localStorage
-  let addressbar   = drivers.addressbar
-  let postMessage  = drivers.postMessage
+  const localStorage = drivers.localStorage
+  const addressbar   = drivers.addressbar
+  const postMessage  = drivers.postMessage
   //const {DOM,localStorage,addressbar} = drivers
 
   let dragOvers$  = DOM.select("#root").events("dragover")
@@ -184,8 +184,9 @@ export function main(drivers) {
   //addressbar.get("modelUrl").subscribe(e=>console.log("addressbar",e))
 
   //Sources of settings
-  localStorage.get("jam!-settings").subscribe(e=>console.log("localStorage",e))
-  //let appMode    = addressbar.get("appMode").map(d=>d.pop())
+  const settingsSources$ = localStorage.get("jam!-settings")
+  const settings$ = settings( settingsIntent(drivers), settingsSources$ ) 
+
 
   let postMessages$ = postMessage
   const meshSources$ = extractMeshSources({dnd$, postMessages$, addressbar})
@@ -193,17 +194,13 @@ export function main(drivers) {
 
   meshSources$.subscribe(e=>console.log("mesh",e))
 
-
   let model$ = model(intent(DOM))
   let v = view({DOM})
 
-
   //output to localStorage
-  //in our case, settings ?
-  const localStorage$ = Rx.Observable.just([
-    {"foo": 980},
-    {bar: "value2"}
-  ])  
+  //in our case, settings
+  const localStorage$ = settings$
+    .map( s=>({"jam!-settings":JSON.stringify(s)}) )
 
   //return anything you want to output to drivers
   return {
