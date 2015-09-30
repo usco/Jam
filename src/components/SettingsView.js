@@ -1,8 +1,7 @@
 /** @jsx hJSX */
 import Cycle from '@cycle/core'
 import {Rx} from '@cycle/core'
-
-import {makeDOMDriver, hJSX} from '@cycle/dom'
+import {hJSX} from '@cycle/dom'
 import Class from "classnames"
 
 let fromEvent = Rx.Observable.fromEvent
