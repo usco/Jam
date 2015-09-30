@@ -15,18 +15,27 @@ export function settingsIntent(drivers){
     return event.target.checked
   }
 
+  //camera etc 
   let showGrid$   = DOM.select(".settingsView .showGrid").events("change").map(checked)
   let showAnnot$  = DOM.select(".settingsView .showAnnot").events("change").map(checked)
   let autoRotate$ = DOM.select(".settingsView .autoRotate").events("change").map(checked)
 
-  let appMode$    =  addressbar.get("appMode").map(d=>d.pop()) //urlSources.appMode$//Rx.Observable.just("editor")//what mode is the app in ? ("editor" or "viewer" only for now)
+  //app state/settings
+  let appMode$      = addressbar.get("appMode").map(d=>d.pop())//what mode is the app in ? ("editor" or "viewer" only for now)
+  let webglEnabled$ = drivers.browserCaps.webglEnabled
+  let fullScreen$   = DOM.select(".fullScreenToggler").events("click")
 
+  //selection
+  let autoSelectNewEntities$ = Rx.Observable.just(true) //TODO: make settable
 
-  //let keyUps$ = DOM.select.subject("keyup")
-  //  .filter(isValidElementEvent)// stop for input, select, and textarea etc 
+  //tools
+  let repeatTool$            = Rx.Observable.just(false) // does a tool gets stopped after a single use or not
+  let activeTool$ =Rx.Observable.just(undefined)
 
-  //for annotations, should this be here ?
-  //heavy code smell  too
+  let keyUps$ = DOM.select("#root").events("keyup")
+    .filter(isValidElementEvent)// stop for input, select, and textarea etc 
+
+  //heavy code smell / should this be here ?
   /*let contextMenuActions$ = DOM.select(".contextMenu", "actionSelected$").pluck("detail")
   let activeTool$       = Rx.Observable.merge(
     contextMenuActions$.filter(e=>e.action === "addNote").pluck("action"),
@@ -46,14 +55,6 @@ export function settingsIntent(drivers){
   )
   .merge( clearActiveTool$.map(undefined) )
   */
-  
-  //let webglEnabled$          = Rx.Observable.just(true)
-  //let autoSelectNewEntities$ = Rx.Observable.just(true) //TODO: make settable
-  //let repeatTool$            = Rx.Observable.just(false) // does a tool gets stopped after a single use or not
-
-  //return {showGrid$,showAnnot$,autoRotate$,activeTool$,appMode$}
-
-  let activeTool$ =Rx.Observable.just(undefined)
 
   const changeSetting$ =  merge(
     showGrid$.map(e=>({showGrid:e}))
