@@ -36,8 +36,8 @@ function BomView({DOM, props$}) {
   let entryTaps$ = DOM.select(".bomEntry").events("click")
   let headerTaps$ = DOM.select(".headerCell").events("click")
 
-  entryTaps$.subscribe((data)=>console.log("oooh bomEntry",data.currentTarget))
-  headerTaps$.subscribe((data)=>console.log("headerCell",data.currentTarget.dataset.name))
+  //entryTaps$.subscribe((data)=>console.log("oooh bomEntry",data.currentTarget))
+  //headerTaps$.subscribe((data)=>console.log("headerCell", data.currentTarget.dataset.name))
 
   let fieldNames$      = props$.pluck('fieldNames').startWith([]).filter(exists)
   let entries$         = props$.pluck('entries').startWith([]).filter(exists)
@@ -53,7 +53,7 @@ function BomView({DOM, props$}) {
   //ascending, descending, neutral 
   let sortablesDirection$ = headerTaps$
     .map( e => undefined)
-    .scan(function (acc, x) { 
+    .scan(false, function (acc, x) { 
       if(!acc) return true
       return !acc
     })
@@ -70,29 +70,28 @@ function BomView({DOM, props$}) {
       }
       return output
     })
-    //.map( x => x.sort(sortBy( ) ) )
 
   let vtree$ = combineLatestObj({fieldNames$,
       entries$,
       selectedEntries$,
       sortFieldName$,
-      sortablesDirection$})
+      direction: sortablesDirection$})
       .map( function({fieldNames, entries, selectedEntries, sortFieldName, direction}){
-        
+
         let headers = fieldNames.map( function(name){
           let sortArrow = undefined
 
           if( direction !== undefined && sortFieldName === name)
           {
             if(direction){
-              sortArrow = <span className="directionArrow"> &#x25B2;</span>
+              sortArrow = <span className="directionArrow"> &#x25B2; </span>
             }else{
-              sortArrow = <span className="directionArrow"> &#x25BC;</span>
+              sortArrow = <span className="directionArrow"> &#x25BC; </span>
             }
           }
           return (
-            <th className="headerCell" data-name={name}> 
-              {name} {sortArrow} 
+            <th className="headerCell" attributes={{"data-name": name}}> 
+              {name} {sortArrow}
             </th> 
           )
         })
