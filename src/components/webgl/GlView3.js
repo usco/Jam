@@ -789,7 +789,7 @@ function GlView({DOM, props$}){
     })
 
   return {
-    view: vtree$,
+    DOM: vtree$,
     events:{
       initialized:initialized$,
 
