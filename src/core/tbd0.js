@@ -28,17 +28,22 @@ export function makeInternals(){
 
 
 export function meshResources(meshSources$, assetManager){
+  console.log("gna")
   //experimental 
   let resources$ = meshSources$
+    .flatMap(Rx.Observable.fromArray)
     .flatMap(function(dataSource){
       let resource = assetManager.load( dataSource, {keepRawData:true, parsing:{useWorker:true,useBuffers:true} } )
       return Rx.Observable.fromPromise(resource.deferred.promise)
     })
     .shareReplay(1)
 
+  resources$.subscribe(e=>console.log("resources",e))
+
   //mesh + resource data together
   let combos$ =
     resources$.map(function(resource){
+      console.log("here")
       let mesh = postProcessMesh(resource.data)
       mesh=centerMesh(mesh)
       return {mesh, resource}

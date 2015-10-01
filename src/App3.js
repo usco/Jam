@@ -82,6 +82,22 @@ function view(state$, DOM, name){
     })
 }
 
+import {makeInternals, meshResources, entityInstanceFromPartTypes} from './core/tbd0'
+
+function registerEntity(sources)
+{
+  console.log("here")
+  let meshSources$ = sources.meshSources$
+  let srcSources$ = sources.srcSources$
+
+  //TODO: get rid of this
+  let assetManager = makeInternals()
+  let meshResources$ = meshResources(meshSources$, assetManager)
+  //meshSources$.map(e=>)
+
+  meshResources$.map(e=>console.log("meshResources",e))
+  
+}
 
 export function main(drivers) {
   let DOM      = drivers.DOM
@@ -103,11 +119,11 @@ export function main(drivers) {
   const meshSources$ = extractMeshSources({dnd$, postMessages$, addressbar})
   const srcSources$  = extractSourceSources({dnd$, postMessages$, addressbar})
 
+  registerEntity({meshSources$,srcSources$})
+
   //comments system
   const comments$ = comments(commentsIntents(DOM,settings$))
   const bom$      = undefined
-
-  meshSources$.subscribe(e=>console.log("mesh",e))
 
   let model$ = model(intent(DOM))
   let state$ = combineLatestObj({settings$})
