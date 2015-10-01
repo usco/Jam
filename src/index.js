@@ -26,6 +26,8 @@ let drivers = {
    ,browserCaps
 }
 
+console.log("---READY TO START JAM!---v 0.2.3")
+
 Cycle.run(main, drivers)
 
 //for isomorphic/server side rendering
