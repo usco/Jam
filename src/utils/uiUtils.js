@@ -1,3 +1,6 @@
+import {combineLatestObj} from './obsUtils'
+
+
 export function clearCursor(element=document.body){
   element.style.cursor = 'default' 
 }
@@ -57,4 +60,18 @@ export function getOffset( el ) {
       curleft += el.x;
   }
     return { top: curtop, left: curleft, x:curleft, y:curtop }
+}
+
+/*prepare observables for rendering , by extracting the DOM object*/
+export function prepForRender(params, suffix)
+{
+  suffix = suffix || "Ui"
+
+  const DOMS = Object.keys(params)
+    .reduce(function(prev,cur){
+      let key = cur.replace(suffix,"")
+      prev[key] = params[cur].DOM
+      return prev
+    },{})
+  return combineLatestObj(DOMS)
 }
