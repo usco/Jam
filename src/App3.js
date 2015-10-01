@@ -45,16 +45,16 @@ function model(){
 function renderSettingsToggler(){
 }
 
-function prepForRender(params)
+function prepForRender(params, suffix)
 {
+  suffix = suffix || "Ui"
 
   const DOMS = Object.keys(params)
     .reduce(function(prev,cur){
-      let key = cur.replace("Ui","")
+      let key = cur.replace(suffix,"")
       prev[key] = params[cur].DOM
       return prev
     },{})
-  console.log("DOMS",DOMS)
   return combineLatestObj(DOMS)
 }
 
@@ -73,13 +73,14 @@ function view(state$, DOM, name){
 
   let fsTogglerUi = FullScreenToggler({DOM})
 
-
   //for bom
   let fieldNames = ["name","qty","unit","version"]
   let sortableFields = ["id","name","qty","unit"]
-  let entries = [{id:0,name:"foo",qty:2,version:"0.0.1",unit:"QA"}]
+  let entries = [{id:0,name:"foo",qty:2,version:"0.0.1",unit:"QA"}
+  ,{id:1,name:"bar",qty:1,version:"0.2.1",unit:"QA"}
+  ]
   //let selectedEntries = selections.bomIds
-  
+
   let bomProps$ = just({fieldNames,sortableFields,entries})
   let bomUi     = BomView({DOM,props$:bomProps$})
 
