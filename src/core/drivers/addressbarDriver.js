@@ -5,6 +5,8 @@ let just      = Observable.just
 import addressbar from 'addressbar'
 
 import {fetchUriParams}  from '../../utils/urlUtils'
+import {exists}  from '../../utils/utils'
+
 
 /*addressbar.addEventListener('change', function (event) {
   event.preventDefault()
@@ -20,7 +22,10 @@ export function addressbarDriver(outgoing$){
     .startWith(addressbar.value)
 
   function get (paramName) {
-    return address$.map(url=>fetchUriParams(url,paramName))
+    return address$
+      .map(url=>fetchUriParams(url,paramName))
+      .filter(exists)
+      .filter(a=>(a.length>0))
   }
 
   return {
