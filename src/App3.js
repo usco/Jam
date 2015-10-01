@@ -24,13 +24,15 @@ import {commentsIntents} from './core/comments/intents'
 
 import BomView from './components/Bom/BomView'
 
+import GLView from './components/webgl/GlView2'
+
 
 import {getExtension} from './utils/utils'
 import {combineLatestObj} from './utils/obsUtils'
+import {prepForRender} from './utils/uiUtils'
 
 
 import {extractDesignSources,extractMeshSources,extractSourceSources} from './core/sources/dataSources'
-
 
 
 function intent(){
@@ -38,24 +40,6 @@ function intent(){
 }
 function model(){
   return Rx.Observable.just("doo")
-}
-
-
-
-function renderSettingsToggler(){
-}
-
-function prepForRender(params, suffix)
-{
-  suffix = suffix || "Ui"
-
-  const DOMS = Object.keys(params)
-    .reduce(function(prev,cur){
-      let key = cur.replace(suffix,"")
-      prev[key] = params[cur].DOM
-      return prev
-    },{})
-  return combineLatestObj(DOMS)
 }
 
 
@@ -84,16 +68,19 @@ function view(state$, DOM, name){
   let bomProps$ = just({fieldNames,sortableFields,entries})
   let bomUi     = BomView({DOM,props$:bomProps$})
 
+  let testData$ = just(15)
+
   return prepForRender({fsTogglerUi,settingsUi,bomUi})
     .map(function({settings,fsToggler,bom}){
       return <div>
         {settings}
         {fsToggler}
         {bom}
+
+        {new GLView(testData$)}
       </div>
     })
 }
-
 
 
 export function main(drivers) {
@@ -118,6 +105,7 @@ export function main(drivers) {
 
   //comments system
   const comments$ = comments(commentsIntents(DOM,settings$))
+  const bom$      = undefined
 
   meshSources$.subscribe(e=>console.log("mesh",e))
 
