@@ -2,7 +2,7 @@ import {Rx} from '@cycle/core'
 let merge = Rx.Observable.merge
 let fromArray = Rx.Observable.fromArray
 
-import {getExtension} from '../../utils/utils'
+import {getExtension,exists,toArray} from '../../utils/utils'
 
 
 function hasModelUrl(data){
@@ -71,6 +71,7 @@ export function extractMeshSources( rawSources, extensions ){
     ,postMessages$.filter(hasModelUrl).pluck("modelUrl") //url sent by postMessage
     ,addressbarMeshUris$
   )
+    .map(toArray)
 
   return meshSources$
 }
