@@ -28,7 +28,6 @@ export function makeInternals(){
 
 
 export function meshResources(meshSources$, assetManager){
-  console.log("gna")
   //experimental 
   let resources$ = meshSources$
     .flatMap(Rx.Observable.fromArray)
@@ -38,7 +37,6 @@ export function meshResources(meshSources$, assetManager){
     })
     .shareReplay(1)
 
-  resources$.subscribe(e=>console.log("resources",e))
 
   //mesh + resource data together
   let combos$ =
@@ -91,53 +89,4 @@ export function entityInstanceFromPartTypes(partTypes$)
         }
       }
     })
-
-  //we observe changes to partTypes to add new instances
-  //note : this should only be the case if we have either
-  //draged meshed, or got meshes from urls
-  //OR we must use data from our entities "model"
-  /*partTypes$
-    .skip(1)
-    .withLatestFrom(entities$,function(partTypes, entities){
-
-      let idx = Object.keys(entities.byId).length
-      let typeUid = partTypes.latest
-      let name = partTypes.typeUidToMeshName[typeUid]+idx
-      let bbox = partTypes.typeData[typeUid].bbox
-      
-      return {name, typeUid, bbox}
-    })
-    .subscribe(
-      function(data){
-      console.log("updated mesh registry, adding instance",data)
-
-      //FIXME: hack "centerMesh" like method, as centerMesh centers a mesh that gets "discarded" in a way
-      let h = data.bbox.max[2]  - data.bbox.min[2]
-
-      let partInstance =
-      {
-          name: data.name,
-          iuid: generateUUID(),
-          typeUid: data.typeUid,
-          color: "#07a9ff",
-          pos: [
-              0,
-              0,
-              h/2
-          ],
-          rot: [
-              0,
-              0,
-              0
-          ],
-          sca: [
-              1,
-              1,
-              1
-          ],
-          bbox:data.bbox
-      }
-
-      addEntityInstances$(partInstance)
-    })*/
 }

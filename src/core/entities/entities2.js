@@ -1,6 +1,6 @@
 import {Rx} from '@cycle/core'
-import {makeModelNoHistory} from '../../utils/modelUtils'
-import {mergeData, generateUUID} from '../../utils/utils'
+import {makeModelNoHistory, mergeData} from '../../utils/modelUtils'
+import {generateUUID} from '../../utils/utils'
 import {combineLatestObj} from '../../utils/obsUtils'
 let just = Rx.Observable.just
 
@@ -21,6 +21,23 @@ let partInstance = {
 
 /////////
 //used for all
+function createComponent(defaults,state,input){
+  console.log("createComponent")
+  let inputValue =  {}
+  if(input && input.value) inputValue = input.value
+  const newAttrs = mergeData(defaults,inputValue)
+
+  //auto increment ?
+  //auto generate ?
+  let id = generateUUID()
+  if(input && input.id) id = input.id
+
+  state = mergeData({},state)
+  state[id] = newAttrs
+  //FIXME big hack, using mutability
+  return state 
+}
+
 function removeComponent(state,input){
   console.log("removeComponent")
   let {id} = input
@@ -54,37 +71,63 @@ function removeEntity(state,input){
   return state 
 }
 
+//other helpers
+function makeActionsFromApiFns(apiFns){
+
+  const actions = Object.keys(apiFns)
+    .reduce(function(prev,cur){
+      let key = cur+'$'
+      prev[key] = new Rx.Subject()
+      return prev
+    },{})
+
+   return actions
+}
+
 
 
 ////Entity Core//////
-function makeCoreSystem(name, typeUid){
+function makeCoreSystem(){
   const defaults = {}
 
-  const coreDefaults ={
-    name: name,
-    iuid: generateUUID(),
-    typeUid: typeUid,
+  //defaults for each component in this system
+  const componentDefaults ={
+    name: "entity",
+    typeUid: undefined,
     color: "#07a9ff"
   }
 
   function setColor(state, input){
+    let id  = input.id
     let color = input || state.color
     state = mergeData( state, {color})
     return state
   }
 
-  let actions = {
-    setColor$:new Rx.Subject()
-    ,removeComponent$:new Rx.Subject()
+  function setAttribs(state, input){
+    let id  = input.id
+
+    let newAttrs = input.value
+    let orig = state[id]
+
+    state = mergeData({},state)
+    //FIXME big hack, using mutability
+    state[id] = mergeData(orig,newAttrs)
+    return state
   }
-  let updateFns = {setColor,removeComponent}
+
+  let updateFns = {setColor, setAttribs
+    , createComponent: createComponent.bind(null,componentDefaults)
+    , removeComponent}
+  let actions   = makeActionsFromApiFns(updateFns)
+
   let core$ = makeModelNoHistory(defaults, updateFns, actions)
 
   return {core$,coreActions:actions}
 }
 ////Transforms//////
 
-function makeTransformsSystem(){
+export function makeTransformsSystem(){
   const defaults = {}
 
   const transformDefaults ={
@@ -141,16 +184,10 @@ function makeTransformsSystem(){
     return state
   }
 
-
-  let updateRotation$ = new Rx.Subject()
-  let updatePosition$ = new Rx.Subject()
-  let updateScale$    = new Rx.Subject()
-  let updateTransforms$ = new Rx.Subject()
-
-  let removeComponent$ = new Rx.Subject()
-
-  let actions   = { updatePosition$, updateRotation$, updateScale$, removeComponent$ }
-  let updateFns = { updateRotation,updatePosition,updateScale,removeComponent }
+  let updateFns = { updateRotation, updatePosition, updateScale, updateTransforms
+    , createComponent: createComponent.bind(null,transformDefaults)
+    , removeComponent }
+  let actions   = makeActionsFromApiFns(updateFns)
 
   let transforms$ = makeModelNoHistory(defaults, updateFns, actions)
 
@@ -230,9 +267,36 @@ function makeBomSystem(){
 }
 
 
-let {core$,coreActions}            = makeCoreSystem("apart_"+0, 0)
+let {core$,coreActions}            = makeCoreSystem()
 let {transforms$,transformActions} = makeTransformsSystem()
-let {mesh$,meshActions}            = makeMeshSystem()
+
+core$.subscribe(e=>console.log("core",e))
+transforms$.subscribe(e=>console.log("transforms",e))
+
+
+setTimeout(function() {
+  const id = generateUUID()
+  coreActions.createComponent$.onNext({id, value:{typeUid:0}})
+  transformActions.createComponent$.onNext({id, value:{typeUid:0}})
+}, 200)
+
+/*setTimeout(function() {
+  transformActions.updatePosition$.onNext({id:0,value:[-10,2,4]})
+  transformActions.updateRotation$.onNext({id:1,value:[0.56,2.19,0]})
+}, 200)
+
+
+setTimeout(function(){
+  transformActions.updateTransforms$.onNext({ 
+    id:0,
+    value:{
+    pos: [ -1, 76, 0 ],
+    rot: [ 0, 8.24, 0 ],
+    sca: [ 1, 1.5, 1.5 ]}
+    })
+},600)*/
+
+/*let {mesh$,meshActions}            = makeMeshSystem()
 let {bounds$ ,boundActions}        = makeBoundingSystem()
 let {meta$ ,metaActions}           = makeMetaDataSystem()
 let {bom$ ,bomActions}             = makeBomSystem()
@@ -257,7 +321,7 @@ let systems$ = combineLatestObj(components)
     transformActions.updatePosition$.onNext({id:1,value:[0,0,9.987]})
     }, 200)
 
- /*setTimeout(function(){
+ setTimeout(function(){
     transformActions.removeComponent$.onNext({id:0})
  },400)
 
@@ -283,7 +347,7 @@ function duplicateEntity(id){
 }
 
 
-
+/*
 function render(data){
   console.log("data in render",data)
   let {transforms,bounds,mesh} = data
@@ -293,7 +357,7 @@ combineLatestObj({transforms$, bounds$, mesh$})
   .distinctUntilChanged()
   .subscribe(render)
 
-
+*/
 
 
   
