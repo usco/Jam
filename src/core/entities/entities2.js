@@ -60,17 +60,6 @@ function duplicateEntity(state,input){
   return state 
 }
 
-//hmm this is the same as remove component ?
-function removeEntity(state,input){
-  console.log("removeEntity")
-  let {id} = input
-
-  state = mergeData({},state)
-  //FIXME big hack, using mutability
-  delete state[id]
-  return state 
-}
-
 //other helpers
 function makeActionsFromApiFns(apiFns){
 
@@ -194,6 +183,26 @@ export function makeTransformsSystem(){
   return {transforms$,transformActions:actions}
 }
 
+////Mesh//////
+function makeMeshSystem(){
+  const defaults ={
+    /*points: [
+      [0,0,1]
+      ,[0,1,0]
+      ,[1,0,0]
+    ]
+    ,cells:[0,1,2]*/
+  }
+
+  //TODO: should defaults be something like a stand in cube ?
+  let updateFns = {
+    createComponent: createComponent.bind(null,undefined)
+    , removeComponent}
+  let mesh$ = makeModelNoHistory(defaults, updateFns, actions)
+
+  return {mesh$,meshActions:actions}
+}
+
 ////BoundingBox//////
 function makeBoundingSystem(){
   const defaults = {}
@@ -208,24 +217,6 @@ function makeBoundingSystem(){
   let bounds$ = makeModelNoHistory(defaults, updateFns, actions)
 
   return {bounds$,boundActions:actions}
-}
-
-////Mesh//////
-function makeMeshSystem(xParam){
-  const defaults ={
-    points: [
-      [0,0,1]
-      ,[0,1,0]
-      ,[1,0,0]
-    ]
-    ,cells:[0,1,2]
-  }
-
-  let actions = {removeComponent$: new Rx.Subject()}
-  let updateFns = {removeComponent}
-  let mesh$ = makeModelNoHistory(defaults, updateFns, actions)
-
-  return {mesh$,meshActions:actions}
 }
 
 ////Meta data ///////
@@ -273,28 +264,33 @@ let {transforms$,transformActions} = makeTransformsSystem()
 core$.subscribe(e=>console.log("core",e))
 transforms$.subscribe(e=>console.log("transforms",e))
 
+const id1 = generateUUID()
+const id2 = generateUUID()
+
 
 setTimeout(function() {
-  const id = generateUUID()
-  coreActions.createComponent$.onNext({id, value:{typeUid:0}})
-  transformActions.createComponent$.onNext({id, value:{typeUid:0}})
-}, 200)
+  coreActions.createComponent$.onNext({id:id1, value:{typeUid:0}})
+  transformActions.createComponent$.onNext({id:id1, value:{typeUid:0}})
 
-/*setTimeout(function() {
-  transformActions.updatePosition$.onNext({id:0,value:[-10,2,4]})
-  transformActions.updateRotation$.onNext({id:1,value:[0.56,2.19,0]})
+  coreActions.createComponent$.onNext({id:id2, value:{typeUid:0}})
+  transformActions.createComponent$.onNext({id:id2, value:{typeUid:0}})
+}, 10)
+
+setTimeout(function() {
+  transformActions.updatePosition$.onNext({id:id1,value:[-10,2,4]})
+  transformActions.updateRotation$.onNext({id:id2,value:[0.56,2.19,0]})
 }, 200)
 
 
 setTimeout(function(){
   transformActions.updateTransforms$.onNext({ 
-    id:0,
+    id:id1,
     value:{
     pos: [ -1, 76, 0 ],
     rot: [ 0, 8.24, 0 ],
     sca: [ 1, 1.5, 1.5 ]}
     })
-},600)*/
+},600)
 
 /*let {mesh$,meshActions}            = makeMeshSystem()
 let {bounds$ ,boundActions}        = makeBoundingSystem()
