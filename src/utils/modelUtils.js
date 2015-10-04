@@ -124,3 +124,48 @@ export function makeModifications(actions, updateFns){
     mods$
   )
 }
+
+
+export function makeModificationsNoHistory(actions, updateFns){
+
+  let mods$ =  Object.keys(actions).map(function(key){
+    //console.log("actions in makeModifications",key)
+    let op     = actions[key]
+    let opName = key.replace(/\$/g, "")
+    let modFn  = updateFns[opName]
+
+    //here is where the "magic happens"
+    //for each "operation/action" we map it to an observable with history & state
+    let mod$   = op
+      .map((input) => (state) => {
+
+      //history = logHistory(state, history)
+      state   = modFn(state, input)//call the adapted function
+
+      return state //Immutable(state)//,history})
+    })
+
+    //console.log("op",op,"opName",opName,"modFn",modFn)
+    if(modFn){
+      return mod$ 
+    }
+  })
+  .filter(e=>e!==undefined)
+
+  return Rx.Observable.merge(
+    mods$
+  )
+}
+
+
+export function makeModelNoHistory(defaults, updateFns, actions){
+  let mods$ =  makeModificationsNoHistory(actions,updateFns)
+
+  let source$ =  Rx.Observable.just( defaults ) //Immutable(defaults) )
+
+  return mods$
+    .merge(source$)
+    .scan((currentData, modFn) => modFn(currentData))//combine existing data with new one
+    //.distinctUntilChanged()
+    .shareReplay(1)
+}
