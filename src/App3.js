@@ -33,6 +33,7 @@ import {prepForRender} from './utils/uiUtils'
 
 
 import {extractDesignSources,extractMeshSources,extractSourceSources} from './core/sources/dataSources'
+import {makeTransformsSystem} from './core/entities/entities2'
 
 
 function intent(){
@@ -95,8 +96,10 @@ function registerEntity(sources)
   let meshResources$ = meshResources(meshSources$, assetManager)
   //meshSources$.map(e=>)
 
-  meshResources$.map(e=>console.log("meshResources",e))
-  
+  meshResources$.subscribe(e=>console.log("meshResources",e))
+
+  //let entityInstance = undefined
+  return meshResources$
 }
 
 export function main(drivers) {
@@ -119,14 +122,14 @@ export function main(drivers) {
   const meshSources$ = extractMeshSources({dnd$, postMessages$, addressbar})
   const srcSources$  = extractSourceSources({dnd$, postMessages$, addressbar})
 
-  registerEntity({meshSources$,srcSources$})
+  const expMeshes$ = registerEntity({meshSources$,srcSources$})
 
   //comments system
   const comments$ = comments(commentsIntents(DOM,settings$))
   const bom$      = undefined
 
   let model$ = model(intent(DOM))
-  let state$ = combineLatestObj({settings$})
+  let state$ = combineLatestObj({settings$,meshes$:expMeshes$})
   let view$ = view(state$, DOM)
 
   //output to localStorage
