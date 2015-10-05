@@ -70,7 +70,12 @@ export function prepForRender(params, suffix)
   const DOMS = Object.keys(params)
     .reduce(function(prev,cur){
       let key = cur.replace(suffix,"")
-      prev[key] = params[cur].DOM
+      if("DOM" in params[cur]){
+        prev[key] = params[cur].DOM
+      }else{
+        prev[key] = params[cur]
+      }
+      console.log("prev",prev)
       return prev
     },{})
   return combineLatestObj(DOMS)
