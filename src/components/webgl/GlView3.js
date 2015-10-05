@@ -59,36 +59,7 @@ import AdditiveBlendShader from './deps/post-process/AdditiveBlendShader'
 
 
 
-function cameraWobble3dHint(camera, time=1500){
-  let camPos = camera.position.clone()
-  let target = camera.position.clone().add(new THREE.Vector3(-5,-10,-5))
 
-  let tween = new TWEEN.Tween( camPos )
-    .to( target , time )
-    .repeat( Infinity )
-    .delay( 500 )
-    .yoyo(true)
-    .easing( TWEEN.Easing.Cubic.InOut )
-    .onUpdate( function () {
-      camera.position.copy(camPos)
-    } )
-    .start()
-
-  let camRot = camera.rotation.clone()
-  //let rtarget = camera.rotation.clone().add(new THREE.Vector3(50,50,50))
-
-  /*let tween2 = new TWEEN.Tween( camRot )
-    .to( rtarget , time )
-    .repeat( Infinity )
-    .delay( 500 )
-    .yoyo(true)
-    .easing( TWEEN.Easing.Quadratic.InOut )
-    .onUpdate( function () {
-      camera.position.copy(camRot)
-    } )
-    .start()*/
-  return tween
-}
 
 
 //extract the object & position from a pickingInfo data
@@ -274,7 +245,7 @@ function makeOutlineFx(mesh){
 - streamline all interactions
 */
 ////////////
-function GlView({DOM, props$}){
+function GLView({DOM, props$}){
   let config = presets
 
   let container$ = DOM.select("#container").events("ready")
@@ -285,12 +256,15 @@ function GlView({DOM, props$}){
   //let reRender$ = Rx.Observable.just(0) //Rx.Observable.interval(16) //observable should be the merger of all observable that need to re-render the view?
 
   let settings$   = props$.pluck('settings')//.startWith({camera:{autoRotate:false}})
-  let items$      = props$.pluck('items')//.startWith([])
+  let items$      = props$.pluck('items').startWith([])
   let selections$ = props$.pluck('selections').startWith([]).filter(exists).distinctUntilChanged()
   let visualMappings$ = props$.pluck('visualMappings')
   //every time either activeTool or selection changes, reset/update transform controls
 
   let activeTool$ = settings$.pluck("activeTool").startWith(undefined)
+
+  let items2$ = props$.pluck('meshes')
+  
 
   //debug only
   //settings$.subscribe(function(data){console.log("SETTINGS ",data)})
@@ -327,7 +301,10 @@ function GlView({DOM, props$}){
   let elementResizes$ = elementResizes(".container",1)
 
   let {shortSingleTaps$, shortDoubleTaps$, longTaps$, 
-      dragMoves$, zooms$} =  pointerInteractions(interactionsFromCEvents(interactions))
+      dragMoves$, zooms$} =  pointerInteractions(interactionsFromCEvents(DOM))
+
+
+  items2$.subscribe(e=>dynamicInjector.add(e))
 
 
   function withPickingInfos(inStream, windowResizes$ ){
@@ -451,7 +428,7 @@ function GlView({DOM, props$}){
   let {applyFx,removeFx} = makeFx()
 
   //TODO: only do once
-  let meshes$ = selections$
+  /*let meshes$ = selections$
     .debounce(200)
     .distinctUntilChanged(null, entityVisualComparer)
     .withLatestFrom( visualMappings$ ,function(selections, mapper){   
@@ -474,7 +451,11 @@ function GlView({DOM, props$}){
       let {added,removed,changed} = extractChanges(prev,cur)
       applyFx(null,added)
       removeFx(null,removed)
-    },e=>console.log("error",e))
+    },e=>console.log("error",e)) */
+
+  let meshes$ = Rx.Observable.just(undefined)
+  items$ = Rx.Observable.never()
+  let initialized$ = Rx.Observable.just(true)
 
 
 
@@ -652,7 +633,7 @@ function GlView({DOM, props$}){
     //if(camViewControls) camViewControls.update()
   }
 
-  function configure (container){
+  function configureStep1(container, callback){
     //log.debug("initializing into container", container)
 
     if(!Detector.webgl){
@@ -674,10 +655,15 @@ function GlView({DOM, props$}){
     //prevents zooming the 3d view from scrolling the window
     preventScroll(container)
 
+    transformControls.setDomElement( container )
+
+    callback()
+  }
+
+  function configureStep2 (){
+
     controls.setObservables(filteredInteractions$)
     controls.addObject( camera )
-
-    transformControls.setDomElement( container )
 
     //not a fan
     zoomInOnObject.camera = camera
@@ -723,7 +709,8 @@ function GlView({DOM, props$}){
   setupScene()
 
 
-  DOM.select('canvas', 'contextmenu').subscribe( e => preventDefault(e) )
+  DOM.select('canvas').events('contextmenu').subscribe( e => preventDefault(e) )
+
   windowResizes$.subscribe(  handleResize  )
   update$.subscribe( update )
   settings$.filter(exists).subscribe(function(settings){
@@ -753,12 +740,12 @@ function GlView({DOM, props$}){
     function(reRender, initialized, settings){
 
       if(!initialized && self.refs.container!==undefined){
-        configure(self.refs.container.getDOMNode())
+        //configure(self.refs.container.getDOMNode())
         //set the inital size correctly
         handleResize({width:window.innerWidth,height:window.innerHeight,aspect:window.innerWidth/window.innerHeight})
 
         //DOM.selectEventSubject('initialized').onEvent(true)
-        initialized = true
+        //initialized = true
 
         //FIXME : needs to be done in a more coherent, reusable way
         //shut down "wobble effect if ANY user interaction takes place"
@@ -777,20 +764,19 @@ function GlView({DOM, props$}){
         render(scene,camera)
       }
       //{reRender} {initialized}
-      return ()=> (
+      return (
       <div className="glView" style={style} >
-        <div className="container" ref="container" autofocus/>  
+        {new GLWidgeHelper(configureStep1.bind(this),configureStep2)}
         <div className="camViewControls" />
 
         <div className="overlayTest" style={overlayStyle}>
-          
         </div>
       </div>)
     })
 
   return {
-    DOM: vtree$,
-    events:{
+    DOM: vtree$
+    /*,events:{
       initialized:initialized$,
 
       shortSingleTaps$:_shortSingleTaps$,
@@ -800,8 +786,26 @@ function GlView({DOM, props$}){
 
       selectionsTransforms$,
       selectedMeshes$,
-    }
+    }*/
   }
 }
 
-export default GlView
+function GLWidgeHelper(configureFn, configCallback) {
+    this.type = 'Widget'
+    this.configureFn = configureFn
+    this.configCallback = configCallback
+}
+
+GLWidgeHelper.prototype.init = function () {
+  console.log("GLWidget init")
+  let elem = document.createElement('div')
+  elem.className = "container"
+  this.configureFn(elem,this.configCallback)
+  return elem
+}
+
+GLWidgeHelper.prototype.update = function (prev, elem) {
+  //this.gl = this.gl || prev.gl
+}
+
+export default GLView

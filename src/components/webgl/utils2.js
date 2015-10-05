@@ -156,3 +156,35 @@ export function makeLight( lightData ){
 
   return light
 }
+
+
+function cameraWobble3dHint(camera, time=1500){
+  let camPos = camera.position.clone()
+  let target = camera.position.clone().add(new THREE.Vector3(-5,-10,-5))
+
+  let tween = new TWEEN.Tween( camPos )
+    .to( target , time )
+    .repeat( Infinity )
+    .delay( 500 )
+    .yoyo(true)
+    .easing( TWEEN.Easing.Cubic.InOut )
+    .onUpdate( function () {
+      camera.position.copy(camPos)
+    } )
+    .start()
+
+  let camRot = camera.rotation.clone()
+  //let rtarget = camera.rotation.clone().add(new THREE.Vector3(50,50,50))
+
+  /*let tween2 = new TWEEN.Tween( camRot )
+    .to( rtarget , time )
+    .repeat( Infinity )
+    .delay( 500 )
+    .yoyo(true)
+    .easing( TWEEN.Easing.Quadratic.InOut )
+    .onUpdate( function () {
+      camera.position.copy(camRot)
+    } )
+    .start()*/
+  return tween
+}

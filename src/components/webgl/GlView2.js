@@ -128,8 +128,9 @@ import {selectionAt,meshFrom,isTransformTool,targetObject,
 
 import {presets} from './presets' //default configuration for lighting, cameras etc
 
-/////////////////////
-function setupScene(scene, config){
+
+
+function testAdd(scene){
   var sphereGeometry = new THREE.SphereGeometry( 15, 32, 16 ) 
   var sphereMaterial = new THREE.MeshLambertMaterial( {color: 0x8888ff} );
   var sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
@@ -141,6 +142,12 @@ function setupScene(scene, config){
   sphere.castShadow = true
 
   scene.add(sphere)
+}
+
+/////////////////////
+function setupScene(scene, config){
+  
+ 
   //scene.add(sphere)
   for( let light of config.scenes["main"])
   {
@@ -195,6 +202,11 @@ function handleResize (sizeInfos,renderer,scene,camera){
 function GLView(data) {
     this.type = 'Widget'
     this.data = data
+
+    let {meshes} = data
+
+    console.log("data / meshes", meshes,data)
+    this.inputMeshes = meshes
 }
 
 GLView.prototype.init = function () {
@@ -219,11 +231,22 @@ GLView.prototype.init = function () {
   }
 
   setupScene(scene,config)
+  //testAdd(dynamicInjector)
+  if(this.inputMeshes){
+    //this.inputMeshes.forEach(function(mesh){
+    //  dynamicInjector.add( meshe )
+    //})
+    dynamicInjector.add( this.inputMeshes )
+  }
+
+
   configure (config, elem, renderer)
 
   scene.add(camera)  
   //scene.add(shadowPlane)
   //scene.add(transformControls)
+  
+
 
   handleResize({width:window.innerWidth,height:window.innerHeight,aspect:window.innerWidth/window.innerHeight},
     renderer,scene,camera)
@@ -232,6 +255,11 @@ GLView.prototype.init = function () {
     render(renderer, scene,camera)
   }, 30)
 
+
+  this.scene = scene
+  this.dynamicInjector = dynamicInjector
+
+
   return elem
 }
 
@@ -239,6 +267,7 @@ GLView.prototype.update = function (prev, elem) {
   /*this.gl = this.gl || prev.gl
   let {gl,data} = this
   draw(gl,data)*/
+  /**/
 }
 
 export default GLView
