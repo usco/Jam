@@ -24,7 +24,8 @@ import {commentsIntents} from './core/comments/intents'
 
 import BomView from './components/Bom/BomView'
 
-import GLView from './components/webgl/GlView2'
+//import GLView from './components/webgl/GlView2'
+import GLView from './components/webgl/GlView3'
 
 
 import {getExtension} from './utils/utils'
@@ -69,21 +70,31 @@ function view(state$, DOM, name){
   let bomProps$ = just({fieldNames,sortableFields,entries})
   let bomUi     = BomView({DOM,props$:bomProps$})
 
-  let testData$ = just(15)
+  //items:state$.pluck("meshes")
+  let glProps$  = combineLatestObj({settings:state$.pluck("settings")
+    ,meshes:state$.pluck("meshes")
+  })
+  let glUi      = GLView({DOM,props$:glProps$})
+  //{new GLView({meshes})}
 
-  return prepForRender({fsTogglerUi,settingsUi,bomUi})
-    .map(function({settings,fsToggler,bom}){
+  return prepForRender({fsTogglerUi,settingsUi,bomUi, glUi, meshes:state$.pluck("meshes")})
+    
+    .map(function({settings,fsToggler,bom,gl,meshes}){
       return <div>
         {settings}
         {fsToggler}
         {bom}
+        {gl}
 
-        {new GLView(testData$)}
+        
       </div>
     })
 }
 
 import {makeInternals, meshResources, entityInstanceFromPartTypes} from './core/tbd0'
+
+import THREE from 'three'
+
 
 function registerEntity(sources)
 {
@@ -98,8 +109,13 @@ function registerEntity(sources)
 
   meshResources$.subscribe(e=>console.log("meshResources",e))
 
+  function testHack2(mesh){
+    mesh.position.set(0, 50, 0)
+    return mesh
+  }
+
   //let entityInstance = undefined
-  return meshResources$
+  return meshResources$.map(e=>e.mesh).map(testHack2)
 }
 
 export function main(drivers) {
