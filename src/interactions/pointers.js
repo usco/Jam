@@ -198,12 +198,14 @@ function drags2(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
 //based on http://jsfiddle.net/mattpodwysocki/pfCqq/
 function drags3(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
   return mouseDowns.flatMap(function (md) {
+    //console.log("drags3 mousedown",md)
     // calculate offsets when mouse down
     var startX = md.offsetX, startY = md.offsetY
     // Calculate delta with mousemove until mouseup
     return mouseMoves
       .map(function (mm) {
-        (mm.preventDefault) ? mm.preventDefault() : mm.returnValue = false 
+        //console.log("drags3 mousemove",mm);
+        //(mm.preventDefault) ? mm.preventDefault() : mm.returnValue = false 
         let delta = {
             left: mm.clientX - startX,
             top: mm.clientY - startY
@@ -231,7 +233,7 @@ function pinches(touchstarts, touchmoves, touchEnds) {
 export function interactionsFromEvents(targetEl){
   let mouseDowns$  = fromEvent(targetEl, 'mousedown')
   let mouseUps$    = fromEvent(targetEl, 'mouseup')
-  let mouseLeaves$ = fromCEvent(targetEl, 'mouseleave').merge(fromCEvent(targetEl, 'mouseout') )
+  let mouseLeaves$ = fromEvent(targetEl, 'mouseleave').merge(fromCEvent(targetEl, 'mouseout') )
   let mouseMoves$  = altMouseMoves(fromEvent(targetEl, 'mousemove')).takeUntil(mouseLeaves$)
   let rightClicks$ = fromEvent(targetEl, 'contextmenu').do(preventDefault)// disable the context menu / right click
   let zooms$ = fromEvent(targetEl, 'wheel')
@@ -254,8 +256,11 @@ export function interactionsFromEvents(targetEl){
 
 /* generate a hash of basic pointer/ mouse event observables*/
 export function interactionsFromCEvents(targetEl, rTarget='canvas'){
-  function fromCEvent(targetEl, eventName){
+  /*function fromCEvent(targetEl, eventName){
     return targetEl.get(rTarget, eventName)
+  }*/
+  function fromCEvent(targetEl, eventName){
+    return targetEl.select(rTarget).events(eventName)
   }
 
 
@@ -269,6 +274,14 @@ export function interactionsFromCEvents(targetEl, rTarget='canvas'){
   let touchStart$  = fromCEvent(targetEl,'touchstart')//dom.touchstart(window)
   let touchMoves$ = fromCEvent(targetEl,'touchmove')//dom.touchmove(window)
   let touchEnd$    = fromCEvent(targetEl,'touchend')//dom.touchend(window)
+
+  /*setTimeout(function() {
+    let elem = document.querySelector(".glView")
+    fromEvent(elem, 'mousemove').subscribe(e=>console.log("mouseMoves",e))
+    let elem2 = document.querySelector(".container")
+
+
+  }, 15000)*/
 
   return {
     mouseDowns$,
@@ -295,6 +308,7 @@ export function pointerInteractions (baseInteractions){
     touchStart$, touchMoves$, touchEnd$,
     zooms$ } = baseInteractions
 
+  //mouseMoves$.subscribe(e=>console.log("mousemove",e))
 
   ///// now setup the more complex interactions
   let taps$ = taps( 
@@ -329,6 +343,8 @@ export function pointerInteractions (baseInteractions){
     touchMoves$
   )
     .takeUntil(longTaps$).repeat()//no drag moves if there is a context action already taking place
+
+  //dragMoves$.subscribe(e=>console.log("dragMoves",e))
 
   return {
     taps:tapStream$, 
