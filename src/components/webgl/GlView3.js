@@ -20,8 +20,9 @@ import {windowResizes,elementResizes} from '../../interactions/sizing'
 
 import Selector from './deps/Selector'
 import {getCoordsFromPosSizeRect} from './deps/Selector'
-import {preventDefault,isTextNotEmpty,formatData,exists} from '../../utils/obsUtils'
+import {preventDefault,isTextNotEmpty,formatData,exists,combineLatestObj} from '../../utils/obsUtils'
 import {toArray} from '../../utils/utils'
+
 import {extractChanges, transformEquals, colorsEqual, entityVisualComparer} from '../../utils/diffPatchUtils'
 
 
@@ -238,6 +239,26 @@ function makeOutlineFx(mesh){
   return {maskMesh, outlineMesh}
 }
 
+
+function intents(drivers){
+  //FIXME : needs to be done in a more coherent, reusable way
+  //shut down "wobble effect if ANY user interaction takes place"
+  const userAction$ = merge(
+    shortSingleTaps$,
+    shortDoubleTaps$,
+    longTaps$,
+    zooms$,
+    dragMoves$
+  )
+  //.subscribe(e=>wobble.stop())
+        
+  return {
+    userAction$
+  }
+}
+
+
+
 /*TODO:
 - remove any "this", adapt code accordingly  
 - extract reusable pieces of code => 50 % done
@@ -248,9 +269,8 @@ function makeOutlineFx(mesh){
 function GLView({DOM, props$}){
   let config = presets
 
-  let container$ = DOM.select("#container").events("ready")
-
-  //let initialized$ = interactions.subject('initialized').startWith(false)
+  let initialized$ = new Rx.BehaviorSubject(false)
+    //.startWith(false) //Rx.Observable.just(true) 
 
   let update$ = Rx.Observable.interval(16,66666666667)
   //let reRender$ = Rx.Observable.just(0) //Rx.Observable.interval(16) //observable should be the merger of all observable that need to re-render the view?
@@ -303,7 +323,7 @@ function GLView({DOM, props$}){
   let {shortSingleTaps$, shortDoubleTaps$, longTaps$, 
       dragMoves$, zooms$} =  pointerInteractions(interactionsFromCEvents(DOM))
 
-
+  //TODO : remove this hack
   items2$.subscribe(e=>dynamicInjector.add(e))
 
 
@@ -428,6 +448,7 @@ function GLView({DOM, props$}){
   let {applyFx,removeFx} = makeFx()
 
   //TODO: only do once
+  //TODO : fix this
   /*let meshes$ = selections$
     .debounce(200)
     .distinctUntilChanged(null, entityVisualComparer)
@@ -455,8 +476,7 @@ function GLView({DOM, props$}){
 
   let meshes$ = Rx.Observable.just(undefined)
   items$ = Rx.Observable.never()
-  let initialized$ = Rx.Observable.just(true)
-
+  
 
 
   //TODO: we need some diffing etc somewhere in here  
@@ -574,13 +594,13 @@ function GLView({DOM, props$}){
 
   let filteredInteractions$ = {dragMoves$:fDragMoves$, zooms$}
 
-
   //hande all the cases where events require re-rendering
   let reRender$ = merge(
     initialized$
-    //update$
-    //,Rx.Observable.timer(2000).take(1)
-    
+      .filter(i=>i===true)
+      .do(i=>handleResize({width:window.innerWidth,height:window.innerHeight,aspect:window.innerWidth/window.innerHeight}))
+      
+    //update$    
     ,fromEvent(controls,'change')
     ,fromEvent(transformControls,'change')
     //,fromEvent(camViewControls,'change')
@@ -590,15 +610,14 @@ function GLView({DOM, props$}){
     //,items$
     ,meshes$
     ,dragMoves$
-    )
-    .sample(15)
-    .shareReplay(1)
-  
 
-  //reRender$.subscribe( () => console.log("reRender"), (err)=>console.log("error in reRender",err))
+    ,windowResizes$.do(handleResize)//we need the resize to take place before we render
+  )
+  //.sample(15)
+  .shareReplay(1)
+  
   //actual 3d stuff
   reRender$.subscribe(e=>render())
-
 
 
   function setupScene(){
@@ -619,9 +638,9 @@ function GLView({DOM, props$}){
   }
     
   function render(scene, camera){
+    console.log("render")
     //renderer.render( scene, camera )
     composers.forEach(c=>c.render())
-
     //composer.passes[composer.passes.length-1].uniforms[ 'tDiffuse2' ].value = composers[0].renderTarget2
     //composer.passes[composer.passes.length-1].uniforms[ 'tDiffuse3' ].value = composers[1].renderTarget2
   }
@@ -637,7 +656,7 @@ function GLView({DOM, props$}){
     //log.debug("initializing into container", container)
 
     if(!Detector.webgl){
-      //renderer = new CanvasRenderer() 
+      //TODO: handle lacking webgl
     } else {
       renderer = new THREE.WebGLRenderer( {antialias:false} )
     }
@@ -679,10 +698,15 @@ function GLView({DOM, props$}){
     outScene = ppData.outScene
     maskScene = ppData.maskScene
 
+    console.log("initializing")
+    initialized$.onNext(true)
+
   }
 
+  //side effect ?
   function handleResize (sizeInfos){
     //log.debug("setting glView size",sizeInfos)
+    console.log("setting glView size",sizeInfos)
     let {width,height,aspect} = sizeInfos
   
     if(width >0 && height >0 && camera && renderer){
@@ -700,8 +724,6 @@ function GLView({DOM, props$}){
         c.reset()
         c.setSize(width * pixelRatio, height * pixelRatio)
       } )
-
-      render()
     }
   }
 
@@ -711,7 +733,6 @@ function GLView({DOM, props$}){
 
   DOM.select('canvas').events('contextmenu').subscribe( e => preventDefault(e) )
 
-  windowResizes$.subscribe(  handleResize  )
   update$.subscribe( update )
   settings$.filter(exists).subscribe(function(settings){
     controls.autoRotate = settings.camera.autoRotate
@@ -724,55 +745,18 @@ function GLView({DOM, props$}){
         scene.add(grid)
       }
     })
-
   //sorta hack ??
   scene.dynamicInjector = dynamicInjector
 
-  
-  let elapsed = 0
-  //for now we use refs, but once in cycle, we should use virtual dom widgets & co
-  let style = {width:"100%",height:"100%"}
-  let overlayStyle ={position:'absolute',top:10,left:10}
-  let vtree$ =  Rx.Observable.combineLatest(
-    reRender$,
-    initialized$,
-    settings$,
-    function(reRender, initialized, settings){
-
-      if(!initialized && self.refs.container!==undefined){
-        //configure(self.refs.container.getDOMNode())
-        //set the inital size correctly
-        handleResize({width:window.innerWidth,height:window.innerHeight,aspect:window.innerWidth/window.innerHeight})
-
-        //DOM.selectEventSubject('initialized').onEvent(true)
-        //initialized = true
-
-        //FIXME : needs to be done in a more coherent, reusable way
-        //shut down "wobble effect if ANY user interaction takes place"
-        /*let wobble = cameraWobble3dHint(camera)
-        merge(
-          shortSingleTaps$,
-          shortDoubleTaps$,
-          longTaps$,
-          zooms$,
-          dragMoves$
-        ).subscribe(e=>wobble.stop())*/
-        
-      }
-
-      if(initialized){
-        render(scene,camera)
-      }
-      //{reRender} {initialized}
+  const vtree$ = combineLatestObj({initialized$, settings$})
+    .map(function({initialized, settings}){
       return (
-      <div className="glView" style={style} >
-        {new GLWidgeHelper(configureStep1.bind(this),configureStep2)}
-        <div className="camViewControls" />
-
-        <div className="overlayTest" style={overlayStyle}>
+        <div className="glView" >
+          {new GLWidgeHelper(configureStep1.bind(this),configureStep2)}
         </div>
-      </div>)
+      )
     })
+
 
   return {
     DOM: vtree$
