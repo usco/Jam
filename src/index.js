@@ -9,6 +9,31 @@ import {localStorageDriver} from './core/drivers/localStorageDriver'
 import {addressbarDriver} from './core/drivers/addressbarDriver'
 import browserCapsDriver from './core/drivers/browserCapabilities'
 
+//test hack/helper driver
+function eventDriver(outgoing$){
+  outgoing$ = outgoing$ || Cycle.Rx.Observable.just({})
+
+  function deep_value(path, obj){
+    try{
+      for (var i=0, path=path.split('.'), len=path.length; i<len; i++){
+        obj = obj[path[i]]
+      }
+      return obj
+    }
+    catch(error){}
+  }
+
+  function getData(path){
+
+    return outgoing$.map( deep_value.bind(null,path) ).filter(e=>e!==undefined)
+  }
+
+  return {
+    select: getData
+  }
+
+  //return outgoing$
+}
 
 //////////setup drivers
 let domDriver      = makeDOMDriver('#root')
@@ -24,6 +49,7 @@ let drivers = {
    ,postMessage
    ,addressbar
    ,browserCaps
+   ,events:eventDriver
 }
 
 console.log("---READY TO START JAM!---v 0.2.3")

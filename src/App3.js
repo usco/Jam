@@ -19,8 +19,14 @@ import SettingsView from './components/SettingsView'
 
 import FullScreenToggler from './components/FullScreenToggler'
 
+//comments
 import comments from './core/comments/comments'
 import {commentsIntents} from './core/comments/intents'
+//selections
+import selections from './core/selections/selections'
+import {selectionsIntents} from './core/selections/intents'
+
+
 
 import BomView from './components/Bom/BomView'
 
@@ -32,17 +38,8 @@ import {getExtension} from './utils/utils'
 import {combineLatestObj} from './utils/obsUtils'
 import {prepForRender} from './utils/uiUtils'
 
-
 import {extractDesignSources,extractMeshSources,extractSourceSources} from './core/sources/dataSources'
 import {makeTransformsSystem} from './core/entities/entities2'
-
-
-function intent(){
-  return Rx.Observable.just({foo:"bar"})
-}
-function model(){
-  return Rx.Observable.just("doo")
-}
 
 
 function view(state$, DOM, name){
@@ -70,25 +67,27 @@ function view(state$, DOM, name){
   let bomProps$ = just({fieldNames,sortableFields,entries})
   let bomUi     = BomView({DOM,props$:bomProps$})
 
-  //items:state$.pluck("meshes")
   let glProps$  = combineLatestObj({settings:state$.pluck("settings")
     ,meshes:state$.pluck("meshes")
   })
   let glUi      = GLView({DOM,props$:glProps$})
-  //{new GLView({meshes})}
+  const glEvents    = glUi.events
+  //glEvents.selectedMeshes$.subscribe(e=>console.log("selectedMeshes",e))
 
-  return prepForRender({fsTogglerUi,settingsUi,bomUi, glUi, meshes:state$.pluck("meshes")})
-    
+  //final results
+  const events = {gl:glEvents}
+
+  DOM = prepForRender({fsTogglerUi,settingsUi,bomUi, glUi, meshes:state$.pluck("meshes")})
     .map(function({settings,fsToggler,bom,gl,meshes}){
       return <div>
         {settings}
         {fsToggler}
         {bom}
         {gl}
-
-        
       </div>
     })
+
+  return {events,DOM}
 }
 
 import {makeInternals, meshResources, entityInstanceFromPartTypes} from './core/tbd0'
@@ -98,7 +97,6 @@ import THREE from 'three'
 
 function registerEntity(sources)
 {
-  console.log("here")
   let meshSources$ = sources.meshSources$
   let srcSources$ = sources.srcSources$
 
@@ -111,6 +109,7 @@ function registerEntity(sources)
 
   function testHack2(mesh){
     mesh.position.set(0, 50, 0)
+    mesh.name = "foo"
     return mesh
   }
 
@@ -124,7 +123,15 @@ export function main(drivers) {
   const addressbar   = drivers.addressbar
   const postMessage  = drivers.postMessage
   //const {DOM,localStorage,addressbar} = drivers
+  const events       = drivers.events
 
+  events
+    .select("gl")
+    .flatMap(e=>e.selectedMeshes$)
+    //.pluck("gl").flatMap(e=>e.selectedMeshes$)
+    .subscribe(e=>console.log("events",e))
+
+  ///
   let dragOvers$  = DOM.select("#root").events("dragover")
   let drops$      = DOM.select("#root").events("drop")  
   let dnd$        = observableDragAndDrop(dragOvers$, drops$) 
@@ -134,19 +141,24 @@ export function main(drivers) {
   const settings$ = settings( settingsIntent(drivers), settingsSources$ ) 
 
   //data sources for our main model
-  let postMessages$ = postMessage
+  let postMessages$  = postMessage
   const meshSources$ = extractMeshSources({dnd$, postMessages$, addressbar})
   const srcSources$  = extractSourceSources({dnd$, postMessages$, addressbar})
 
   const expMeshes$ = registerEntity({meshSources$,srcSources$})
 
-  //comments system
-  const comments$ = comments(commentsIntents(DOM,settings$))
-  const bom$      = undefined
+  //entities$
+  const entities$   = Rx.Observable.just(undefined)
+  //comments
+  const comments$   = comments(commentsIntents(DOM,settings$))
+  const bom$        = undefined
+  //selections 
+  const selections$ = selections( selectionsIntents({DOM,events}, entities$) )
 
-  let model$ = model(intent(DOM))
-  let state$ = combineLatestObj({settings$,meshes$:expMeshes$})
-  let view$ = view(state$, DOM)
+  //
+  //let model$ = model(intent(DOM))
+  let state$ = combineLatestObj({settings$,meshes$:expMeshes$,selections$})
+  let _view = view(state$, DOM)
 
   //output to localStorage
   //in our case, settings
@@ -155,8 +167,10 @@ export function main(drivers) {
 
   //return anything you want to output to drivers
   return {
-      DOM: view$
+      DOM: _view.DOM
+      ,events: just(_view.events)
       ,localStorage:localStorage$
+
   }
 }
 
