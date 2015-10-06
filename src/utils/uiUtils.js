@@ -75,7 +75,6 @@ export function prepForRender(params, suffix)
       }else{
         prev[key] = params[cur]
       }
-      console.log("prev",prev)
       return prev
     },{})
   return combineLatestObj(DOMS)
