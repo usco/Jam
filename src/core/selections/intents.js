@@ -1,4 +1,4 @@
-import {toArray} from '../../utils/utils'
+import {toArray,exists} from '../../utils/utils'
 import {hasEntity, getEntity} from '../../utils/entityUtils'
 
 function extractEntities(data){
@@ -26,7 +26,6 @@ export function reverseSelections(intents, entities$){
         return entities.instances.filter( i => i.typeUid === typeUid ).map( i => i.iuid )
       })
     })
-
   //selectEntities$.subscribe(e=>console.log("for these bomEntries, instIds are",e))
   //selectBomEntries$.subscribe(e=>console.log("for these entities, typeUids are",e))
 
@@ -40,17 +39,22 @@ export function reverseSelections(intents, entities$){
 }
 
 
-export function selectionsIntents(interactions){
-  let selectEntities$ = interactions.get(".glview","selectedMeshes$")
-    .pluck("detail")
+export function selectionsIntents(drivers, entities$){
+  //console.log("selectionsIntents")
+
+  let selectEntities$ = drivers.events.select("gl")//.events("selectedMeshes$")
+    .flatMap(e=>e.selectedMeshes$)
+    .filter(exists)
     .map(extractEntities)
 
-  let selectBomEntries$ = interactions.get(".bom","entryTaps$")
-    .pluck("detail")
+  let selectBomEntries$ = drivers.events.select("bom")//.events("entryTaps$")
+    .flatMap(e=>e.entryTaps$)
+    .filter(exists)
     .map(toArray)
 
-  return{
-    selectEntities$
+  return reverseSelections({
+     selectEntities$
     ,selectBomEntries$
-  }
+  },entities$)
+
 }
