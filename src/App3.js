@@ -26,20 +26,16 @@ import {commentsIntents} from './core/comments/intents'
 import selections from './core/selections/selections'
 import {selectionsIntents} from './core/selections/intents'
 
-
-
+//views etc
 import BomView from './components/Bom/BomView'
-
-//import GLView from './components/webgl/GlView2'
 import GLView from './components/webgl/GlView3'
-
 
 import {getExtension} from './utils/utils'
 import {combineLatestObj} from './utils/obsUtils'
 import {prepForRender} from './utils/uiUtils'
 
 import {extractDesignSources,extractMeshSources,extractSourceSources} from './core/sources/dataSources'
-import {makeTransformsSystem} from './core/entities/entities2'
+import {makeCoreSystem,makeTransformsSystem,makeMeshSystem} from './core/entities/entities2'
 
 
 function view(state$, DOM, name){
@@ -69,6 +65,7 @@ function view(state$, DOM, name){
 
   let glProps$  = combineLatestObj({settings:state$.pluck("settings")
     ,meshes:state$.pluck("meshes")
+    ,transforms:state$.pluck("transforms")
   })
   let glUi      = GLView({DOM,props$:glProps$})
   const glEvents    = glUi.events
@@ -92,9 +89,6 @@ function view(state$, DOM, name){
 
 import {makeInternals, meshResources, entityInstanceFromPartTypes} from './core/tbd0'
 
-import THREE from 'three'
-
-
 function registerEntity(sources)
 {
   let meshSources$ = sources.meshSources$
@@ -114,7 +108,7 @@ function registerEntity(sources)
   }
 
   //let entityInstance = undefined
-  return meshResources$.map(e=>e.mesh).map(testHack2)
+  return meshResources$.map(e=>e.mesh).map(testHack2).shareReplay(1)
 }
 
 export function main(drivers) {
@@ -147,6 +141,7 @@ export function main(drivers) {
 
   const expMeshes$ = registerEntity({meshSources$,srcSources$})
 
+  //Models etc 
   //entities$
   const entities$   = Rx.Observable.just(undefined)
   //comments
@@ -154,10 +149,52 @@ export function main(drivers) {
   const bom$        = undefined
   //selections 
   const selections$ = selections( selectionsIntents({DOM,events}, entities$) )
-
   //
-  //let model$ = model(intent(DOM))
-  let state$ = combineLatestObj({settings$,meshes$:expMeshes$,selections$})
+  let {core$,coreActions}            = makeCoreSystem()
+  let {meshes$,meshActions}          = makeMeshSystem()
+  let {transforms$,transformActions} = makeTransformsSystem()
+
+  //HACKKKK !! do actual stuff !!!
+  let types$ = expMeshes$.map(function(mesh){
+    let typeUid = Math.round( Math.random()*10)
+    return {
+      mesh
+      ,name:"foo"+Math.round( Math.random()*10)
+      ,id:typeUid
+    }
+  }).shareReplay(1)
+
+  const instances$ = types$.map(function(typeData){
+    let instUid = Math.round( Math.random()*10 )
+    let instanceData = {
+      id:instUid
+      ,typeUid:typeData.id
+      ,name:typeData.name+"_"+instUid
+    }
+    return instanceData
+  }).shareReplay(1)
+
+  //types$.subscribe(e=>console.log("types",e))
+  //instances$.subscribe(e=>console.log("instances",e))
+
+  instances$
+    .withLatestFrom(types$,function(instance,types){
+      console.log("instances",instance, "types",types)
+
+      meshActions.createComponent$.onNext({id:instance.id, value:{ mesh: types.mesh.clone() } })
+
+      coreActions.createComponent$.onNext({id:instance.id, value:{typeUid:instance.typeUid}})
+      transformActions.createComponent$.onNext({id:instance.id})
+    })
+    .subscribe(e=>e)
+
+  //meshes$.subscribe(e=>console.log("meshes (per instance)",e))
+  //transforms$.subscribe(e=>console.log("transforms (per instance)",e))
+
+  //////////
+  //,meshes$:expMeshes$
+  let state$ = combineLatestObj({settings$,selections$,meshes$,transforms$})
+
   let _view = view(state$, DOM)
 
   //output to localStorage

@@ -76,7 +76,7 @@ function makeActionsFromApiFns(apiFns){
 
 
 ////Entity Core//////
-function makeCoreSystem(){
+export function makeCoreSystem(){
   const defaults = {}
 
   //defaults for each component in this system
@@ -184,23 +184,38 @@ export function makeTransformsSystem(){
 }
 
 ////Mesh//////
-function makeMeshSystem(){
+export function makeMeshSystem(){
   const defaults ={
-    /*points: [
-      [0,0,1]
-      ,[0,1,0]
-      ,[1,0,0]
-    ]
-    ,cells:[0,1,2]*/
+  }
+
+  function createComponentMesh(defaults,state,input){
+    console.log("createComponent", input)
+    let inputValue =  {}
+    if(input && input.value) inputValue = input.value
+
+    let newAttrs = inputValue.mesh //{mesh: inputValue.mesh }// mergeData(defaults,inputValue)
+
+    //auto increment ?
+    //auto generate ?
+    //let id = generateUUID()
+    //if(input && input.id) id = input.id
+    let id = input.id
+
+    state = mergeData({},state)
+    state[id] = newAttrs
+    //FIXME big hack, using mutability
+    return state 
   }
 
   //TODO: should defaults be something like a stand in cube ?
   let updateFns = {
-    createComponent: createComponent.bind(null,undefined)
+    createComponent: createComponentMesh.bind(null,undefined)
     , removeComponent}
-  let mesh$ = makeModelNoHistory(defaults, updateFns, actions)
+  let actions   = makeActionsFromApiFns(updateFns)
 
-  return {mesh$,meshActions:actions}
+  let meshes$ = makeModelNoHistory(defaults, updateFns, actions)
+
+  return {meshes$,meshActions:actions}
 }
 
 ////BoundingBox//////
@@ -268,7 +283,7 @@ const id1 = generateUUID()
 const id2 = generateUUID()
 
 
-setTimeout(function() {
+/*setTimeout(function() {
   coreActions.createComponent$.onNext({id:id1, value:{typeUid:0}})
   transformActions.createComponent$.onNext({id:id1, value:{typeUid:0}})
 
@@ -290,9 +305,9 @@ setTimeout(function(){
     rot: [ 0, 8.24, 0 ],
     sca: [ 1, 1.5, 1.5 ]}
     })
-},600)
+},600)*/
 
-/*let {mesh$,meshActions}            = makeMeshSystem()
+/*let {meshes$,meshActions}            = makeMeshSystem()
 let {bounds$ ,boundActions}        = makeBoundingSystem()
 let {meta$ ,metaActions}           = makeMetaDataSystem()
 let {bom$ ,bomActions}             = makeBomSystem()
