@@ -270,10 +270,7 @@ function GLView({DOM, props$}){
   let config = presets
 
   let initialized$ = new Rx.BehaviorSubject(false)
-    //.startWith(false) //Rx.Observable.just(true) 
-
   let update$ = Rx.Observable.interval(16,66666666667)
-  //let reRender$ = Rx.Observable.just(0) //Rx.Observable.interval(16) //observable should be the merger of all observable that need to re-render the view?
 
   let settings$   = props$.pluck('settings')//.startWith({camera:{autoRotate:false}})
   let items$      = props$.pluck('items').startWith([])
@@ -284,8 +281,15 @@ function GLView({DOM, props$}){
   let activeTool$ = settings$.pluck("activeTool").startWith(undefined)
 
   let items2$ = props$.pluck('meshes')
+    .map(function(mesh){
+      mesh.selectable      = true
+      mesh.selectTrickleUp = false
+      mesh.transformable   = true
+      //FIXME: not sure, these are very specific for visuals
+      mesh.castShadow      = true
+      return mesh
+    })
   
-
   //debug only
   //settings$.subscribe(function(data){console.log("SETTINGS ",data)})
   //items$.subscribe(function(data){console.log("items ",data)})
@@ -327,23 +331,20 @@ function GLView({DOM, props$}){
   items2$.subscribe(e=>dynamicInjector.add(e))
 
 
-  function withPickingInfos(inStream, windowResizes$ ){
-    //TODO : use a stream of element size 
-    let clientRect$ = Rx.Observable.just("foo") //inStream
-      //.filter( e => (e && e.target) )
-      //.map(e => e.target)
-      //.map(target => target.getBoundingClientRect())
-
+  function withPickingInfos( inStream, containerResizes$ ){
     return inStream
       .withLatestFrom(
-        clientRect$,
-        windowResizes$,
-        function(event, clientRect_, resizes){
-          let input = document.querySelector('.container')//canvas
-          let clientRect = input.getBoundingClientRect()
-          //console.log("clientRect",clientRect,"event",event)
+        containerResizes$,
+        function(event, clientRect){          
           if(event){
-            let data = {pos:{x:event.clientX,y:event.clientY},rect:clientRect,width:resizes.width,height:resizes.height,event}
+            let input = document.querySelector('.container')//canvas
+            let clientRect = input.getBoundingClientRect()
+
+            let data = {
+              pos:{x:event.clientX,y:event.clientY}
+              ,rect:clientRect,width:clientRect.width,height:clientRect.height
+              ,event
+            }
             let mouseCoords = getCoordsFromPosSizeRect(data)
             return selectionAt(event, mouseCoords, camera, scene.children)
           }
@@ -353,6 +354,15 @@ function GLView({DOM, props$}){
         }
       )
   }
+
+  let containerResizes$ = windowResizes$
+    .map(function(){
+      let input = document.querySelector('.container')//canvas
+      if(input) return input.getBoundingClientRect()
+    })
+    .filter(exists)
+    .startWith({width:window.innerWidth, height:window.innerHeight, aspect:window.innerWidth/window.innerHeight, bRect:undefined})
+
 
   let _shortSingleTaps$ = withPickingInfos(shortSingleTaps$, windowResizes$)
   let _shortDoubleTaps$ = withPickingInfos(shortDoubleTaps$, windowResizes$)
@@ -381,8 +391,6 @@ function GLView({DOM, props$}){
       dragMoves$.map(undefined)
     )
     //.shareReplay(1)
-
-
 
   //for outlines, experimental
   function removeOutline(){
@@ -440,8 +448,6 @@ function GLView({DOM, props$}){
 
     return {applyFx,removeFx}
   }
-
-
 
 
 
@@ -526,6 +532,8 @@ function GLView({DOM, props$}){
       }
     })
     .subscribe(e=>e)*/
+  //_shortSingleTaps$.subscribe(e=>console.log("_shortSingleTaps",e))
+  //_shortSingleTaps$.map( meshFrom ).subscribe(e=>console.log("_shortSingleTaps meshFrom",e))
 
   //Stream of selected meshes
   let selectedMeshes$ = merge(
@@ -600,7 +608,6 @@ function GLView({DOM, props$}){
       .filter(i=>i===true)
       .do(i=>handleResize({width:window.innerWidth,height:window.innerHeight,aspect:window.innerWidth/window.innerHeight}))
       
-    //update$    
     ,fromEvent(controls,'change')
     ,fromEvent(transformControls,'change')
     //,fromEvent(camViewControls,'change')
@@ -638,7 +645,6 @@ function GLView({DOM, props$}){
   }
     
   function render(scene, camera){
-    console.log("render")
     //renderer.render( scene, camera )
     composers.forEach(c=>c.render())
     //composer.passes[composer.passes.length-1].uniforms[ 'tDiffuse2' ].value = composers[0].renderTarget2
@@ -745,6 +751,7 @@ function GLView({DOM, props$}){
         scene.add(grid)
       }
     })
+
   //sorta hack ??
   scene.dynamicInjector = dynamicInjector
 
@@ -760,17 +767,16 @@ function GLView({DOM, props$}){
 
   return {
     DOM: vtree$
-    /*,events:{
-      initialized:initialized$,
+    ,events:{
+      //initialized:initialized$,
+       shortSingleTaps$:_shortSingleTaps$
+      , shortDoubleTaps$:_shortDoubleTaps$
 
-      shortSingleTaps$:_shortSingleTaps$,
-      shortDoubleTaps$:_shortDoubleTaps$,
+      , longTaps$
 
-      longTaps$,
-
-      selectionsTransforms$,
-      selectedMeshes$,
-    }*/
+      , selectionsTransforms$
+      , selectedMeshes$
+    }
   }
 }
 
