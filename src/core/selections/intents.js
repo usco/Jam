@@ -17,7 +17,6 @@ export function reverseSelections(intents, entities$){
       return entityIds.map(id=>entities.byId[id].typeUid)
     })
     
-
   //select entities from bom entries
   let selectEntities$ = intents
     .selectBomEntries$
