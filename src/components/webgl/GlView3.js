@@ -280,16 +280,52 @@ function GLView({DOM, props$}){
 
   let activeTool$ = settings$.pluck("activeTool").startWith(undefined)
 
-  let items2$ = props$.pluck('meshes')
-    .map(function(mesh){
-      mesh.selectable      = true
-      mesh.selectTrickleUp = false
-      mesh.transformable   = true
-      //FIXME: not sure, these are very specific for visuals
-      mesh.castShadow      = true
-      return mesh
+  let transforms$ = props$.pluck('transforms')
+  let meshes$     = props$.pluck('meshes')
+
+
+
+  function setFlags(mesh){
+    mesh.selectable      = true
+    mesh.selectTrickleUp = false
+    mesh.transformable   = true
+    //FIXME: not sure, these are very specific for visuals
+    mesh.castShadow      = true
+    return mesh
+  }
+
+  let __items2$ = props$.pluck('meshes')
+    .map(function(meshes){
+      return setFlags( meshes )
     })
+
+  let items2$ = combineLatestObj({transforms$,meshes$})
+    .map(function({transforms,meshes}){
+
+      let keys = Object.keys(meshes)
+      //console.log("keys",keys)
+
+      return keys.map(function(key){
+        let transform = transforms[key]
+        let mesh = meshes[key]
+
+        if(transform && mesh){
+          mesh.position.fromArray( transform.pos )
+          mesh.rotation.fromArray( transform.rot )
+          mesh.scale.fromArray(  transform.sca )
+          //mesh.material.color.set( entity.color )
+          //console.log("mesh",mesh)
+          return setFlags(mesh)
+        }
+      })
+      .filter(m=>m !== undefined)
+    })
+
+    //items2$
+      //.subscribe(e=>console.log("megacombo !!",e))
   
+  //let meshes$ = Rx.Observable.just(undefined)
+  items$ = Rx.Observable.never()
   //debug only
   //settings$.subscribe(function(data){console.log("SETTINGS ",data)})
   //items$.subscribe(function(data){console.log("items ",data)})
@@ -326,10 +362,6 @@ function GLView({DOM, props$}){
 
   let {shortSingleTaps$, shortDoubleTaps$, longTaps$, 
       dragMoves$, zooms$} =  pointerInteractions(interactionsFromCEvents(DOM))
-
-  //TODO : remove this hack
-  items2$.subscribe(e=>dynamicInjector.add(e))
-
 
   function withPickingInfos( inStream, containerResizes$ ){
     return inStream
@@ -480,11 +512,8 @@ function GLView({DOM, props$}){
       removeFx(null,removed)
     },e=>console.log("error",e)) */
 
-  let meshes$ = Rx.Observable.just(undefined)
-  items$ = Rx.Observable.never()
+
   
-
-
   //TODO: we need some diffing etc somewhere in here  
   //ie : which were added , which were removed, which ones were changed
   function clearScene(){
@@ -583,7 +612,6 @@ function GLView({DOM, props$}){
           return []
         }
       })
-
 
   //what are the active controls : camera, object tranforms, 
   let tControlsActive$ = merge(
@@ -755,6 +783,17 @@ function GLView({DOM, props$}){
   //sorta hack ??
   scene.dynamicInjector = dynamicInjector
 
+
+
+    //TODO : remove this hack
+  items2$
+    .subscribe(function(e){
+      //clearScene()
+      console.log("foooo",dynamicInjector)
+      e.map( m=>dynamicInjector.add(m) )
+
+    })
+
   const vtree$ = combineLatestObj({initialized$, settings$})
     .map(function({initialized, settings}){
       return (
@@ -764,18 +803,17 @@ function GLView({DOM, props$}){
       )
     })
 
-
   return {
     DOM: vtree$
     ,events:{
       //initialized:initialized$,
-       shortSingleTaps$:_shortSingleTaps$
-      , shortDoubleTaps$:_shortDoubleTaps$
+      shortSingleTaps$:_shortSingleTaps$
+      ,shortDoubleTaps$:_shortDoubleTaps$
 
-      , longTaps$
+      ,longTaps$
 
-      , selectionsTransforms$
-      , selectedMeshes$
+      ,selectionsTransforms$
+      ,selectedMeshes$
     }
   }
 }
