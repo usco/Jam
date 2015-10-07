@@ -270,20 +270,16 @@ function GLView({DOM, props$}){
   let config = presets
 
   let initialized$ = new Rx.BehaviorSubject(false)
-  let update$ = Rx.Observable.interval(16,66666666667)
+  let update$      = Rx.Observable.interval(16,66666666667)
 
-  let settings$   = props$.pluck('settings')//.startWith({camera:{autoRotate:false}})
-  let items$      = props$.pluck('items').startWith([])
-  let selections$ = props$.pluck('selections').startWith([]).filter(exists).distinctUntilChanged()
-  let visualMappings$ = props$.pluck('visualMappings')
+  let settings$       = props$.pluck('settings')
+  let selections$     = props$.pluck('selections').startWith([]).filter(exists).distinctUntilChanged()
   //every time either activeTool or selection changes, reset/update transform controls
 
   let activeTool$ = settings$.pluck("activeTool").startWith(undefined)
 
   let transforms$ = props$.pluck('transforms')
   let meshes$     = props$.pluck('meshes')
-
-
 
   function setFlags(mesh){
     mesh.selectable      = true
@@ -294,12 +290,7 @@ function GLView({DOM, props$}){
     return mesh
   }
 
-  let __items2$ = props$.pluck('meshes')
-    .map(function(meshes){
-      return setFlags( meshes )
-    })
-
-  let items2$ = combineLatestObj({transforms$,meshes$})
+  let items$ = combineLatestObj({transforms$,meshes$})
     .map(function({transforms,meshes}){
 
       let keys = Object.keys(meshes)
@@ -320,12 +311,7 @@ function GLView({DOM, props$}){
       })
       .filter(m=>m !== undefined)
     })
-
-    //items2$
-      //.subscribe(e=>console.log("megacombo !!",e))
   
-  //let meshes$ = Rx.Observable.just(undefined)
-  items$ = Rx.Observable.never()
   //debug only
   //settings$.subscribe(function(data){console.log("SETTINGS ",data)})
   //items$.subscribe(function(data){console.log("items ",data)})
@@ -530,39 +516,6 @@ function GLView({DOM, props$}){
   function addMeshToScene(mesh){
      scene.dynamicInjector.add(mesh)
   }
-
- 
-  items$
-    .debounce(200)
-    .distinctUntilChanged(null, entityVisualComparer)
-    .withLatestFrom( visualMappings$ ,function(items, mapper){
-      return items
-        .filter(exists)
-        .map(mapper)
-        .map(s=>s.take(1))
-    })
-    .do(clearScene)
-    .flatMap(Rx.Observable.forkJoin)
-    .subscribe(function(meshes){
-      meshes.map(addMeshToScene)
-    })
-   
-  /*items$
-    .withLatestFrom( visualMappings$ ,function(items, mapper){
-      console.log("visualMappings diff test",mapper, items)
-     
-      if(items){
-        let obs = items.map(mapper).map(s=>s.take(1))
-        Rx.Observable.forkJoin(obs)
-          .bufferWithTimeOrCount(16,2)
-          .subscribe(function(meshes){
-            console.log("meshes",meshes)
-        })
-      }
-    })
-    .subscribe(e=>e)*/
-  //_shortSingleTaps$.subscribe(e=>console.log("_shortSingleTaps",e))
-  //_shortSingleTaps$.map( meshFrom ).subscribe(e=>console.log("_shortSingleTaps meshFrom",e))
 
   //Stream of selected meshes
   let selectedMeshes$ = merge(
@@ -783,10 +736,9 @@ function GLView({DOM, props$}){
   //sorta hack ??
   scene.dynamicInjector = dynamicInjector
 
-
-
-    //TODO : remove this hack
-  items2$
+  //TODO : remove this hack
+  items$
+    //.do(clearScene)
     .subscribe(function(e){
       //clearScene()
       console.log("foooo",dynamicInjector)
