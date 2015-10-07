@@ -411,8 +411,8 @@ function GLView({DOM, props$}){
       .filter(m=>m !== undefined)
     })
   
-  function addPickingInfos( inStream, containerResizes$ ){
-    return inStream
+  function addPickingInfos( inStream$, containerResizes$, camera, scene ){
+    return inStream$
       .withLatestFrom(
         containerResizes$,
         function(event, clientRect){          
@@ -443,10 +443,9 @@ function GLView({DOM, props$}){
     .filter(exists)
     .startWith({width:window.innerWidth, height:window.innerHeight, aspect:window.innerWidth/window.innerHeight, bRect:undefined})
 
-
-  let shortSingleTapsWPicking$ = addPickingInfos(shortSingleTaps$, windowResizes$)
-  let shortDoubleTapsWPicking$ = addPickingInfos(shortDoubleTaps$, windowResizes$)
-  let longTapsWPicking$        = addPickingInfos(longTaps$, windowResizes$)//.map( meshFrom )
+  let shortSingleTapsWPicking$ = addPickingInfos(shortSingleTaps$, windowResizes$, camera, scene)
+  let shortDoubleTapsWPicking$ = addPickingInfos(shortDoubleTaps$, windowResizes$, camera, scene)
+  let longTapsWPicking$        = addPickingInfos(longTaps$, windowResizes$, camera, scene)
   
   //problem : this fires BEFORE the rest is ready
   //activeTool$.skip(1).filter(isTransformTool).subscribe(transformControls.setMode)
@@ -470,7 +469,6 @@ function GLView({DOM, props$}){
       shortDoubleTaps$.map(undefined),
       dragMoves$.map(undefined)
     )
-    //.shareReplay(1)
 
   //for outlines, experimental
   function removeOutline(){
@@ -612,7 +610,6 @@ function GLView({DOM, props$}){
       ,(err)=>console.log("error in setting transform",err)
     )
 
-  
   //this limits "selectability" to transforms & default 
   selectedMeshes$ =
     selectedMeshes$.
