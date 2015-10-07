@@ -219,7 +219,7 @@ export function makeMeshSystem(){
 }
 
 ////BoundingBox//////
-function makeBoundingSystem(){
+export function makeBoundingSystem(){
   const defaults = {}
 
   const  boundsDefaults ={
@@ -227,8 +227,11 @@ function makeBoundingSystem(){
     max:[0,0,0]
   }
 
-  let actions = {removeComponent$: new Rx.Subject()}
-  let updateFns = {removeComponent}
+  let updateFns = {
+    createComponent: createComponent.bind(null,boundsDefaults)
+    , removeComponent}
+
+  let actions = makeActionsFromApiFns(updateFns)
   let bounds$ = makeModelNoHistory(defaults, updateFns, actions)
 
   return {bounds$,boundActions:actions}
