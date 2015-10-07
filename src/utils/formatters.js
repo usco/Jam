@@ -86,6 +86,25 @@ export function hexToThreejsColor (input){
     })
  }
 
+export function hashCodeFromString(s){
+  return s.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)           
+}
+
+//TODO: do this better
+export function nameCleanup( name ){
+   let cName = name.substr(0, name.lastIndexOf('.'))
+   //cName = cName.replace(/_/g, '').replace(/-/g, '');
+   cName = camelCase(cName)
+   cName = camelCase2(cName)
+   //cName = cName.replace("_","").replace("-","");
+   return cName
+}
+
+/*generate a url-valid string from the input string :ie remove spaces, */
+export function normalizeString(string){
+  return string.toLowerCase().replace(/\./g, '-').replace(/ /g, '-')
+}
+
 
       
 //OLD polymer code, to be converted
