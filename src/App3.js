@@ -35,7 +35,7 @@ import {combineLatestObj} from './utils/obsUtils'
 import {prepForRender} from './utils/uiUtils'
 
 import {extractDesignSources,extractMeshSources,extractSourceSources} from './core/sources/dataSources'
-import {makeCoreSystem,makeTransformsSystem,makeMeshSystem} from './core/entities/entities2'
+import {makeCoreSystem,makeTransformsSystem,makeMeshSystem, makeBoundingSystem} from './core/entities/entities2'
 
 
 function view(state$, DOM, name){
@@ -102,7 +102,7 @@ function registerEntity(sources)
   meshResources$.subscribe(e=>console.log("meshResources",e))
 
   function testHack2(mesh){
-    mesh.position.set(0, 50, 0)
+    mesh.position.set(0, 0, 0)
     mesh.name = "foo"
     return mesh
   }
@@ -153,6 +153,7 @@ export function main(drivers) {
   let {core$,coreActions}            = makeCoreSystem()
   let {meshes$,meshActions}          = makeMeshSystem()
   let {transforms$,transformActions} = makeTransformsSystem()
+  let {bounds$ ,boundActions}        = makeBoundingSystem()
 
   //HACKKKK !! do actual stuff !!!
   let types$ = expMeshes$.map(function(mesh){
@@ -176,20 +177,23 @@ export function main(drivers) {
 
   //types$.subscribe(e=>console.log("types",e))
   //instances$.subscribe(e=>console.log("instances",e))
-
   instances$
     .withLatestFrom(types$,function(instance,types){
       console.log("instances",instance, "types",types)
 
-      meshActions.createComponent$.onNext({id:instance.id, value:{ mesh: types.mesh.clone() } })
+      //is this a hack
+      let mesh = types.mesh
+      let bbox = mesh.boundingBox
+      let zOffset = bbox.max.clone().sub(bbox.min)
+      zOffset = zOffset.z/2
+      bbox = { min:bbox.min.toArray(), max:bbox.max.toArray() }
 
+      boundActions.createComponent$.onNext({id:instance.id,value:{bbox} })
+      meshActions.createComponent$.onNext({id:instance.id, value:{ mesh: types.mesh.clone() } })
       coreActions.createComponent$.onNext({id:instance.id, value:{typeUid:instance.typeUid}})
-      transformActions.createComponent$.onNext({id:instance.id})
+      transformActions.createComponent$.onNext({id:instance.id, value:{pos:[0,0,zOffset]} })
     })
     .subscribe(e=>e)
-
-  //meshes$.subscribe(e=>console.log("meshes (per instance)",e))
-  //transforms$.subscribe(e=>console.log("transforms (per instance)",e))
 
   //////////
   //,meshes$:expMeshes$
