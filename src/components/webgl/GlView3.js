@@ -240,7 +240,13 @@ function makeOutlineFx(mesh){
 }
 
 
-function intents(drivers){
+function intents(drivers, interactions){
+  let {shortSingleTaps$,
+    shortDoubleTaps$,
+    longTaps$,
+    zooms$,
+    dragMoves$} = interactions
+
   //FIXME : needs to be done in a more coherent, reusable way
   //shut down "wobble effect if ANY user interaction takes place"
   const userAction$ = merge(
@@ -252,16 +258,53 @@ function intents(drivers){
   )
   //.subscribe(e=>wobble.stop())
 
-  const zoomInOnPoint$ = _shortDoubleTaps$
+  function addPickingInfos( inStream, containerResizes$ ){
+    return inStream
+      .withLatestFrom(
+        containerResizes$,
+        function(event, clientRect){          
+          if(event){
+            let input = document.querySelector('.container')//canvas
+            let clientRect = input.getBoundingClientRect()
+
+            let data = {
+              pos:{x:event.clientX,y:event.clientY}
+              ,rect:clientRect,width:clientRect.width,height:clientRect.height
+              ,event
+            }
+            let mouseCoords = getCoordsFromPosSizeRect(data)
+            return selectionAt(event, mouseCoords, camera, scene.children)
+          }
+          else{
+            return {}
+          }
+        }
+      )
+  }
+
+  let containerResizes$ = windowResizes$
+    .map(function(){
+      let input = document.querySelector('.container')//canvas
+      if(input) return input.getBoundingClientRect()
+    })
+    .filter(exists)
+    .startWith({width:window.innerWidth, height:window.innerHeight, aspect:window.innerWidth/window.innerHeight, bRect:undefined})
+
+
+  let shortSingleTapsWPicking$ = addPickingInfos(shortSingleTaps$, windowResizes$)
+  let shortDoubleTapsWPicking$ = addPickingInfos(shortDoubleTaps$, windowResizes$)
+  let longTapsWPicking$        = addPickingInfos(longTaps$, windowResizes$)//.map( meshFrom )
+
+
+  const zoomInOnPoint$ = shortDoubleTapsWPicking$
     .map(e => e.detail.pickingInfos.shift())
     .filter(exists)
     .map( objectAndPosition )
     //.subscribe( (oAndP) => zoomInOnObject.execute( oAndP.object, {position:oAndP.point} ) )
         
   const selectMeshes$ = merge( //Stream of selected meshes
-      _shortSingleTaps$.map( meshFrom )
-      ,_longTaps$
-      ,meshes$
+      shortSingleTapsWPicking$.map( meshFrom )
+      ,longTapsWPicking$.map( meshFrom )
     )
     .map(toArray)//important !!
     .distinctUntilChanged()
@@ -300,37 +343,6 @@ function GLView({DOM, props$}){
   let transforms$ = props$.pluck('transforms')
   let meshes$     = props$.pluck('meshes')
 
-  function setFlags(mesh){
-    mesh.selectable      = true
-    mesh.selectTrickleUp = false
-    mesh.transformable   = true
-    //FIXME: not sure, these are very specific for visuals
-    mesh.castShadow      = true
-    return mesh
-  }
-
-  let items$ = combineLatestObj({transforms$,meshes$})
-    .map(function({transforms,meshes}){
-
-      let keys = Object.keys(meshes)
-      //console.log("keys",keys)
-
-      return keys.map(function(key){
-        let transform = transforms[key]
-        let mesh = meshes[key]
-
-        if(transform && mesh){
-          mesh.position.fromArray( transform.pos )
-          mesh.rotation.fromArray( transform.rot )
-          mesh.scale.fromArray(  transform.sca )
-          //mesh.material.color.set( entity.color )
-          //console.log("mesh",mesh)
-          return setFlags(mesh)
-        }
-      })
-      .filter(m=>m !== undefined)
-    })
-  
   //debug only
   //settings$.subscribe(function(data){console.log("SETTINGS ",data)})
   //items$.subscribe(function(data){console.log("items ",data)})
@@ -368,7 +380,38 @@ function GLView({DOM, props$}){
   let {shortSingleTaps$, shortDoubleTaps$, longTaps$, 
       dragMoves$, zooms$} =  pointerInteractions(interactionsFromCEvents(DOM))
 
-  function withPickingInfos( inStream, containerResizes$ ){
+  function setFlags(mesh){
+    mesh.selectable      = true
+    mesh.selectTrickleUp = false
+    mesh.transformable   = true
+    //FIXME: not sure, these are very specific for visuals
+    mesh.castShadow      = true
+    return mesh
+  }
+
+  let items$ = combineLatestObj({transforms$,meshes$})
+    .map(function({transforms,meshes}){
+
+      let keys = Object.keys(meshes)
+      //console.log("keys",keys)
+
+      return keys.map(function(key){
+        let transform = transforms[key]
+        let mesh = meshes[key]
+
+        if(transform && mesh){
+          mesh.position.fromArray( transform.pos )
+          mesh.rotation.fromArray( transform.rot )
+          mesh.scale.fromArray(  transform.sca )
+          //mesh.material.color.set( entity.color )
+          //console.log("mesh",mesh)
+          return setFlags(mesh)
+        }
+      })
+      .filter(m=>m !== undefined)
+    })
+  
+  function addPickingInfos( inStream, containerResizes$ ){
     return inStream
       .withLatestFrom(
         containerResizes$,
@@ -401,15 +444,15 @@ function GLView({DOM, props$}){
     .startWith({width:window.innerWidth, height:window.innerHeight, aspect:window.innerWidth/window.innerHeight, bRect:undefined})
 
 
-  let _shortSingleTaps$ = withPickingInfos(shortSingleTaps$, windowResizes$)
-  let _shortDoubleTaps$ = withPickingInfos(shortDoubleTaps$, windowResizes$)
-  let _longTaps$        = withPickingInfos(longTaps$, windowResizes$).map( meshFrom )
+  let shortSingleTapsWPicking$ = addPickingInfos(shortSingleTaps$, windowResizes$)
+  let shortDoubleTapsWPicking$ = addPickingInfos(shortDoubleTaps$, windowResizes$)
+  let longTapsWPicking$        = addPickingInfos(longTaps$, windowResizes$)//.map( meshFrom )
   
   //problem : this fires BEFORE the rest is ready
   //activeTool$.skip(1).filter(isTransformTool).subscribe(transformControls.setMode)
 
   //zoom with double tap
-  _shortDoubleTaps$
+  shortDoubleTapsWPicking$
     .map(e => e.detail.pickingInfos.shift())
     .filter(exists)
     .map( objectAndPosition )
@@ -538,9 +581,8 @@ function GLView({DOM, props$}){
 
   //Stream of selected meshes
   let selectedMeshes$ = merge(
-    _shortSingleTaps$.map( meshFrom ),
-    _longTaps$
-    ,meshes$
+    shortSingleTapsWPicking$.map( meshFrom ),
+    longTapsWPicking$.map( meshFrom )
     )
   .map(toArray)//important !!
   .distinctUntilChanged()
@@ -758,7 +800,7 @@ function GLView({DOM, props$}){
   items$
     //.do(clearScene)
     .subscribe(function(e){
-      console.log("foooo",dynamicInjector)
+      //console.log("foooo",dynamicInjector)
       e.map( m=>dynamicInjector.add(m) )
     })
 
@@ -775,8 +817,9 @@ function GLView({DOM, props$}){
     DOM: vtree$
     ,events:{
       //initialized:initialized$,
-      shortSingleTaps$:_shortSingleTaps$
-      ,shortDoubleTaps$:_shortDoubleTaps$
+      shortSingleTaps$:shortSingleTapsWPicking$
+      ,shortDoubleTaps$:shortDoubleTapsWPicking$
+
 
       ,longTaps$
 
