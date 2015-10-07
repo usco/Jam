@@ -251,9 +251,27 @@ function intents(drivers){
     dragMoves$
   )
   //.subscribe(e=>wobble.stop())
+
+  const zoomInOnPoint$ = _shortDoubleTaps$
+    .map(e => e.detail.pickingInfos.shift())
+    .filter(exists)
+    .map( objectAndPosition )
+    //.subscribe( (oAndP) => zoomInOnObject.execute( oAndP.object, {position:oAndP.point} ) )
         
+  const selectMeshes$ = merge( //Stream of selected meshes
+      _shortSingleTaps$.map( meshFrom )
+      ,_longTaps$
+      ,meshes$
+    )
+    .map(toArray)//important !!
+    .distinctUntilChanged()
+    .shareReplay(1)
+
+
   return {
     userAction$
+    , zoomInOnPoint$
+    , selectMeshes$
   }
 }
 
@@ -278,6 +296,7 @@ function GLView({DOM, props$}){
 
   let activeTool$ = settings$.pluck("activeTool").startWith(undefined)
 
+  //composite data
   let transforms$ = props$.pluck('transforms')
   let meshes$     = props$.pluck('meshes')
 
@@ -717,7 +736,6 @@ function GLView({DOM, props$}){
   ///////////
   setupScene()
 
-
   DOM.select('canvas').events('contextmenu').subscribe( e => preventDefault(e) )
 
   update$.subscribe( update )
@@ -740,10 +758,8 @@ function GLView({DOM, props$}){
   items$
     //.do(clearScene)
     .subscribe(function(e){
-      //clearScene()
       console.log("foooo",dynamicInjector)
       e.map( m=>dynamicInjector.add(m) )
-
     })
 
   const vtree$ = combineLatestObj({initialized$, settings$})
@@ -771,13 +787,12 @@ function GLView({DOM, props$}){
 }
 
 function GLWidgeHelper(configureFn, configCallback) {
-    this.type = 'Widget'
-    this.configureFn = configureFn
-    this.configCallback = configCallback
+  this.type = 'Widget'
+  this.configureFn = configureFn
+  this.configCallback = configCallback
 }
 
 GLWidgeHelper.prototype.init = function () {
-  console.log("GLWidget init")
   let elem = document.createElement('div')
   elem.className = "container"
   this.configureFn(elem,this.configCallback)
