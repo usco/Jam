@@ -10,6 +10,9 @@ export function reverseSelections(intents, entities$){
     return Array.prototype.concat.apply([], this.map(lambda)) 
   }
 
+  //what we want is actually typeUid!
+  //so typeUidFromInstUid()
+
   //select bom entries from entities
   let selectBomEntries$ = intents
     .selectEntities$
@@ -18,6 +21,8 @@ export function reverseSelections(intents, entities$){
     })
     
   //select entities from bom entries
+  //in this case instUidFromTypeUid
+  
   let selectEntities$ = intents
     .selectBomEntries$
     .withLatestFrom(entities$,function(bomIds,entities){

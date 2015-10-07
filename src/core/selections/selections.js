@@ -3,12 +3,8 @@ let Observable = Rx.Observable
 let merge = Rx.Observable.merge
 
 import {toArray} from '../../utils/utils'
+import {makeModelNoHistory, mergeData} from '../../utils/modelUtils'
 
-///defaults, what else ?
-const defaults = {
-  selectedIds:[]
-  ,bomIds:[]
-}
 
 function selectEntities(state, input){
   //log.info("selecting entitites",sentities)
@@ -26,38 +22,15 @@ function selectBomEntries(state, input){
   return state
 }
 
-function makeModifications(intent){
+function selections(actions, source){
+  ///defaults, what else ?
+  const defaults = {
+    selectedIds:[]
+    ,bomIds:[]
+  }
 
-  /*select given entities*/
-  let _selectEntities$ = intent.selectEntities$ 
-    .distinctUntilChanged()//we do not want to be notified multiple times in a row for the same selections
-    .map((sentityIds) => (selections) => {
-      return selectEntities(selections,sentityIds)
-    })
-
-  let _selectBomEntries$ = intent.selectBomEntries$
-    .distinctUntilChanged()
-    .map((sBomIds) => (selections) => {
-      return selectBomEntries(selections,sBomIds)
-    })
-
-  return merge(
-    _selectEntities$
-    ,_selectBomEntries$
-  )
-
-}
-
-function selections(intent, source) {
-  let source$ = source || Observable.just(defaults)
-
-  let modification$ = makeModifications(intent)
-
-  return modification$
-    .merge(source$)
-    .scan((selections, modFn) => modFn(selections))//combine existing data with new one
-    .distinctUntilChanged()
-    .shareReplay(1)
+  let updateFns  = {selectEntities,selectBomEntries}
+  return makeModelNoHistory(defaults, updateFns, actions)
 }
 
 export default selections
