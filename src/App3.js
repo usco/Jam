@@ -200,50 +200,60 @@ export function main(drivers) {
     .addInstances$
     .subscribe(e=>console.log("addInstances",e))*/
 
-  let instances$  =  instanceIntents(entityTypes$)
+  let entityInstances$  =  instanceIntents(entityTypes$)
     .addInstances$
-    .map(function(typeData){
-      console.log("data",typeData)
-      if(typeData.typeData){
+    .map(function(newTypes){
+      console.log("data",newTypes)
+
+      return newTypes.map(function(typeData){
         let instUid = Math.round( Math.random()*10 )
-        let typeUid = typeData.typeData.id
-        let instName = typeData.typeData.name+"_"+instUid
+        let typeUid = typeData.id
+        let instName = typeData.name+"_"+instUid
 
         let instanceData = {
           id:instUid
           ,typeUid
           ,name:instName
         }
-      }
+        return instanceData
+      })
+      
+    })
+
+    //.subscribe(e=>e)
+
+  //instances$.subscribe(e=>console.log("instances",e))
+  entityInstances$
+    .withLatestFrom(entityTypes$,function(instances,types){
+      console.log("instances",instances, "types",types)
+
+      instances.map(function(instance){
+
+        let instUid = instance.id
+        let typeUid = instance.typeUid
+
+        //is this a hack?
+        let mesh = types.typeUidToTemplateMesh[typeUid]
+        let bbox = mesh.boundingBox
+        let zOffset = bbox.max.clone().sub(bbox.min)
+        zOffset = zOffset.z/2
+        bbox = { min:bbox.min.toArray(), max:bbox.max.toArray() }
+
+        //injecting data like this is the right way ?
+        mesh = mesh.clone()
+        mesh.userData.entity = {
+          iuid:instUid
+        }
+
+        boundActions.createComponent$.onNext({id:instUid, value:{bbox} })
+        meshActions.createComponent$.onNext({id:instUid,  value:{ mesh }})
+        coreActions.createComponent$.onNext({id:instUid,  value:{ typeUid }})
+        transformActions.createComponent$.onNext({id:instUid, value:{pos:[0,0,zOffset]} })
+      })
 
     })
     .subscribe(e=>e)
 
-  //types$.subscribe(e=>console.log("types",e))
-  //instances$.subscribe(e=>console.log("instances",e))
-  /*instances$
-    .withLatestFrom(types$,function(instance,types){
-      console.log("instances",instance, "types",types)
-
-      //is this a hack?
-      let mesh = types.mesh
-      let bbox = mesh.boundingBox
-      let zOffset = bbox.max.clone().sub(bbox.min)
-      zOffset = zOffset.z/2
-      bbox = { min:bbox.min.toArray(), max:bbox.max.toArray() }
-
-      //injecting data like this is the right way ?
-      mesh = mesh.clone()
-      mesh.userData.entity = {
-        iuid:instance.id
-      }
-
-      boundActions.createComponent$.onNext({id:instance.id, value:{bbox} })
-      meshActions.createComponent$.onNext({id:instance.id,  value:{ mesh }})
-      coreActions.createComponent$.onNext({id:instance.id,  value:{ typeUid:instance.typeUid }})
-      transformActions.createComponent$.onNext({id:instance.id, value:{pos:[0,0,zOffset]} })
-    })
-    .subscribe(e=>e)*/
 
   //////////
   let state$ = combineLatestObj({settings$,selections$,meshes$,transforms$})
