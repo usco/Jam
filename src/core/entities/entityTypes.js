@@ -7,17 +7,10 @@ import logger from 'log-minim'
 let log = logger("app")
 log.setLevel("debug")
 
-import {generateUUID, nameCleanup} from 'usco-kernel2/src/utils'
+import {generateUUID} from '../../utils/utils'
+import {nameCleanup} from '../../utils/formatters'
 import {computeBoundingBox,computeBoundingSphere} from 'glView-helpers/src/meshTools/computeBounds'
 
-const defaults = {
-  meshNameToPartTypeUId:{},
-  typeUidToMeshName:{},
-  typeData:{},
-  latest:undefined,
-  //not sure
-  typeUidToTemplateMesh:{}
-}
 
 function typeUidFromMeshName(meshNameToPartTypeUId, meshName){
   return meshNameToPartTypeUId[ meshName ]
@@ -30,7 +23,7 @@ function typeFromMeshData(data, typeUidFromMeshName){
   let typeUid = typeUidFromMeshName(meshName)
   let templateMesh = undefined
 
-  //no typeUid was given, it means we have a mesh with no part (yet !)
+  //no typeUid was given, it means we have a mesh with no entity (yet !)
   if( !typeUid ) {
     typeUid = generateUUID()
 
@@ -42,7 +35,7 @@ function typeFromMeshData(data, typeUidFromMeshName){
     computeBoundingBox(templateMesh)
   }
 
-  return {typeUid, meshName, templateMesh}
+  return {id: typeUid, meshName, templateMesh}
 }
 
 function updateTypesData(newTypeData, currentData){
@@ -50,7 +43,6 @@ function updateTypesData(newTypeData, currentData){
   let regData = currentData
   let {typeUid,meshName,templateMesh} = newTypeData
   
-  //partKlass = this.makeNamedPartKlass( cleanedName, typeUid )& register class
   let typeData              = regData.typeData || {}
   let meshNameToPartTypeUId = regData.meshNameToPartTypeUId || {}
   let typeUidToMeshName     = regData.typeUidToMeshName || {}
@@ -84,42 +76,36 @@ function updateTypesData(newTypeData, currentData){
   }
 }
 
+/////////////////
+//actual api functions 
 
-function modifications(intent){
-
-  let typeFromMesh$ = intent.combos$
-    .map((data) => (regData) => {
-      //log.info("I would register something", data, regData)
-      //prepare lookup function for finding already registered meshes
-      let typeUidLookup = typeUidFromMeshName.bind(null,regData.meshNameToPartTypeUId)
-      //create new data
-      let newData = typeFromMeshData(data,typeUidLookup)
-      //update data
-      return updateTypesData(newData,regData)
-  })
-
-  /*reset all the data to nothing*/
-  let reset$ = intent.reset$
-    .map(() => (regData) => {
-      //log.info("New design, clearing registry",regData)
-      return Object.assign({},defaults)
-  })
-
-  return merge(
-    typeFromMesh$
-    ,reset$
-  )
+function registerTypeFromMesh(state,input){
+  //log.info("I would register something", data, regData)
+  //prepare lookup function for finding already registered meshes
+  let typeUidLookup = typeUidFromMeshName.bind(null,state.meshNameToPartTypeUId)
+  //create new data
+  let newData = typeFromMeshData(input,typeUidLookup)
+  //update data
+  return updateTypesData(newData,state)
 }
 
-function partRegistry(intent, source) {
-  let source$ = source || Observable.just(defaults)
-  
-  let modification$ = modifications(intent)
-
-  return modification$
-    .merge(source$)
-    .scan((regData, modFn) => modFn(regData))//combine existing data with new one
-    .shareReplay(1)
+function clearTypes(state, input){
+  //log.info("New design, clearing registry",regData)
+  return Object.assign({},defaults)
 }
 
-export default partRegistry
+function entityTypes(actions, source){
+  const defaults = {
+    meshNameToPartTypeUId:{},
+    typeUidToMeshName:{},
+    typeData:{},
+    latest:undefined,
+    //not sure
+    typeUidToTemplateMesh:{}
+  }
+
+  let updateFns  = {registerTypeFromMesh, clearTypes}
+  return makeModelNoHistory(defaults, updateFns, actions)
+}
+
+export default entityTypes
