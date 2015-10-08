@@ -29,6 +29,7 @@ import {selectionsIntents} from './core/selections/intents'
 import {extractDesignSources,extractMeshSources,extractSourceSources} from './core/sources/dataSources'
 import {makeCoreSystem,makeTransformsSystem,makeMeshSystem, makeBoundingSystem} from './core/entities/entities2'
 import entityTypes from './core/entities/entityTypes'
+import {entityTypeIntents, instanceIntents} from './core/entities/intents2'
 
 //views etc
 import BomView from './components/Bom/BomView'
@@ -37,11 +38,6 @@ import GLView from './components/webgl/GlView3'
 import {getExtension} from './utils/utils'
 import {combineLatestObj} from './utils/obsUtils'
 import {prepForRender} from './utils/uiUtils'
-
-
-///
-import {extractChanges} from './utils/diffPatchUtils'
-
 
 
 function view(state$, DOM, name){
@@ -93,7 +89,6 @@ function view(state$, DOM, name){
   return {events,DOM}
 }
 
-import {makeInternals, meshResources, entityInstanceFromPartTypes} from './core/tbd0'
 
 export function main(drivers) {
   let DOM      = drivers.DOM
@@ -136,69 +131,10 @@ export function main(drivers) {
   let {transforms$,transformActions} = makeTransformsSystem()
   let {bounds$ ,boundActions}        = makeBoundingSystem()
 
-  function entityTypeIntents(sources){
-    let meshSources$ = sources.meshSources$
-    let srcSources$ = sources.srcSources$
-
-    //TODO: get rid of this
-    let assetManager = makeInternals()
-    let meshResources$ = meshResources(meshSources$, assetManager)
-    //meshResources$.subscribe(e=>console.log("meshResources",e))
-
-    function testHack2(mesh){
-      mesh.position.set(0, 0, 0)
-      return mesh
-    }
-    //let entityInstance = undefined
-    //return meshResources$.map(e=>e.mesh).map(testHack2).shareReplay(1)
-
-    const clearTypes$  = Rx.Observable.never()
-    const registerTypeFromMesh$ = meshResources$
-
-    return {
-      registerTypeFromMesh$
-      , clearTypes$
-    }
-  }
-
   const entityTypes$ = entityTypes(entityTypeIntents({meshSources$,srcSources$}))
   //types also needs:
   //typeUidFromInstUid
   //instUidFromTypeUid
-
-  function instanceIntents(entityTypes$){
-    const baseOps$ = entityTypes$
-      //.distinctUntilChanged()//no worky ?
-      .pluck("typeData")
-      .scan({prev:undefined,cur:undefined},function(acc, x){
-        let cur  = x
-        let prev = acc.cur
-
-        cur = Object.keys(cur).map(function(key){
-          return cur[key]
-        })      
-        return {cur,prev} 
-      })
-      .map(function(typeData){
-        let {cur,prev} = typeData
-
-        let changes = extractChanges(prev,cur)
-        console.log("changes",changes)
-      return changes
-    })
-
-    const addInstances$ = baseOps$
-      .pluck("added")
-    
-    return {
-      baseOps$
-      , addInstances$
-    }
-  }
-
-  /*instanceIntents(entityTypes$)
-    .addInstances$
-    .subscribe(e=>console.log("addInstances",e))*/
 
   let entityInstances$  =  instanceIntents(entityTypes$)
     .addInstances$
@@ -253,7 +189,6 @@ export function main(drivers) {
 
     })
     .subscribe(e=>e)
-
 
   //////////
   let state$ = combineLatestObj({settings$,selections$,meshes$,transforms$})

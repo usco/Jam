@@ -5,14 +5,10 @@ import StlParser    from 'usco-stl-parser'
 import CtmParser    from 'usco-ctm-parser'
 import PlyParser    from 'usco-ply-parser'
 
-import Kernel       from 'usco-kernel2'
 /////////
-
 import postProcessMesh from '../utils/meshUtils'
 import helpers         from 'glView-helpers'
 let centerMesh         = helpers.mesthTools.centerMesh
-import {generateUUID} from 'usco-kernel2/src/utils'
-
 
 export function makeInternals(){
   let assetManager = new AssetManager()
@@ -41,7 +37,6 @@ export function meshResources(meshSources$, assetManager){
   //mesh + resource data together
   let combos$ =
     resources$.map(function(resource){
-      console.log("here")
       let mesh = postProcessMesh(resource.data)
       mesh=centerMesh(mesh)
       return {mesh, resource}
@@ -49,44 +44,4 @@ export function meshResources(meshSources$, assetManager){
     .shareReplay(1)
 
   return combos$
-}
-
-
-function instanceFromTypeData(name, typeData){
-  //let name = 
-  let bbox = typeData.bbox
-  let h = bbox.max[2]  - bbox.min[2]
-
-  let instance =
-  {
-      name: name,
-      iuid: generateUUID(),
-      typeUid: typeData.typeUid,
-      cid:0,//categoryId
-      color: "#07a9ff",
-      pos: [0,0,h/2],
-      rot: [0,0,0],
-      sca: [1,1,1],
-      bbox:bbox
-  }
-
-  return instance
-}
-
-export function entityInstanceFromPartTypes(partTypes$)
-{
-  //alternative
-  return partTypes$
-    .skip(1)
-    .map(function(partTypes){
-      let idx = 0//Object.keys(entities.byId).length  
-      let typeUid = partTypes.latest
-      if( typeUid ){
-        let name = partTypes.typeUidToMeshName[typeUid]+idx
-        let typeData = partTypes.typeData[typeUid]
-        if(typeData){
-          return instanceFromTypeData(name,typeData)
-        }
-      }
-    })
 }
