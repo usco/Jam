@@ -90,6 +90,19 @@ export function hashCodeFromString(s){
   return s.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)           
 }
 
+
+//TODO remove redundandt ones 
+function camelCase (string) {
+  return string.replace( /-([a-z])/ig, function( all, letter ) {
+      return letter.toUpperCase()
+  })
+}
+
+function camelCase2 (string) {
+  return string.replace( /-([a-z])/ig, function( all, letter ) {
+      return letter.toUpperCase()
+  })
+}
 //TODO: do this better
 export function nameCleanup( name ){
    let cName = name.substr(0, name.lastIndexOf('.'))
