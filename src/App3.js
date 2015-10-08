@@ -25,6 +25,10 @@ import {commentsIntents} from './core/comments/intents'
 //selections
 import selections from './core/selections/selections'
 import {selectionsIntents} from './core/selections/intents'
+//entities
+import {extractDesignSources,extractMeshSources,extractSourceSources} from './core/sources/dataSources'
+import {makeCoreSystem,makeTransformsSystem,makeMeshSystem, makeBoundingSystem} from './core/entities/entities2'
+import entityTypes from './core/entities/entityTypes'
 
 //views etc
 import BomView from './components/Bom/BomView'
@@ -34,8 +38,10 @@ import {getExtension} from './utils/utils'
 import {combineLatestObj} from './utils/obsUtils'
 import {prepForRender} from './utils/uiUtils'
 
-import {extractDesignSources,extractMeshSources,extractSourceSources} from './core/sources/dataSources'
-import {makeCoreSystem,makeTransformsSystem,makeMeshSystem, makeBoundingSystem} from './core/entities/entities2'
+
+///
+import {extractChanges} from './utils/diffPatchUtils'
+
 
 
 function view(state$, DOM, name){
@@ -89,28 +95,6 @@ function view(state$, DOM, name){
 
 import {makeInternals, meshResources, entityInstanceFromPartTypes} from './core/tbd0'
 
-function registerEntity(sources)
-{
-  let meshSources$ = sources.meshSources$
-  let srcSources$ = sources.srcSources$
-
-  //TODO: get rid of this
-  let assetManager = makeInternals()
-  let meshResources$ = meshResources(meshSources$, assetManager)
-  //meshSources$.map(e=>)
-
-  meshResources$.subscribe(e=>console.log("meshResources",e))
-
-  function testHack2(mesh){
-    mesh.position.set(0, 0, 0)
-    mesh.name = "foo"
-    return mesh
-  }
-
-  //let entityInstance = undefined
-  return meshResources$.map(e=>e.mesh).map(testHack2).shareReplay(1)
-}
-
 export function main(drivers) {
   let DOM      = drivers.DOM
   const localStorage = drivers.localStorage
@@ -122,7 +106,6 @@ export function main(drivers) {
   events
     .select("gl")
     .flatMap(e=>e.selectedMeshes$)
-    //.pluck("gl").flatMap(e=>e.selectedMeshes$)
     .subscribe(e=>console.log("events",e))
 
   ///
@@ -139,8 +122,6 @@ export function main(drivers) {
   const meshSources$ = extractMeshSources({dnd$, postMessages$, addressbar})
   const srcSources$  = extractSourceSources({dnd$, postMessages$, addressbar})
 
-  const expMeshes$ = registerEntity({meshSources$,srcSources$})
-
   //Models etc 
   //entities$
   const entities$   = Rx.Observable.just(undefined)
@@ -155,48 +136,116 @@ export function main(drivers) {
   let {transforms$,transformActions} = makeTransformsSystem()
   let {bounds$ ,boundActions}        = makeBoundingSystem()
 
-  //HACKKKK !! do actual stuff !!!
-  let types$ = expMeshes$.map(function(mesh){
-    let typeUid = Math.round( Math.random()*10)
-    return {
-      mesh
-      ,name:"foo"+Math.round( Math.random()*10)
-      ,id:typeUid
-    }
-  }).shareReplay(1)
+  function entityTypeIntents(sources){
+    let meshSources$ = sources.meshSources$
+    let srcSources$ = sources.srcSources$
 
-  const instances$ = types$.map(function(typeData){
-    let instUid = Math.round( Math.random()*10 )
-    let instanceData = {
-      id:instUid
-      ,typeUid:typeData.id
-      ,name:typeData.name+"_"+instUid
+    //TODO: get rid of this
+    let assetManager = makeInternals()
+    let meshResources$ = meshResources(meshSources$, assetManager)
+    //meshResources$.subscribe(e=>console.log("meshResources",e))
+
+    function testHack2(mesh){
+      mesh.position.set(0, 0, 0)
+      return mesh
     }
-    return instanceData
-  }).shareReplay(1)
+    //let entityInstance = undefined
+    //return meshResources$.map(e=>e.mesh).map(testHack2).shareReplay(1)
+
+    const clearTypes$  = Rx.Observable.never()
+    const registerTypeFromMesh$ = meshResources$
+
+    return {
+      registerTypeFromMesh$
+      , clearTypes$
+    }
+  }
+
+  const entityTypes$ = entityTypes(entityTypeIntents({meshSources$,srcSources$}))
+  //types also needs:
+  //typeUidFromInstUid
+  //instUidFromTypeUid
+
+  function instanceIntents(entityTypes$){
+    const baseOps$ = entityTypes$
+      //.distinctUntilChanged()//no worky ?
+      .pluck("typeData")
+      .scan({prev:undefined,cur:undefined},function(acc, x){
+        let cur  = x
+        let prev = acc.cur
+
+        cur = Object.keys(cur).map(function(key){
+          return cur[key]
+        })      
+        return {cur,prev} 
+      })
+      .map(function(typeData){
+        let {cur,prev} = typeData
+
+        let changes = extractChanges(prev,cur)
+        console.log("changes",changes)
+      return changes
+    })
+
+    const addInstances$ = baseOps$
+      .pluck("added")
+    
+    return {
+      baseOps$
+      , addInstances$
+    }
+  }
+
+  /*instanceIntents(entityTypes$)
+    .addInstances$
+    .subscribe(e=>console.log("addInstances",e))*/
+
+  let instances$  =  instanceIntents(entityTypes$)
+    .addInstances$
+    .map(function(typeData){
+      console.log("data",typeData)
+      if(typeData.typeData){
+        let instUid = Math.round( Math.random()*10 )
+        let typeUid = typeData.typeData.id
+        let instName = typeData.typeData.name+"_"+instUid
+
+        let instanceData = {
+          id:instUid
+          ,typeUid
+          ,name:instName
+        }
+      }
+
+    })
+    .subscribe(e=>e)
 
   //types$.subscribe(e=>console.log("types",e))
   //instances$.subscribe(e=>console.log("instances",e))
-  instances$
+  /*instances$
     .withLatestFrom(types$,function(instance,types){
       console.log("instances",instance, "types",types)
 
-      //is this a hack
+      //is this a hack?
       let mesh = types.mesh
       let bbox = mesh.boundingBox
       let zOffset = bbox.max.clone().sub(bbox.min)
       zOffset = zOffset.z/2
       bbox = { min:bbox.min.toArray(), max:bbox.max.toArray() }
 
-      boundActions.createComponent$.onNext({id:instance.id,value:{bbox} })
-      meshActions.createComponent$.onNext({id:instance.id, value:{ mesh: types.mesh.clone() } })
-      coreActions.createComponent$.onNext({id:instance.id, value:{typeUid:instance.typeUid}})
+      //injecting data like this is the right way ?
+      mesh = mesh.clone()
+      mesh.userData.entity = {
+        iuid:instance.id
+      }
+
+      boundActions.createComponent$.onNext({id:instance.id, value:{bbox} })
+      meshActions.createComponent$.onNext({id:instance.id,  value:{ mesh }})
+      coreActions.createComponent$.onNext({id:instance.id,  value:{ typeUid:instance.typeUid }})
       transformActions.createComponent$.onNext({id:instance.id, value:{pos:[0,0,zOffset]} })
     })
-    .subscribe(e=>e)
+    .subscribe(e=>e)*/
 
   //////////
-  //,meshes$:expMeshes$
   let state$ = combineLatestObj({settings$,selections$,meshes$,transforms$})
 
   let _view = view(state$, DOM)

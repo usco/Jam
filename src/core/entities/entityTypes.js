@@ -10,6 +10,7 @@ log.setLevel("debug")
 import {generateUUID} from '../../utils/utils'
 import {nameCleanup} from '../../utils/formatters'
 import {computeBoundingBox,computeBoundingSphere} from 'glView-helpers/src/meshTools/computeBounds'
+import {makeModelNoHistory} from '../../utils/modelUtils'
 
 
 function typeUidFromMeshName(meshNameToPartTypeUId, meshName){
@@ -20,12 +21,12 @@ function typeFromMeshData(data, typeUidFromMeshName){
   let meshName      = data.resource.name || ""
   let cleanedName   = nameCleanup(meshName)
 
-  let typeUid = typeUidFromMeshName(meshName)
+  let id = typeUidFromMeshName(meshName)
   let templateMesh = undefined
 
-  //no typeUid was given, it means we have a mesh with no entity (yet !)
-  if( !typeUid ) {
-    typeUid = generateUUID()
+  //no id was given, it means we have a mesh with no entity (yet !)
+  if( !id ) {
+    id = generateUUID()
 
     //extract usefull information
     //we do not return the shape since that becomes the "reference shape/mesh", not the
@@ -35,34 +36,31 @@ function typeFromMeshData(data, typeUidFromMeshName){
     computeBoundingBox(templateMesh)
   }
 
-  return {id: typeUid, meshName, templateMesh}
+  return {id, name:cleanedName, meshName, templateMesh } 
 }
 
 function updateTypesData(newTypeData, currentData){
   //save new data
   let regData = currentData
-  let {typeUid,meshName,templateMesh} = newTypeData
+  let {id, name, meshName,templateMesh} = newTypeData
   
   let typeData              = regData.typeData || {}
   let meshNameToPartTypeUId = regData.meshNameToPartTypeUId || {}
   let typeUidToMeshName     = regData.typeUidToMeshName || {}
   let typeUidToTemplateMesh = regData.typeUidToTemplateMesh || {}
 
-  if(typeUid && meshName && templateMesh){
-    typeUidToMeshName[typeUid]      = meshName
-    typeUidToTemplateMesh[typeUid]  = templateMesh
-    meshNameToPartTypeUId[meshName] = typeUid
+  if(id && meshName && templateMesh){
+    typeUidToMeshName[id]      = meshName
+    typeUidToTemplateMesh[id]  = templateMesh
+    meshNameToPartTypeUId[meshName] = id
 
-    //FIXME: duplicate code, needs removal
-    let cleanedName   = nameCleanup(meshName)
-
-    typeData[typeUid]={
-      name:cleanedName,
-      typeUid,
-      bbox:{
+    typeData[id]={
+      name,
+      id,
+      /*bbox:{
         min: templateMesh.boundingBox.min.toArray(),
         max: templateMesh.boundingBox.max.toArray()
-      }
+      }*/
     }
   }
 
@@ -71,8 +69,7 @@ function updateTypesData(newTypeData, currentData){
     typeUidToMeshName, 
     typeUidToTemplateMesh,
 
-    typeData,
-    latest:typeUid
+    typeData
   }
 }
 
@@ -80,7 +77,9 @@ function updateTypesData(newTypeData, currentData){
 //actual api functions 
 
 function registerTypeFromMesh(state,input){
-  //log.info("I would register something", data, regData)
+  //log.info("I would register something", state, input)
+  //console.log("I would register something", state, input)
+
   //prepare lookup function for finding already registered meshes
   let typeUidLookup = typeUidFromMeshName.bind(null,state.meshNameToPartTypeUId)
   //create new data
@@ -99,7 +98,7 @@ function entityTypes(actions, source){
     meshNameToPartTypeUId:{},
     typeUidToMeshName:{},
     typeData:{},
-    latest:undefined,
+    
     //not sure
     typeUidToTemplateMesh:{}
   }
