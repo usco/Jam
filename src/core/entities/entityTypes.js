@@ -55,8 +55,8 @@ function updateTypesData(newTypeData, currentData){
     meshNameToPartTypeUId[meshName] = id
 
     typeData[id]={
-      name,
-      id,
+        id
+      ,name
       /*bbox:{
         min: templateMesh.boundingBox.min.toArray(),
         max: templateMesh.boundingBox.max.toArray()
