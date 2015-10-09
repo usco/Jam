@@ -29,7 +29,7 @@ import {selectionsIntents} from './core/selections/intents'
 import {extractDesignSources,extractMeshSources,extractSourceSources} from './core/sources/dataSources'
 import {makeCoreSystem,makeTransformsSystem,makeMeshSystem, makeBoundingSystem} from './core/entities/entities2'
 import entityTypes from './core/entities/entityTypes'
-import {entityTypeIntents, instanceIntents} from './core/entities/intents2'
+import {entityTypeIntents, entityInstanceIntents} from './core/entities/intents2'
 
 //views etc
 import BomView from './components/Bom/BomView'
@@ -123,8 +123,7 @@ export function main(drivers) {
   //comments
   const comments$   = comments(commentsIntents(DOM,settings$))
   const bom$        = undefined
-  //selections 
-  const selections$ = selections( selectionsIntents({DOM,events}, entities$) )
+  
   //
   let {core$,coreActions}            = makeCoreSystem()
   let {meshes$,meshActions}          = makeMeshSystem()
@@ -136,13 +135,14 @@ export function main(drivers) {
   //typeUidFromInstUid
   //instUidFromTypeUid
 
-  let entityInstances$  =  instanceIntents(entityTypes$)
+
+  let entityInstancesBase$  =  entityInstanceIntents(entityTypes$)
     .addInstances$
     .map(function(newTypes){
       console.log("data",newTypes)
 
       return newTypes.map(function(typeData){
-        let instUid = Math.round( Math.random()*10 )
+        let instUid = Math.round( Math.random()*100 )
         let typeUid = typeData.id
         let instName = typeData.name+"_"+instUid
 
@@ -153,13 +153,69 @@ export function main(drivers) {
         }
         return instanceData
       })
-      
+    })
+    .shareReplay(1)
+
+  //register type=> instance & vice versa
+  let base = {typeUidFromInstUid:{},instUidFromTypeUid:{}}
+  let typesInstancesRegistry$ = combineLatestObj({instances:entityInstancesBase$,types:entityTypes$})
+    .scan(base,function(acc,n){
+
+      let {instances,types} = n
+
+      acc.instUidFromTypeUid = instances
+        .reduce(function(prev,instance){
+          prev[instance.typeUid] = instance.id
+          return prev
+        },{})
+
+      acc.typeUidFromInstUid = instances
+        .reduce(function(prev,instance){
+          prev[instance.id] = instance.typeUid
+          return prev
+        },{})
+
+      //types.typeData[]
+      //console.log("registry stuff",acc,n)
+      return acc
+    })
+    
+  //.subscribe(e=>console.log("FOOOO",e))
+
+  function instUidFromTypeUids(core$,types$, typeUids){
+    return combineLatestObj({instances:core$,types$})
+      .map(function({instances,types}){
+
+        return typeUids.map(function(tuid){
+             
+        })
+
+      })
+  }
+
+  function typeUidFromInstUids(core$, types$, instUids){
+    return combineLatestObj({instances:core$,types$})
+      .map(function({instances,types}){
+
+        return instUids.map(function(iuid){
+          let inst = instances[iuid]
+          if(inst) return inst.typeUid
+          
+        })
+
+      })
+  }
+
+  entityInstancesBase$
+    .subscribe(function(){
+        typeUidFromInstUids(core$, entityTypes$, [10]).subscribe(e=>console.log("e",e))
+        instUidFromTypeUids(core$, entityTypes$, [10]).subscribe(e=>console.log("e",e))
     })
 
-    //.subscribe(e=>e)
+    
 
-  //instances$.subscribe(e=>console.log("instances",e))
-  entityInstances$
+  //create various components
+  entityInstancesBase$
     .withLatestFrom(entityTypes$,function(instances,types){
       console.log("instances",instances, "types",types)
 
@@ -186,9 +242,14 @@ export function main(drivers) {
         coreActions.createComponent$.onNext({id:instUid,  value:{ typeUid }})
         transformActions.createComponent$.onNext({id:instUid, value:{pos:[0,0,zOffset]} })
       })
-
     })
     .subscribe(e=>e)
+
+
+  //selections 
+  const selections$ = selections( selectionsIntents({DOM,events}, typesInstancesRegistry$) )
+
+  selections$.subscribe(e=>console.log("selections",e))
 
   //////////
   let state$ = combineLatestObj({settings$,selections$,meshes$,transforms$})

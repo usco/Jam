@@ -5,7 +5,7 @@ function extractEntities(data){
   return data.filter(hasEntity).map(getEntity).map(e=>e.iuid)
 }
 
-export function reverseSelections(intents, entities$){
+export function reverseSelections(intents, idsMapper$){
   Array.prototype.flatMap = function(lambda) { 
     return Array.prototype.concat.apply([], this.map(lambda)) 
   }
@@ -16,20 +16,27 @@ export function reverseSelections(intents, entities$){
   //select bom entries from entities
   let selectBomEntries$ = intents
     .selectEntities$
-    .withLatestFrom(entities$,function(entityIds,entities){
-      return entityIds.map(id=>entities.byId[id].typeUid)
+    .withLatestFrom(idsMapper$,function(entityIds,idsMapper){
+      return entityIds.map(id=>idsMapper.typeUidFromInstUid[id])
     })
+    /*.withLatestFrom(entities$,function(entityIds,entities){
+      return entityIds.map(id=>entities.byId[id].typeUid)
+    })*/
     
   //select entities from bom entries
   //in this case instUidFromTypeUid
   
   let selectEntities$ = intents
     .selectBomEntries$
-    .withLatestFrom(entities$,function(bomIds,entities){
+    .withLatestFrom(idsMapper$,function(bomIds,idsMapper){
+      return bomIds.map(id=>idsMapper.instUidFromTypeUid[id])
+    })
+    
+    /*.withLatestFrom(entities$,function(bomIds,entities){
       return bomIds.flatMap(function(typeUid){
         return entities.instances.filter( i => i.typeUid === typeUid ).map( i => i.iuid )
       })
-    })
+    })*/
   //selectEntities$.subscribe(e=>console.log("for these bomEntries, instIds are",e))
   //selectBomEntries$.subscribe(e=>console.log("for these entities, typeUids are",e))
 
@@ -43,7 +50,7 @@ export function reverseSelections(intents, entities$){
 }
 
 
-export function selectionsIntents(drivers, entities$){
+export function selectionsIntents(drivers, idsMapper$){
   //console.log("selectionsIntents")
   let selectEntities$ = drivers.events.select("gl")//.events("selectedMeshes$")
     .flatMap(e=>e.selectedMeshes$)
@@ -58,6 +65,6 @@ export function selectionsIntents(drivers, entities$){
   return reverseSelections({
      selectEntities$
     ,selectBomEntries$
-  },entities$)
+  },idsMapper$)
 
 }
