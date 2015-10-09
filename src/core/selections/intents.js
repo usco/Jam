@@ -45,7 +45,6 @@ export function reverseSelections(intents, entities$){
 
 export function selectionsIntents(drivers, entities$){
   //console.log("selectionsIntents")
-
   let selectEntities$ = drivers.events.select("gl")//.events("selectedMeshes$")
     .flatMap(e=>e.selectedMeshes$)
     .filter(exists)

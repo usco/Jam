@@ -28,7 +28,7 @@ export function entityTypeIntents(sources){
   }
 }
 
-export function instanceIntents(entityTypes$){
+export function entityInstanceIntents(entityTypes$){
   const baseOps$ = entityTypes$
     //.distinctUntilChanged()//no worky ?
     .pluck("typeData")
@@ -45,7 +45,6 @@ export function instanceIntents(entityTypes$){
       let {cur,prev} = typeData
 
       let changes = extractChanges(prev,cur)
-      console.log("changes",changes)
     return changes
   })
 
