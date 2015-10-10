@@ -41,10 +41,7 @@ import {combineLatestObj} from './utils/obsUtils'
 import {prepForRender} from './utils/uiUtils'
 
 
-
-
-
-function view(state$, DOM, name){
+function view_old(state$, DOM, name){
   console.log("view")
   const settingProps$ = state$
   /*just({
@@ -54,8 +51,37 @@ function view(state$, DOM, name){
       //,annotations:{type:"checkbox",path:"grid.show"}
     }
   })*/
+  
+  //settings
+  let settingsUi = SettingsView({DOM, props$:settingProps$})
+  //fullscreen 
+  let fsTogglerUi = FullScreenToggler({DOM})
+
+  ///////
+  //final results
+  //const events = {gl:glEvents}
+
+  DOM = prepForRender({fsTogglerUi,settingsUi,bomUi, glUi, entityInfosUi, meshes:state$.pluck("meshes")})
+    .map(function({settings,fsToggler,bom,gl,entityInfos,meshes}){
+      return <div>
+        {settings}
+        {fsToggler}
+        {bom}
+        {gl}
+
+        {entityInfos}
+      </div>
+    })
+
+  return {events,DOM}
+}
+
+function EntityInfosWrapper(state$, DOM) {
+  //.distinctUntilChanged(state => state.value)
+
   function makeEntityInfosProps(state$){
-    const selectedInstIds$ = state$.pluck("selections")
+    const selectedInstIds$ = state$
+      .pluck("selections")
       .map(s=>s.instIds)
       .filter(s=>s !== undefined)
       .distinctUntilChanged(null,itemsEqual)
@@ -73,19 +99,15 @@ function view(state$, DOM, name){
         })
         return {transforms,core}
       })
+      .shareReplay(1)
   }
-  //extractDataForEntityInfos(state$).subscribe(e=>console.log("state",e))
-
-  //settings
-  let settingsUi = SettingsView({DOM, props$:settingProps$})
-  //fullscreen 
-  let fsTogglerUi = FullScreenToggler({DOM})
+  const props$ = makeEntityInfosProps(state$)
 
   //entity infos
-  let entityInfosUi = EntityInfos({DOM,props$:makeEntityInfosProps(state$)})
+  return EntityInfos({DOM,props$})
+}
 
-  //for bom
-  
+function BOMWrapper(state$, DOM){
   function makeBomProps(state$){
     let fieldNames = ["name","qty","unit","version"]
     let sortableFields = ["id","name","qty","unit"]
@@ -102,36 +124,33 @@ function view(state$, DOM, name){
 
     return bomProps$
   }
+  return BomView({DOM,props$:makeBomProps(state$)})
+}
 
-    //just({fieldNames,sortableFields,entries})
-  let bomUi     = BomView({DOM,props$:makeBomProps(state$)})
-
-  let glProps$  = combineLatestObj({settings:state$.pluck("settings")
+function GLWrapper(state$,DOM){
+  let glProps$  = combineLatestObj({
+    settings:state$.pluck("settings")
     ,meshes:state$.pluck("meshes")
     ,transforms:state$.pluck("transforms")
   })
   let glUi      = GLView({DOM,props$:glProps$})
-  const glEvents    = glUi.events
+  return glUi
+}
 
-  ///////
-  //final results
-  const events = {gl:glEvents}
 
-  DOM = prepForRender({fsTogglerUi,settingsUi,bomUi, glUi, entityInfosUi, meshes:state$.pluck("meshes")})
-    .map(function({settings,fsToggler,bom,gl,entityInfos,meshes}){
+function view(bomVtree$,glVtree$,entityInfosVtree$){
+  //return prepForRender({fsTogglerUi,settingsUi,bomUi, glUi, entityInfosUi, meshes:state$.pluck("meshes")})
+    //.map(function({settings,fsToggler,bom,gl,entityInfos,meshes}){
+  return combineLatestObj({bom:bomVtree$,gl:glVtree$,entityInfos:entityInfosVtree$})
+    .map(function({bom,gl,entityInfos}){
       return <div>
-        {settings}
-        {fsToggler}
         {bom}
         {gl}
 
         {entityInfos}
       </div>
     })
-
-  return {events,DOM}
 }
-
 
 export function main(drivers) {
   let DOM      = drivers.DOM
@@ -255,14 +274,23 @@ export function main(drivers) {
   //////////
   let state$ = combineLatestObj({settings$, selections$, core$,transforms$,meshes$})
 
-  let _view = view(state$, DOM)
+  //various
+  const entityInfos = EntityInfosWrapper(state$,DOM)
+  const gl          = GLWrapper(state$,DOM)
+  const bom         = BOMWrapper(state$,DOM)
 
-  core$.subscribe(e=>console.log("core",e))
+  //let _view = view(state$, DOM)
+
+  let vtree$ = view(bom.DOM,gl.DOM,entityInfos.DOM)
+
+  let events$ = just( {gl:gl.events} )
+
+  /*core$.subscribe(e=>console.log("core",e))
   transforms$.subscribe(e=>console.log("transforms",e))
   meshes$.subscribe(e=>console.log("meshes",e))
   settings$.subscribe(e=>console.log("settings",e))
   selections$.subscribe(e=>console.log("selections",e))
-  state$.subscribe(e=>console.log("state",e))
+  state$.subscribe(e=>console.log("state",e))*/
 
   //output to localStorage
   //in our case, settings
@@ -271,8 +299,8 @@ export function main(drivers) {
 
   //return anything you want to output to drivers
   return {
-      DOM: _view.DOM
-      ,events: just(_view.events)
+      DOM: vtree$
+      ,events: events$
       ,localStorage:localStorage$
 
   }
