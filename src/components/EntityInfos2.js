@@ -61,7 +61,7 @@ function transformInputs(transforms, fieldName, displayName, controlsStep, numbe
     transforms[fieldName].forEach(function(entry, index){
       entry = formatNumberTo(entry, numberPrecision)
       inputs.push(
-        <input type="number" value={entry} step={controlsStep} />
+        <input type="number" value={entry} step={controlsStep} className={`transformsInput ${fieldName}_${index}`}/>
       )
     })
 
@@ -80,6 +80,57 @@ function intent({DOM}){
     ,DOM.select(".nameInput").events('input').map(e=>e.target.value)
   )
   const changeColor$ = DOM.select(".colorInput").events('change').map(e=>e.target.value)
+
+  /*const changeTransforms$ = combineLatestObj({
+    pos:DOM.select(".transformsInput .pos_0").events('change').map(e=>e.target.value)
+  })*/
+  function fromTransformInputs(){
+    let trans = ['pos','rot','sca']
+    let defaults = {pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]}
+    let attrs = ['x','y','z']
+
+    return trans.map(function(t){
+
+      let subs= attrs.map(function(name,index){
+        let className = `.transformsInput.${t}_${index}`
+        return merge(
+          DOM.select(className).events('change').map(e=>e.target.value)
+          ,DOM.select(className).events('input').map(e=>e.target.value)
+        )
+        .map(function(value){
+          let res = {}
+          res[t] = {idx:index,value}
+          return res
+        })
+        .distinctUntilChanged()
+      })
+
+      //subs[0].subscribe(e=>console.log("posX",e))
+
+      return merge(subs)
+    })
+  }
+
+
+
+  //change = {rot:{idx:0,val:2}}
+  /*const posX$ = merge(
+    DOM.select(".transformsInput.pos_0").events('change').map(e=>e.target.value)
+    DOM.select(".transformsInput.pos_0").events('input').map(e=>e.target.value)
+  ).map(function(value){
+    return {pos:{idx:0,value}}
+  })
+  .distinctUntilChanged()*/
+  /*const posY$ = merge(
+    DOM.select(".transformsInput.pos_1").events('change').map(e=>e.target.value)
+    ,DOM.select(".transformsInput.pos_1").events('input').map(e=>e.target.value)
+  )
+  const posZ$ = merge(
+    DOM.select(".transformsInput.pos_2").events('change').map(e=>e.target.value)
+    ,DOM.select(".transformsInput.pos_2").events('input').map(e=>e.target.value)
+  )*/
+  
+  merge( fromTransformInputs()).subscribe(e=>console.log("transforms change",e))
   
   return {
     changeName$
@@ -87,11 +138,15 @@ function intent({DOM}){
   }
 }
 
+function model(props$, actions){
+
+}
+
 function EntityInfos({DOM, props$}, name = '') {
   //let settings$ = props$.pluck('settings').filter(exists).startWith([])
-  let comments$ = props$.pluck('comments').filter(exists).startWith(undefined)
-  let core$ = props$.pluck('core')
-  let transforms$ = props$.pluck('transforms')
+  let comments$   = props$.pluck('comments').filter(exists).startWith(undefined)
+  let core$       = props$.pluck('core').filter(exists).startWith(undefined)
+  let transforms$ = props$.pluck('transforms').filter(exists).startWith(undefined)
 
   let addComment$          = DOM.select(".comments").events("addComment$").pluck("detail")
 
@@ -102,13 +157,17 @@ function EntityInfos({DOM, props$}, name = '') {
   let numberPrecision = 2
   let controlsStep = 0.1
 
-  const commentsUiProps$ = combineLatestObj({entity:core$.map(e=>e[0]),comments$})
+  let commentsEntity$ = core$.filter(exists).map(e=>e[0]).startWith(undefined)
+  const commentsUiProps$ = combineLatestObj({entity:commentsEntity$,comments$})
   const commentsUi = Comments({DOM,props$:commentsUiProps$})
 
   const vtree$ = combineLatestObj({core$, transforms$, comments:commentsUi.DOM})
     .distinctUntilChanged()
     .map(function({core, transforms, comments}){
 
+      if(!core || !transforms || !comments){
+        return undefined
+      }
       if(transforms.length>0) transforms = transforms[0]
       if(core.length>0) core = core[0]
         //console.log("core,transforms",core,transforms)
