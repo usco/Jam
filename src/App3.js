@@ -50,7 +50,7 @@ function view(state$, DOM, name){
       //,annotations:{type:"checkbox",path:"grid.show"}
     }
   })*/
-  function extractDataForEntityInfos(state$){
+  function makeEntityInfosProps(state$){
     const selectedInstIds$ = state$.pluck("selections")
       .map(s=>s.instIds)
 
@@ -61,10 +61,10 @@ function view(state$, DOM, name){
           return state.transforms[id]
         })
         
-        /*let core = ids.map(function(id){
-          return state.transforms[id]
-        })*/
-        return {transforms}
+        let core = ids.map(function(id){
+          return state.core[id]
+        })
+        return {transforms,core}
       })
   }
   //extractDataForEntityInfos(state$).subscribe(e=>console.log("state",e))
@@ -76,18 +76,29 @@ function view(state$, DOM, name){
 
   //entity infos
   let entityInfosProps$ = just(undefined)
-  let entityInfosUi = EntityInfos({DOM,props$:extractDataForEntityInfos(state$)})
+  let entityInfosUi = EntityInfos({DOM,props$:makeEntityInfosProps(state$)})
 
   //for bom
-  let fieldNames = ["name","qty","unit","version"]
-  let sortableFields = ["id","name","qty","unit"]
-  let entries = [{id:0,name:"foo",qty:2,version:"0.0.1",unit:"QA"}
-  ,{id:1,name:"bar",qty:1,version:"0.2.1",unit:"QA"}
-  ]
-  //let selectedEntries = selections.bomIds
+  
+  function makeBomProps(state$){
+    let fieldNames = ["name","qty","unit","version"]
+    let sortableFields = ["id","name","qty","unit"]
+    let entries = [{id:0,name:"foo",qty:2,version:"0.0.1",unit:"QA"}
+    ,{id:1,name:"bar",qty:1,version:"0.2.1",unit:"QA"}
+    ]
+    //let selectedEntries = selections.bomIds
+    let fieldNames$ = just(fieldNames)
+    let sortableFields$ = just(sortableFields)
+    let entries$ = just(entries)
+    let selectedEntries$ = state$.pluck("selections").pluck("bomIds")
 
-  let bomProps$ = just({fieldNames,sortableFields,entries})
-  let bomUi     = BomView({DOM,props$:bomProps$})
+    let bomProps$ = combineLatestObj( {fieldNames$,sortableFields$,entries$,selectedEntries$ })
+
+    return bomProps$
+  }
+
+    //just({fieldNames,sortableFields,entries})
+  let bomUi     = BomView({DOM,props$:makeBomProps(state$)})
 
   let glProps$  = combineLatestObj({settings:state$.pluck("settings")
     ,meshes:state$.pluck("meshes")
@@ -121,7 +132,6 @@ export function main(drivers) {
   const localStorage = drivers.localStorage
   const addressbar   = drivers.addressbar
   const postMessage  = drivers.postMessage
-  //const {DOM,localStorage,addressbar} = drivers
   const events       = drivers.events
 
   events
@@ -258,7 +268,7 @@ export function main(drivers) {
 
         boundActions.createComponent$.onNext({id:instUid, value:{bbox} })
         meshActions.createComponent$.onNext({id:instUid,  value:{ mesh }})
-        coreActions.createComponent$.onNext({id:instUid,  value:{ typeUid }})
+        coreActions.createComponent$.onNext({id:instUid,  value:{ typeUid, name:instance.name }})
         transformActions.createComponent$.onNext({id:instUid, value:{pos:[0,0,zOffset]} })
       })
     })
@@ -271,7 +281,7 @@ export function main(drivers) {
   selections$.subscribe(e=>console.log("selections",e))
 
   //////////
-  let state$ = combineLatestObj({settings$,selections$,meshes$,transforms$})
+  let state$ = combineLatestObj({settings$, selections$, core$,transforms$,meshes$})
 
   let _view = view(state$, DOM)
 
