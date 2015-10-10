@@ -18,7 +18,7 @@ import BomView from './components/Bom/BomView'
 import GLView from './components/webgl/GlView3'
 import SettingsView from './components/SettingsView'
 import FullScreenToggler from './components/FullScreenToggler'
-import EntityInfos       from './components/EntityInfos2'
+import EntityInfos       from './components/EntityInfos/EntityInfos'
 
 //settings
 import settings from './core/settings/settings'
