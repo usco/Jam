@@ -13,12 +13,16 @@ let fromArray = Rx.Observable.fromArray
 
 import {observableDragAndDrop} from './interactions/dragAndDrop'
 
+//views etc
+import BomView from './components/Bom/BomView'
+import GLView from './components/webgl/GlView3'
+import SettingsView from './components/SettingsView'
+import FullScreenToggler from './components/FullScreenToggler'
+import EntityInfos       from './components/EntityInfos2'
+
+//settings
 import settings from './core/settings/settings'
 import {settingsIntent} from './core/settings/settingsIntent'
-import SettingsView from './components/SettingsView'
-
-import FullScreenToggler from './components/FullScreenToggler'
-
 //comments
 import comments from './core/comments/comments'
 import {commentsIntents} from './core/comments/intents'
@@ -31,9 +35,6 @@ import {makeCoreSystem,makeTransformsSystem,makeMeshSystem, makeBoundingSystem} 
 import entityTypes from './core/entities/entityTypes'
 import {entityTypeIntents, entityInstanceIntents} from './core/entities/intents2'
 
-//views etc
-import BomView from './components/Bom/BomView'
-import GLView from './components/webgl/GlView3'
 
 import {getExtension} from './utils/utils'
 import {combineLatestObj} from './utils/obsUtils'
@@ -49,10 +50,33 @@ function view(state$, DOM, name){
       //,annotations:{type:"checkbox",path:"grid.show"}
     }
   })*/
+  function extractDataForEntityInfos(state$){
+    const selectedInstIds$ = state$.pluck("selections")
+      .map(s=>s.instIds)
 
+    return selectedInstIds$
+      .combineLatest(state$,function(ids,state){
+        
+        let transforms = ids.map(function(id){
+          return state.transforms[id]
+        })
+        
+        /*let core = ids.map(function(id){
+          return state.transforms[id]
+        })*/
+        return {transforms}
+      })
+  }
+  //extractDataForEntityInfos(state$).subscribe(e=>console.log("state",e))
+
+  //settings
   let settingsUi = SettingsView({DOM, props$:settingProps$})
-
+  //fullscreen 
   let fsTogglerUi = FullScreenToggler({DOM})
+
+  //entity infos
+  let entityInfosProps$ = just(undefined)
+  let entityInfosUi = EntityInfos({DOM,props$:extractDataForEntityInfos(state$)})
 
   //for bom
   let fieldNames = ["name","qty","unit","version"]
@@ -71,18 +95,20 @@ function view(state$, DOM, name){
   })
   let glUi      = GLView({DOM,props$:glProps$})
   const glEvents    = glUi.events
-  //glEvents.selectedMeshes$.subscribe(e=>console.log("selectedMeshes",e))
 
+  ///////
   //final results
   const events = {gl:glEvents}
 
-  DOM = prepForRender({fsTogglerUi,settingsUi,bomUi, glUi, meshes:state$.pluck("meshes")})
-    .map(function({settings,fsToggler,bom,gl,meshes}){
+  DOM = prepForRender({fsTogglerUi,settingsUi,bomUi, glUi, entityInfosUi, meshes:state$.pluck("meshes")})
+    .map(function({settings,fsToggler,bom,gl,entityInfos,meshes}){
       return <div>
         {settings}
         {fsToggler}
         {bom}
         {gl}
+
+        {entityInfos}
       </div>
     })
 
@@ -131,10 +157,6 @@ export function main(drivers) {
   let {bounds$ ,boundActions}        = makeBoundingSystem()
 
   const entityTypes$ = entityTypes(entityTypeIntents({meshSources$,srcSources$}))
-  //types also needs:
-  //typeUidFromInstUid
-  //instUidFromTypeUid
-
 
   let entityInstancesBase$  =  entityInstanceIntents(entityTypes$)
     .addInstances$
@@ -182,12 +204,13 @@ export function main(drivers) {
     
   //.subscribe(e=>console.log("FOOOO",e))
 
+  //experimental , not sure
+  /*
   function instUidFromTypeUids(core$,types$, typeUids){
     return combineLatestObj({instances:core$,types$})
       .map(function({instances,types}){
-
         return typeUids.map(function(tuid){
-             
+           //FIXME: implement  
         })
 
       })
@@ -199,10 +222,8 @@ export function main(drivers) {
 
         return instUids.map(function(iuid){
           let inst = instances[iuid]
-          if(inst) return inst.typeUid
-          
+          if(inst) return inst.typeUid 
         })
-
       })
   }
 
@@ -210,9 +231,7 @@ export function main(drivers) {
     .subscribe(function(){
         typeUidFromInstUids(core$, entityTypes$, [10]).subscribe(e=>console.log("e",e))
         instUidFromTypeUids(core$, entityTypes$, [10]).subscribe(e=>console.log("e",e))
-    })
-
-    
+    })*/
 
   //create various components
   entityInstancesBase$
