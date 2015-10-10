@@ -10,7 +10,7 @@ function selectEntities(state, input){
   //log.info("selecting entitites",sentities)
   let entityIds = toArray(input)
 
-  state.selectedIds = entityIds
+  state.instIds = entityIds
   return state
 }
 
@@ -25,7 +25,7 @@ function selectBomEntries(state, input){
 function selections(actions, source){
   ///defaults, what else ?
   const defaults = {
-    selectedIds:[]
+    instIds:[]
     ,bomIds:[]
   }
 
