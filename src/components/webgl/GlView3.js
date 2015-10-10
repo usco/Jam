@@ -806,14 +806,20 @@ function GLView({DOM, props$}){
       render()
     })
 
-  const vtree$ = combineLatestObj({initialized$, settings$})
+  //absurd, we do not want to change our container (DOM) but the contents (gl)
+  /*const vtree$ = combineLatestObj({initialized$, settings$})
     .map(function({initialized, settings}){
       return (
         <div className="glView" >
           {new GLWidgeHelper(configureStep1.bind(this),configureStep2)}
         </div>
       )
-    })
+    })*/
+  const vtree$ = Rx.Observable.just(
+    <div className="glView" >
+      {new GLWidgeHelper(configureStep1.bind(this),configureStep2)}
+    </div>
+  )
 
   return {
     DOM: vtree$
