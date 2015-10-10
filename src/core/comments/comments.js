@@ -8,21 +8,13 @@ let log = logger("comments")
 log.setLevel("info")
 
 import {toArray, generateUUID} from '../../utils/utils'
-import {mergeData} from '../../utils/modelUtils'
+import {makeModelNoHistory, mergeData} from '../../utils/modelUtils'
 
 //"comments" system
-const defaults = {
-  data:[
-     /*{text:"bla bla details",author:"foo"},
-     {text:"oh yes cool ",author:"bar"},*/
-  ]
-  ,bykey:{
 
-  }
-}
 //comments[key]= "some quite long text, with markdown support "
 
-function addComments(state, {input,settings}){
+function addComments(state, input){
 
   log.info("adding comments", input)
 
@@ -49,31 +41,19 @@ function addComments(state, {input,settings}){
 
 }
 
-function makeModification(intent){
-  /*add comments*/
-  let addComments$ = intent.addComments$
-    .withLatestFrom(intent.settings$,function(newData,settings){
-      return {newData, settings}
-    })
-    .map(({newData,settings}) => (existingData) => {
-      addComments(existingData,{input:newData,settings})
-    })
-  
-  return merge(
-    addComments$
-  )
-}
+function comments(actions, source){
+  ///defaults, what else ?
+  const defaults = {
+    data:[
+       /*{text:"bla bla details",author:"foo"},
+       {text:"oh yes cool ",author:"bar"},*/
+    ]
+    ,bykey:{
+    }
+  }
 
-
-function comments(intent, source) {
-  let source$ = source || Observable.just(defaults)
-  let modification$ = makeModification(intent)
-
-  return modification$
-    .merge(source$)
-    .scan((existingData, modFn) => modFn(existingData))//combine existing data with new one
-    //.distinctUntilChanged()
-    .shareReplay(1)
+  let updateFns  = {addComments}
+  return makeModelNoHistory(defaults, updateFns, actions, source)
 }
 
 export default comments
