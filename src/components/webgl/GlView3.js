@@ -409,7 +409,11 @@ function GLView({DOM, props$}){
         }
       })
       .filter(m=>m !== undefined)
+
     })
+    .filter(m=> (m.length > 0))
+    .distinctUntilChanged()
+    .do(e=>console.log("DONE with items in GLView",e))
   
   function addPickingInfos( inStream$, containerResizes$, camera, scene ){
     return inStream$
@@ -799,6 +803,7 @@ function GLView({DOM, props$}){
     .subscribe(function(e){
       //console.log("foooo",dynamicInjector)
       e.map( m=>dynamicInjector.add(m) )
+      render()
     })
 
   const vtree$ = combineLatestObj({initialized$, settings$})
@@ -827,6 +832,7 @@ function GLView({DOM, props$}){
 }
 
 function GLWidgeHelper(configureFn, configCallback) {
+  console.log("creating GLWidgeHelper")
   this.type = 'Widget'
   this.configureFn = configureFn
   this.configCallback = configCallback
@@ -836,11 +842,13 @@ GLWidgeHelper.prototype.init = function () {
   let elem = document.createElement('div')
   elem.className = "container"
   this.configureFn(elem,this.configCallback)
+  this.elem = elem
   return elem
 }
 
 GLWidgeHelper.prototype.update = function (prev, elem) {
-  //this.gl = this.gl || prev.gl
+  this.elem = this.elem || prev.elem
+  console.log("update GLWidgeHelper" )
 }
 
 export default GLView
