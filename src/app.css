@@ -551,6 +551,10 @@ div.largeIcon{
   background: rgba(244, 244, 244, 0.25);
 }
 
+.comments .icon{
+  position: relative;
+      top: 10px;
+}
 
 
 /*for adding new comments*/
