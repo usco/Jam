@@ -26,18 +26,44 @@ function intent(DOM){
   let entryTaps$  = DOM.select(".bomEntry").events('click')
   let headerTaps$ = DOM.select(".headerCell").events('click')
 
+  let removeEntry$ = DOM.select('DOM', '.remove-btn').events('click')
+  let fieldNames$  = DOM.select('props', 'fieldNames').startWith([])
+}
+
+function model(actions){
+  //observable of current sorting field (what field do we sort by)
+  let sortFieldName$ = headerTaps$
+    .map(e => e.currentTarget.dataset.name)
+    .startWith(undefined)
+    //.filter( name => sortableFields.indexOf(name)>1 )
+
+  //ascending, descending, neutral 
+  let sortablesDirection$ = headerTaps$
+    .map( e => undefined)
+    .scan(false, function (acc, x) { 
+      if(!acc) return true
+      return !acc
+    })
+    .startWith(undefined)
+
+  //actual entries (filtered, sorted etc)
+  entries$ = entries$
+    .combineLatest(sortFieldName$, sortablesDirection$, function(entries, sortFieldName, direction){
+      if(!sortFieldName) return entries 
+
+      let output = entries.sort( sortBy(sortFieldName) )
+      if(direction!==undefined && direction === false ) {
+        output = output.reverse()
+      }
+      return output
+    })
+
 }
 
 function BomView({DOM, props$}) {
-  //let removeEntry$ = DOM.select('DOM', '.remove-btn', 'click')
-  //let fieldNames$ = DOM.select('props', 'fieldNames').startWith([])
-
   //actions
   let entryTaps$ = DOM.select(".bomEntry").events("click")
   let headerTaps$ = DOM.select(".headerCell").events("click")
-
-  //entryTaps$.subscribe((data)=>console.log("oooh bomEntry",data.currentTarget))
-  //headerTaps$.subscribe((data)=>console.log("headerCell", data.currentTarget.dataset.name))
 
   let fieldNames$      = props$.pluck('fieldNames').startWith([]).filter(exists)
   let entries$         = props$.pluck('entries').startWith([]).filter(exists)
