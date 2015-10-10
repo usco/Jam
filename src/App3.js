@@ -36,13 +36,17 @@ import entityTypes from './core/entities/entityTypes'
 import {entityTypeIntents, entityInstanceIntents} from './core/entities/intents2'
 
 
-import {getExtension} from './utils/utils'
+import {getExtension,itemsEqual} from './utils/utils'
 import {combineLatestObj} from './utils/obsUtils'
 import {prepForRender} from './utils/uiUtils'
 
 
+
+
+
 function view(state$, DOM, name){
-  const settingProps$ = state$//.map(s=>s.settings)
+  console.log("view")
+  const settingProps$ = state$
   /*just({
     ,schema : {
       showGrid:{type:"checkbox",path:"grid.show"}
@@ -53,8 +57,11 @@ function view(state$, DOM, name){
   function makeEntityInfosProps(state$){
     const selectedInstIds$ = state$.pluck("selections")
       .map(s=>s.instIds)
+      .filter(s=>s !== undefined)
+      .distinctUntilChanged(null,itemsEqual)
 
     return selectedInstIds$
+      .do(e=>console.log("selectedInstIds",e))
       .combineLatest(state$,function(ids,state){
         
         let transforms = ids.map(function(id){
@@ -75,7 +82,6 @@ function view(state$, DOM, name){
   let fsTogglerUi = FullScreenToggler({DOM})
 
   //entity infos
-  let entityInfosProps$ = just(undefined)
   let entityInfosUi = EntityInfos({DOM,props$:makeEntityInfosProps(state$)})
 
   //for bom
@@ -171,8 +177,6 @@ export function main(drivers) {
   let entityInstancesBase$  =  entityInstanceIntents(entityTypes$)
     .addInstances$
     .map(function(newTypes){
-      console.log("data",newTypes)
-
       return newTypes.map(function(typeData){
         let instUid = Math.round( Math.random()*100 )
         let typeUid = typeData.id
@@ -185,6 +189,7 @@ export function main(drivers) {
         }
         return instanceData
       })
+      console.log("DONE with entityInstancesBase")
     })
     .shareReplay(1)
 
@@ -207,46 +212,14 @@ export function main(drivers) {
           return prev
         },{})
 
-      //types.typeData[]
       //console.log("registry stuff",acc,n)
       return acc
     })
     
-  //.subscribe(e=>console.log("FOOOO",e))
-
-  //experimental , not sure
-  /*
-  function instUidFromTypeUids(core$,types$, typeUids){
-    return combineLatestObj({instances:core$,types$})
-      .map(function({instances,types}){
-        return typeUids.map(function(tuid){
-           //FIXME: implement  
-        })
-
-      })
-  }
-
-  function typeUidFromInstUids(core$, types$, instUids){
-    return combineLatestObj({instances:core$,types$})
-      .map(function({instances,types}){
-
-        return instUids.map(function(iuid){
-          let inst = instances[iuid]
-          if(inst) return inst.typeUid 
-        })
-      })
-  }
-
-  entityInstancesBase$
-    .subscribe(function(){
-        typeUidFromInstUids(core$, entityTypes$, [10]).subscribe(e=>console.log("e",e))
-        instUidFromTypeUids(core$, entityTypes$, [10]).subscribe(e=>console.log("e",e))
-    })*/
-
   //create various components
   entityInstancesBase$
     .withLatestFrom(entityTypes$,function(instances,types){
-      console.log("instances",instances, "types",types)
+      //console.log("instances",instances, "types",types)
 
       instances.map(function(instance){
 
@@ -270,20 +243,26 @@ export function main(drivers) {
         meshActions.createComponent$.onNext({id:instUid,  value:{ mesh }})
         coreActions.createComponent$.onNext({id:instUid,  value:{ typeUid, name:instance.name }})
         transformActions.createComponent$.onNext({id:instUid, value:{pos:[0,0,zOffset]} })
+
+        console.log("DONE with creating various components")
       })
     })
     .subscribe(e=>e)
 
-
   //selections 
   const selections$ = selections( selectionsIntents({DOM,events}, typesInstancesRegistry$) )
-
-  selections$.subscribe(e=>console.log("selections",e))
 
   //////////
   let state$ = combineLatestObj({settings$, selections$, core$,transforms$,meshes$})
 
   let _view = view(state$, DOM)
+
+  core$.subscribe(e=>console.log("core",e))
+  transforms$.subscribe(e=>console.log("transforms",e))
+  meshes$.subscribe(e=>console.log("meshes",e))
+  settings$.subscribe(e=>console.log("settings",e))
+  selections$.subscribe(e=>console.log("selections",e))
+  state$.subscribe(e=>console.log("state",e))
 
   //output to localStorage
   //in our case, settings
