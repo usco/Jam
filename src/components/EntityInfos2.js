@@ -4,6 +4,7 @@ import {Rx} from '@cycle/core'
 import {hJSX} from '@cycle/dom'
 import Class from 'classnames'
 let merge = Rx.Observable.merge
+let combineLatest = Rx.Observable.combineLatest
 
 import {combineLatestObj, preventDefault,isTextNotEmpty,formatData,exists} from '../utils/obsUtils'
 import {formatNumberTo, absSizeFromBBox} from '../utils/formatters'
@@ -138,32 +139,38 @@ function intent({DOM}){
   }
 }
 
+////////
+function intents(){
+  let addComment$          = DOM.select(".comments").events("addComment$").pluck("detail")
+
+}
+
 function model(props$, actions){
 
 }
 
-function EntityInfos({DOM, props$}, name = '') {
-  //let settings$ = props$.pluck('settings').filter(exists).startWith([])
-  let comments$   = props$.pluck('comments').filter(exists).startWith(undefined)
-  let core$       = props$.pluck('core').filter(exists).startWith(undefined)
-  let transforms$ = props$.pluck('transforms').filter(exists).startWith(undefined)
+function CommentsWrapper(state$, DOM){
+  const commentsEntity$ = state$.pluck("core")
+    .filter(exists)
+    .map(e=>e[0])
+    .startWith(undefined)
 
-  let addComment$          = DOM.select(".comments").events("addComment$").pluck("detail")
+  const props$ = combineLatestObj({
+    entity:commentsEntity$
+    ,comments:state$.pluck("comments")
+  })
 
-  //comments$.subscribe(e=>console.log("Comments",e))
-  intent({DOM}).changeName$.subscribe(e=>console.log("changeName",e))
-  intent({DOM}).changeColor$.subscribe(e=>console.log("changeColor",e))
+  return Comments({DOM,props$})
+}
 
+
+function view(state$, commentsVTree$){
   let numberPrecision = 2
   let controlsStep = 0.1
 
-  let commentsEntity$ = core$.filter(exists).map(e=>e[0]).startWith(undefined)
-  const commentsUiProps$ = combineLatestObj({entity:commentsEntity$,comments$})
-  const commentsUi = Comments({DOM,props$:commentsUiProps$})
-
-  const vtree$ = combineLatestObj({core$, transforms$, comments:commentsUi.DOM})
-    .distinctUntilChanged()
-    .map(function({core, transforms, comments}){
+  return combineLatest(state$,commentsVTree$
+    ,function(state,comments){
+      let {core,transforms} = state
 
       if(!core || !transforms || !comments){
         return undefined
@@ -174,14 +181,32 @@ function EntityInfos({DOM, props$}, name = '') {
 
       return <div className="toolBarBottom entityInfos">
         {comments}
+
         {nameInput(core)}
         {colorInput(core)}
         {transformInputs(transforms, "pos", "P", controlsStep, numberPrecision)}
         {transformInputs(transforms, "rot", "R", controlsStep, numberPrecision)}
         {transformInputs(transforms, "sca", "S", controlsStep, numberPrecision)}
-      </div>
+        
+      </div>   
     })
+}
 
+function EntityInfos({DOM, props$}, name = '') {
+  let comments$   = props$.pluck('comments').filter(exists).startWith(undefined)
+  let core$       = props$.pluck('core').filter(exists).startWith(undefined)
+  let transforms$ = props$.pluck('transforms').filter(exists).startWith(undefined)
+
+  //comments$.subscribe(e=>console.log("Comments",e))
+  /*intent({DOM}).changeName$.subscribe(e=>console.log("changeName",e))
+  intent({DOM}).changeColor$.subscribe(e=>console.log("changeColor",e))*/
+
+  const state$ = combineLatestObj({core$, transforms$, comments$})
+
+  const comments = CommentsWrapper(state$,DOM)
+
+  const vtree$ = view(state$,comments.DOM)
+  
   return {
     DOM: vtree$,
     events:{
