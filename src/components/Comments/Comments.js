@@ -5,8 +5,8 @@ import {hJSX} from '@cycle/dom'
 import Class from 'classnames'
 let merge = Rx.Observable.merge
 
-import {preventDefault,isTextNotEmpty,formatData,exists} from '../utils/obsUtils'
-import EditableItem from './EditableItem'
+import {preventDefault,isTextNotEmpty,formatData,exists} from '../../utils/obsUtils'
+//import EditableItem from './EditableItem'
 
 
 function commentsList (comments) {
@@ -36,7 +36,15 @@ function commentsList (comments) {
   </ul>
 }
 
-function createComment (newComment,  changeHandler){
+/*<EditableItem id="newComment" 
+          data={newComment.text}  
+          placeholder="what are your thoughts..." 
+          multiline="true"
+          changeHandler={changeHandler}
+        />*/
+
+
+function createComment (newComment){
   const iconSvg = `
     <svg className="icon" version="1.1" id="Message" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
        viewBox="0 0 20 20" enable-background="new 0 0 20 20" >
@@ -50,12 +58,7 @@ function createComment (newComment,  changeHandler){
           Leave a comment
       </header>
       <div className="content">
-        <EditableItem id="newComment" 
-          data={newComment.text}  
-          placeholder="what are your thoughts..." 
-          multiline="true"
-          changeHandler={changeHandler}
-        />
+        
       </div>
       <button className="add">Add comment</button>
     </div>
@@ -63,7 +66,7 @@ function createComment (newComment,  changeHandler){
 }
 
 //FIXME : uppercased to avoid conflict with comments "model"
-function renderComments(interactions, toggled, comments, entity, newComment, changeHandler){
+function renderComments(toggled, comments, entity, newComment){
   let commentDetails = null
   let commentsData = []
 
@@ -80,26 +83,28 @@ function renderComments(interactions, toggled, comments, entity, newComment, cha
     commentDetails = <div className="commentDetails fadesIn visible">
       <span>
         { commentsList(commentsData) }
-        { createComment(newComment, changeHandler) }
+        { createComment(newComment) }
       </span>
     </div>
   }
+  //onClick={interactions.subject('toggle').onEvent}
  
   const iconSvg =  `
-    <svg className="icon" version="1.1" id="Message" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
-       viewBox="0 0 20 20" enable-background="new 0 0 20 20" onClick={interactions.subject('toggle').onEvent}>
+    <svg class="icon" version="1.1" id="Message" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
+       viewBox="0 0 20 20" enable-background="new 0 0 20 20" >
       <path fill="#FFFFFF" d="M18,6v7c0,1.1-0.9,2-2,2h-4v3l-4-3H4c-1.101,0-2-0.9-2-2V6c0-1.1,0.899-2,2-2h12C17.1,4,18,4.9,18,6z"/>
     </svg>`
   
-
-  return (
-      <span className="comments">
-        <a className="tooltips" href="#" >
+   /*<a className="tooltips" href="#" >
           <span innerHTML={iconSvg}> </span>
           <span>
             See/add comments
           </span>
-        </a>
+        </a>*/
+
+  return (
+      <span className="comments" innerHTML={iconSvg}>
+       
         {commentDetails}
       </span>
 
@@ -111,7 +116,7 @@ function renderComments(interactions, toggled, comments, entity, newComment, cha
 function getIds(entity){
   console.log("getIds")
   if(entity){
-    return {typeUid:entity.typeUid, iuid:entity.iuid}
+    return {typeUid:entity.typeUid, iuid:entity.id}
   }
   return {typeUid:undefined, iuid:undefined}
 }
@@ -121,17 +126,17 @@ function Comments({DOM,props$}) {
   let entity$     = props$.pluck('entity')
 
   let addComment$ = DOM.select(".add").events("click")
-  let toggled$ =  DOM.select(".comments").events("toggle")
+  let toggled$    = DOM.select(".comments").events("toggle")
     .map(true)
     .startWith(false)
     .scan((acc,val)=>!acc)
 
   //stream containing new comment, if any
-  let newComment$ = interactions.subject('newCommentContent$')
+  let newComment$ = Rx.Observable.just("foo") /*interactions.subject('newCommentContent$')
     .map(e=>e.target.value)
     .startWith(undefined)
     .map(e=>{ return {text:e} })
-    .shareReplay(1)
+    .shareReplay(1)*/
 
   //stream of new comments
   addComment$ = addComment$
@@ -158,14 +163,12 @@ function Comments({DOM,props$}) {
       ,newComment$
       ,toggled$
       ,function(comments,entity,newComment, toggled){
-
         //FIXME: temp hack
-        function changeHandler(fieldName, index, event){
+        /*function changeHandler(fieldName, index, event){
           interactions.subject('newCommentContent$').onEvent(event)
         }
-        let _changeHandler = changeHandler.bind(null,"comment",undefined)
-
-        return renderComments(interactions, toggled, comments, entity, newComment, _changeHandler)
+        let _changeHandler = changeHandler.bind(null,"comment",undefined)*/
+        return renderComments(toggled, comments, entity, newComment)
       }
     )
 
