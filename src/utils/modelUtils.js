@@ -2,6 +2,7 @@ import Rx from 'rx'
 let fromEvent = Rx.Observable.fromEvent
 let Observable = Rx.Observable
 let merge = Rx.Observable.merge
+let just  = Rx.Observable.just
 
 //TODO: this needs to be an external lib, for re-use
 //merge the current data with any number of input data
@@ -12,10 +13,19 @@ export function mergeData(currentData,inputs){
   return Object.assign({}, currentData,inputs)
 }
 
-export function makeModel(updateFns, actions, defaults){
+//need to make sure source data structure is right 
+export function applyDefaults(data$, defaults){
+  return data$.map(function(data){
+    return Object.assign(defaults,data)
+  })
+}
+
+export function makeModel(updateFns, actions, defaults, source){
   let mods$ =  makeModifications(actions,updateFns)
 
-  let source$ =  Rx.Observable.just( defaults )//Immutable(defaults) )
+  //let source$ =  Rx.Observable.just( defaults )//Immutable(defaults) )
+  let source$ = source || just(defaults)
+  source$ = applyDefaults(source$,defaults)
 
   return mods$
     .merge(source$)
@@ -158,10 +168,12 @@ export function makeModificationsNoHistory(actions, updateFns){
 }
 
 
-export function makeModelNoHistory(defaults, updateFns, actions){
+export function makeModelNoHistory(defaults, updateFns, actions, source){
   let mods$ =  makeModificationsNoHistory(actions,updateFns)
 
-  let source$ =  Rx.Observable.just( defaults ) //Immutable(defaults) )
+  //let source$ =  Rx.Observable.just( defaults )//Immutable(defaults) )
+  let source$ = source || just(defaults)
+  source$ = applyDefaults(source$, defaults)
 
   return mods$
     .merge(source$)
