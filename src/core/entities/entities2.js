@@ -4,20 +4,6 @@ import {generateUUID} from '../../utils/utils'
 import {combineLatestObj} from '../../utils/obsUtils'
 let just = Rx.Observable.just
 
-/*
-let partInstance = {
-    name: data.name,
-    iuid: generateUUID(),
-    typeUid: data.typeUid,
-    color: "#07a9ff",
-    pos: [ 0, 0, h/2 ],
-    rot: [ 0, 0, 0 ],
-    sca: [ 1, 1, 1 ],
-    bbox:data.bbox
-}*/
-
-//just experimenting with thoughts about component based system
-
 
 /////////
 //used for all
@@ -81,7 +67,7 @@ export function makeCoreSystem(){
 
   //defaults for each component in this system
   const componentDefaults ={
-    name: "entity",
+    name: undefined,
     typeUid: undefined,
     color: "#07a9ff"
   }
