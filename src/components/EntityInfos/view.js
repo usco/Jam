@@ -8,6 +8,84 @@ let combineLatest = Rx.Observable.combineLatest
 
 import {formatNumberTo, absSizeFromBBox} from '../../utils/formatters'
 
+function absSizeInput(entity , controlsStep, numberPrecision, changeHandler){
+  /*display / control object transforms: posistion,rotation,scale etc
+  in doubt about change handler
+  onChange={self.handleChange.bind(self,"pos",index)}
+  onChange={self.handleSizeChange.bind(self,index)}
+  */
+
+  //TODO : do the "safing" of values better( no divisions by zero, nothing under 0 )
+  /*var minScale = 0.0001;
+  if(!value) return minScale;
+  
+  if(value <= 0) value = minScale;
+  //var foo = this.meshSize[axis];
+  var map = {"l":"x","w":"y","h":"z"};
+  var mapped = map[axis];
+  var axisScale = this.selectedObject.scale[ mapped ];
+  if( axisScale <= minScale ) axisScale = minScale;
+  
+  var scaling = 1/ axisScale;
+  
+  var meshSize = this.meshSize[axis];
+  if(meshSize <= minScale) meshSize = minScale;
+  
+  var originalSize = meshSize * scaling;
+  var targetScale = value/(originalSize);
+    
+  if(targetScale <= minScale) targetScale = minScale;
+  if(this.meshSize[axis] <= minScale) this.meshSize[axis] = minScale;
+  
+  this.selectedObject.scale[mapped] = targetScale;
+  return targetScale;
+
+
+  absSize = originalSize * scale
+  scale   =
+  */
+
+
+  if(entity && entity["sca"]){
+    //this one is for absolute sizing
+
+    function innerChangeHandler(fieldName, index, absSize, event){  
+      let value = event.target.value
+      let originalValue = absSize[index]
+      let scaleChange = value/originalValue
+      //console.log("changeHandler for absSize fieldName",fieldName,"index",index,"value",value,"originalValue",originalValue ,"absSize", absSize )
+      console.log("value",value, "originalValue",originalValue,scaleChange)
+
+      changeHandler("sca",index,{target:{value:value}})
+    }
+
+    let absSizeInputs = []
+     if(entity.bbox){
+      let absSize = absSizeFromBBox(entity.bbox)
+      absSize = absSize || {w:0,l:0,h:0}
+      //convert to array to keep logic the same for all fields
+      absSize = [absSize.l,absSize.w,absSize.h]
+      //onChange={innerChangeHandler.bind(null,"absSize",index ,absSize)} 
+
+      absSize.forEach(function(entry, index){
+        entry = formatNumberTo(entry, numberPrecision)
+        absSizeInputs.push(
+          <input type="number" value={entry} step={controlsStep} 
+          onChange={changeHandler.bind(null,"absSize",index)} />
+        )
+      })
+    }
+
+    return (
+      <span>
+        <span>D:</span> {absSizeInputs}
+      </span>
+    )
+
+  }
+}
+
+
 function nameInput(core){
    if(core && core.name){
     return (
