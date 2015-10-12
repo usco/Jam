@@ -21,7 +21,7 @@ import {windowResizes,elementResizes} from '../../interactions/sizing'
 import Selector from './deps/Selector'
 import {getCoordsFromPosSizeRect} from './deps/Selector'
 import {preventDefault,isTextNotEmpty,formatData,exists,combineLatestObj} from '../../utils/obsUtils'
-import {toArray} from '../../utils/utils'
+import {toArray,itemsEqual} from '../../utils/utils'
 
 import {extractChanges, transformEquals, colorsEqual, entityVisualComparer} from '../../utils/diffPatchUtils'
 
@@ -240,7 +240,7 @@ function makeOutlineFx(mesh){
 }
 
 
-function intents(drivers, interactions){
+function intent(drivers, interactions){
   let {shortSingleTaps$,
     shortDoubleTaps$,
     longTaps$,
@@ -320,6 +320,25 @@ function intents(drivers, interactions){
 
 
 
+function model(props$, actions){
+
+  let update$      = Rx.Observable.interval(16,66666666667)
+
+  let settings$       = props$.pluck('settings')
+  let selections$     = props$.pluck('selections').startWith([]).filter(exists).distinctUntilChanged()
+  //every time either activeTool or selection changes, reset/update transform controls
+
+  let activeTool$ = settings$.pluck("activeTool").startWith(undefined)
+
+  //composite data
+  let core$       = props$.pluck('core').distinctUntilChanged()
+  let transforms$ = props$.pluck('transforms')//.distinctUntilChanged()
+  let meshes$     = props$.pluck('meshes').filter(exists).distinctUntilChanged(function(m){
+    return Object.keys(m)
+  } )//m=>m.uuid)
+
+}
+
 /*TODO:
 - remove any "this", adapt code accordingly  
 - extract reusable pieces of code => 50 % done
@@ -340,9 +359,11 @@ function GLView({DOM, props$}){
   let activeTool$ = settings$.pluck("activeTool").startWith(undefined)
 
   //composite data
-  let core$       = props$.pluck('core')
-  let transforms$ = props$.pluck('transforms')
-  let meshes$     = props$.pluck('meshes')
+  let core$       = props$.pluck('core').distinctUntilChanged()
+  let transforms$ = props$.pluck('transforms')//.distinctUntilChanged()
+  let meshes$     = props$.pluck('meshes').filter(exists).distinctUntilChanged(function(m){
+    return Object.keys(m)
+  } )//m=>m.uuid)
 
   //debug only
   //settings$.subscribe(function(data){console.log("SETTINGS ",data)})
@@ -390,14 +411,20 @@ function GLView({DOM, props$}){
     return mesh
   }
 
+  /*core$.subscribe(e=>console.log("core change in GLView"))
+  transforms$.subscribe(e=>console.log("transforms change in GLView",JSON.stringify( e ) ))
+  meshes$.subscribe(e=>console.log("meshes change in GLView"))*/
+
+  let requestAnimationFrameScheduler = Rx.Scheduler.requestAnimationFrame
+
   //combine All needed components to apply any "transforms" to their visuals
   let items$ = combineLatestObj({core$,transforms$,meshes$})
-    .debounce(50)//ignore if we have too fast changes in any of the 3 components
-    .distinctUntilChanged()
+    .debounce(5)//ignore if we have too fast changes in any of the 3 components
+    //.distinctUntilChanged()
     .map(function({core,transforms,meshes}){
 
       let keys = Object.keys(core)
-      //console.log("keys",keys)
+      //console.log("items change in GLView")
       let cores = core
 
       return keys.map(function(key){
@@ -406,13 +433,14 @@ function GLView({DOM, props$}){
         let core = cores[key]
 
         if(core && transform && mesh){
+
+          //console.log("transforms",transform)
           mesh.position.fromArray( transform.pos )
           mesh.rotation.fromArray( transform.rot )
-          mesh.scale.fromArray(  transform.sca )
+          mesh.scale.fromArray( transform.sca )
 
           //color is stored in core component
           mesh.material.color.set( core.color )
-
           return setFlags(mesh)
         }
       })
@@ -420,7 +448,8 @@ function GLView({DOM, props$}){
 
     })
     .filter(m=> (m.length > 0))
-    .distinctUntilChanged()
+    .sample(0, requestAnimationFrameScheduler)
+    //.distinctUntilChanged()
     .do(e=>console.log("DONE with items in GLView",e))
   
   function addPickingInfos( inStream$, containerResizes$, camera, scene ){
