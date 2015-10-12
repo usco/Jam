@@ -8,7 +8,7 @@ let just = Rx.Observable.just
 /////////
 //used for all
 function createComponent(defaults,state,input){
-  console.log("createComponent")
+  console.log("createComponent",defaults)
   let inputValue =  {}
   if(input && input.value) inputValue = input.value
   const newAttrs = mergeData(defaults,inputValue)
@@ -20,7 +20,7 @@ function createComponent(defaults,state,input){
 
   state = mergeData({},state)
   state[id] = newAttrs
-  //FIXME big hack, using mutability
+  //FIXME big hack, use mutability
   return state 
 }
 
@@ -29,7 +29,7 @@ function removeComponent(state,input){
   let {id} = input
 
   state = mergeData({},state)
-  //FIXME big hack, using mutability
+  //FIXME big hack, use mutability
   delete state[id]
   return state 
 }
@@ -41,7 +41,7 @@ function duplicateEntity(state,input){
   let clone = mergeData({},state[id]) 
 
   state = mergeData({},state)
-  //FIXME big hack, using mutability
+  //FIXME big hack, use mutability
   state[newId] = clone
   return state 
 }
@@ -72,13 +72,6 @@ export function makeCoreSystem(){
     color: "#07a9ff"
   }
 
-  function setColor(state, input){
-    let id  = input.id
-    let color = input || state.color
-    state = mergeData( state, {color})
-    return state
-  }
-
   function setAttribs(state, input){
     let id  = input.id
 
@@ -86,12 +79,13 @@ export function makeCoreSystem(){
     let orig = state[id]
 
     state = mergeData({},state)
-    //FIXME big hack, using mutability
+    //FIXME big hack, use mutability
     state[id] = mergeData(orig,newAttrs)
     return state
   }
 
-  let updateFns = {setColor, setAttribs
+  let updateFns = {
+    setAttribs
     , createComponent: createComponent.bind(null,componentDefaults)
     , removeComponent}
   let actions   = makeActionsFromApiFns(updateFns)
@@ -118,8 +112,8 @@ export function makeTransformsSystem(){
     let orig = state[id] || transformDefaults
 
     state = mergeData({},state)
-    //FIXME big hack, using mutability
-    state[id] = mergeData(orig,{pos})
+    //FIXME big hack, use mutability
+    state[id] = mergeData({},orig,{pos})
     return state
   }
 
@@ -130,8 +124,8 @@ export function makeTransformsSystem(){
     let orig = state[id] || transformDefaults
 
     state = mergeData({},state)
-    //FIXME big hack, using mutability
-    state[id] = mergeData(orig,{rot})
+    //FIXME big hack, use mutability
+    state[id] = mergeData({},orig,{rot})
     return state
   }
 
@@ -142,20 +136,20 @@ export function makeTransformsSystem(){
     let orig = state[id] || transformDefaults
 
     state = mergeData({},state)
-    //FIXME big hack, using mutability
-    state[id] = mergeData(orig,{sca})
+    //FIXME big hack, use mutability
+    state[id] = mergeData({},orig,{sca})
     return state
   }
 
   function updateTransforms(state, input){
-    console.log("updateTransforms")
+    console.log("updateTransforms", input.id)
+    state = mergeData({},state)
+
     let {id} = input
     let transforms = input.value || transformDefaults
-    let orig = state[id] || transformDefaults
-
-    state = mergeData({},state)
-    //FIXME big hack, using mutability
-    state[id] = mergeData(orig,transforms)
+    
+    //FIXME big hack, use mutability
+    state[id] = transforms
     return state
   }
 
@@ -189,7 +183,7 @@ export function makeMeshSystem(){
 
     state = mergeData({},state)
     state[id] = newAttrs
-    //FIXME big hack, using mutability
+    //FIXME big hack, use mutability
     return state 
   }
 
@@ -265,11 +259,20 @@ function makeBomSystem(){
 let {core$,coreActions}            = makeCoreSystem()
 let {transforms$,transformActions} = makeTransformsSystem()
 
-core$.subscribe(e=>console.log("core",e))
+core$.subscribe(e=>console.log("core test",e))
 transforms$.subscribe(e=>console.log("transforms",e))
 
 const id1 = generateUUID()
 const id2 = generateUUID()
+
+/*
+setTimeout(function() {
+  coreActions.createComponent$.onNext({id:id1, value:{typeUid:0}})
+  //transformActions.createComponent$.onNext({id:id1, value:{typeUid:0}})
+
+  coreActions.createComponent$.onNext({id:id2, value:{typeUid:0}})
+  //transformActions.createComponent$.onNext({id:id2, value:{typeUid:0}})
+}, 10)*/
 
 
 /*setTimeout(function() {
@@ -345,19 +348,6 @@ function duplicateEntity(id){
     action.cloneComponent$.onNext({id})
   })
 }
-
-
-/*
-function render(data){
-  console.log("data in render",data)
-  let {transforms,bounds,mesh} = data
-  //here we could do stuff with meshes, transforms etc
-}
-combineLatestObj({transforms$, bounds$, mesh$})
-  .distinctUntilChanged()
-  .subscribe(render)
-
-*/
 
 
   
