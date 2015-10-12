@@ -8,10 +8,20 @@ export default function intent(DOM){
   const addComment$          = DOM.select(".comments").events("addComment$").pluck("detail")
 
   const changeName$  = merge(
-    DOM.select(".nameInput").events('change').map(e=>e.target.value)
-    ,DOM.select(".nameInput").events('input').map(e=>e.target.value)
-  )
-  const changeColor$ = DOM.select(".colorInput").events('change').map(e=>e.target.value)
+    DOM.select(".nameInput").events('change')
+    ,DOM.select(".nameInput").events('input')
+  ).map(e=>e.target.value)
+  .distinctUntilChanged()
+  .debounce(20)
+  .shareReplay(1)
+
+  const changeColor$ = merge(
+    DOM.select(".colorInput").events('change')
+    ,DOM.select(".colorInput").events('input')
+  ).map(e=>e.target.value)
+  .distinctUntilChanged()
+  .debounce(20)
+  .shareReplay(1)
 
   const changeTransforms$ = merge(
     DOM.select(".transformsInput").events('change')
@@ -24,6 +34,8 @@ export default function intent(DOM){
       return {val,trans,idx:parseInt(idx)}
     })
     .distinctUntilChanged()
+    //.debounce(20)
+    .shareReplay(1)
   
   return {
     changeName$
