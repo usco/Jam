@@ -782,11 +782,17 @@ function GLView({DOM, props$}){
   DOM.select('canvas').events('contextmenu').subscribe( e => preventDefault(e) )
 
   update$.subscribe( update )
-  settings$.filter(exists).subscribe(function(settings){
-    controls.autoRotate = settings.camera.autoRotate
-  })
-  //big HACK
-  settings$.filter(exists).map(s => s.grid.show)
+  
+  //settings handling
+  settings$ = settings$
+    .filter(exists)
+    .distinctUntilChanged()
+
+  settings$.map(s => s.camera.autoRotate)
+    .subscribe(autoRotate => controls.autoRotate = autoRotate )
+
+  //big HACK?
+  settings$.map(s => s.grid.show)
     .subscribe(function(showGrid){
       scene.remove(grid)
       if(showGrid){
