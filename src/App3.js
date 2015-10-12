@@ -10,11 +10,12 @@ let fromEvent = Rx.Observable.fromEvent
 let just = Rx.Observable.just
 let merge = Rx.Observable.merge
 let fromArray = Rx.Observable.fromArray
+let combineLatest = Rx.Observable.combineLatest
 
 import {observableDragAndDrop} from './interactions/dragAndDrop'
 
 //views etc
-import BomView from './components/Bom/BomView'
+import Bom from './components/Bom/Bom'
 import GLView from './components/webgl/GlView3'
 import SettingsView from './components/SettingsView'
 import FullScreenToggler from './components/FullScreenToggler'
@@ -40,41 +41,14 @@ import {getExtension,itemsEqual} from './utils/utils'
 import {combineLatestObj} from './utils/obsUtils'
 import {prepForRender} from './utils/uiUtils'
 
-
-function view_old(state$, DOM, name){
-  console.log("view")
-  const settingProps$ = state$
-  /*just({
+//for settings
+ /*just({
     ,schema : {
       showGrid:{type:"checkbox",path:"grid.show"}
       ,autoRotate:{type:"checkbox",path:"camera.autoRotate"}
       //,annotations:{type:"checkbox",path:"grid.show"}
     }
   })*/
-  
-  //settings
-  let settingsUi = SettingsView({DOM, props$:settingProps$})
-  //fullscreen 
-  let fsTogglerUi = FullScreenToggler({DOM})
-
-  ///////
-  //final results
-  //const events = {gl:glEvents}
-
-  DOM = prepForRender({fsTogglerUi,settingsUi,bomUi, glUi, entityInfosUi, meshes:state$.pluck("meshes")})
-    .map(function({settings,fsToggler,bom,gl,entityInfos,meshes}){
-      return <div>
-        {settings}
-        {fsToggler}
-        {bom}
-        {gl}
-
-        {entityInfos}
-      </div>
-    })
-
-  return {events,DOM}
-}
 
 function EntityInfosWrapper(state$, DOM) {
   //.distinctUntilChanged(state => state.value)
@@ -124,26 +98,29 @@ function BOMWrapper(state$, DOM){
 
     return bomProps$
   }
-  return BomView({DOM,props$:makeBomProps(state$)})
+  return Bom({DOM,props$:makeBomProps(state$)})
 }
 
 function GLWrapper(state$,DOM){
   let glProps$  = combineLatestObj({
     settings:state$.pluck("settings")
+
+    ,core:state$.pluck("core")
     ,meshes:state$.pluck("meshes")
     ,transforms:state$.pluck("transforms")
   })
+
   let glUi      = GLView({DOM,props$:glProps$})
   return glUi
 }
 
-
-function view(bomVtree$,glVtree$,entityInfosVtree$){
-  //return prepForRender({fsTogglerUi,settingsUi,bomUi, glUi, entityInfosUi, meshes:state$.pluck("meshes")})
-    //.map(function({settings,fsToggler,bom,gl,entityInfos,meshes}){
-  return combineLatestObj({bom:bomVtree$,gl:glVtree$,entityInfos:entityInfosVtree$})
-    .map(function({bom,gl,entityInfos}){
+function view(settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree$, entityInfosVtree$){
+  return combineLatest(settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree$, entityInfosVtree$
+    ,function(settings, fsToggler, bom, gl, entityInfos){
       return <div>
+        {settings}
+        {fsToggler}
+
         {bom}
         {gl}
 
@@ -258,9 +235,11 @@ export function main(drivers) {
           iuid:instUid
         }
 
+        coreActions.createComponent$.onNext({id:instUid,  value:{ typeUid, name:instance.name }})
+        //coreActions.createComponent$.onNext({id:id1, value:{typeUid:0}})
+
         boundActions.createComponent$.onNext({id:instUid, value:{bbox} })
         meshActions.createComponent$.onNext({id:instUid,  value:{ mesh }})
-        coreActions.createComponent$.onNext({id:instUid,  value:{ typeUid, name:instance.name }})
         transformActions.createComponent$.onNext({id:instUid, value:{pos:[0,0,zOffset]} })
 
         console.log("DONE with creating various components")
@@ -272,21 +251,23 @@ export function main(drivers) {
   const selections$ = selections( selectionsIntents({DOM,events}, typesInstancesRegistry$) )
 
   //////////
-  let state$ = combineLatestObj({settings$, selections$, core$,transforms$,meshes$})
+  let state$ = combineLatestObj({settings$, selections$, core$, transforms$, meshes$})
 
   //various
   const entityInfos = EntityInfosWrapper(state$,DOM)
   const gl          = GLWrapper(state$,DOM)
   const bom         = BOMWrapper(state$,DOM)
+  const settingsC   = SettingsView({DOM, props$:state$})
+  const fsToggler   = FullScreenToggler({DOM})
 
   //let _view = view(state$, DOM)
 
-  let vtree$ = view(bom.DOM,gl.DOM,entityInfos.DOM)
+  let vtree$ = view(settingsC.DOM, fsToggler.DOM, bom.DOM,gl.DOM,entityInfos.DOM)
 
   let events$ = just( {gl:gl.events} )
 
-  /*core$.subscribe(e=>console.log("core",e))
-  transforms$.subscribe(e=>console.log("transforms",e))
+  //core$.subscribe(e=>console.log("core",e))
+  /*transforms$.subscribe(e=>console.log("transforms",e))
   meshes$.subscribe(e=>console.log("meshes",e))
   settings$.subscribe(e=>console.log("settings",e))
   selections$.subscribe(e=>console.log("selections",e))

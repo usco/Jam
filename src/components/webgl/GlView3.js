@@ -340,6 +340,7 @@ function GLView({DOM, props$}){
   let activeTool$ = settings$.pluck("activeTool").startWith(undefined)
 
   //composite data
+  let core$       = props$.pluck('core')
   let transforms$ = props$.pluck('transforms')
   let meshes$     = props$.pluck('meshes')
 
@@ -389,22 +390,29 @@ function GLView({DOM, props$}){
     return mesh
   }
 
-  let items$ = combineLatestObj({transforms$,meshes$})
-    .map(function({transforms,meshes}){
+  //combine All needed components to apply any "transforms" to their visuals
+  let items$ = combineLatestObj({core$,transforms$,meshes$})
+    .debounce(50)//ignore if we have too fast changes in any of the 3 components
+    .distinctUntilChanged()
+    .map(function({core,transforms,meshes}){
 
-      let keys = Object.keys(meshes)
+      let keys = Object.keys(core)
       //console.log("keys",keys)
+      let cores = core
 
       return keys.map(function(key){
         let transform = transforms[key]
         let mesh = meshes[key]
+        let core = cores[key]
 
-        if(transform && mesh){
+        if(core && transform && mesh){
           mesh.position.fromArray( transform.pos )
           mesh.rotation.fromArray( transform.rot )
           mesh.scale.fromArray(  transform.sca )
-          //mesh.material.color.set( entity.color )
-          //console.log("mesh",mesh)
+
+          //color is stored in core component
+          mesh.material.color.set( core.color )
+
           return setFlags(mesh)
         }
       })
