@@ -113,7 +113,9 @@ function transformInputs(transforms, fieldName, displayName, controlsStep, numbe
     transforms[fieldName].forEach(function(entry, index){
       entry = formatNumberTo(entry, numberPrecision)
       inputs.push(
-        <input type="number" value={entry} step={controlsStep} className={`transformsInput ${fieldName}_${index}`}/>
+        <input type="number" value={entry} step={controlsStep} className={`transformsInput`}
+          attributes={ {'data-transform': `${fieldName}_${index}` } }>
+        </input>
       )
     })
 

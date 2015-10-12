@@ -9,8 +9,8 @@ let combineLatest = Rx.Observable.combineLatest
 import {combineLatestObj, preventDefault,isTextNotEmpty,formatData,exists} from '../../utils/obsUtils'
 
 import Comments from '../Comments/Comments'
-import view from './View'
-
+import view from './view'
+import intent from './intent'
 
 ////////
 
@@ -38,19 +38,27 @@ function CommentsWrapper(state$, DOM){
 
 function EntityInfos({DOM, props$}, name = '') {
   //comments$.subscribe(e=>console.log("Comments",e))
-  /*intent({DOM}).changeName$.subscribe(e=>console.log("changeName",e))
-  intent({DOM}).changeColor$.subscribe(e=>console.log("changeColor",e))*/
-
   const state$ = model(props$)
 
   const comments = CommentsWrapper(state$,DOM)
+
+  const {changeColor$,changeName$,changeTransforms$} = intent(DOM)
+  
+  /*changeColor$
+    .subscribe(e=>console.log("changeColor",e)) 
+  changeName$
+    .subscribe(e=>console.log("changeName",e))
+  changeTransforms$
+    .subscribe(e=>console.log("changeTransforms",e))*/
 
   const vtree$ = view(state$,comments.DOM)
   
   return {
     DOM: vtree$,
     events:{
-      //selectionTransforms$
+      changeColor$
+      ,changeName$
+      ,changeTransforms$
       //addComment$
     }
   }
