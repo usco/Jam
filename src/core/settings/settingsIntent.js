@@ -3,13 +3,14 @@ import {clearActiveTool$} from '../../actions/appActions'
 import {keycodes, isValidElementEvent} from '../../interactions/keyboard'
 let merge = Rx.Observable.merge
 
-export function settingsIntent(drivers){
+export function settingsIntent(drivers, selections$){
   let DOM = drivers.DOM
   let addressbar = drivers.addressbar
 
   //hack for firefox only as it does not correct get the "checked" value : note : this is not an issue in cycle.js
   let is_firefox_or_chrome  = (navigator.userAgent.toLowerCase().indexOf('firefox') > -1 || 
     navigator.userAgent.toLowerCase().indexOf('chrome') > -1 )
+
   function checked(event){
     //if(is_firefox_or_chrome) return ! event.target.checked
     return event.target.checked
@@ -60,6 +61,7 @@ export function settingsIntent(drivers){
     showGrid$.map(e=>({showGrid:e}))
     ,showAnnot$.map(e=>({showAnnot:e}))
     ,autoRotate$.map(e=>({autoRotate:e}))
+    //,selections$
     //,activeTool$.map(e=>({activeTool:e}))
     //,appMode$.map(e=>({appMode:e}))
   )

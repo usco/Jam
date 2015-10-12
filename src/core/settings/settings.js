@@ -31,6 +31,8 @@ function settings(actions, source){
     activeTool:undefined,
     repeatTool:false,
 
+    selections: undefined,
+
     //these are "domain specific", there should be a way for sub systems
     //to "hook up" to the main data storage
     camera:{
