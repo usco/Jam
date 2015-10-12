@@ -31,8 +31,6 @@ function eventDriver(outgoing$){
   return {
     select: getData
   }
-
-  //return outgoing$
 }
 
 //////////setup drivers
