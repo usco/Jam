@@ -236,8 +236,6 @@ export function main(drivers) {
         }
 
         coreActions.createComponent$.onNext({id:instUid,  value:{ typeUid, name:instance.name }})
-        //coreActions.createComponent$.onNext({id:id1, value:{typeUid:0}})
-
         boundActions.createComponent$.onNext({id:instUid, value:{bbox} })
         meshActions.createComponent$.onNext({id:instUid,  value:{ mesh }})
         transformActions.createComponent$.onNext({id:instUid, value:{pos:[0,0,zOffset]} })
@@ -264,7 +262,7 @@ export function main(drivers) {
 
   let vtree$ = view(settingsC.DOM, fsToggler.DOM, bom.DOM,gl.DOM,entityInfos.DOM)
 
-  let events$ = just( {gl:gl.events} )
+  let events$ = just( {gl:gl.events, entityInfos:entityInfos.events} )
 
   //core$.subscribe(e=>console.log("core",e))
   /*transforms$.subscribe(e=>console.log("transforms",e))
@@ -272,6 +270,37 @@ export function main(drivers) {
   settings$.subscribe(e=>console.log("settings",e))
   selections$.subscribe(e=>console.log("selections",e))
   state$.subscribe(e=>console.log("state",e))*/
+
+  //hack
+  entityInfos.events.changeColor$
+    .withLatestFrom(selections$.pluck("instIds"),function(color, instIds){
+      console.log("setting color", color, instIds)
+      instIds.map(function(instId){
+        coreActions.setAttribs$.onNext({id:instId, value:{color}})
+      })
+    })
+    .subscribe(e=>e)
+
+  entityInfos.events.changeName$
+    .withLatestFrom(selections$.pluck("instIds"),function(name, instIds){
+      console.log("setting name", name, instIds)
+      instIds.map(function(instId){
+        coreActions.setAttribs$.onNext({id:instId, value:{name}})
+      })
+    })
+    .subscribe(e=>e)
+
+  entityInfos.events.changeTransforms$
+    .withLatestFrom(selections$.pluck("instIds"),function(transforms, instIds){
+      //console.log("setting transforms", transforms, instIds)
+
+      instIds.map(function(instId){
+        transformActions.updateTransforms$.onNext({id:instId, value:transforms})
+      })
+
+    })
+    .subscribe(e=>e)
+
 
   //output to localStorage
   //in our case, settings
