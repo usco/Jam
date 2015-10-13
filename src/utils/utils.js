@@ -23,7 +23,11 @@ export function toArray(data){
 
 /* JSON parse that always returns an object*/
 export function safeJSONParse(str){
-  return JSON.parse(str) || {} //from cycle.js
+  try{
+    return JSON.parse(str) || {} //from cycle.js
+  }catch(error){
+    throw new Error("Error parsing data",JSON.stringify(str))
+  }
 }
 
 //file utils ??
