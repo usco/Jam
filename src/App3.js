@@ -136,11 +136,6 @@ export function main(drivers) {
   const postMessage  = drivers.postMessage
   const events       = drivers.events
 
-  events
-    .select("gl")
-    .flatMap(e=>e.selectedMeshes$)
-    .subscribe(e=>console.log("events",e))
-
   ///
   let dragOvers$  = DOM.select("#root").events("dragover")
   let drops$      = DOM.select("#root").events("drop")  
@@ -162,7 +157,6 @@ export function main(drivers) {
   const comments$   = comments(commentsIntents(DOM,settings$))
   const bom$        = undefined
   
-  //
   let {core$,coreActions}            = makeCoreSystem()
   let {meshes$,meshActions}          = makeMeshSystem()
   let {transforms$,transformActions} = makeTransformsSystem()
@@ -258,8 +252,6 @@ export function main(drivers) {
   const settingsC   = SettingsView({DOM, props$:state$})
   const fsToggler   = FullScreenToggler({DOM})
 
-  //let _view = view(state$, DOM)
-
   let vtree$ = view(settingsC.DOM, fsToggler.DOM, bom.DOM,gl.DOM,entityInfos.DOM)
 
   let events$ = just( {gl:gl.events, entityInfos:entityInfos.events} )
@@ -272,20 +264,11 @@ export function main(drivers) {
   state$.subscribe(e=>console.log("state",e))*/
 
   //hack
-  entityInfos.events.changeColor$
-    .withLatestFrom(selections$.pluck("instIds"),function(color, instIds){
-      console.log("setting color", color, instIds)
+  entityInfos.events.changeCore$
+    .withLatestFrom(selections$.pluck("instIds"),function(coreChanges, instIds){
+      console.log("setting core changes", coreChanges, instIds)
       instIds.map(function(instId){
-        coreActions.setAttribs$.onNext({id:instId, value:{color}})
-      })
-    })
-    .subscribe(e=>e)
-
-  entityInfos.events.changeName$
-    .withLatestFrom(selections$.pluck("instIds"),function(name, instIds){
-      console.log("setting name", name, instIds)
-      instIds.map(function(instId){
-        coreActions.setAttribs$.onNext({id:instId, value:{name}})
+        coreActions.setAttribs$.onNext({id:instId, value:coreChanges})
       })
     })
     .subscribe(e=>e)
@@ -293,11 +276,9 @@ export function main(drivers) {
   entityInfos.events.changeTransforms$
     .withLatestFrom(selections$.pluck("instIds"),function(transforms, instIds){
       //console.log("setting transforms", transforms, instIds)
-
       instIds.map(function(instId){
         transformActions.updateTransforms$.onNext({id:instId, value:transforms})
       })
-
     })
     .subscribe(e=>e)
 
