@@ -37,9 +37,14 @@ export default function intent(DOM){
     //.debounce(20)
     .shareReplay(1)
   
+
+  const changeCore$ = merge(
+    changeName$.map(function(value){return {name:value} })
+    ,changeColor$.map(function(value){return {color:value}})
+    )
+
   return {
-    changeName$
-    ,changeColor$
+    changeCore$
     ,changeTransforms$
   }
 }

@@ -36,8 +36,7 @@ function refineActions(props$, actions){
       return output
   })
   return {
-    changeColor$:actions.changeColor$
-    , changeName$:actions.changeName$
+    changeCore$:actions.changeCore$
     , changeTransforms$
   }
 }
@@ -63,15 +62,14 @@ function EntityInfos({DOM, props$}, name = '') {
 
   const comments = CommentsWrapper(state$,DOM)
 
-  const {changeColor$,changeName$,changeTransforms$} = refineActions( props$, intent(DOM) )
+  const {changeCore$, changeTransforms$} = refineActions( props$, intent(DOM) )
 
   const vtree$ = view(state$, comments.DOM)
   
   return {
     DOM: vtree$,
     events:{
-      changeColor$
-      ,changeName$
+      changeCore$
       ,changeTransforms$
       //addComment$
     }
