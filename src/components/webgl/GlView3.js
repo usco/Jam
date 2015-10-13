@@ -16,10 +16,9 @@ Rx.config.longStackSupport = true
 
 
 import {pointerInteractions,interactionsFromCEvents,preventScroll} from '../../interactions/pointers'
-import {windowResizes,elementResizes} from '../../interactions/sizing'
+import {windowResizes} from '../../interactions/sizing'
 
 import Selector from './deps/Selector'
-import {getCoordsFromPosSizeRect} from './deps/Selector'
 import {preventDefault,isTextNotEmpty,formatData,exists,combineLatestObj} from '../../utils/obsUtils'
 import {toArray,itemsEqual} from '../../utils/utils'
 
@@ -58,15 +57,6 @@ import vignetteShader from './deps/post-process/vignetteShader'
 import EdgeShader3 from './deps/post-process/EdgeShader3'
 import AdditiveBlendShader from './deps/post-process/AdditiveBlendShader'
 
-
-
-
-
-
-//extract the object & position from a pickingInfo data
-function objectAndPosition(pickingInfo){
-  return {object:pickingInfo.object,point:pickingInfo.point}
-}
 
 function setupPostProcess(camera, renderer, scene){
   //console.log("setupPostProcess")
@@ -239,279 +229,8 @@ function makeOutlineFx(mesh){
   return {maskMesh, outlineMesh}
 }
 
-
-function intent(drivers, interactions){
-  let {shortSingleTaps$,
-    shortDoubleTaps$,
-    longTaps$,
-    zooms$,
-    dragMoves$} = interactions
-
-  //FIXME : needs to be done in a more coherent, reusable way
-  //shut down "wobble effect if ANY user interaction takes place"
-  const userAction$ = merge(
-    shortSingleTaps$,
-    shortDoubleTaps$,
-    longTaps$,
-    zooms$,
-    dragMoves$
-  )
-  //.subscribe(e=>wobble.stop())
-
-  function addPickingInfos( inStream, containerResizes$ ){
-    return inStream
-      .withLatestFrom(
-        containerResizes$,
-        function(event, clientRect){          
-          if(event){
-            let input = document.querySelector('.container')//canvas
-            let clientRect = input.getBoundingClientRect()
-
-            let data = {
-              pos:{x:event.clientX,y:event.clientY}
-              ,rect:clientRect,width:clientRect.width,height:clientRect.height
-              ,event
-            }
-            let mouseCoords = getCoordsFromPosSizeRect(data)
-            return selectionAt(event, mouseCoords, camera, scene.children)
-          }
-          else{
-            return {}
-          }
-        }
-      )
-  }
-
-  let containerResizes$ = windowResizes$
-    .map(function(){
-      let input = document.querySelector('.container')//canvas
-      if(input) return input.getBoundingClientRect()
-    })
-    .filter(exists)
-    .startWith({width:window.innerWidth, height:window.innerHeight, aspect:window.innerWidth/window.innerHeight, bRect:undefined})
-
-
-  let shortSingleTapsWPicking$ = addPickingInfos(shortSingleTaps$, windowResizes$)
-  let shortDoubleTapsWPicking$ = addPickingInfos(shortDoubleTaps$, windowResizes$)
-  let longTapsWPicking$        = addPickingInfos(longTaps$, windowResizes$)//.map( meshFrom )
-
-
-  const zoomInOnPoint$ = shortDoubleTapsWPicking$
-    .map(e => e.detail.pickingInfos.shift())
-    .filter(exists)
-    .map( objectAndPosition )
-    //.subscribe( (oAndP) => zoomInOnObject.execute( oAndP.object, {position:oAndP.point} ) )
-        
-  const selectMeshes$ = merge( //Stream of selected meshes
-      shortSingleTapsWPicking$.map( meshFrom )
-      ,longTapsWPicking$.map( meshFrom )
-    )
-    .map(toArray)//important !!
-    .distinctUntilChanged()
-    .shareReplay(1)
-
-
-  return {
-    userAction$
-    , zoomInOnPoint$
-    , selectMeshes$
-  }
-}
-
-
-
-function model(props$, actions){
-
-  let update$      = Rx.Observable.interval(16,66666666667)
-
-  let settings$       = props$.pluck('settings')
-  let selections$     = props$.pluck('selections').startWith([]).filter(exists).distinctUntilChanged()
-  //every time either activeTool or selection changes, reset/update transform controls
-
-  let activeTool$ = settings$.pluck("activeTool").startWith(undefined)
-
-  //composite data
-  let core$       = props$.pluck('core').distinctUntilChanged()
-  let transforms$ = props$.pluck('transforms')//.distinctUntilChanged()
-  let meshes$     = props$.pluck('meshes').filter(exists).distinctUntilChanged(function(m){
-    return Object.keys(m)
-  } )//m=>m.uuid)
-
-}
-
-/*TODO:
-- remove any "this", adapt code accordingly  
-- extract reusable pieces of code => 50 % done
-- remove any explicit "actions" like showContextMenu$, hideContextMenu$ etc => done
-- streamline all interactions
-*/
-////////////
-function GLView({DOM, props$}){
-  let config = presets
-
-  let initialized$ = new Rx.BehaviorSubject(false)
-  let update$      = Rx.Observable.interval(16,66666666667)
-
-  let settings$       = props$.pluck('settings')
-  let selections$     = props$.pluck('selections').startWith([]).filter(exists).distinctUntilChanged()
-  //every time either activeTool or selection changes, reset/update transform controls
-
-  let activeTool$ = settings$.pluck("activeTool").startWith(undefined)
-
-  //composite data
-  let core$       = props$.pluck('core').distinctUntilChanged()
-  let transforms$ = props$.pluck('transforms')//.distinctUntilChanged()
-  let meshes$     = props$.pluck('meshes').filter(exists).distinctUntilChanged(function(m){
-    return Object.keys(m)
-  } )//m=>m.uuid)
-
-  //debug only
-  //settings$.subscribe(function(data){console.log("SETTINGS ",data)})
-  //items$.subscribe(function(data){console.log("items ",data)})
-  //activeTool$.subscribe((data)=>console.log("activeTool",data))
-  //selections$.subscribe((data)=>console.log("selections",data))
-
-  let renderer = null
-
-  let composer = null
-  let composers = []
-  let fxaaPass = null
-  let outScene = null
-  let maskScene = null
-
-  let zoomInOnObject = null
-  let sphere =null
-
-  let scene = new THREE.Scene()
-  let dynamicInjector = new THREE.Object3D()//all dynamic mapped objects reside here
-  scene.add( dynamicInjector )
-
-  let camera   = makeCamera(config.cameras[0])
-  let controls = makeControls(config.controls[0])
-  let transformControls = new TransformControls( camera )
-
-  let grid        = new LabeledGrid(200, 200, 10, config.cameras[0].up)
-  let shadowPlane = new ShadowPlane(2000, 2000, null, config.cameras[0].up) 
-
-  //interactions
-  zoomInOnObject = new ZoomInOnObject()
-
-  let windowResizes$ = windowResizes(1) //get from intents/interactions ?
-  let elementResizes$ = elementResizes(".container",1)
-
-  let {shortSingleTaps$, shortDoubleTaps$, longTaps$, 
-      dragMoves$, zooms$} =  pointerInteractions(interactionsFromCEvents(DOM))
-
-  function setFlags(mesh){
-    mesh.selectable      = true
-    mesh.selectTrickleUp = false
-    mesh.transformable   = true
-    //FIXME: not sure, these are very specific for visuals
-    mesh.castShadow      = true
-    return mesh
-  }
-
-  /*core$.subscribe(e=>console.log("core change in GLView"))
-  transforms$.subscribe(e=>console.log("transforms change in GLView",JSON.stringify( e ) ))
-  meshes$.subscribe(e=>console.log("meshes change in GLView"))*/
-
-  let requestAnimationFrameScheduler = Rx.Scheduler.requestAnimationFrame
-
-  //combine All needed components to apply any "transforms" to their visuals
-  let items$ = combineLatestObj({core$,transforms$,meshes$})
-    .debounce(5)//ignore if we have too fast changes in any of the 3 components
-    //.distinctUntilChanged()
-    .map(function({core,transforms,meshes}){
-
-      let keys = Object.keys(core)
-      //console.log("items change in GLView")
-      let cores = core
-
-      return keys.map(function(key){
-        let transform = transforms[key]
-        let mesh = meshes[key]
-        let core = cores[key]
-
-        if(core && transform && mesh){
-
-          //console.log("transforms",transform)
-          mesh.position.fromArray( transform.pos )
-          mesh.rotation.fromArray( transform.rot )
-          mesh.scale.fromArray( transform.sca )
-
-          //color is stored in core component
-          mesh.material.color.set( core.color )
-          return setFlags(mesh)
-        }
-      })
-      .filter(m=>m !== undefined)
-
-    })
-    .filter(m=> (m.length > 0))
-    .sample(0, requestAnimationFrameScheduler)
-    //.distinctUntilChanged()
-    .do(e=>console.log("DONE with items in GLView",e))
-  
-  function addPickingInfos( inStream$, containerResizes$, camera, scene ){
-    return inStream$
-      .withLatestFrom(
-        containerResizes$,
-        function(event, clientRect){          
-          if(event){
-            let input = document.querySelector('.container')//canvas
-            let clientRect = input.getBoundingClientRect()
-
-            let data = {
-              pos:{x:event.clientX,y:event.clientY}
-              ,rect:clientRect,width:clientRect.width,height:clientRect.height
-              ,event
-            }
-            let mouseCoords = getCoordsFromPosSizeRect(data)
-            return selectionAt(event, mouseCoords, camera, scene.children)
-          }
-          else{
-            return {}
-          }
-        }
-      )
-  }
-
-  let containerResizes$ = windowResizes$
-    .map(function(){
-      let input = document.querySelector('.container')//canvas
-      if(input) return input.getBoundingClientRect()
-    })
-    .filter(exists)
-    .startWith({width:window.innerWidth, height:window.innerHeight, aspect:window.innerWidth/window.innerHeight, bRect:undefined})
-
-  let shortSingleTapsWPicking$ = addPickingInfos(shortSingleTaps$, windowResizes$, camera, scene)
-  let shortDoubleTapsWPicking$ = addPickingInfos(shortDoubleTaps$, windowResizes$, camera, scene)
-  let longTapsWPicking$        = addPickingInfos(longTaps$, windowResizes$, camera, scene)
-  
-  //problem : this fires BEFORE the rest is ready
-  //activeTool$.skip(1).filter(isTransformTool).subscribe(transformControls.setMode)
-
-  //zoom with double tap
-  shortDoubleTapsWPicking$
-    .map(e => e.detail.pickingInfos.shift())
-    .filter(exists)
-    .map( objectAndPosition )
-    .subscribe( (oAndP) => zoomInOnObject.execute( oAndP.object, {position:oAndP.point} ) )
-
-  //stream of transformations done on the current selection
-  let selectionsTransforms$ = fromEvent(transformControls, 'objectChange')
-      .map(targetObject)
-
-  //contextmenu observable should return undifined when any other basic interaction
-  //took place (to cancel displaying context menu , etc)
-  longTaps$ = longTaps$
-    .merge(
-      shortSingleTaps$.map(undefined),
-      shortDoubleTaps$.map(undefined),
-      dragMoves$.map(undefined)
-    )
-
-  //for outlines, experimental
+function outlineStuff(){
+    //for outlines, experimental
   function removeOutline(){
     if(outScene){
       outScene.children = []
@@ -568,8 +287,6 @@ function GLView({DOM, props$}){
     return {applyFx,removeFx}
   }
 
-
-
   let {applyFx,removeFx} = makeFx()
 
   //TODO: only do once
@@ -598,9 +315,83 @@ function GLView({DOM, props$}){
       applyFx(null,added)
       removeFx(null,removed)
     },e=>console.log("error",e)) */
+}
 
 
-  
+import intent from './intent'
+import model from './model'
+
+
+/*TODO:
+- remove any "this", adapt code accordingly  
+- extract reusable pieces of code => 50 % done
+- remove any explicit "actions" like showContextMenu$, hideContextMenu$ etc => done
+- streamline all interactions
+*/
+////////////
+function GLView({DOM, props$}){
+  let config = presets
+
+  let initialized$ = new Rx.BehaviorSubject(false)
+  let update$      = Rx.Observable.interval(16,66666666667)
+
+  let settings$       = props$.pluck('settings')
+  let selections$     = props$.pluck('selections').startWith([]).filter(exists).distinctUntilChanged()
+  //every time either activeTool or selection changes, reset/update transform controls
+  let activeTool$ = settings$.pluck("activeTool").startWith(undefined)
+
+  //composite data
+  let core$       = props$.pluck('core').distinctUntilChanged()
+  let transforms$ = props$.pluck('transforms')//.distinctUntilChanged()
+  let meshes$     = props$.pluck('meshes').filter(exists).distinctUntilChanged(function(m){
+    return Object.keys(m)
+  } )//m=>m.uuid)
+
+
+  let renderer = null
+
+  let composer = null
+  let composers = []
+  let fxaaPass = null
+  let outScene = null
+  let maskScene = null
+
+  let zoomInOnObject = null
+  let sphere =null
+
+  let scene = new THREE.Scene()
+  let dynamicInjector = new THREE.Object3D()//all dynamic mapped objects reside here
+  scene.add( dynamicInjector )
+
+  let camera   = makeCamera(config.cameras[0])
+  let controls = makeControls(config.controls[0])
+  let transformControls = new TransformControls( camera )
+
+  let grid        = new LabeledGrid(200, 200, 10, config.cameras[0].up)
+  let shadowPlane = new ShadowPlane(2000, 2000, null, config.cameras[0].up) 
+
+  //interactions
+  zoomInOnObject = new ZoomInOnObject()
+
+  const actions = intent({DOM},{camera,scene,transformControls})
+  const state$  = model(props$, actions)
+
+  //react to actions
+  actions.zoomInOnPoint$.subscribe( (oAndP) => zoomInOnObject.execute( oAndP.object, {position:oAndP.point} ) )
+
+  let selectedMeshes$ = actions.selectMeshes$
+
+  let windowResizes$ = windowResizes(1) //get from intents/interactions ?
+
+  function setFlags(mesh){
+    mesh.selectable      = true
+    mesh.selectTrickleUp = false
+    mesh.transformable   = true
+    //FIXME: not sure, these are very specific for visuals
+    mesh.castShadow      = true
+    return mesh
+  }
+
   //TODO: we need some diffing etc somewhere in here  
   //ie : which were added , which were removed, which ones were changed
   function clearScene(){
@@ -614,18 +405,144 @@ function GLView({DOM, props$}){
       scene.add( dynamicInjector )
     }
   }
+
   function addMeshToScene(mesh){
      scene.dynamicInjector.add(mesh)
   }
+  
+  function setupScene(){
+    var sphereGeometry = new THREE.SphereGeometry( 20, 32, 16 ) 
+    var sphereMaterial = new THREE.MeshLambertMaterial( {color: 0x8888ff} );
+    sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
+    sphere.position.set(0, 0, 30)
+    sphere.geometry.computeBoundingSphere()
+    sphere.geometry.computeBoundingBox()
+    sphere.selectTrickleUp = false 
+    sphere.selectable = true
+    sphere.castShadow = true
+    //scene.add(sphere)
+    for( let light of config.scenes["main"])
+    {
+      scene.add( makeLight( light ) )
+    }
+  }
+    
+  function render(scene, camera){
+    composers.forEach(c=>c.render())
+    //composer.passes[composer.passes.length-1].uniforms[ 'tDiffuse2' ].value = composers[0].renderTarget2
+    //composer.passes[composer.passes.length-1].uniforms[ 'tDiffuse3' ].value = composers[1].renderTarget2
+  }
 
-  //Stream of selected meshes
-  let selectedMeshes$ = merge(
-    shortSingleTapsWPicking$.map( meshFrom ),
-    longTapsWPicking$.map( meshFrom )
-    )
-  .map(toArray)//important !!
-  .distinctUntilChanged()
-  .shareReplay(1)
+  function update(){
+    controls.update()
+    transformControls.update()
+    TWEEN.update()
+    //if(camViewControls) camViewControls.update()
+  }
+
+  function configureStep1(container){
+    //log.debug("initializing into container", container)
+
+    if(!Detector.webgl){
+      //TODO: handle lacking webgl
+    } else {
+      renderer = new THREE.WebGLRenderer( {antialias:false} )
+    }
+
+    renderer.setClearColor( "#fff" )
+    Object.keys(config.renderer).map(function(key){
+      //TODO add hasOwnProp check
+      renderer[key] = config.renderer[key]
+    })
+
+    let pixelRatio = window.devicePixelRatio || 1
+    renderer.setPixelRatio( pixelRatio )
+
+    container.appendChild( renderer.domElement )
+    //prevents zooming the 3d view from scrolling the window
+    preventScroll(container)
+
+    transformControls.setDomElement( container )
+
+    //more init
+    controls.setObservables(actions.filteredInteractions$)
+    controls.addObject( camera )
+
+    //not a fan
+    zoomInOnObject.camera = camera
+
+    scene.add(camera)  
+    scene.add(shadowPlane)
+    scene.add(transformControls)
+
+    let ppData = setupPostProcess(camera, renderer, scene)
+    //composer = ppData.composer
+    composers = ppData.composers
+    fxaaPass = ppData.fxaaPass
+    outScene = ppData.outScene
+    maskScene = ppData.maskScene
+
+    initialized$.onNext(true)
+  }
+
+
+  //side effect ?
+  function handleResize (sizeInfos){
+    //log.debug("setting glView size",sizeInfos)
+    console.log("setting glView size",sizeInfos)
+    let {width,height,aspect} = sizeInfos
+  
+    if(width >0 && height >0 && camera && renderer){
+      renderer.setSize( width, height )
+      camera.aspect = aspect
+      camera.setSize(width,height)
+      camera.updateProjectionMatrix()   
+      
+      let pixelRatio = window.devicePixelRatio || 1
+      fxaaPass.uniforms[ 'resolution' ].value.set (1 / (width * pixelRatio), 1 / (height * pixelRatio))
+      
+      composers.forEach( c=> {
+        c.reset()
+        c.setSize(width * pixelRatio, height * pixelRatio)
+      } )
+    }
+  }
+
+  //combine All needed components to apply any "transforms" to their visuals
+  let items$ = combineLatestObj({core$,transforms$,meshes$})
+    .debounce(5)//ignore if we have too fast changes in any of the 3 components
+    //.distinctUntilChanged()
+    .map(function({core,transforms,meshes}){
+
+      let keys = Object.keys(core)
+      //console.log("items change in GLView")
+      let cores = core
+
+      return keys.map(function(key){
+        let transform = transforms[key]
+        let mesh = meshes[key]
+        let core = cores[key]
+
+        if(core && transform && mesh){
+
+          //console.log("transforms",transform)
+          mesh.position.fromArray( transform.pos )
+          mesh.rotation.fromArray( transform.rot )
+          mesh.scale.fromArray( transform.sca )
+
+          //color is stored in core component
+          mesh.material.color.set( core.color )
+          return setFlags(mesh)
+        }
+      })
+      .filter(m=>m !== undefined)
+
+    })
+    .filter(m=> (m.length > 0))
+    //.sample(0, requestAnimationFrameScheduler)
+    //.distinctUntilChanged()
+    .do(e=>console.log("DONE with items in GLView",e))
+  
 
   //transformControls handling
   //we modify the transformControls mode based on the active tool
@@ -651,36 +568,6 @@ function GLView({DOM, props$}){
       ,(err)=>console.log("error in setting transform",err)
     )
 
-  //this limits "selectability" to transforms & default 
-  selectedMeshes$ =
-    selectedMeshes$.
-    withLatestFrom(activeTool$,function(meshes,tool)
-      {
-        let idx = ["translate","rotate","scale",undefined].indexOf(tool)
-        if(idx > -1)
-        {
-          return meshes
-        }else{
-          return []
-        }
-      })
-
-  //what are the active controls : camera, object tranforms, 
-  let tControlsActive$ = merge(
-    fromEvent(transformControls,"mouseDown").map(true),
-    fromEvent(transformControls,"mouseUp").map(false)
-  ).startWith(false)
- 
-  //let activeControls$
-  //if transformControls are active, filter out dragMove gestures
-  let fDragMoves$ = dragMoves$
-    .combineLatest(tControlsActive$,function(dragMoves,tCActive){
-      if(tCActive) return undefined
-      return dragMoves
-    })
-    .filter(exists) 
-
-  let filteredInteractions$ = {dragMoves$:fDragMoves$, zooms$}
 
   //hande all the cases where events require re-rendering
   let reRender$ = merge(
@@ -690,136 +577,18 @@ function GLView({DOM, props$}){
       
     ,fromEvent(controls,'change')
     ,fromEvent(transformControls,'change')
-    //,fromEvent(camViewControls,'change')
-    //,selectedMeshes$ 
-    //,selectionsTransforms$
     ,selections$
-    //,items$
-    ,meshes$
-    ,dragMoves$
 
     ,windowResizes$.do(handleResize)//we need the resize to take place before we render
   )
-  //.sample(15)
   .shareReplay(1)
-  
-  //actual 3d stuff
-  reRender$.subscribe(e=>render())
-
-
-  function setupScene(){
-    var sphereGeometry = new THREE.SphereGeometry( 20, 32, 16 ) 
-    var sphereMaterial = new THREE.MeshLambertMaterial( {color: 0x8888ff} );
-    sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
-    sphere.position.set(0, 0, 30)
-    sphere.geometry.computeBoundingSphere()
-    sphere.geometry.computeBoundingBox()
-    sphere.selectTrickleUp = false 
-    sphere.selectable = true
-    sphere.castShadow = true
-    //scene.add(sphere)
-    for( let light of config.scenes["main"])
-    {
-      scene.add( makeLight( light ) )
-    }
-  }
-    
-  function render(scene, camera){
-    //renderer.render( scene, camera )
-    composers.forEach(c=>c.render())
-    //composer.passes[composer.passes.length-1].uniforms[ 'tDiffuse2' ].value = composers[0].renderTarget2
-    //composer.passes[composer.passes.length-1].uniforms[ 'tDiffuse3' ].value = composers[1].renderTarget2
-  }
-
-  function update(){
-    controls.update()
-    transformControls.update()
-    TWEEN.update()
-    //if(camViewControls) camViewControls.update()
-  }
-
-  function configureStep1(container, callback){
-    //log.debug("initializing into container", container)
-
-    if(!Detector.webgl){
-      //TODO: handle lacking webgl
-    } else {
-      renderer = new THREE.WebGLRenderer( {antialias:false} )
-    }
-
-    renderer.setClearColor( "#fff" )
-    Object.keys(config.renderer).map(function(key){
-      //TODO add hasOwnProp check
-      renderer[key] = config.renderer[key]
-    })
-
-    let pixelRatio = window.devicePixelRatio || 1
-    renderer.setPixelRatio( pixelRatio )
-
-    container.appendChild( renderer.domElement )
-    //prevents zooming the 3d view from scrolling the window
-    preventScroll(container)
-
-    transformControls.setDomElement( container )
-
-    callback()
-  }
-
-  function configureStep2 (){
-
-    controls.setObservables(filteredInteractions$)
-    controls.addObject( camera )
-
-    //not a fan
-    zoomInOnObject.camera = camera
-
-    scene.add(camera)  
-    scene.add(shadowPlane)
-    scene.add(transformControls)
-
-    let ppData = setupPostProcess(camera, renderer, scene)
-    //composer = ppData.composer
-    composers = ppData.composers
-    fxaaPass = ppData.fxaaPass
-    outScene = ppData.outScene
-    maskScene = ppData.maskScene
-
-    console.log("initializing")
-    initialized$.onNext(true)
-
-  }
-
-  //side effect ?
-  function handleResize (sizeInfos){
-    //log.debug("setting glView size",sizeInfos)
-    console.log("setting glView size",sizeInfos)
-    let {width,height,aspect} = sizeInfos
-  
-    if(width >0 && height >0 && camera && renderer){
-      renderer.setSize( width, height )
-      camera.aspect = aspect
-      camera.setSize(width,height)
-      camera.updateProjectionMatrix()   
-      
-
-      let pixelRatio = window.devicePixelRatio || 1
-
-      fxaaPass.uniforms[ 'resolution' ].value.set (1 / (width * pixelRatio), 1 / (height * pixelRatio))
-      
-      composers.forEach( c=> {
-        c.reset()
-        c.setSize(width * pixelRatio, height * pixelRatio)
-      } )
-    }
-  }
 
   ///////////
   setupScene()
 
-  DOM.select('canvas').events('contextmenu').subscribe( e => preventDefault(e) )
-
   update$.subscribe( update )
-  
+  reRender$.subscribe( render )
+
   //settings handling
   settings$ = settings$
     .filter(exists)
@@ -828,7 +597,6 @@ function GLView({DOM, props$}){
   settings$.map(s => s.camera.autoRotate)
     .subscribe(autoRotate => controls.autoRotate = autoRotate )
 
-  //big HACK?
   settings$.map(s => s.grid.show)
     .subscribe(function(showGrid){
       scene.remove(grid)
@@ -837,16 +605,15 @@ function GLView({DOM, props$}){
       }
     })
 
-  //sorta hack ??
-  scene.dynamicInjector = dynamicInjector
-
   //TODO : remove this hack
   items$
     //.do(clearScene)
+    .do(function(items){
+      items.map( m=>dynamicInjector.add(m) )
+    })
+    .do(e=>render())
     .subscribe(function(e){
-      //console.log("foooo",dynamicInjector)
-      e.map( m=>dynamicInjector.add(m) )
-      render()
+      //console.log("foooo",dynamicInjector)      
     })
 
   //absurd, we do not want to change our container (DOM) but the contents (gl)
@@ -860,7 +627,7 @@ function GLView({DOM, props$}){
     })*/
   const vtree$ = Rx.Observable.just(
     <div className="glView" >
-      {new GLWidgeHelper(configureStep1.bind(this),configureStep2)}
+      {new GLWidgeHelper(configureStep1)}
     </div>
   )
 
@@ -868,13 +635,11 @@ function GLView({DOM, props$}){
     DOM: vtree$
     ,events:{
       //initialized:initialized$,
-      shortSingleTaps$:shortSingleTapsWPicking$
-      ,shortDoubleTaps$:shortDoubleTapsWPicking$
+      shortSingleTaps$:actions.shortSingleTapsWPicking$
+      ,shortDoubleTaps$:actions.shortDoubleTapsWPicking$
+      ,longTaps$:actions.longTapsWPicking$
 
-
-      ,longTaps$
-
-      ,selectionsTransforms$
+      ,selectionsTransforms$:actions.selectionsTransforms$
       ,selectedMeshes$
     }
   }
