@@ -2,7 +2,7 @@ require("./app.css")
 import Cycle from '@cycle/core'
 import {makeDOMDriver, hJSX} from '@cycle/dom'
 
-import {main} from './App3'
+import main from './components/main/index'
 
 import {postMessageDriver}  from './core/drivers/postMessageDriver'
 import {localStorageDriver} from './core/drivers/localStorageDriver'
