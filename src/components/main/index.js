@@ -1,19 +1,19 @@
-require("./app.css")
+require("../../app.css")
 import {Rx} from '@cycle/core'
 let just = Rx.Observable.just
 
 //views & wrappers
-import SettingsView from './components/SettingsView'
-import FullScreenToggler from './components/FullScreenToggler'
-import {EntityInfosWrapper,BOMWrapper,GLWrapper} from './components/main/wrappers'
+import SettingsView from '../../components/SettingsView'
+import FullScreenToggler from '../../components/FullScreenToggler'
+import {EntityInfosWrapper,BOMWrapper,GLWrapper} from '../../components/main/wrappers'
 
 
-import intent from './components/main/intent'
-import model from './components/main/model'
-import view from './components/main/view'
+import intent from './intent'
+import model  from './model'
+import view   from './view'
 
 
-export function main(drivers) {
+export default function main(drivers) {
   const {DOM} = drivers
   
   const actions = intent(drivers)
