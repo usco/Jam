@@ -1,291 +1,39 @@
 require("./app.css")
-/** @jsx hJSX */
-import Cycle from '@cycle/core'
 import {Rx} from '@cycle/core'
-import {makeDOMDriver, hJSX} from '@cycle/dom'
-import Class from "classnames"
-
-import combineTemplate from 'rx.observable.combinetemplate'
-let fromEvent = Rx.Observable.fromEvent
 let just = Rx.Observable.just
-let merge = Rx.Observable.merge
-let fromArray = Rx.Observable.fromArray
-let combineLatest = Rx.Observable.combineLatest
 
-import {observableDragAndDrop} from './interactions/dragAndDrop'
-
-//views etc
-import Bom from './components/Bom/Bom'
-import GLView from './components/webgl/GlView3'
+//views & wrappers
 import SettingsView from './components/SettingsView'
 import FullScreenToggler from './components/FullScreenToggler'
-import EntityInfos       from './components/EntityInfos/EntityInfos'
-
-//settings
-import settings from './core/settings/settings'
-import {settingsIntent} from './core/settings/settingsIntent'
-//comments
-import comments from './core/comments/comments'
-import {commentsIntents} from './core/comments/intents'
-//selections
-import selections from './core/selections/selections'
-import {selectionsIntents} from './core/selections/intents'
-//entities
-import {extractDesignSources,extractMeshSources,extractSourceSources} from './core/sources/dataSources'
-import {makeCoreSystem,makeTransformsSystem,makeMeshSystem, makeBoundingSystem} from './core/entities/entities2'
-import entityTypes from './core/entities/entityTypes'
-import {entityTypeIntents, entityInstanceIntents} from './core/entities/intents2'
+import {EntityInfosWrapper,BOMWrapper,GLWrapper} from './components/main/wrappers'
 
 
-import {getExtension,itemsEqual} from './utils/utils'
-import {combineLatestObj} from './utils/obsUtils'
-import {prepForRender} from './utils/uiUtils'
+import intent from './components/main/intent'
+import model from './components/main/model'
+import view from './components/main/view'
 
-//for settings
- /*just({
-    ,schema : {
-      showGrid:{type:"checkbox",path:"grid.show"}
-      ,autoRotate:{type:"checkbox",path:"camera.autoRotate"}
-      //,annotations:{type:"checkbox",path:"grid.show"}
-    }
-  })*/
-
-function EntityInfosWrapper(state$, DOM) {
-  //.distinctUntilChanged(state => state.value)
-
-  function makeEntityInfosProps(state$){
-    const selectedInstIds$ = state$
-      .pluck("selections")
-      .map(s=>s.instIds)
-      .filter(s=>s !== undefined)
-      .distinctUntilChanged(null,itemsEqual)
-
-    return selectedInstIds$
-      .do(e=>console.log("selectedInstIds",e))
-      .combineLatest(state$,function(ids,state){
-        
-        let transforms = ids.map(function(id){
-          return state.transforms[id]
-        })
-        
-        let core = ids.map(function(id){
-          return state.core[id]
-        })
-        return {transforms,core}
-      })
-      .shareReplay(1)
-  }
-  const props$ = makeEntityInfosProps(state$)
-
-  //entity infos
-  return EntityInfos({DOM,props$})
-}
-
-function BOMWrapper(state$, DOM){
-  function makeBomProps(state$){
-    let fieldNames = ["name","qty","unit","version"]
-    let sortableFields = ["id","name","qty","unit"]
-    let entries = [{id:0,name:"foo",qty:2,version:"0.0.1",unit:"QA"}
-    ,{id:1,name:"bar",qty:1,version:"0.2.1",unit:"QA"}
-    ]
-    //let selectedEntries = selections.bomIds
-    let fieldNames$ = just(fieldNames)
-    let sortableFields$ = just(sortableFields)
-    let entries$ = just(entries)
-    let selectedEntries$ = state$.pluck("selections").pluck("bomIds")
-
-    let bomProps$ = combineLatestObj( {fieldNames$,sortableFields$,entries$,selectedEntries$ })
-
-    return bomProps$
-  }
-  return Bom({DOM,props$:makeBomProps(state$)})
-}
-
-function GLWrapper(state$,DOM){
-  let glProps$  = combineLatestObj({
-    settings:state$.pluck("settings")
-
-    ,core:state$.pluck("core")
-    ,meshes:state$.pluck("meshes")
-    ,transforms:state$.pluck("transforms")
-  })
-
-  let glUi      = GLView({DOM,props$:glProps$})
-  return glUi
-}
-
-function view(settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree$, entityInfosVtree$){
-  return combineLatest(settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree$, entityInfosVtree$
-    ,function(settings, fsToggler, bom, gl, entityInfos){
-      return <div>
-        {settings}
-        {fsToggler}
-
-        {bom}
-        {gl}
-
-        {entityInfos}
-      </div>
-    })
-}
 
 export function main(drivers) {
-  let DOM      = drivers.DOM
-  const localStorage = drivers.localStorage
-  const addressbar   = drivers.addressbar
-  const postMessage  = drivers.postMessage
-  const events       = drivers.events
-
-  ///
-  let dragOvers$  = DOM.select("#root").events("dragover")
-  let drops$      = DOM.select("#root").events("drop")  
-  let dnd$        = observableDragAndDrop(dragOvers$, drops$) 
-
-  //Sources of settings
-  const settingsSources$ = localStorage.get("jam!-settings")
-  const settings$ = settings( settingsIntent(drivers), settingsSources$ ) 
-
-  //data sources for our main model
-  let postMessages$  = postMessage
-  const meshSources$ = extractMeshSources({dnd$, postMessages$, addressbar})
-  const srcSources$  = extractSourceSources({dnd$, postMessages$, addressbar})
-
-  //Models etc 
-  //entities$
-  const entities$   = Rx.Observable.just(undefined)
-  //comments
-  const comments$   = comments(commentsIntents(DOM,settings$))
-  const bom$        = undefined
+  const {DOM} = drivers
   
-  let {core$,coreActions}            = makeCoreSystem()
-  let {meshes$,meshActions}          = makeMeshSystem()
-  let {transforms$,transformActions} = makeTransformsSystem()
-  let {bounds$ ,boundActions}        = makeBoundingSystem()
-
-  const entityTypes$ = entityTypes(entityTypeIntents({meshSources$,srcSources$}))
-
-  let entityInstancesBase$  =  entityInstanceIntents(entityTypes$)
-    .addInstances$
-    .map(function(newTypes){
-      return newTypes.map(function(typeData){
-        let instUid = Math.round( Math.random()*100 )
-        let typeUid = typeData.id
-        let instName = typeData.name+"_"+instUid
-
-        let instanceData = {
-          id:instUid
-          ,typeUid
-          ,name:instName
-        }
-        return instanceData
-      })
-      console.log("DONE with entityInstancesBase")
-    })
-    .shareReplay(1)
-
-  //register type=> instance & vice versa
-  let base = {typeUidFromInstUid:{},instUidFromTypeUid:{}}
-  let typesInstancesRegistry$ = combineLatestObj({instances:entityInstancesBase$,types:entityTypes$})
-    .scan(base,function(acc,n){
-
-      let {instances,types} = n
-
-      acc.instUidFromTypeUid = instances
-        .reduce(function(prev,instance){
-          prev[instance.typeUid] = instance.id
-          return prev
-        },{})
-
-      acc.typeUidFromInstUid = instances
-        .reduce(function(prev,instance){
-          prev[instance.id] = instance.typeUid
-          return prev
-        },{})
-
-      //console.log("registry stuff",acc,n)
-      return acc
-    })
-    
-  //create various components
-  entityInstancesBase$
-    .withLatestFrom(entityTypes$,function(instances,types){
-      //console.log("instances",instances, "types",types)
-
-      instances.map(function(instance){
-
-        let instUid = instance.id
-        let typeUid = instance.typeUid
-
-        //is this a hack?
-        let mesh = types.typeUidToTemplateMesh[typeUid]
-        let bbox = mesh.boundingBox
-        let zOffset = bbox.max.clone().sub(bbox.min)
-        zOffset = zOffset.z/2
-        bbox = { min:bbox.min.toArray(), max:bbox.max.toArray() }
-
-        //injecting data like this is the right way ?
-        mesh = mesh.clone()
-        mesh.userData.entity = {
-          iuid:instUid
-        }
-
-        coreActions.createComponent$.onNext({id:instUid,  value:{ typeUid, name:instance.name }})
-        boundActions.createComponent$.onNext({id:instUid, value:{bbox} })
-        meshActions.createComponent$.onNext({id:instUid,  value:{ mesh }})
-        transformActions.createComponent$.onNext({id:instUid, value:{pos:[0,0,zOffset]} })
-
-        console.log("DONE with creating various components")
-      })
-    })
-    .subscribe(e=>e)
-
-  //selections 
-  const selections$ = selections( selectionsIntents({DOM,events}, typesInstancesRegistry$) )
-
-  //////////
-  let state$ = combineLatestObj({settings$, selections$, core$, transforms$, meshes$})
-
-  //various
+  const actions = intent(drivers)
+  const state$  = model(undefined, actions, drivers)
+  
+  //create visual elements
   const entityInfos = EntityInfosWrapper(state$,DOM)
   const gl          = GLWrapper(state$,DOM)
   const bom         = BOMWrapper(state$,DOM)
   const settingsC   = SettingsView({DOM, props$:state$})
   const fsToggler   = FullScreenToggler({DOM})
 
-  let vtree$ = view(settingsC.DOM, fsToggler.DOM, bom.DOM,gl.DOM,entityInfos.DOM)
 
-  let events$ = just( {gl:gl.events, entityInfos:entityInfos.events} )
-
-  //core$.subscribe(e=>console.log("core",e))
-  /*transforms$.subscribe(e=>console.log("transforms",e))
-  meshes$.subscribe(e=>console.log("meshes",e))
-  settings$.subscribe(e=>console.log("settings",e))
-  selections$.subscribe(e=>console.log("selections",e))
-  state$.subscribe(e=>console.log("state",e))*/
-
-  //hack
-  entityInfos.events.changeCore$
-    .withLatestFrom(selections$.pluck("instIds"),function(coreChanges, instIds){
-      console.log("setting core changes", coreChanges, instIds)
-      instIds.map(function(instId){
-        coreActions.setAttribs$.onNext({id:instId, value:coreChanges})
-      })
-    })
-    .subscribe(e=>e)
-
-  entityInfos.events.changeTransforms$
-    .withLatestFrom(selections$.pluck("instIds"),function(transforms, instIds){
-      //console.log("setting transforms", transforms, instIds)
-      instIds.map(function(instId){
-        transformActions.updateTransforms$.onNext({id:instId, value:transforms})
-      })
-    })
-    .subscribe(e=>e)
-
-
+  //outputs 
+  const vtree$  = view(settingsC.DOM, fsToggler.DOM, bom.DOM,gl.DOM,entityInfos.DOM)
+  const events$ = just( {gl:gl.events, entityInfos:entityInfos.events} )
   //output to localStorage
-  //in our case, settings
-  const localStorage$ = settings$
+  //in this case, settings
+  const localStorage$ = state$
+    .pluck("settings")
     .map( s=>({"jam!-settings":JSON.stringify(s)}) )
 
   //return anything you want to output to drivers

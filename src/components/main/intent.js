@@ -1,6 +1,11 @@
 import {observableDragAndDrop} from '../../interactions/dragAndDrop'
 
 import {entityTypeIntents, entityInstanceIntents} from '../../core/entities/intents2'
+import {extractDesignSources,extractMeshSources,extractSourceSources} from '../../core/sources/dataSources'
+
+import {settingsIntent} from '../../core/settings/settingsIntent'
+import {commentsIntents} from '../../core/comments/intents'
+import {selectionsIntents} from '../../core/selections/intents'
 
 
 export default function intent (drivers) {
@@ -14,8 +19,22 @@ export default function intent (drivers) {
   const drops$      = DOM.select("#root").events("drop")  
   const dnd$        = observableDragAndDrop(dragOvers$, drops$) 
 
+  //data sources for our main model
+  let postMessages$  = postMessage
+  const meshSources$ = extractMeshSources({dnd$, postMessages$, addressbar})
+  const srcSources$  = extractSourceSources({dnd$, postMessages$, addressbar})
 
-  //const  createEntityType$ = entityTypeIntents({meshSources$,srcSources$})
+  //
+  const  createEntityType$ = entityTypeIntents({meshSources$,srcSources$})
+
+  //settings
+  const settingsSources$ = localStorage.get("jam!-settings")
+  const settingActions   = settingsIntent(drivers)
+  
+  //const selectionActions = selectionsIntents({DOM,events}, typesInstancesRegistry$)
+
+  const entityTypeActions = entityTypeIntents({meshSources$,srcSources$})
+  
 
   /*let createEntityBase$  =  entityInstanceIntents(entityTypes$)
     .addInstances$
@@ -51,6 +70,13 @@ export default function intent (drivers) {
   return {
     dnd$
 
-    //,createEntityBase$
+    //,createEntityBase$    
+    ,settingsSources$
+    ,settingActions
+
+    //,selectionActions
+
+    ,entityTypeActions
+
   }
 }
