@@ -538,7 +538,6 @@ function GLView({DOM, props$}){
       .filter(m=>m !== undefined)
 
     })
-    .filter(m=> (m.length > 0))
     //.sample(0, requestAnimationFrameScheduler)
     //.distinctUntilChanged()
     .do(e=>console.log("DONE with items in GLView",e))
@@ -607,9 +606,11 @@ function GLView({DOM, props$}){
 
   //TODO : remove this hack
   items$
-    //.do(clearScene)
+    .do(clearScene)
     .do(function(items){
-      items.map( m=>dynamicInjector.add(m) )
+      console.log("ITEMS",items, dynamicInjector)
+      //items.map( m=>dynamicInjector.add(m) )
+      items.map( m=>addMeshToScene(m) )
     })
     .do(e=>render())
     .subscribe(function(e){
