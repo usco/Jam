@@ -57,10 +57,6 @@ function updateTypesData(newTypeData, currentData){
     typeData[id]={
         id
       ,name
-      /*bbox:{
-        min: templateMesh.boundingBox.min.toArray(),
-        max: templateMesh.boundingBox.max.toArray()
-      }*/
     }
   }
 
