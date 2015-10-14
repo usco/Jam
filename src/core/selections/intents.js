@@ -17,20 +17,20 @@ export function reverseSelections(intents, idsMapper$){
   let selectBomEntries$ = intents
     .selectEntities$
     .withLatestFrom(idsMapper$,function(entityIds,idsMapper){
-      return entityIds.map(id=>idsMapper.typeUidFromInstUid[id])
+      return entityIds.map(id=>idsMapper.typeUidFromInstUid[id]).filter(exists)
     })
-    /*.withLatestFrom(entities$,function(entityIds,entities){
-      return entityIds.map(id=>entities.byId[id].typeUid)
-    })*/
+    //.do(e=>console.log("selectedBomEntries",e))
+
     
   //select entities from bom entries
   //in this case instUidFromTypeUid
   
   let selectEntities$ = intents
-    .selectBomEntries$
+    .selectBomEntries$ 
     .withLatestFrom(idsMapper$,function(bomIds,idsMapper){
-      return bomIds.map(id=>idsMapper.instUidFromTypeUid[id])
+      return bomIds.map(id=>idsMapper.instUidFromTypeUid[id]).filter(exists)
     })
+    //.do(e=>console.log("selectedEntities",e))
     
     /*.withLatestFrom(entities$,function(bomIds,entities){
       return bomIds.flatMap(function(typeUid){
@@ -56,11 +56,15 @@ export function selectionsIntents(drivers, idsMapper$){
     .flatMap(e=>e.selectedMeshes$)
     .filter(exists)
     .map(extractEntities)
+    .distinctUntilChanged()
+    .shareReplay(1)
 
   let selectBomEntries$ = drivers.events.select("bom")//.events("entryTaps$")
-    .flatMap(e=>e.entryTaps$)
+    .flatMap(e=>e.entryTapped$)
     .filter(exists)
     .map(toArray)
+    .distinctUntilChanged()
+    .shareReplay(1)
 
   return reverseSelections({
      selectEntities$
