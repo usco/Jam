@@ -359,12 +359,12 @@ button:focus {outline:0;}
   right: 0px;
   top: 30px;
   width: 200px;
-  border: 1px solid white;
+ 
 
 }
 
 .settings .toggled{
-  border: 1px solid #dddddd !important;
+  border: 1px solid #FFFFFF !important;
 }
 
 
