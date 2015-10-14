@@ -68,6 +68,7 @@ export function makeCoreSystem(){
   //defaults for each component in this system
   const componentDefaults ={
     name: undefined,
+    id:   undefined,
     typeUid: undefined,
     color: "#07a9ff"
   }
