@@ -51,15 +51,14 @@ export function EntityInfosWrapper(state$, DOM) {
 export function BOMWrapper(state$, DOM){
   function makeBomProps(state$){
     let fieldNames = ["name","qty","unit","version"]
-    let sortableFields = ["id","name","qty","unit"]
-    let entries = [{id:0,name:"foo",qty:2,version:"0.0.1",unit:"QA"}
-    ,{id:1,name:"bar",qty:1,version:"0.2.1",unit:"QA"}
-    ]
-    //let selectedEntries = selections.bomIds
+    let sortableFields = ["id","name","qty","unit"]   
     let fieldNames$ = just(fieldNames)
     let sortableFields$ = just(sortableFields)
-    let entries$ = just(entries)
     let selectedEntries$ = state$.pluck("selections").pluck("bomIds")
+
+    let entries$ = state$
+      .map(s=>s.bom.entries)
+      .distinctUntilChanged()
 
     let bomProps$ = combineLatestObj( {fieldNames$,sortableFields$,entries$,selectedEntries$ })
 

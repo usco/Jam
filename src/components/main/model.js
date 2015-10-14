@@ -1,29 +1,65 @@
 import {combineLatestObj} from '../../utils/obsUtils'
+import {generateUUID} from '../../utils/utils'
 
 import {makeCoreSystem,makeTransformsSystem,makeMeshSystem, makeBoundingSystem} from '../../core/entities/entities2'
 import {entityTypeIntents, entityInstanceIntents} from '../../core/entities/intents2'
 
 import {selectionsIntents} from '../../core/selections/intents'
 
-
-
+import settings from    '../../core/settings/settings'
+import comments from    '../../core/comments/comments'
+import selections from  '../../core/selections/selections'
 import entityTypes from '../../core/entities/entityTypes'
-import settings from '../../core/settings/settings'
-import comments from '../../core/comments/comments'
-import selections from '../../core/selections/selections'
+import bom         from '../../core/bom/bom'
 
-
-function makeRegistry(){
+function makeRegistry(instances$,types$){
   //register type=> instance & vice versa
   let base = {typeUidFromInstUid:{},instUidFromTypeUid:{}}
-  let typesInstancesRegistry$ = combineLatestObj({instances:entityInstancesBase$,types:entityTypes$})
-    .scan(base,function(acc,n){
+
+  instances$ = instances$.map(function(instances){
+
+    let res = []
+    Object.keys(instances).map(function(key){
+      res.push( instances[key] )
+    })
+    return res
+  })
+
+
+
+  return combineLatestObj({instances$,types$})
+    .map(function({instances, types}){
+
+      let instUidFromTypeUid = instances
+        .reduce(function(prev,instance){
+          if(!prev[instance.typeUid]){
+            prev[instance.typeUid] = []//instance.id
+          }
+
+          prev[instance.typeUid].push( instance.id )
+          return prev
+        },{})
+
+      let typeUidFromInstUid = instances
+        .reduce(function(prev,instance){
+          prev[instance.id] = instance.typeUid
+          return prev
+        },{})
+
+      return {instUidFromTypeUid,typeUidFromInstUid}
+    })
+
+    /*.scan(base,function(acc,n){
 
       let {instances,types} = n
 
       acc.instUidFromTypeUid = instances
         .reduce(function(prev,instance){
-          prev[instance.typeUid] = instance.id
+          if(!prev[instance.typeUid]){
+            prev[instance.typeUid] = []//instance.id
+          }
+
+          prev[instance.typeUid].push( instance.id )
           return prev
         },{})
 
@@ -35,9 +71,8 @@ function makeRegistry(){
 
       //console.log("registry stuff",acc,n)
       return acc
-    })
+    })*/
 
-  return typesInstancesRegistry$
 }
 
 
@@ -54,11 +89,14 @@ export default function model(props$, actions, drivers){
   let {transforms$,transformActions} = makeTransformsSystem()
   let {bounds$ ,boundActions}        = makeBoundingSystem()
 
+  //hack
+  const addBomEntries$ = new Rx.ReplaySubject()
+
   const entityInstancesBase$  =  entityInstanceIntents(entityTypes$)
     .addInstances$
     .map(function(newTypes){
       return newTypes.map(function(typeData){
-        let instUid = Math.round( Math.random()*100 )
+        let instUid = generateUUID()//Math.round( Math.random()*100 )
         let typeUid = typeData.id
         let instName = typeData.name+"_"+instUid
 
@@ -67,34 +105,18 @@ export default function model(props$, actions, drivers){
           ,typeUid
           ,name:instName
         }
+
+        addBomEntries$.onNext({id:typeUid,name:typeData.name,qty:1,version:"0.0.1",unit:"QA"})
+
+
         return instanceData
       })
       console.log("DONE with entityInstancesBase")
     })
     .shareReplay(1)
 
-  //register type=> instance & vice versa
-  let base = {typeUidFromInstUid:{},instUidFromTypeUid:{}}
-  let typesInstancesRegistry$ = combineLatestObj({instances:entityInstancesBase$,types:entityTypes$})
-    .scan(base,function(acc,n){
 
-      let {instances,types} = n
-
-      acc.instUidFromTypeUid = instances
-        .reduce(function(prev,instance){
-          prev[instance.typeUid] = instance.id
-          return prev
-        },{})
-
-      acc.typeUidFromInstUid = instances
-        .reduce(function(prev,instance){
-          prev[instance.id] = instance.typeUid
-          return prev
-        },{})
-
-      //console.log("registry stuff",acc,n)
-      return acc
-    })
+  const typesInstancesRegistry$ =  makeRegistry(core$,entityTypes$)
 
   //create various components
   entityInstancesBase$
@@ -119,10 +141,13 @@ export default function model(props$, actions, drivers){
           iuid:instUid
         }
 
-        coreActions.createComponent$.onNext({id:instUid,  value:{ typeUid, name:instance.name }})
+        //FIXME : horrid
+        coreActions.createComponent$.onNext({id:instUid,  value:{ id:instUid, typeUid, name:instance.name }})
         boundActions.createComponent$.onNext({id:instUid, value:{bbox} })
         meshActions.createComponent$.onNext({id:instUid,  value:{ mesh }})
         transformActions.createComponent$.onNext({id:instUid, value:{pos:[0,0,zOffset]} })
+
+        //BOM instance?
 
         console.log("DONE with creating various components")
       })
@@ -131,7 +156,8 @@ export default function model(props$, actions, drivers){
 
   const selections$  = selections( selectionsIntents({DOM,events}, typesInstancesRegistry$) )
 
-  //hack
+
+  //hack ??
   events
     .select("entityInfos")
     .flatMap(e=>e.changeCore$)
@@ -155,10 +181,25 @@ export default function model(props$, actions, drivers){
     .subscribe(e=>e) 
 
 
+  //BOM
+  function bomActionsFromOtherStuff(){
+    const addBomEntries$ = null
+
+    return {
+      addBomEntries$
+    }
+  }
+
+  let bomActions = Object.assign( {addBomEntries$},actions.bomActions )
+  console.log("bomActions",bomActions)
+  const bom$ = bom(bomActions)
+
+
   //combine all the above 
   const state$ = combineLatestObj({
     settings$ 
     ,selections$
+    ,bom$
 
     ,core$
     ,transforms$

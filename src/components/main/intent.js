@@ -6,7 +6,7 @@ import {extractDesignSources,extractMeshSources,extractSourceSources} from '../.
 import {settingsIntent} from '../../core/settings/settingsIntent'
 import {commentsIntents} from '../../core/comments/intents'
 import {selectionsIntents} from '../../core/selections/intents'
-
+import {bomIntent} from '../../core/bom/intent'
 
 export default function intent (drivers) {
   const DOM      = drivers.DOM
@@ -23,9 +23,6 @@ export default function intent (drivers) {
   let postMessages$  = postMessage
   const meshSources$ = extractMeshSources({dnd$, postMessages$, addressbar})
   const srcSources$  = extractSourceSources({dnd$, postMessages$, addressbar})
-
-  //
-  const  createEntityType$ = entityTypeIntents({meshSources$,srcSources$})
 
   //settings
   const settingsSources$ = localStorage.get("jam!-settings")
@@ -57,15 +54,12 @@ export default function intent (drivers) {
 
 
   ///entity actions
-  events.select("entityInfos")
-    .flatMap(e=>e.changeTransforms$)
-    /*.withLatestFrom(selections$.pluck("instIds"),function(transforms, instIds){
-      console.log("setting transforms", transforms, instIds)
-      /*instIds.map(function(instId){
-        transformActions.updateTransforms$.onNext({id:instId, value:transforms})
-      })
-    })*/
-    .subscribe(e=>console.log("sdfdsf",e))
+
+
+  const clearAll$         = undefined
+  const removeEntityType$ = undefined //same as delete type/ remove bom entry
+
+  const bomActions = bomIntent(drivers)
 
   return {
     dnd$
@@ -75,8 +69,9 @@ export default function intent (drivers) {
     ,settingActions
 
     //,selectionActions
-
     ,entityTypeActions
+
+    ,bomActions
 
   }
 }

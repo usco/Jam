@@ -17,6 +17,17 @@ export default function view(settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree
         {gl}
 
         {entityInfos}
+
+        <div className="topToolbar titlebar">
+          <button className="clearAll"> Delete all </button>
+          <button className="delete">Delete</button>
+          <button className="duplicate">Duplicate</button>
+
+          <button>Translate</button>
+          <button>Rotate</button>
+          <button>Scale</button>
+        </div>
+
       </div>
     })
 }
