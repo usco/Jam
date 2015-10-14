@@ -3,7 +3,9 @@ let fromEvent = Rx.Observable.fromEvent
 let Observable = Rx.Observable
 let merge = Rx.Observable.merge
 
+import {toArray} from '../../utils/utils'
 import {exists} from '../../utils/obsUtils'
+import {makeModelNoHistory, mergeData} from '../../utils/modelUtils'
 
 import logger from 'log-minim'
 let log = logger("app")
@@ -15,12 +17,10 @@ const defaults = {
   ,byId:{}
 }
 
-
 function addBomEntries(state,input){
-  //console.log("ADDING BOM entries")
-  //FIXME , immutable
-  let newData = input || []
-  if(newData.constructor !== Array) newData = [newData]
+  console.log("ADDING BOM entries")
+  //FIXME , make immutable
+  let newData = toArray(input) || []
 
   state.entries = state.entries.concat(newData)
 
@@ -79,54 +79,12 @@ function clearBomEntries(state, input){
   return Object.assign({},defaults)
 }
 
-function makeModifications(intent){
-  //intent.partTypes$.subscribe(e=>console.log("partTypes in BOM"))
-  //intent.combos$.subscribe(e=>console.log("combos in BOM"))
 
-  let addEntries$ = intent.addBomEntries$
-    .filter(exists)
-    .map((nData) => (bomData) => {
-      return addBomEntries(bomData,nData)
-    })
-
-  let newType$ = intent.partTypes$
-    .withLatestFrom(intent.combos$,function(types, combos){ return {combos,types}})
-    .map((data) => (bomData) => {
-      return createBomEntries(bomData,data)
-     })
-
-
-  //this means ALL instances represented by bom entries need to be removed!
-  let removeEntries$ = intent.removeEntries$
-    .map((data) => (bomData) => {
-      //console.log("removeEntries from BOM", data, bomData)
-      return removeBomEntries(bomData,data)
-    })
-
-  //clear it all
-  let clearEntries$ = intent.clearEntries$
-    .map((data) => (bomData) => {
-      return clearBomEntries(bomData,data)
-    })
-
-  return merge(
-    addEntries$
-    ,clearEntries$
-    ,removeEntries$
-    ,newType$
-  )
+function bom(actions, source) {
+  //let updateFns  = {addBomEntries,createBomEntries,removeBomEntries,clearBomEntries}
+  let updateFns = {addBomEntries, clearBomEntries}
+  return makeModelNoHistory(defaults, updateFns, actions, source)
 }
 
-function Bom(intent, source) {
-  //console.log("seting up bom model")
-  let source$ = source || Observable.just(defaults)
-  
-  let modification$ = makeModifications(intent)
 
-  return modification$
-    .merge(source$)
-    .scan((bomData, modFn) => modFn(bomData))//combine existing data with new one
-    .shareReplay(1)
-}
-
-export default Bom
+export default bom
