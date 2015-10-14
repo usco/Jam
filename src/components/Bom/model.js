@@ -16,19 +16,21 @@ function sortBy(fieldName){
 
 export default function model(props$, actions){
   const fieldNames$      = props$.pluck('fieldNames').startWith([]).filter(exists)
-  const selectedEntries$ = props$.pluck('selectedEntries').startWith([]).filter(exists)
   const sortableFields$  = props$.pluck('sortableFields').startWith([]).filter(exists)
-  let entries$           = props$.pluck('entries').startWith([]).filter(exists)
+  const entries$         = props$.pluck('entries').startWith([]).filter(exists)
+  const selectedEntries$ = props$.pluck('selectedEntries').startWith([]).filter(exists)
+    .distinctUntilChanged()
+    .shareReplay(1)
 
 
   //observable of current sorting field (what field do we sort by)
-  let sortFieldName$ = actions.headerTapped$
+  const sortFieldName$ = actions.headerTapped$
     .map(e => e.currentTarget.dataset.name)
     .startWith(undefined)
     //.filter( name => sortableFields.indexOf(name)>1 )
 
   //ascending, descending, neutral 
-  let sortablesDirection$ = actions.headerTapped$
+  const sortablesDirection$ = actions.headerTapped$
     .map( e => undefined)
     .scan(false, function (acc, x) { 
       if(!acc) return true
@@ -37,7 +39,7 @@ export default function model(props$, actions){
     .startWith(undefined)
 
   //actual entries (filtered, sorted etc)
-  entries$ = entries$
+  const sortedEntries$ = entries$
     .combineLatest(sortFieldName$, sortablesDirection$, function(entries, sortFieldName, direction){
       if(!sortFieldName) return entries 
 
@@ -48,5 +50,5 @@ export default function model(props$, actions){
       return output
     })
 
-  return combineLatestObj({entries$, selectedEntries$, fieldNames$, sortFieldName$, sortablesDirection$})
+  return combineLatestObj({entries$:sortedEntries$, selectedEntries$, fieldNames$, sortFieldName$, sortablesDirection$})
 }

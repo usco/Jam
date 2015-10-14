@@ -17,7 +17,7 @@ export default function Bom({DOM, props$}) {
   return {
     DOM: vtree$,
     events: {
-      //entryTaps$
+      entryTapped$:actions.entryTapped$
     }
   }
 }

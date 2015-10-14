@@ -6,8 +6,12 @@ import Class from "classnames"
 
 export default function view (state$) {
 
-  return state$.map(function({entries, selectedEntries
+  return state$
+    .distinctUntilChanged()
+    .map(function({entries, selectedEntries
       , fieldNames, sortFieldName, sortablesDirection}){
+
+      console.log("selectedEntries in BOM",selectedEntries)
 
       let direction = sortablesDirection
       //generate headers
@@ -28,6 +32,8 @@ export default function view (state$) {
           </th> 
         )
       })
+      
+      
 
       let rows    = entries.map( function(row, index){
         let cells = fieldNames.map(function(name){         
@@ -36,14 +42,14 @@ export default function view (state$) {
 
         cells.push(<td className="bomEntry cell"> <button>Change Model</button> </td>)
 
-        let selected = selectedEntries.indexOf(row.uuid) > -1
+        let selected = selectedEntries.indexOf(row.id) > -1
         
         return(
           <tr
             className={Class("bomEntry", {selected: selected})} 
-            attributes={{"data-name": row.name}} key={row.uuid}
+            attributes={{"data-name": row.name}} key={row.id}
             data-name={row.name}
-            data-uuid={row.uuid}
+            data-uuid={row.id}
             >
             {cells}
           </tr>
