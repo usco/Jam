@@ -3,7 +3,7 @@ let fromEvent = Rx.Observable.fromEvent
 let Observable = Rx.Observable
 let merge = Rx.Observable.merge
 import combineTemplate from 'rx.observable.combinetemplate'
-import {makeModelNoHistory, mergeData} from '../../utils/modelUtils'
+import {makeModelNoHistory, mergeData} from '../utils/modelUtils'
 
 
  function remapStructure(input){

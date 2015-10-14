@@ -3,9 +3,9 @@ let fromEvent = Rx.Observable.fromEvent
 let Observable = Rx.Observable
 let merge = Rx.Observable.merge
 
-import {toArray} from '../../utils/utils'
-import {exists} from '../../utils/obsUtils'
-import {makeModelNoHistory, mergeData} from '../../utils/modelUtils'
+import {toArray} from '../utils/utils'
+import {exists} from '../utils/obsUtils'
+import {makeModelNoHistory, mergeData} from '../utils/modelUtils'
 
 import logger from 'log-minim'
 let log = logger("app")

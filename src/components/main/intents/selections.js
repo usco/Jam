@@ -1,5 +1,5 @@
-import {toArray,exists} from '../../utils/utils'
-import {hasEntity, getEntity} from '../../utils/entityUtils'
+import {toArray,exists} from '../../../utils/utils'
+import {hasEntity, getEntity} from '../../../utils/entityUtils'
 
 function extractEntities(data){
   return data.filter(hasEntity).map(getEntity).map(e=>e.iuid)

@@ -2,8 +2,8 @@ import Rx from 'rx'
 let Observable = Rx.Observable
 let merge = Rx.Observable.merge
 
-import {toArray} from '../../utils/utils'
-import {makeModelNoHistory, mergeData} from '../../utils/modelUtils'
+import {toArray} from '../utils/utils'
+import {makeModelNoHistory, mergeData} from '../utils/modelUtils'
 
 
 function selectEntities(state, input){

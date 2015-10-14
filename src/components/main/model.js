@@ -4,13 +4,13 @@ import {generateUUID} from '../../utils/utils'
 import {makeCoreSystem,makeTransformsSystem,makeMeshSystem, makeBoundingSystem} from '../../core/entities/entities2'
 import {entityTypeIntents, entityInstanceIntents} from '../../core/entities/intents2'
 
-import {selectionsIntents} from '../../core/selections/intents'
+import {selectionsIntents} from './intents/selections'
 
-import settings from    '../../core/settings/settings'
-import comments from    '../../core/comments/comments'
-import selections from  '../../core/selections/selections'
+import settings from    '../../core/settings'
+import comments from    '../../core/comments'
+import selections from  '../../core/selections'
 import entityTypes from '../../core/entities/entityTypes'
-import bom         from '../../core/bom/bom'
+import bom         from '../../core/bom'
 
 function makeRegistry(instances$,types$){
   //register type=> instance & vice versa

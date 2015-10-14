@@ -3,12 +3,12 @@ let fromEvent = Rx.Observable.fromEvent
 let Observable = Rx.Observable
 let merge = Rx.Observable.merge
 
-import logger from '../../utils/log'
+import logger from '../utils/log'
 let log = logger("comments")
 log.setLevel("info")
 
-import {toArray, generateUUID} from '../../utils/utils'
-import {makeModelNoHistory, mergeData} from '../../utils/modelUtils'
+import {toArray, generateUUID} from '../utils/utils'
+import {makeModelNoHistory, mergeData} from '../utils/modelUtils'
 
 //"comments" system
 

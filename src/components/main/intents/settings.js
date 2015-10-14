@@ -1,6 +1,6 @@
 //NEEDED because of circular dependency in annotations...
-import {clearActiveTool$} from '../../actions/appActions'
-import {keycodes, isValidElementEvent} from '../../interactions/keyboard'
+//import {clearActiveTool$} from '../../actions/appActions'
+import {keycodes, isValidElementEvent} from '../../../interactions/keyboard'
 let merge = Rx.Observable.merge
 
 export function settingsIntent(drivers, selections$){

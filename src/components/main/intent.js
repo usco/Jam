@@ -3,10 +3,10 @@ import {observableDragAndDrop} from '../../interactions/dragAndDrop'
 import {entityTypeIntents, entityInstanceIntents} from '../../core/entities/intents2'
 import {extractDesignSources,extractMeshSources,extractSourceSources} from '../../core/sources/dataSources'
 
-import {settingsIntent} from '../../core/settings/settingsIntent'
-import {commentsIntents} from '../../core/comments/intents'
-import {selectionsIntents} from '../../core/selections/intents'
-import {bomIntent} from '../../core/bom/intent'
+import {settingsIntent} from    './intents/settings'
+import {commentsIntents} from   './intents/comments'
+import {selectionsIntents} from './intents/selections'
+import {bomIntent} from         './intents/bom'
 
 export default function intent (drivers) {
   const DOM      = drivers.DOM
