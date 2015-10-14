@@ -34,7 +34,6 @@ export default function view (state$) {
       })
       
       
-
       let rows    = entries.map( function(row, index){
         let cells = fieldNames.map(function(name){         
           return(<td className="bomEntry cell">{row[name]}</td>)
@@ -47,9 +46,7 @@ export default function view (state$) {
         return(
           <tr
             className={Class("bomEntry", {selected: selected})} 
-            attributes={{"data-name": row.name}} key={row.id}
-            data-name={row.name}
-            data-uuid={row.id}
+            attributes={{"data-name": row.name, "data-id":row.id}} key={row.id}
             >
             {cells}
           </tr>
