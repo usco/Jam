@@ -3,8 +3,8 @@ import {Rx} from '@cycle/core'
 let just = Rx.Observable.just
 
 //views & wrappers
-import SettingsView from '../../components/SettingsView'
-import FullScreenToggler from '../../components/FullScreenToggler'
+import Settings from '../../components/widgets/Settings'
+import FullScreenToggler from '../../components/widgets/FullScreenToggler/index'
 import {EntityInfosWrapper,BOMWrapper,GLWrapper} from '../../components/main/wrappers'
 
 
@@ -23,7 +23,7 @@ export default function main(drivers) {
   const entityInfos = EntityInfosWrapper(state$,DOM)
   const gl          = GLWrapper(state$,DOM)
   const bom         = BOMWrapper(state$,DOM)
-  const settingsC   = SettingsView({DOM, props$:state$})
+  const settingsC   = Settings({DOM, props$:state$})
   const fsToggler   = FullScreenToggler({DOM})
 
 

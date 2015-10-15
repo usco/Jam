@@ -7,7 +7,7 @@ import {combineLatestObj} from '../../utils/obsUtils'
 //views etc
 import Bom from '../Bom/Bom'
 import GLView from '../webgl/GlView3'
-import EntityInfos       from '../EntityInfos/EntityInfos'
+import EntityInfos       from '../widgets/EntityInfos'
 
 //for settings
  /*just({
