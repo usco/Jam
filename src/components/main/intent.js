@@ -56,15 +56,27 @@ export default function intent (drivers) {
   ///entity actions
 
 
-  const clearAll$         = undefined
+  const reset$         = DOM.select('.reset').events("click")
+  
   const removeEntityType$ = undefined //same as delete type/ remove bom entry
+
+  const deleteEntityInstance$    = DOM.select('.delete').events("click")
+  const duplicateEntityInstance$ = DOM.select('.duplicate').events("click")
+
+  const entityActions = {
+     deleteEntityInstance$
+    ,duplicateEntityInstance$
+    ,reset$
+  }
+
 
   const bomActions = bomIntent(drivers)
 
   return {
     dnd$
 
-    //,createEntityBase$    
+    ,entityActions
+        
     ,settingsSources$
     ,settingActions
 

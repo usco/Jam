@@ -1,7 +1,10 @@
 import {combineLatestObj} from '../../utils/obsUtils'
 import {generateUUID} from '../../utils/utils'
 
-import {makeCoreSystem,makeTransformsSystem,makeMeshSystem, makeBoundingSystem} from '../../core/entities/entities2'
+import {makeCoreSystem} from '../../core/entities/components/core' 
+import {makeTransformsSystem} from '../../core/entities/components/transforms' 
+import {makeMeshSystem} from '../../core/entities/components/mesh' 
+
 import {entityTypeIntents, entityInstanceIntents} from '../../core/entities/intents2'
 
 import {selectionsIntents} from './intents/selections'
@@ -17,7 +20,6 @@ function makeRegistry(instances$,types$){
   let base = {typeUidFromInstUid:{},instUidFromTypeUid:{}}
 
   instances$ = instances$.map(function(instances){
-
     let res = []
     Object.keys(instances).map(function(key){
       res.push( instances[key] )
@@ -25,10 +27,9 @@ function makeRegistry(instances$,types$){
     return res
   })
 
-
-
   return combineLatestObj({instances$,types$})
     .map(function({instances, types}){
+      console.log("foooRegistry")
 
       let instUidFromTypeUid = instances
         .reduce(function(prev,instance){
@@ -48,37 +49,14 @@ function makeRegistry(instances$,types$){
 
       return {instUidFromTypeUid,typeUidFromInstUid}
     })
-
-    /*.scan(base,function(acc,n){
-
-      let {instances,types} = n
-
-      acc.instUidFromTypeUid = instances
-        .reduce(function(prev,instance){
-          if(!prev[instance.typeUid]){
-            prev[instance.typeUid] = []//instance.id
-          }
-
-          prev[instance.typeUid].push( instance.id )
-          return prev
-        },{})
-
-      acc.typeUidFromInstUid = instances
-        .reduce(function(prev,instance){
-          prev[instance.id] = instance.typeUid
-          return prev
-        },{})
-
-      //console.log("registry stuff",acc,n)
-      return acc
-    })*/
-
 }
 
 
 export default function model(props$, actions, drivers){
   const DOM      = drivers.DOM
   const events   = drivers.events
+
+  const entityActions = actions.entityActions
 
   const settings$      = settings( actions.settingActions, actions.settingsSources$ ) 
   const entityTypes$   = entityTypes( actions.entityTypeActions)
@@ -87,7 +65,9 @@ export default function model(props$, actions, drivers){
   let {core$,coreActions}            = makeCoreSystem()
   let {meshes$,meshActions}          = makeMeshSystem()
   let {transforms$,transformActions} = makeTransformsSystem()
-  let {bounds$ ,boundActions}        = makeBoundingSystem()
+  //let {bounds$ ,boundActions}        = makeBoundingSystem()
+
+  const typesInstancesRegistry$ =  makeRegistry(core$,entityTypes$)
 
   //hack
   const addBomEntries$ = new Rx.ReplaySubject()
@@ -108,15 +88,11 @@ export default function model(props$, actions, drivers){
 
         addBomEntries$.onNext({id:typeUid,name:typeData.name,qty:1,version:"0.0.1",unit:"QA"})
 
-
         return instanceData
       })
-      console.log("DONE with entityInstancesBase")
     })
     .shareReplay(1)
 
-
-  const typesInstancesRegistry$ =  makeRegistry(core$,entityTypes$)
 
   //create various components
   entityInstancesBase$
@@ -143,7 +119,7 @@ export default function model(props$, actions, drivers){
 
         //FIXME : horrid
         coreActions.createComponent$.onNext({id:instUid,  value:{ id:instUid, typeUid, name:instance.name }})
-        boundActions.createComponent$.onNext({id:instUid, value:{bbox} })
+        //boundActions.createComponent$.onNext({id:instUid, value:{bbox} })
         meshActions.createComponent$.onNext({id:instUid,  value:{ mesh }})
         transformActions.createComponent$.onNext({id:instUid, value:{pos:[0,0,zOffset]} })
 
@@ -154,14 +130,21 @@ export default function model(props$, actions, drivers){
     })
     .subscribe(e=>e)
 
+
+
   const selections$  = selections( selectionsIntents({DOM,events}, typesInstancesRegistry$) )
 
+  //TODO: all of these need to be refactored
+
+  /*const currentSelections$ = selections$.pluck("instIds")
+    .distinctUntilChanged()
+    .shareReplay(1)
 
   //hack ??
   events
     .select("entityInfos")
     .flatMap(e=>e.changeCore$)
-    .withLatestFrom(selections$.pluck("instIds"),function(coreChanges, instIds){
+    .withLatestFrom(currentSelections$,function(coreChanges, instIds){
       console.log("setting core changes", coreChanges, instIds)
       instIds.map(function(instId){
         coreActions.setAttribs$.onNext({id:instId, value:coreChanges})
@@ -172,7 +155,7 @@ export default function model(props$, actions, drivers){
   events
     .select("entityInfos")
     .flatMap(e=>e.changeTransforms$)
-    .withLatestFrom(selections$.pluck("instIds"),function(transforms, instIds){
+    .withLatestFrom(currentSelections$,function(transforms, instIds){
       //console.log("setting transforms", transforms, instIds)
       instIds.map(function(instId){
         transformActions.updateTransforms$.onNext({id:instId, value:transforms})
@@ -180,20 +163,77 @@ export default function model(props$, actions, drivers){
     })
     .subscribe(e=>e) 
 
+  //delete 
+  entityActions
+    .deleteEntityInstance$
+    .withLatestFrom(currentSelections$,function(e, instIds){
+      console.log("deleteEntityInstance")
 
+      instIds.map(function(id){
+        coreActions.removeComponent$.onNext({id})
+        meshActions.removeComponent$.onNext({id})
+        transformActions.removeComponent$.onNext({id})
+      })
+
+    })
+    .subscribe(e=>e)
+
+
+  //duplicate
+  entityActions
+    .reset$
+    .withLatestFrom(core$,function(e,instances){
+      let instIds = Object.keys(instances)
+      instIds.map(function(id){
+        coreActions.removeComponent$.onNext({id})
+        meshActions.removeComponent$.onNext({id})
+        transformActions.removeComponent$.onNext({id})
+      })
+    })
+    .subscribe(e=>e)
+
+
+  //clears out everything
+  entityActions
+    .duplicateEntityInstance$
+    .take(1)
+    .withLatestFrom(currentSelections$,function(e, instIds){
+      console.log("duplicateEntityInstance")
+
+
+      instIds.map(function(id){
+        let newId = generateUUID()
+
+        let selected$ = core$.map(c=>c[id])
+        
+        selected$
+          .do(e=>console.log("duplicate core",e))
+          .map(function(c){
+            let clone = Object.assign({},c)
+            clone.id  = newId
+
+            coreActions.clone$.onNext({id:c.id,value:newId}) 
+            //return clone 
+          })
+          .subscribe(e=>console.log("duplicate core",e))
+        //meshes$.map(c=>c[id])
+        //transforms$.map(c=>c[id])
+      })
+
+    })
+    .subscribe(e=>e) */
+
+  
   //BOM
   function bomActionsFromOtherStuff(){
     const addBomEntries$ = null
-
     return {
       addBomEntries$
     }
   }
 
   let bomActions = Object.assign( {addBomEntries$},actions.bomActions )
-  console.log("bomActions",bomActions)
   const bom$ = bom(bomActions)
-
 
   //combine all the above 
   const state$ = combineLatestObj({
