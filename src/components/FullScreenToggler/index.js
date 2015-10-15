@@ -6,14 +6,17 @@ import Class from "classnames"
 import screenfull from 'screenfull'
 
 
-function FullScreenToggler({DOM, props}) {
-
-  let toggle$ =  DOM.select(".fullScreenToggler").events("click")
+function intent({DOM}){
+  const toggle$ =  DOM.select(".fullScreenToggler").events("click")
     .map(true)
     .startWith(false)
     .scan((acc,val)=>!acc)
 
-  let vtree$ = toggle$
+  return toggle$
+}
+
+function view(state$){
+  return state$
     .map(function(toggle){
 
       if (screenfull.enabled) {
@@ -43,6 +46,12 @@ function FullScreenToggler({DOM, props}) {
         </button>
       )
     })
+}
+
+function FullScreenToggler({DOM, props}) {
+  const state$ = intent({DOM}) //cheating a bit
+  const vtree$ = view(state$)
+
   return {
     DOM:vtree$
   }
