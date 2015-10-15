@@ -1,42 +1,11 @@
 /** @jsx hJSX */
-import Cycle from '@cycle/core'
-import {Rx} from '@cycle/core'
 import {hJSX} from '@cycle/dom'
 import Class from "classnames"
 
-let fromEvent = Rx.Observable.fromEvent
-import {combineLatestObj} from '../utils/obsUtils'
 
+export default function view (state$) {
 
-function intent(DOM){
-  let toggled$  = DOM.select(".toggler").events("click")
-    .map(true)
-    .scan((acc,val)=>!acc)
-    .startWith(false)
-
-  //any outside taps close the settings
-  let outsideTaps$     = fromEvent(window,"click")
-    .map(e=>e.target)
-    .map(function(target){
-      return document.querySelector(".settings").contains(target)
-    })
-    .filter(x=>(x===false))//we only care if it was clicked outside, not in
-
-  toggled$ = toggled$.merge( outsideTaps$ )
-
-  return {toggled$}
-}
-
-//fyi for now, we hardcode some of the ui 
-function SettingsView({DOM, props$}, name = '') {
-
-  let settings$ = props$.pluck('settings')
-  let schema$   = props$.pluck('schema').startWith({})
-
-  let {toggled$} = intent(DOM)  
-
-  let vtree$ = combineLatestObj({settings$,toggled$})
-    .map( function({settings , toggled}){
+  return state$.map(function({settings , toggled}){
       let fields = undefined
       let showGrid = settings.grid.show
       let showAnnot = settings.annotations.show
@@ -85,9 +54,5 @@ function SettingsView({DOM, props$}, name = '') {
       } 
     )
 
-  return {
-    DOM: vtree$,
-  }
-}
 
-export default SettingsView
+}
