@@ -6,7 +6,7 @@ import Class from 'classnames'
 let merge = Rx.Observable.merge
 let combineLatest = Rx.Observable.combineLatest
 
-import {formatNumberTo, absSizeFromBBox} from '../../utils/formatters'
+import {formatNumberTo, absSizeFromBBox} from '../../../utils/formatters'
 
 function absSizeInput(entity , controlsStep, numberPrecision, changeHandler){
   /*display / control object transforms: posistion,rotation,scale etc

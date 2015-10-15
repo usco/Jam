@@ -1,5 +1,5 @@
 import {Rx} from '@cycle/core'
-import {combineLatestObj} from '../../utils/obsUtils'
+import {combineLatestObj} from '../../../utils/obsUtils'
 
 export default function model(props$,actions){
   let settings$ = props$.pluck('settings')

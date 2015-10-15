@@ -1,7 +1,7 @@
 import {Rx} from '@cycle/core'
 let merge = Rx.Observable.merge
 let combineLatest = Rx.Observable.combineLatest
-import {combineLatestObj} from '../../utils/obsUtils'
+import {combineLatestObj} from '../../../utils/obsUtils'
 
 
 export default function intent(DOM){

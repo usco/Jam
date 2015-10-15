@@ -6,9 +6,9 @@ import Class from 'classnames'
 let merge = Rx.Observable.merge
 let combineLatest = Rx.Observable.combineLatest
 
-import {combineLatestObj, preventDefault,isTextNotEmpty,formatData,exists} from '../../utils/obsUtils'
+import {combineLatestObj, preventDefault,isTextNotEmpty,formatData,exists} from '../../../utils/obsUtils'
 
-import Comments from '../Comments/Comments'
+import Comments from '../Comments'
 import view from './view'
 import intent from './intent'
 

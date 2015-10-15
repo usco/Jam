@@ -6,7 +6,7 @@ import Class from 'classnames'
 let merge = Rx.Observable.merge
 let just  = Rx.Observable.just
 
-import {preventDefault,isTextNotEmpty,formatData,exists} from '../../utils/obsUtils'
+import {preventDefault,isTextNotEmpty,formatData,exists} from '../../../utils/obsUtils'
 //import EditableItem from './EditableItem'
 
 function renderCommentsList (comments) {
