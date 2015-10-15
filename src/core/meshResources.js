@@ -33,7 +33,6 @@ export function meshResources(meshSources$, assetManager){
     })
     .shareReplay(1)
 
-
   //mesh + resource data together
   let combos$ =
     resources$.map(function(resource){

@@ -1,7 +1,7 @@
 import {observableDragAndDrop} from '../../interactions/dragAndDrop'
 
 import {entityTypeIntents, entityInstanceIntents} from '../../core/entities/intents2'
-import {extractDesignSources,extractMeshSources,extractSourceSources} from '../../core/sources/dataSources'
+import {extractDesignSources,extractMeshSources,extractSourceSources} from '../../core/dataSourceExtractors'
 
 import {settingsIntent} from    './intents/settings'
 import {commentsIntents} from   './intents/comments'

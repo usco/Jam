@@ -2,7 +2,7 @@ import {Rx} from '@cycle/core'
 let merge = Rx.Observable.merge
 let fromArray = Rx.Observable.fromArray
 
-import {getExtension,exists,toArray} from '../../utils/utils'
+import {getExtension,exists,toArray} from '../utils/utils'
 
 
 function hasModelUrl(data){
