@@ -10,13 +10,13 @@ export function mergeData(currentData,inputs){
   if("merge" in currentData){
     return currentData.merge(inputs)
   }
-  return Object.assign({}, currentData,inputs)
+  return Object.assign({}, currentData, inputs)
 }
 
 //need to make sure source data structure is right 
 export function applyDefaults(data$, defaults){
   return data$.map(function(data){
-    return Object.assign(defaults,data)
+    return mergeData(defaults,data)
   })
 }
 
@@ -170,8 +170,7 @@ export function makeModificationsNoHistory(actions, updateFns){
 
 export function makeModelNoHistory(defaults, updateFns, actions, source){
   let mods$ =  makeModificationsNoHistory(actions,updateFns)
-
-  //let source$ =  Rx.Observable.just( defaults )//Immutable(defaults) )
+  //Immutable(defaults) )
   let source$ = source || just(defaults)
   source$ = applyDefaults(source$, defaults)
 
