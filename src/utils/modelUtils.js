@@ -4,6 +4,8 @@ let Observable = Rx.Observable
 let merge = Rx.Observable.merge
 let just  = Rx.Observable.just
 
+import Immutable from 'seamless-immutable'
+
 //TODO: this needs to be an external lib, for re-use
 //merge the current data with any number of input data
 export function mergeData(currentData,inputs){
@@ -17,6 +19,13 @@ export function mergeData(currentData,inputs){
 export function applyDefaults(data$, defaults){
   return data$.map(function(data){
     return mergeData(defaults,data)
+  })
+}
+
+//need to make sure the "type" (immutable) is right 
+export function applyTransform(data$, transform){
+  return data$.map(function(data){
+    return transform(data)
   })
 }
 
@@ -136,7 +145,10 @@ export function makeModifications(actions, updateFns){
 }
 
 
-export function makeModificationsNoHistory(actions, updateFns){
+///
+let transform = Immutable
+
+export function makeModificationsNoHistory(actions, updateFns, doApplyTransform){
 
   let mods$ =  Object.keys(actions).map(function(key){
     //console.log("actions in makeModifications",key)
@@ -152,7 +164,12 @@ export function makeModificationsNoHistory(actions, updateFns){
       //history = logHistory(state, history)
       state   = modFn(state, input)//call the adapted function
 
-      return state //Immutable(state)//,history})
+      if(doApplyTransform)//if we need to coerce it to immutable etc
+      {
+        state = transform(state)
+      }
+
+      return state //,history})
     })
 
     //console.log("op",op,"opName",opName,"modFn",modFn)
@@ -168,11 +185,16 @@ export function makeModificationsNoHistory(actions, updateFns){
 }
 
 
-export function makeModelNoHistory(defaults, updateFns, actions, source){
-  let mods$ =  makeModificationsNoHistory(actions,updateFns)
-  //Immutable(defaults) )
-  let source$ = source || just(defaults)
+export function makeModelNoHistory(defaults, updateFns, actions, source, doApplyTransform=false){
+  let mods$ =  makeModificationsNoHistory(actions,updateFns, doApplyTransform)
+  
+  let source$ = source || just( defaults)
+
   source$ = applyDefaults(source$, defaults)
+
+  if(doApplyTransform){
+    source$ = applyTransform( source$, transform )
+  }
 
   return mods$
     .merge(source$)
