@@ -60,11 +60,9 @@ function CommentsWrapper(state$, DOM){
 function EntityInfos({DOM, props$}, name = '') {
   const state$ = model(props$)
 
-  const comments = CommentsWrapper(state$,DOM)
-
   const {changeCore$, changeTransforms$} = refineActions( props$, intent(DOM) )
 
-  const vtree$ = view(state$, comments.DOM)
+  const vtree$ = view(state$)
   
   return {
     DOM: vtree$,

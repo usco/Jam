@@ -127,15 +127,15 @@ function transformInputs(transforms, fieldName, displayName, controlsStep, numbe
   }
 }
 
-export default function view(state$, commentsVTree$){
+export default function view(state$){
   let numberPrecision = 2
   let controlsStep = 0.1
 
-  return combineLatest(state$,commentsVTree$
-    ,function(state,comments){
+  return combineLatest(state$
+    ,function(state){
       let {core,transforms} = state
 
-      if(!core || !transforms || !comments){
+      if(!core || !transforms){
         return undefined
       }
       if(transforms.length>0) transforms = transforms[0]
@@ -143,8 +143,6 @@ export default function view(state$, commentsVTree$){
         //console.log("core,transforms",core,transforms)
 
       return <div className="toolBarBottom entityInfos">
-        {comments}
-
         {nameInput(core)}
         {colorInput(core)}
         {transformInputs(transforms, "pos", "P", controlsStep, numberPrecision)}
