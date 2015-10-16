@@ -1,79 +1,42 @@
-/** @jsx hJSX */
-import Cycle from '@cycle/core'
-import {Rx} from '@cycle/core'
-import {hJSX} from '@cycle/dom'
-import Class from 'classnames'
-let merge = Rx.Observable.merge
-let just  = Rx.Observable.just
-
-import {preventDefault,isTextNotEmpty,formatData,exists} from '../../../utils/obsUtils'
+import intent from './intent'
+import model from './model'
 import view from './view'
 
+function addExtraData(actions,props$){
+  const entity$     = props$.pluck('entity')
 
-//helper function, tor return uids (type/instance)
-function getIds(entity){
-  console.log("getIds")
-  if(entity){
-    return {typeUid:entity.typeUid, iuid:entity.id}
+  //helper function, tor return uids (type/instance)
+  function getIds(entity){
+    console.log("getIds")
+    if(entity){
+      return {typeUid:entity.typeUid, iuid:entity.id}
+    }
+    return {typeUid:undefined, iuid:undefined}
   }
-  return {typeUid:undefined, iuid:undefined}
-}
 
-function intent(DOM){
-  const toggle$    = DOM.select(".comments").events("toggle")
-    .map(true)
-    .startWith(false)
-    .scan((acc,val)=>!acc)
-
-  const addCommentStart$ = DOM.select(".add").events("click")
-
-  //stream containing new comment, if any
-  let addComment$ = Rx.Observable.just("foo") //interactions.subject('newCommentContent$')
-    .map(e=>e.target.value)
-    .startWith(undefined)
-    .map(e=>{ return {text:e} })
-    .shareReplay(1)
-
-  addComment$ = addComment$
+  const addComment$ = actions.addComment$
     .withLatestFrom(
-      newComment$
-      ,entity$.map(getIds)
-      ,function(a,commentText,entityData){
-        return { text:commentText.text, target:entityData}
+      entity$.map(getIds)
+      ,function(commentText,entityData){
+        return { text:commentText, target:entityData}
       })
     .shareReplay(1)
 
-  newComment$ = 
-    merge(
-      newComment$,
-      addComment$.map({text:undefined})
-    )
-
   return {
-    newComment$
-    ,toggle$
+    addComment$
   }
 }
 
-function model(props$){
-  const comments$   = props$.pluck('comments')
-  const entity$     = props$.pluck('entity')
-
-
-  const state$ = just(undefined)//combineLatest()
-  return state$
-}
-
-
 function Comments({DOM,props$}) {
-  const model$ = model(props$)
-  const vtree$ = view()
+  const actions = intent(DOM)
+  const state$ = model(props$, actions)
+  const vtree$ = view(state$)
 
   return {
     DOM: vtree$,
-    /*events:{
-      addComment$
-    }*/
+    events:{
+      addComment$: addExtraData(actions,state$).addComment$
+    }
   }
 }
 

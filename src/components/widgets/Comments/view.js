@@ -7,7 +7,10 @@ let merge = Rx.Observable.merge
 let just  = Rx.Observable.just
 
 import {preventDefault,isTextNotEmpty,formatData,exists} from '../../../utils/obsUtils'
-//import EditableItem from './EditableItem'
+import Immutable from 'seamless-immutable'
+import {equals} from 'ramda'
+
+
 
 function renderCommentsList (comments) {
   const iconSvg = `<svg class="icon" version="1.1" id="Pencil" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
@@ -44,20 +47,22 @@ function renderCommentsList (comments) {
         />*/
 
 
-function renderCommentCreator (){
+function renderCommentCreator (newCommentContent){
   const iconSvg = `
     <svg class="icon" version="1.1" id="Message" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
        viewBox="0 0 20 20" enable-background="new 0 0 20 20" >
       <path fill="#FFFFFF" d="M18,6v7c0,1.1-0.9,2-2,2h-4v3l-4-3H4c-1.101,0-2-0.9-2-2V6c0-1.1,0.899-2,2-2h12C17.1,4,18,4.9,18,6z"/>
     </svg>`
-
+  
   return  (
     <div className="item new">
-      <header innerHTML={iconSvg}>
+      <header innerHTML={iconSvg} >
           Leave a comment
       </header>
       <div className="content">
-        
+        <textarea name="textarea" className="newCommentContent" placeholder="What are your thoughts..." 
+          value={newCommentContent}>
+        </textarea>
       </div>
       <button className="add">Add comment</button>
     </div>
@@ -71,70 +76,83 @@ function renderCommentCreator (){
           </span>
         </a>*/
 
-function renderComments(toggled, comments, entity){
+function renderComments(toggled, comments, entity, newCommentContent){
   let commentDetails = null
   let commentsList = []
-
-  let key = [undefined,undefined] //at design level ie :no entity selected
-  if(entity){
-    key = [entity.id,entity.typeUid]
-  }
-  
-  if(toggled){
-    commentsList = comments.bykey[key]
-    if(!commentsList){
-      commentsList = []
-    }
-    console.log("commentsList",commentsList,key)
-
-    //
-    commentDetails = <div className="commentDetails fadesIn visible">
-      <span>
-        { renderCommentsList(commentsList) }
-        { renderCommentCreator() }
-      </span>
-    </div>
-  }
 
   const iconSvg =  `
     <svg class="icon" version="1.1" id="Message" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
        viewBox="0 0 20 20" enable-background="new 0 0 20 20" >
       <path fill="#FFFFFF" d="M18,6v7c0,1.1-0.9,2-2,2h-4v3l-4-3H4c-1.101,0-2-0.9-2-2V6c0-1.1,0.899-2,2-2h12C17.1,4,18,4.9,18,6z"/>
     </svg>`
+
+
+  if(toggled){
+    let key = [undefined,undefined] //at design level ie :no entity selected
+    if(entity){
+      key = [entity.id,entity.typeUid]
+    }
+
+    function bykey(key){
+      //key = Immutable(key)
+      return comments.data.filter(function(e){
+        //e.key === key
+        let equal = equals(e.key , key)
+        return equal
+      })
+    }
+
+    commentsList = bykey(key)
+    commentsList=commentsList.asMutable()
+    console.log("entity", entity, "key",key,"commentsList",commentsList)
+    if(!commentsList){
+      commentsList = []
+    }
+
+    commentDetails = (
+      <div className="commentDetails fadesIn visible">
+        <span>
+          { renderCommentsList(commentsList) }
+          { renderCommentCreator(newCommentContent) }
+        </span>
+      </div>
+    )
+
+  }
   
   return (
-    <span className="comments" innerHTML={iconSvg}>
+    <div className="comments">
+      <span className="commentsBtn" innerHTML={iconSvg} />
        {commentDetails}
-    </span>
+    </div>
   )
 }
 
 export default function view(state$){
-   /*let vtree$ = Rx.Observable
-    .combineLatest(
-      comments$
-      ,entity$
-      ,newComment$
-      ,toggled$
-      ,function(comments,entity,newComment, toggled){
+   return state$.map(function({comments,entity,toggled,newCommentContent}){
+       /*let fakeComments = {
+          bykey:{}
+        }
 
-        return renderComments(toggled, comments, entity, newComment)
+        fakeComments.bykey[[undefined,undefined]] = [
+        {
+          text: "foo bar baz"
+          ,author:"DR WhoBrown"}
+          , 
+          {
+          text: "indeed"
+          ,author:"Roborbarbar"}
+        ]*/
+
+        return renderComments( toggled, comments, entity, newCommentContent )
+        
+        if(toggled){
+          return <div className="comments"> Foo </div>
+        }
+        else{
+          return <div className="comments"> Bar </div>
+        }
+
       }
-    )*/
-
-  let fakeComments = {
-    bykey:{}
-  }
-
-  fakeComments.bykey[[undefined,undefined]] = [
-  {
-    text: "foo bar baz"
-    ,author:"DR WhoBrown"}
-    , 
-    {
-    text: "indeed"
-    ,author:"Roborbarbar"}
-  ]
-
-  return just( renderComments(false,fakeComments,undefined) )
+    )
 }
