@@ -1,13 +1,14 @@
 import {Rx} from '@cycle/core'
 let just = Rx.Observable.just
 
-import {getExtension,itemsEqual} from '../../utils/utils'
+import {getExtension, itemsEqual, exists} from '../../utils/utils'
 import {combineLatestObj} from '../../utils/obsUtils'
 
 //views etc
 import Bom from '../Bom/Bom'
 import GLView from '../webgl/GlView3'
 import EntityInfos       from '../widgets/EntityInfos'
+import Comments from '../widgets/Comments'
 
 //for settings
  /*just({
@@ -67,7 +68,7 @@ export function BOMWrapper(state$, DOM){
   return Bom({DOM,props$:makeBomProps(state$)})
 }
 
-export function GLWrapper(state$,DOM){
+export function GLWrapper(state$, DOM){
   let glProps$  = combineLatestObj({
     settings:state$.pluck("settings")
 
@@ -79,3 +80,39 @@ export function GLWrapper(state$,DOM){
   let glUi      = GLView({DOM,props$:glProps$})
   return glUi
 }
+
+
+export function CommentsWrapper(state$, DOM){
+
+  const selectedInstIds$ = state$
+    .pluck("selections")
+    .map(s=>s.instIds)
+    .filter(s=>s !== undefined)
+    .distinctUntilChanged(null,itemsEqual)
+
+  const selections$ = selectedInstIds$
+    .combineLatest(state$,function(ids,state){
+      //console.log("gnagna gna")
+      let core = ids.map(function(id){
+        return state.core[id]
+      })
+      return core
+    })
+    .map(getFirstsData)
+    .shareReplay(1)
+    
+
+  function getFirstsData(list){
+    if(list.length === 0) return undefined
+    return {id:list[0].id,typeUid:list[0].typeUid}
+  }
+
+
+  const props$ = combineLatestObj({
+    entity:selections$
+    ,comments:state$.pluck("comments")
+  })
+
+  return Comments({DOM,props$})
+}
+

@@ -5,7 +5,7 @@ let just = Rx.Observable.just
 //views & wrappers
 import Settings from '../../components/widgets/Settings'
 import FullScreenToggler from '../../components/widgets/FullScreenToggler/index'
-import {EntityInfosWrapper,BOMWrapper,GLWrapper} from '../../components/main/wrappers'
+import {EntityInfosWrapper,BOMWrapper,GLWrapper,CommentsWrapper} from '../../components/main/wrappers'
 
 
 import intent from './intent'
@@ -21,6 +21,7 @@ export default function main(drivers) {
   
   //create visual elements
   const entityInfos = EntityInfosWrapper(state$,DOM)
+  const comments    = CommentsWrapper(state$,DOM)
   const gl          = GLWrapper(state$,DOM)
   const bom         = BOMWrapper(state$,DOM)
   const settingsC   = Settings({DOM, props$:state$})
@@ -28,8 +29,8 @@ export default function main(drivers) {
 
 
   //outputs 
-  const vtree$  = view(settingsC.DOM, fsToggler.DOM, bom.DOM,gl.DOM,entityInfos.DOM)
-  const events$ = just( {gl:gl.events, entityInfos:entityInfos.events, bom:bom.events} )
+  const vtree$  = view(settingsC.DOM, fsToggler.DOM, bom.DOM,gl.DOM,entityInfos.DOM,comments.DOM)
+  const events$ = just( {gl:gl.events, entityInfos:entityInfos.events, bom:bom.events, comments:comments.events} )
   //output to localStorage
   //in this case, settings
   const localStorage$ = state$

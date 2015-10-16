@@ -27,6 +27,9 @@ export default function intent (drivers) {
   //settings
   const settingsSources$ = localStorage.get("jam!-settings")
   const settingActions   = settingsIntent(drivers)
+
+  //comments
+  const commentActions   = commentsIntents(drivers)
   
   //const selectionActions = selectionsIntents({DOM,events}, typesInstancesRegistry$)
 
@@ -79,6 +82,8 @@ export default function intent (drivers) {
         
     ,settingsSources$
     ,settingActions
+
+    ,commentActions
 
     //,selectionActions
     ,entityTypeActions

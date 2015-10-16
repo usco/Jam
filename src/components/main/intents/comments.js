@@ -1,9 +1,8 @@
-export function commentsIntents(DOM, settings$){
-  //interactions.get(".commentDetails","addComment$").subscribe(e=>console.log("gna",e))
-  //.subscribe(e=>console.log("gna",e))
+export function commentsIntents(drivers){
+  const addComments$ = drivers.events.select("comments")
+    .flatMap(e=>e.addComment$)
 
   return {
-    addComments$ : DOM.select(".entityInfos").events("addComment$").pluck("detail")
-    ,settings$
+    addComments$ 
   }
 }

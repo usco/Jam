@@ -15,6 +15,7 @@ import selections from  '../../core/selections'
 import entityTypes from '../../core/entities/entityTypes'
 import bom         from '../../core/bom'
 
+
 function makeRegistry(instances$,types$){
   //register type=> instance & vice versa
   let base = {typeUidFromInstUid:{},instUidFromTypeUid:{}}
@@ -29,7 +30,6 @@ function makeRegistry(instances$,types$){
 
   return combineLatestObj({instances$,types$})
     .map(function({instances, types}){
-      console.log("foooRegistry")
 
       let instUidFromTypeUid = instances
         .reduce(function(prev,instance){
@@ -60,7 +60,7 @@ export default function model(props$, actions, drivers){
 
   const settings$      = settings( actions.settingActions, actions.settingsSources$ ) 
   const entityTypes$   = entityTypes( actions.entityTypeActions)
-  //const comments$      = comments(commentsIntents(DOM,settings$))
+  const comments$      = comments( actions.commentActions)
 
   let {core$,coreActions}            = makeCoreSystem()
   let {meshes$,meshActions}          = makeMeshSystem()
@@ -240,6 +240,7 @@ export default function model(props$, actions, drivers){
     settings$ 
     ,selections$
     ,bom$
+    ,comments$
 
     ,core$
     ,transforms$

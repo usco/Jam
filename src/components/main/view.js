@@ -6,9 +6,9 @@ import Class from "classnames"
 let combineLatest = Rx.Observable.combineLatest
 
 
-export default function view(settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree$, entityInfosVtree$){
-  return combineLatest(settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree$, entityInfosVtree$
-    ,function(settings, fsToggler, bom, gl, entityInfos){
+export default function view(settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree$, entityInfosVtree$, commentVTree$){
+  return combineLatest(settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree$, entityInfosVtree$, commentVTree$
+    ,function(settings, fsToggler, bom, gl, entityInfos, comments){
       return <div>
         {settings}
         {fsToggler}
@@ -16,6 +16,7 @@ export default function view(settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree
         {bom}
         {gl}
 
+        {comments}
         {entityInfos}
 
         <div className="topToolbar titlebar">
