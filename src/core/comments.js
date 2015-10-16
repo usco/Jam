@@ -9,8 +9,6 @@ log.setLevel("info")
 
 import {toArray, generateUUID} from '../utils/utils'
 import {makeModelNoHistory, mergeData} from '../utils/modelUtils'
-//for testing
-import Immutable from 'seamless-immutable'
 
 //"comments" system
 //helper function to get data by key
@@ -32,7 +30,7 @@ function addComments(state, input){
         let text           = comment.text 
         let author         = "jon doe"  //FIXME: how to deal with authors ? 
 
-        let key = Immutable([iuid,typeUid])
+        let key = [iuid,typeUid]
         let entry = {text, author, key}
         return entry
       })
@@ -53,7 +51,7 @@ function comments(actions, source){
   }
 
   let updateFns  = {addComments}
-  return makeModelNoHistory(Immutable(defaults), updateFns, actions, source)
+  return makeModelNoHistory(defaults, updateFns, actions, source,true)
 }
 
 export default comments
