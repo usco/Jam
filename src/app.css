@@ -125,8 +125,8 @@
 .toolbarBottom{
   font-size: 0.8em;
   position: absolute;
-  bottom: 10px;
-  left: 10px;
+  bottom:5px;
+  left: 50px;
 }
 
 .toolbarBottom input[type=text]{
@@ -539,6 +539,24 @@ div.largeIcon{
 /*-----------------*/
 .toolTips .icon{
   margin: -10px 0px;
+}
+
+.comments{
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  font-size: 0.7em;
+}
+
+.comments textarea{
+  border: none;
+  overflow: auto;
+  outline: none;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+  width: 100%;
+  height: 100%;
 }
 
 .commentDetails{
