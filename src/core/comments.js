@@ -9,36 +9,38 @@ log.setLevel("info")
 
 import {toArray, generateUUID} from '../utils/utils'
 import {makeModelNoHistory, mergeData} from '../utils/modelUtils'
+//for testing
+import Immutable from 'seamless-immutable'
 
 //"comments" system
-
-//comments[key]= "some quite long text, with markdown support "
+//helper function to get data by key
+/*
+function bykey(key){
+  return comments.data.filter(function(e){
+    let equal = equals(e.key , key)
+    return equal
+  })
+}*/
 
 function addComments(state, input){
-
   log.info("adding comments", input)
-
-  let {data,bykey} = state
   let newComments = toArray(input)
-  let updatedData = mergeData({},state)
 
-  newComments.map(function(comment){
-    let {iuid,typeUid} = comment.target
-    let text = comment.text 
+  const comments = state.data.concat(
+      newComments.map(function(comment){
+        let {iuid,typeUid} = comment.target
+        let text           = comment.text 
+        let author         = "jon doe"  //FIXME: how to deal with authors ? 
 
-    let key = [iuid,typeUid]
-    
-    //FIXME: how to deal with authors ? 
-    let entry = {text, author:"jon doe", key}
-    if(!updatedData.bykey[key]){
-      updatedData.bykey[key] = [] //we need LISTS of comments
-    }
-
-    updatedData.bykey[key].push( entry )
-    updatedData.data.push( entry )
-  })
-  return updatedData
-
+        let key = Immutable([iuid,typeUid])
+        let entry = {text, author, key}
+        return entry
+      })
+    )
+  const updatedState = {
+    data:comments
+  }
+  return updatedState
 }
 
 function comments(actions, source){
@@ -48,12 +50,10 @@ function comments(actions, source){
        /*{text:"bla bla details",author:"foo"},
        {text:"oh yes cool ",author:"bar"},*/
     ]
-    ,bykey:{
-    }
   }
 
   let updateFns  = {addComments}
-  return makeModelNoHistory(defaults, updateFns, actions, source)
+  return makeModelNoHistory(Immutable(defaults), updateFns, actions, source)
 }
 
 export default comments
