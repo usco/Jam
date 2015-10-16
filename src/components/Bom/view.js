@@ -11,6 +11,8 @@ export default function view (state$) {
     .map(function({entries, selectedEntries
       , fieldNames, sortFieldName, sortablesDirection}){
 
+      entries = entries.asMutable()//FIXME: not sure
+
       console.log("selectedEntries in BOM",selectedEntries)
 
       let direction = sortablesDirection

@@ -22,13 +22,21 @@ function addBomEntries(state,input){
   //FIXME , make immutable
   let newData = toArray(input) || []
 
-  state.entries = state.entries.concat(newData)
+  let entries = state.entries.concat(newData)
+  /*let byId    = newData.reduce(function(acc,cur){
+
+  },{})
 
   newData.map( entry =>
      state.byId[entry.uuid]= entry
-    )
+    )*/
+  let byId = {}
 
-  return state
+
+  return {
+    entries
+    ,byId
+  }
 }
 
 function createBomEntries(state,input){
@@ -83,7 +91,7 @@ function clearBomEntries(state, input){
 function bom(actions, source) {
   //let updateFns  = {addBomEntries,createBomEntries,removeBomEntries,clearBomEntries}
   let updateFns = {addBomEntries, clearBomEntries}
-  return makeModelNoHistory(defaults, updateFns, actions, source)
+  return makeModelNoHistory(defaults, updateFns, actions, source,true)
 }
 
 
