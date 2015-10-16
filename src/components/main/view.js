@@ -26,9 +26,9 @@ export default function view(settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree
           <button className="delete">Delete</button>
           <button className="duplicate">Duplicate</button>
 
-          <button className="translate">Translate</button>
-          <button className="rotate">Rotate</button>
-          <button className="scale">Scale</button>
+          <button className="toTranslateMode">Translate</button>
+          <button className="toRotateMode">Rotate</button>
+          <button className="toScaleMode">Scale</button>
         </div>
 
       </div>
