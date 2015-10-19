@@ -6,7 +6,7 @@ import {combineLatestObj} from '../../utils/obsUtils'
 
 //views etc
 import Bom from '../Bom/Bom'
-import GLView from '../webgl/GlView3'
+import GLView from '../webgl/GlView'
 import EntityInfos       from '../widgets/EntityInfos'
 import Comments from '../widgets/Comments'
 
