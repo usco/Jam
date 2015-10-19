@@ -16,6 +16,74 @@ import entityTypes from '../../core/entities/entityTypes'
 import bom         from '../../core/bom'
 
 
+/*
+  let intents = entityIntents(interactions)  
+
+  //register meshes <=> types
+  let registry = require('./core/entities/registry')
+  let partTypes$ = registry({
+    combos$:meshResources$
+    ,reset$: intents.deleteAllInstances$
+  })
+
+  //get new instances from "types"
+ 
+  //annotations
+  let aIntents = annotationIntents(interactions)
+  let aIntent = {
+    creationStep$:aIntents.creationStep$,
+    settings$:settings$
+  }
+  let addAnnotation$ = addAnnotationMod(aIntent)
+
+  addAnnotation$
+    .withLatestFrom(settings$,function(annotation,settings){
+      if(!settings.repeatTool){
+        clearActiveTool$()
+      }
+      //console.log("ok I am done with annotation",annotation,settings)
+    })
+    .subscribe(e=>e)
+
+  let addInstance$ = newInstFromTypes$.merge(addAnnotation$)
+  
+  function remapEntityIntents(intent, addInstance$, settings$){
+    return  {
+      createInstance$:new Rx.Subject(),//createInstance$,
+      addInstances$: addInstance$,
+
+      updateInstance$: intent.selectionTransforms$,//
+      deleteInstances$: intent.deleteInstances$,
+      duplicateInstances$: intent.duplicateInstances$,  
+      deleteAllInstances$: intent.deleteAllInstances$, 
+
+      replaceAll$:intent.replaceAll$,
+      settings$:settings$
+    }
+  }
+  //entities
+  let entities$ = entities(remapEntityIntents(intents,addInstance$,settings$))
+
+  //bom
+  let bomIntent = entriesFromEntities( bomIntents(interactions), entities$ )
+  bomIntent.partTypes$ = partTypes$
+  bomIntent.combos$    = meshResources$
+ 
+  let bom$ = Bom(bomIntent)
+
+  let {getVisual,addVisualProvider } = createVisualMapper(partTypes$, entities$)
+
+  //selections 
+  let selections$ = selections( reverseSelections(selectionsIntents(interactions),entities$) )
+
+ 
+  //TODO:remove
+  let contextTaps$ = intents.contextTaps$*/
+
+
+
+
+
 function makeRegistry(instances$,types$){
   //register type=> instance & vice versa
   let base = {typeUidFromInstUid:{},instUidFromTypeUid:{}}
@@ -93,6 +161,8 @@ export default function model(props$, actions, drivers){
     })
     .shareReplay(1)
 
+  //entityTypes$.subscribe(e=>console.log("entityTypes",e))
+  //entityInstancesBase$.subscribe(e=>console.log("entityInstancesBase",e))
 
   //create various components
   entityInstancesBase$
@@ -124,7 +194,6 @@ export default function model(props$, actions, drivers){
         transformActions.createComponent$.onNext({id:instUid, value:{pos:[0,0,zOffset]} })
 
         //BOM instance?
-
         console.log("DONE with creating various components")
       })
     })
@@ -234,6 +303,14 @@ export default function model(props$, actions, drivers){
 
   let bomActions = Object.assign( {addBomEntries$},actions.bomActions )
   const bom$ = bom(bomActions)
+
+  //loading flag , mostly for viewer mode
+  const loading$ = Rx.Observable.merge(
+      meshSources$
+        .map(true)
+      ,addInstance$
+        .map(false)
+    ).startWith(false)
 
   //combine all the above 
   const state$ = combineLatestObj({
