@@ -228,7 +228,7 @@ export default function model(props$, actions, drivers){
       events
         .select("gl")
         .flatMap(e=>e.selectionsTransforms$)
-
+        .debounce(20)
     )
     //.do(e=>console.log("entityInfos transforms",e))
     .withLatestFrom(currentSelections$,function(transforms, instIds){

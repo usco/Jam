@@ -7,6 +7,8 @@ import Cycle from '@cycle/core'
 import {Rx} from '@cycle/core'
 import {hJSX} from '@cycle/dom'
 
+import {equals} from 'ramda'
+
 
 let fromEvent = Rx.Observable.fromEvent
 let merge = Rx.Observable.merge
@@ -361,6 +363,7 @@ function GLView({DOM, props$}){
 
   let scene = new THREE.Scene()
   let dynamicInjector = new THREE.Object3D()//all dynamic mapped objects reside here
+  scene.dynamicInjector = dynamicInjector
   scene.add( dynamicInjector )
 
   let camera   = makeCamera(config.cameras[0])
@@ -525,11 +528,21 @@ function GLView({DOM, props$}){
 
         if(core && transform && mesh){
 
+          //only apply changes to mesh IF the current transform is different ?
           //console.log("transforms",transform)
-          mesh.position.fromArray( transform.pos )
-          mesh.rotation.fromArray( transform.rot )
-          mesh.scale.fromArray( transform.sca )
-
+          if( !equals(mesh.position.toArray() , transform.pos) )
+          {
+            mesh.position.fromArray( transform.pos )
+          }
+          if( !equals(mesh.rotation.toArray() , transform.rot) )
+          {
+            mesh.rotation.fromArray( transform.rot )
+          }
+          if( !equals(mesh.scale.toArray() , transform.sca) )
+          {
+            mesh.scale.fromArray( transform.sca )
+          }
+          
           //color is stored in core component
           mesh.material.color.set( core.color )
           return setFlags(mesh)
@@ -541,6 +554,20 @@ function GLView({DOM, props$}){
     //.sample(0, requestAnimationFrameScheduler)
     //.distinctUntilChanged()
     .do(e=>console.log("DONE with items in GLView",e))
+
+  //do diffing to find what was added/changed
+  let itemChanges$ = items$.scan({prev:undefined,cur:undefined},function(acc, x){
+      let cur  = x
+      let prev = acc.cur   
+      return {cur,prev} 
+    })
+    .map(function(typeData){
+      let {cur,prev} = typeData
+
+      let changes = extractChanges(prev,cur)
+    return changes
+    })
+    //.subscribe(e=>console.log("item changes",e))
   
 
   //transformControls handling
@@ -550,6 +577,7 @@ function GLView({DOM, props$}){
     tool:activeTool$,  //.filter(isTransformTool)),
     selections:selectedMeshes$
   })
+    .distinctUntilChanged()
     .subscribe( 
       function(data){
         let {tool,selections} = data
@@ -558,6 +586,7 @@ function GLView({DOM, props$}){
         selections.map(function(mesh){
            if(tool && mesh && ["translate","rotate","scale"].indexOf(tool)>-1 )
           {
+            console.log("attaching transformControls")
             transformControls.attach(mesh)
             transformControls.setMode(tool)
           }
@@ -604,7 +633,7 @@ function GLView({DOM, props$}){
     })
 
   //TODO : remove this hack
-  items$
+  /*items$
     .do(clearScene)
     .do(function(items){
       console.log("ITEMS",items, dynamicInjector)
@@ -614,7 +643,15 @@ function GLView({DOM, props$}){
     .do(e=>render())
     .subscribe(function(e){
       //console.log("foooo",dynamicInjector)      
+    })*/
+
+  itemChanges$
+    .do(function(changes){
+      changes.added.map( m=>addMeshToScene(m) )
+      changes.removed.map( m=>scene.dynamicInjector.remove(m) )
     })
+    .do(e=>render())
+    .subscribe(e=>e)
 
   //absurd, we do not want to change our container (DOM) but the contents (gl)
   /*const vtree$ = combineLatestObj({initialized$, settings$})
