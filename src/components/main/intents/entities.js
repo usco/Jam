@@ -31,7 +31,7 @@ function hasClear(data){
 }
 
 
-export function entityIntents(interactions){
+export function entityIntents(drivers){
   let glviewInit$ = interactions.get(".glview","initialized$")
   let shortSingleTaps$ = interactions.get(".glview","shortSingleTaps$")
   let shortDoubleTaps$ = interactions.get(".glview","shortDoubleTaps$")
@@ -66,12 +66,10 @@ export function entityIntents(interactions){
     contextMenuActions$.map(undefined)
   )
 
-  //get any "clear" message from post message
-  let postMessages$ = require('../drivers/postMessageDriver')( )
   deleteAllInstances$ = 
     deleteAllInstances$
     .merge(
-      postMessages$
+      drivers.postMessages
       .filter(hasClear)
       .map(true)
     )
