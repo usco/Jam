@@ -553,7 +553,6 @@ function GLView({DOM, props$}){
     .subscribe( 
       function(data){
         let {tool,selections} = data
-        //console.log("data",data, tool, selections)
         transformControls.detach()
 
         selections.map(function(mesh){
