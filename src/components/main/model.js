@@ -205,7 +205,7 @@ export default function model(props$, actions, drivers){
 
   //TODO: all of these need to be refactored
 
-  /*const currentSelections$ = selections$.pluck("instIds")
+  const currentSelections$ = selections$.pluck("instIds")
     .distinctUntilChanged()
     .shareReplay(1)
 
@@ -224,6 +224,13 @@ export default function model(props$, actions, drivers){
   events
     .select("entityInfos")
     .flatMap(e=>e.changeTransforms$)
+    .merge(
+      events
+        .select("gl")
+        .flatMap(e=>e.selectionsTransforms$)
+
+    )
+    //.do(e=>console.log("entityInfos transforms",e))
     .withLatestFrom(currentSelections$,function(transforms, instIds){
       //console.log("setting transforms", transforms, instIds)
       instIds.map(function(instId){
@@ -231,6 +238,8 @@ export default function model(props$, actions, drivers){
       })
     })
     .subscribe(e=>e) 
+
+    //.subscribe(e=>console.log("transforms",e))
 
   //delete 
   entityActions
@@ -290,7 +299,7 @@ export default function model(props$, actions, drivers){
       })
 
     })
-    .subscribe(e=>e) */
+    .subscribe(e=>e) 
 
   
   //BOM
@@ -305,12 +314,12 @@ export default function model(props$, actions, drivers){
   const bom$ = bom(bomActions)
 
   //loading flag , mostly for viewer mode
-  const loading$ = Rx.Observable.merge(
+  /*const loading$ = Rx.Observable.merge(
       meshSources$
         .map(true)
       ,addInstance$
         .map(false)
-    ).startWith(false)
+    ).startWith(false)*/
 
   //combine all the above 
   const state$ = combineLatestObj({

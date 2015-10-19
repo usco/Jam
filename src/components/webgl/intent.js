@@ -131,6 +131,12 @@ export default function intent(drivers, data){
   //stream of transformations done on the current selection
   const selectionsTransforms$ = fromEvent(transformControls, 'objectChange')
     .map(targetObject)
+    .map(function(t){
+      return {pos:t.position.toArray(),
+        rot:t.rotation.toArray(),
+        sca:t.scale.toArray()
+      }
+    })
 
 
   return {
