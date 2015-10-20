@@ -319,10 +319,8 @@ function outlineStuff(){
     },e=>console.log("error",e)) */
 }
 
-
 import intent from './intent'
 import model from './model'
-
 
 /*TODO:
 - remove any "this", adapt code accordingly  
@@ -338,17 +336,8 @@ function GLView({DOM, props$}){
   let update$      = Rx.Observable.interval(16,66666666667)
 
   let settings$       = props$.pluck('settings')
-  let selections$     = props$.pluck('selections').startWith([]).filter(exists).distinctUntilChanged()
   //every time either activeTool or selection changes, reset/update transform controls
   let activeTool$ = settings$.pluck("activeTool").startWith(undefined)
-
-  //composite data
-  let core$       = props$.pluck('core').distinctUntilChanged()
-  let transforms$ = props$.pluck('transforms')//.distinctUntilChanged()
-  let meshes$     = props$.pluck('meshes').filter(exists).distinctUntilChanged(function(m){
-    return Object.keys(m)
-  } )//m=>m.uuid)
-
 
   let renderer = null
 
@@ -381,22 +370,9 @@ function GLView({DOM, props$}){
 
   //react to actions
   actions.zoomInOnPoint$.subscribe( (oAndP) => zoomInOnObject.execute( oAndP.object, {position:oAndP.point} ) )
-
-  let selectedMeshes$ = actions.selectMeshes$
-
   let windowResizes$ = windowResizes(1) //get from intents/interactions ?
 
-  function setFlags(mesh){
-    mesh.selectable      = true
-    mesh.selectTrickleUp = false
-    mesh.transformable   = true
-    //FIXME: not sure, these are very specific for visuals
-    mesh.castShadow      = true
-    return mesh
-  }
 
-  //TODO: we need some diffing etc somewhere in here  
-  //ie : which were added , which were removed, which ones were changed
   function clearScene(){
     if(scene){
       if(scene.dynamicInjector){
@@ -512,48 +488,7 @@ function GLView({DOM, props$}){
   }
 
   //combine All needed components to apply any "transforms" to their visuals
-  let items$ = combineLatestObj({core$,transforms$,meshes$})
-    .debounce(5)//ignore if we have too fast changes in any of the 3 components
-    //.distinctUntilChanged()
-    .map(function({core,transforms,meshes}){
-
-      let keys = Object.keys(core)
-      //console.log("items change in GLView")
-      let cores = core
-
-      return keys.map(function(key){
-        let transform = transforms[key]
-        let mesh = meshes[key]
-        let core = cores[key]
-
-        if(core && transform && mesh){
-
-          //only apply changes to mesh IF the current transform is different ?
-          //console.log("transforms",transform)
-          if( !equals(mesh.position.toArray() , transform.pos) )
-          {
-            mesh.position.fromArray( transform.pos )
-          }
-          if( !equals(mesh.rotation.toArray() , transform.rot) )
-          {
-            mesh.rotation.fromArray( transform.rot )
-          }
-          if( !equals(mesh.scale.toArray() , transform.sca) )
-          {
-            mesh.scale.fromArray( transform.sca )
-          }
-          
-          //color is stored in core component
-          mesh.material.color.set( core.color )
-          return setFlags(mesh)
-        }
-      })
-      .filter(m=>m !== undefined)
-
-    })
-    //.sample(0, requestAnimationFrameScheduler)
-    //.distinctUntilChanged()
-    //.do(e=>console.log("DONE with items in GLView",e))
+  let items$ = state$.pluck("items").distinctUntilChanged()
 
   //do diffing to find what was added/changed
   let itemChanges$ = items$.scan({prev:undefined,cur:undefined},function(acc, x){
@@ -565,13 +500,13 @@ function GLView({DOM, props$}){
       let {cur,prev} = typeData
       let changes = extractChanges(prev,cur)
     return changes
-    })
-  
+    })  
 
   //transformControls handling
   //we modify the transformControls mode based on the active tool
   //every time either activeTool or selection changes, reset/update transform controls
-  let selectedMeshesChanges$ = selectedMeshes$
+  let selectedMeshes$ = Rx.Observable.just([])
+  let selectedMeshesChanges$ = state$.pluck("selectedMeshes").distinctUntilChanged()
     .scan({prev:[],cur:[]},function(acc, x){
       let cur  = x
       let prev = acc.cur   
@@ -590,14 +525,13 @@ function GLView({DOM, props$}){
     ,tool:activeTool$.distinctUntilChanged()
   })
   .subscribe(function({selections,tool}){
-    //console.log("updating transformControls")
+    //console.log("updating transformControls",selections,tool)
     //remove transformControls from removed meshes
     selections.removed.map(mesh=>transformControls.detach(mesh))
     
     selections.added.map(function(mesh){
       if(tool && mesh && ["translate","rotate","scale"].indexOf(tool)>-1 )
       {
-        //console.log("attaching transformControls")
         transformControls.attach(mesh)
         transformControls.setMode(tool)
       }
@@ -616,7 +550,7 @@ function GLView({DOM, props$}){
       
     ,fromEvent(controls,'change')
     ,fromEvent(transformControls,'change')
-    ,selections$
+    //,selections$
 
     ,windowResizes$.do(handleResize)//we need the resize to take place before we render
   )
@@ -644,19 +578,7 @@ function GLView({DOM, props$}){
       }
     })
 
-  //TODO : remove this hack
-  /*items$
-    .do(clearScene)
-    .do(function(items){
-      console.log("ITEMS",items, dynamicInjector)
-      //items.map( m=>dynamicInjector.add(m) )
-      items.map( m=>addMeshToScene(m) )
-    })
-    .do(e=>render())
-    .subscribe(function(e){
-      //console.log("foooo",dynamicInjector)      
-    })*/
-
+  //react based on diffs
   itemChanges$
     .do(function(changes){
       changes.added.map( m=>addMeshToScene(m) )
@@ -665,15 +587,7 @@ function GLView({DOM, props$}){
     .do(e=>render())
     .subscribe(e=>e)
 
-  //absurd, we do not want to change our container (DOM) but the contents (gl)
-  /*const vtree$ = combineLatestObj({initialized$, settings$})
-    .map(function({initialized, settings}){
-      return (
-        <div className="glView" >
-          {new GLWidgeHelper(configureStep1.bind(this),configureStep2)}
-        </div>
-      )
-    })*/
+  //we do not want to change our container (DOM) but the contents (gl)
   const vtree$ = Rx.Observable.just(
     <div className="glView" >
       {new GLWidgeHelper(configureStep1)}
@@ -689,7 +603,7 @@ function GLView({DOM, props$}){
       ,longTaps$:actions.longTapsWPicking$
 
       ,selectionsTransforms$:actions.selectionsTransforms$
-      ,selectedMeshes$
+      ,selectedMeshes$:state$.pluck("selectedMeshes").distinctUntilChanged()
     }
   }
 }
