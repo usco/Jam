@@ -553,7 +553,7 @@ function GLView({DOM, props$}){
     })
     //.sample(0, requestAnimationFrameScheduler)
     //.distinctUntilChanged()
-    .do(e=>console.log("DONE with items in GLView",e))
+    //.do(e=>console.log("DONE with items in GLView",e))
 
   //do diffing to find what was added/changed
   let itemChanges$ = items$.scan({prev:undefined,cur:undefined},function(acc, x){
@@ -563,38 +563,50 @@ function GLView({DOM, props$}){
     })
     .map(function(typeData){
       let {cur,prev} = typeData
-
       let changes = extractChanges(prev,cur)
     return changes
     })
-    //.subscribe(e=>console.log("item changes",e))
   
 
   //transformControls handling
   //we modify the transformControls mode based on the active tool
   //every time either activeTool or selection changes, reset/update transform controls
-  combineTemplate({
-    tool:activeTool$,  //.filter(isTransformTool)),
-    selections:selectedMeshes$
-  })
+  let selectedMeshesChanges$ = selectedMeshes$
+    .scan({prev:[],cur:[]},function(acc, x){
+      let cur  = x
+      let prev = acc.cur   
+      return {cur,prev} 
+    })
+    .map(function(typeData){
+      let {cur,prev} = typeData
+      let changes = extractChanges(prev,cur)
+    return changes
+    })
     .distinctUntilChanged()
-    .subscribe( 
-      function(data){
-        let {tool,selections} = data
-        transformControls.detach()
+    .shareReplay(1)
 
-        selections.map(function(mesh){
-           if(tool && mesh && ["translate","rotate","scale"].indexOf(tool)>-1 )
-          {
-            console.log("attaching transformControls")
-            transformControls.attach(mesh)
-            transformControls.setMode(tool)
-          }
-        })
-      } 
-      ,(err)=>console.log("error in setting transform",err)
-    )
+  combineLatestObj({
+    selections:selectedMeshesChanges$
+    ,tool:activeTool$.distinctUntilChanged()
+  })
+  .subscribe(function({selections,tool}){
+    //console.log("updating transformControls")
+    //remove transformControls from removed meshes
+    selections.removed.map(mesh=>transformControls.detach(mesh))
+    
+    selections.added.map(function(mesh){
+      if(tool && mesh && ["translate","rotate","scale"].indexOf(tool)>-1 )
+      {
+        //console.log("attaching transformControls")
+        transformControls.attach(mesh)
+        transformControls.setMode(tool)
+      }
+      else if(!tool && mesh){//tool is undefined, but we still had selections
+        transformControls.detach(mesh)
+      }
+    })
 
+  })
 
   //hande all the cases where events require re-rendering
   let reRender$ = merge(
