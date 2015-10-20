@@ -69,8 +69,27 @@ export function BOMWrapper(state$, DOM){
 }
 
 export function GLWrapper(state$, DOM){
+
+  const selectedInstIds$ = state$
+    .pluck("selections")
+    .map(s=>s.instIds)
+    .filter(s=>s !== undefined)
+    .distinctUntilChanged(null,itemsEqual)
+
+  const selections$ = selectedInstIds$
+    .combineLatest(state$,function(ids,state){
+      //console.log("gnagna gna")
+      let core = ids.map(function(id){
+        return state.core[id]
+      })
+      return core
+    })
+    .shareReplay(1)
+
+
   let glProps$  = combineLatestObj({
     settings:state$.pluck("settings")
+    ,selections$
 
     ,core:state$.pluck("core")
     ,meshes:state$.pluck("meshes")
@@ -104,6 +123,8 @@ export function CommentsWrapper(state$, DOM){
 
   function getFirstsData(list){
     if(list.length === 0) return undefined
+    if(!list[0]) return undefined
+
     return {id:list[0].id,typeUid:list[0].typeUid}
   }
 
