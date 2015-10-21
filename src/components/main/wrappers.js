@@ -77,7 +77,7 @@ export function GLWrapper(state$, DOM){
     .distinctUntilChanged(null,itemsEqual)
 
   const selections$ = selectedInstIds$
-    .combineLatest(state$,function(ids,state){
+    .withLatestFrom(state$,function(ids,state){
       //console.log("gnagna gna")
       let core = ids.map(function(id){
         return state.core[id]

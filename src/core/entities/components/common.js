@@ -23,8 +23,9 @@ function duplicateEntity(id){
 
 /////////
 //used for all
-export function createComponent(defaults,state,input){
+export function createComponent(defaults, state, input){
   console.log("createComponent",defaults)
+
   let inputValue =  {}
   if(input && input.value) inputValue = input.value
   const newAttrs = mergeData(defaults,inputValue)
@@ -37,17 +38,24 @@ export function createComponent(defaults,state,input){
   state = mergeData({},state)
   state[id] = newAttrs
   //FIXME big hack, use mutability
+
+  console.log("done createComponent",state)
   return state 
 }
 
-export function removeComponent(state,input){
-  console.log("removeComponent")
-  let {id} = input
+export function removeComponent(state, input){
 
-  state = mergeData({},state)
-  //FIXME big hack, use mutability
-  delete state[id]
-  return state 
+  state = input.map(function(selection){
+    console.log("removeComponent")
+    let id = selection
+
+    state = mergeData({},state)
+    //FIXME big hack, use mutability
+    delete state[id]
+    return state 
+  })
+
+  return state
 }
 
 export function duplicateComponent(state,input){

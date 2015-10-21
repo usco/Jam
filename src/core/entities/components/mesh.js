@@ -4,12 +4,12 @@ import {makeModelNoHistory, mergeData} from '../../../utils/modelUtils'
 
 
 ////Mesh//////
-export function makeMeshSystem(){
+export function makeMeshSystem(actions){
   const defaults ={
   }
 
   function createComponentMesh(defaults,state,input){
-    console.log("createComponent", input)
+    console.log("createComponent for mesh", input)
     let inputValue =  {}
     if(input && input.value) inputValue = input.value
 
@@ -26,12 +26,15 @@ export function makeMeshSystem(){
     //FIXME big hack, use mutability
     return state 
   }
-
+  
   //TODO: should defaults be something like a stand in cube ?
   let updateFns = {
     createComponent: createComponentMesh.bind(null,undefined)
     , removeComponent}
-  let actions   = makeActionsFromApiFns(updateFns)
+  
+  if(!actions){
+    actions   = makeActionsFromApiFns(updateFns)
+  }
 
   let meshes$ = makeModelNoHistory(defaults, updateFns, actions, undefined, false)//last flag set to false because we
   //do not want immutable data for meshes ?

@@ -1,11 +1,11 @@
-import {combineLatestObj} from '../../utils/obsUtils'
+import {combineLatestObj,replicateStream} from '../../utils/obsUtils'
 import {generateUUID} from '../../utils/utils'
 
 import {makeCoreSystem} from '../../core/entities/components/core' 
 import {makeTransformsSystem} from '../../core/entities/components/transforms' 
 import {makeMeshSystem} from '../../core/entities/components/mesh' 
 
-import {entityTypeIntents, entityInstanceIntents} from '../../core/entities/intents2'
+import {entityTypeIntents, entityInstanceIntents} from '../../core/entities/intentHelpers'
 
 import {selectionsIntents} from './intents/selections'
 
@@ -81,9 +81,6 @@ import bom         from '../../core/bom'
   let contextTaps$ = intents.contextTaps$*/
 
 
-
-
-
 function makeRegistry(instances$,types$){
   //register type=> instance & vice versa
   let base = {typeUidFromInstUid:{},instUidFromTypeUid:{}}
@@ -130,13 +127,6 @@ export default function model(props$, actions, drivers){
   const entityTypes$   = entityTypes( actions.entityTypeActions)
   const comments$      = comments( actions.commentActions)
 
-  let {core$,coreActions}            = makeCoreSystem()
-  let {meshes$,meshActions}          = makeMeshSystem()
-  let {transforms$,transformActions} = makeTransformsSystem()
-  //let {bounds$ ,boundActions}        = makeBoundingSystem()
-
-  const typesInstancesRegistry$ =  makeRegistry(core$,entityTypes$)
-
   //hack
   const addBomEntries$ = new Rx.ReplaySubject()
 
@@ -161,15 +151,22 @@ export default function model(props$, actions, drivers){
     })
     .shareReplay(1)
 
+
+  /*let foo$ = Rx.Observable.just(42)
+    let fooS1$ = foo$.map(e=>({value:e,from:"fooS1"}))
+    let fooS2$ = foo$.map(e=>({value:e,from:"fooS2"}))
+    fooS1$.subscribe(e=>console.log("first",e))
+    fooS2$.subscribe(e=>console.log("second",e))*/
+
   //entityTypes$.subscribe(e=>console.log("entityTypes",e))
   //entityInstancesBase$.subscribe(e=>console.log("entityInstancesBase",e))
 
   //create various components
-  entityInstancesBase$
+  let componentBase$ = entityInstancesBase$
     .withLatestFrom(entityTypes$,function(instances,types){
       //console.log("instances",instances, "types",types)
 
-      instances.map(function(instance){
+      let data =  instances.map(function(instance){
 
         let instUid = instance.id
         let typeUid = instance.typeUid
@@ -187,27 +184,129 @@ export default function model(props$, actions, drivers){
           iuid:instUid
         }
 
-        //FIXME : horrid
-        coreActions.createComponent$.onNext({id:instUid,  value:{ id:instUid, typeUid, name:instance.name }})
-        //boundActions.createComponent$.onNext({id:instUid, value:{bbox} })
-        meshActions.createComponent$.onNext({id:instUid,  value:{ mesh }})
-        transformActions.createComponent$.onNext({id:instUid, value:{pos:[0,0,zOffset]} })
-
-        //BOM instance?
-        console.log("DONE with creating various components")
+        return {
+          instUid
+          ,typeUid
+          ,instance
+          ,mesh
+          ,zOffset
+        }
       })
+
+      return data
     })
-    .subscribe(e=>e)
+    .shareReplay(1)
+
+  //FIXME : horrid
+  /*coreActions.createComponent$.onNext({id:instUid,  value:{ id:instUid, typeUid, name:instance.name }})
+  //boundActions.createComponent$.onNext({id:instUid, value:{bbox} })
+  meshActions.createComponent$.onNext({id:instUid,  value:{ mesh }})
+  transformActions.createComponent$.onNext({id:instUid, value:{pos:[0,0,zOffset]} })*/
+
+  function remapCoreActions(entityActions, componentBase$, currentSelections$){
+    const createComponent$ = componentBase$
+      .filter(c=>c.length>0)
+      .map(function(datas){
+        return datas.map(function({instUid, typeUid, instance}){
+          return { id:instUid,  value:{ id:instUid, typeUid, name:instance.name } }
+        })
+      })
+      //hack for now , needs to be plural based
+      .map(e=>e[0])
+
+    const removeComponent$ = entityActions.deleteEntityInstance$
+      .withLatestFrom(currentSelections$,function(_,selections){
+        console.log("selections core to remove",selections)
+        return selections
+      })
+    
+    const reset$           = entityActions.reset$
+    const setAttribs$      = Rx.Observable.never()
+
+    return {
+      createComponent$
+      ,removeComponent$
+      ,clear:reset$
+      ,setAttribs$
+    }
+  }
+
+  function remapMeshActions(entityActions, componentBase$, currentSelections$){
+    const createComponent$ = componentBase$
+      .filter(c=>c.length>0)
+      .map(function(datas){
+        return datas.map(function({instUid, mesh}){
+          return { id:instUid,  value:{ mesh } }
+        })
+      })
+      //hack for now , needs to be plural based
+      .map(e=>e[0])
+
+    const removeComponent$ = entityActions.deleteEntityInstance$
+      .withLatestFrom(currentSelections$,function(_,selections){
+        console.log("selections mesh to remove",selections)
+        return selections
+      })
+    
+    const reset$           = entityActions.reset$
+    const setAttribs$      = Rx.Observable.never()
+
+    return {
+      createComponent$
+      ,removeComponent$
+      ,clear:reset$
+    }
+  }
+
+  function remapTransformActions(entityActions, componentBase$, currentSelections$){
+    const createComponent$ = componentBase$
+      .filter(c=>c.length>0)
+      .map(function(datas){
+        return datas.map(function({instUid, zOffset}){
+          return { id:instUid, value:{pos:[0,0,zOffset]} }
+        })
+      })
+      //hack for now , needs to be plural based
+      .map(e=>e[0])
+
+    const removeComponent$ = entityActions.deleteEntityInstance$
+      .withLatestFrom(currentSelections$,function(_,selections){
+        return selections
+      })
+    
+    const reset$           = entityActions.reset$
+
+    return {
+      createComponent$
+      ,removeComponent$
+      ,clear:reset$
+    }
+  }
+
+  const proxySelections$ = new Rx.ReplaySubject(1)
+
+  let coreActions      = remapCoreActions(entityActions,componentBase$,proxySelections$)
+  let meshActions      = remapMeshActions(entityActions,componentBase$,proxySelections$)
+  let transformActions = remapTransformActions(entityActions,componentBase$,proxySelections$)
+
+  let {core$}          = makeCoreSystem(coreActions)
+  let {meshes$}        = makeMeshSystem(meshActions)
+  let {transforms$}    = makeTransformsSystem(transformActions)
+  //let {bounds$ ,boundActions}        = makeBoundingSystem()
 
 
-
+  const typesInstancesRegistry$ =  makeRegistry(core$,entityTypes$)
   const selections$  = selections( selectionsIntents({DOM,events}, typesInstancesRegistry$) )
 
-  //TODO: all of these need to be refactored
+  selections$.subscribe(e=>console.log("selections",e))
 
+  //TODO: all of these need to be refactored
   const currentSelections$ = selections$.pluck("instIds")
     .distinctUntilChanged()
     .shareReplay(1)
+
+  //close some cycles
+  replicateStream(currentSelections$,proxySelections$)
 
   //hack ??
   events
@@ -230,48 +329,29 @@ export default function model(props$, actions, drivers){
         .flatMap(e=>e.selectionsTransforms$)
         .debounce(20)
     )
-    //.do(e=>console.log("entityInfos transforms",e))
     .withLatestFrom(currentSelections$,function(transforms, instIds){
-      //console.log("setting transforms", transforms, instIds)
       instIds.map(function(instId){
         transformActions.updateTransforms$.onNext({id:instId, value:transforms})
       })
     })
     .subscribe(e=>e) 
 
-    //.subscribe(e=>console.log("transforms",e))
-
-  //delete 
-  entityActions
-    .deleteEntityInstance$
-    .withLatestFrom(currentSelections$,function(e, instIds){
-      console.log("deleteEntityInstance")
-
-      instIds.map(function(id){
-        coreActions.removeComponent$.onNext({id})
-        meshActions.removeComponent$.onNext({id})
-        transformActions.removeComponent$.onNext({id})
-      })
-
-    })
-    .subscribe(e=>e)
-
-
-  //duplicate
-  entityActions
+  //clears out everything 
+  /*entityActions
     .reset$
     .withLatestFrom(core$,function(e,instances){
+      return{e,instances}
+    })
+    .subscribe(function({e,instances}){
       let instIds = Object.keys(instances)
       instIds.map(function(id){
         coreActions.removeComponent$.onNext({id})
         meshActions.removeComponent$.onNext({id})
         transformActions.removeComponent$.onNext({id})
       })
-    })
-    .subscribe(e=>e)
+    })*/
 
-
-  //clears out everything
+  //duplicate
   entityActions
     .duplicateEntityInstance$
     .take(1)

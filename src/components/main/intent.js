@@ -1,6 +1,6 @@
 import {observableDragAndDrop} from '../../interactions/dragAndDrop'
 
-import {entityTypeIntents, entityInstanceIntents} from '../../core/entities/intents2'
+import {entityTypeIntents, entityInstanceIntents} from '../../core/entities/intentHelpers'
 import {extractDesignSources,extractMeshSources,extractSourceSources} from '../../core/dataSourceExtractors'
 
 import {settingsIntent} from    './intents/settings'
@@ -73,19 +73,32 @@ export default function intent (drivers) {
   }
 
 
+
   const bomActions = bomIntent(drivers)
+
+  reset$.subscribe(e=>console.log("reseting instances"))
+  
+
+  bomActions.clearBomEntries$.subscribe(e=>console.log("reseting bom1"))
+  /*let foo$ = Rx.Observable.just("bar")
+  let reset2$ = DOM.select('.reset').events("click")
+  DOM.select('.reset').events("click").subscribe(e=>console.log("reseting bom1"))
+  DOM.select('.reset').events("click").subscribe(e=>console.log("reseting bom2"))
+
+  reset2$.withLatestFrom(foo$,function(e,f){
+    console.log("reset")
+  }).subscribe(e=>e)*/
 
   return {
     dnd$
-
-    ,entityActions
-        
+     
     ,settingsSources$
     ,settingActions
 
     ,commentActions
 
     //,selectionActions
+    ,entityActions
     ,entityTypeActions
 
     ,bomActions

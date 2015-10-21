@@ -6,6 +6,7 @@ function extractEntities(data){
 }
 
 export function reverseSelections(intents, idsMapper$){
+
   Array.prototype.flatMap = function(lambda) { 
     return Array.prototype.concat.apply([], this.map(lambda)) 
   }
@@ -16,7 +17,9 @@ export function reverseSelections(intents, idsMapper$){
   //select bom entries from entities
   let selectBomEntries$ = intents
     .selectEntities$
+    .do(e=>console.log("reversing selections to selectBomEntries"))
     .withLatestFrom(idsMapper$,function(entityIds,idsMapper){
+
       return entityIds.map(id=>idsMapper.typeUidFromInstUid[id]).filter(exists)
     })
     //.do(e=>console.log("selectedBomEntries",e))
@@ -27,7 +30,9 @@ export function reverseSelections(intents, idsMapper$){
   
   let selectEntities$ = intents
     .selectBomEntries$ 
+    .do(e=>console.log("reversing selections to selectEntities"))
     .withLatestFrom(idsMapper$,function(bomIds,idsMapper){
+      
       return bomIds.map(id=>idsMapper.instUidFromTypeUid[id]).filter(exists)
     })
     //.do(e=>console.log("selectedEntities",e))

@@ -1,4 +1,6 @@
-import Rx from 'rx'
+//import Rx from 'rx'
+import {Rx} from '@cycle/core'
+
 let merge = Rx.Observable.merge
 
 
@@ -14,6 +16,7 @@ export function bomIntent(drivers){
 
   const clearBomEntries$ = merge(
     drivers.DOM.select('.clearAll').events('click')
+    ,drivers.DOM.select('.reset').events('click')//DEBUG ONLY
     , drivers.postMessage
       .filter(hasClear)
   )

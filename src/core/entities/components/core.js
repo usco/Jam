@@ -42,11 +42,18 @@ export function makeCoreSystem(actions){
     return state
   }
 
+  function clear(state, input){
+    console.log("clearing core")
+    return {}
+  }
+
   let updateFns = {
     setAttribs
-    , clone
+    //, clone
     , createComponent: createComponent.bind(null,componentDefaults)
-    , removeComponent}
+    , removeComponent
+    , clear
+  }
 
   if(!actions){
     actions   = makeActionsFromApiFns(updateFns)

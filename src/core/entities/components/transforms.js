@@ -4,7 +4,7 @@ import {makeModelNoHistory, mergeData} from '../../../utils/modelUtils'
 
 ////Transforms//////
 
-export function makeTransformsSystem(){
+export function makeTransformsSystem(actions){
   const defaults = {}
 
   const transformDefaults ={
@@ -50,7 +50,7 @@ export function makeTransformsSystem(){
   }
 
   function updateTransforms(state, input){
-    console.log("updateTransforms", input.id)
+    //console.log("updateTransforms", input.id)
     state = mergeData({},state)
 
     let {id} = input
@@ -64,7 +64,10 @@ export function makeTransformsSystem(){
   let updateFns = { updateRotation, updatePosition, updateScale, updateTransforms
     , createComponent: createComponent.bind(null,transformDefaults)
     , removeComponent }
-  let actions   = makeActionsFromApiFns(updateFns)
+
+  if(!actions){
+    actions   = makeActionsFromApiFns(updateFns)
+  }
 
   let transforms$ = makeModelNoHistory(defaults, updateFns, actions)
 
