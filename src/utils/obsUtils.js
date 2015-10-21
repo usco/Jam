@@ -45,6 +45,11 @@ export function combineLatestObj(obj) {
   })
 }
 
+//From https://github.com/futurice/power-ui/blob/85d09645ecadc85bc753ba42fdd841d22d8bdd10/src/utils.js
+export function replicateStream(origin$, proxy$) {
+  origin$.subscribe(proxy$.asObserver())
+}
+
 
 
 export function logNext( next ){
