@@ -7,6 +7,8 @@ import {toArray} from '../utils/utils'
 import {exists} from '../utils/obsUtils'
 import {makeModelNoHistory, mergeData} from '../utils/modelUtils'
 
+import {findIndex,propEq,adjust} from 'ramda'
+
 import logger from 'log-minim'
 let log = logger("app")
 log.setLevel("debug")
@@ -21,18 +23,9 @@ function addBomEntries(state,input){
   console.log("ADDING BOM entries")
   //FIXME , make immutable
   let newData = toArray(input) || []
-
   let entries = state.entries.concat(newData)
-  /*let byId    = newData.reduce(function(acc,cur){
 
-  },{})
-
-  newData.map( entry =>
-     state.byId[entry.uuid]= entry
-    )*/
   let byId = {}
-
-
   return {
     entries
     ,byId
@@ -79,19 +72,38 @@ function createBomEntries(state,input){
 
 //how do we deal with this, as it impacts other data structures ? 
 function removeBomEntries(state,input){
-
+  let toRemove = input
 }
 
 function clearBomEntries(state, input){
-  //console.log("clear BOM", input, state)
+  console.log("clearing BOM", input, state)
   return Object.assign({},defaults)
+}
+
+function updateBomEntries(state, input){
+  console.log("updating BOM", input, state)
+  return state
+}
+
+function updateBomEntriesCount(state, inputs){
+  console.log("updateBomEntriesCount",inputs)
+
+  return inputs.reduce(function(state,{id,offset}){    
+    const entries = adjust(
+      (item) => mergeData({},item,{qty:item.qty+offset})
+      , findIndex(propEq('id', id))(state.entries) //get index of the one we want to change
+      , state.entries)
+    
+    return {entries,byId:{}}
+  },state)
+
 }
 
 
 function bom(actions, source) {
   //let updateFns  = {addBomEntries,createBomEntries,removeBomEntries,clearBomEntries}
-  let updateFns = {addBomEntries, clearBomEntries}
-  return makeModelNoHistory(defaults, updateFns, actions, source,true)
+  let updateFns = {addBomEntries, updateBomEntries, updateBomEntriesCount, clearBomEntries}
+  return makeModelNoHistory(defaults, updateFns, actions, source, false)
 }
 
 

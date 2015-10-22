@@ -1,3 +1,6 @@
+import {Rx} from '@cycle/core'
+let merge = Rx.Observable.merge
+
 import {combineLatestObj,replicateStream} from '../../utils/obsUtils'
 import {generateUUID} from '../../utils/utils'
 
@@ -136,9 +139,6 @@ export default function model(props$, actions, drivers){
   const entityTypes$   = entityTypes( actions.entityTypeActions)
   const comments$      = comments( actions.commentActions)
 
-  //hack
-  const addBomEntries$ = new Rx.ReplaySubject()
-
   const entityInstancesBase$  =  entityInstanceIntents(entityTypes$)
     .addInstances$
     .map(function(newTypes){
@@ -152,17 +152,13 @@ export default function model(props$, actions, drivers){
           ,typeUid
           ,name:instName
         }
-
-        addBomEntries$.onNext({id:typeUid,name:typeData.name,qty:1,version:"0.0.1",unit:"QA"})
-
         return instanceData
       })
     })
     .shareReplay(1)
 
 
-
-  //create various components
+  //create various components' baseis
   let componentBase$ = entityInstancesBase$
     .withLatestFrom(entityTypes$,function(instances,types){
       //console.log("instances",instances, "types",types)
@@ -213,6 +209,7 @@ export default function model(props$, actions, drivers){
         console.log("selections core to remove",selections)
         return selections
       })
+      .shareReplay(1)
     
     const updateComponents$ = entityActions.updateComponent$
        .filter(u=>u.target === "core")
@@ -324,9 +321,6 @@ export default function model(props$, actions, drivers){
 
   const typesInstancesRegistry$ =  makeRegistry(core$,entityTypes$)
   const selections$  = selections( selectionsIntents({DOM,events}, typesInstancesRegistry$) )
-
-
-  //TODO: all of these need to be refactored
   const currentSelections$ = selections$.pluck("instIds")
     .distinctUntilChanged()
     .shareReplay(1)
@@ -336,14 +330,41 @@ export default function model(props$, actions, drivers){
 
 
   //BOM
-  function bomActionsFromOtherStuff(){
-    const addBomEntries$ = null
-    return {
-      addBomEntries$
-    }
+  function createBomActions(){
   }
 
-  let bomActions = Object.assign( {addBomEntries$},actions.bomActions )
+  const addBomEntries$ = entityInstanceIntents(entityTypes$)
+    .addInstances$//in truth this just mean "a new type was added"
+    .map(function(typeDatas){
+      return typeDatas.map(function({id,name}){
+        return {id,name,qty:0,version:"0.0.1",unit:"QA"}
+      })
+    })
+
+  const increaseBomEntries$ = coreActions
+    .createComponents$
+    .map(function(data){
+      return data
+        .map(v=>v.value.typeUid)
+        .map(function(id){
+          return {offset:1,id}
+        })
+    })
+  const decreaseBomEntries$ = coreActions
+    .removeComponents$
+    .map(function(data){
+      return data
+        .map(function(id){
+          return {offset:-1,id}
+        })
+    })
+
+  const updateBomEntriesCount$ = merge(
+    increaseBomEntries$
+    , decreaseBomEntries$
+  )
+  
+  let bomActions = Object.assign( {addBomEntries$,updateBomEntriesCount$},actions.bomActions )
   const bom$ = bom(bomActions)
 
   //loading flag , mostly for viewer mode

@@ -99,11 +99,7 @@ export default function intent (drivers) {
   }
 
   const bomActions = bomIntent(drivers)
-
-  reset$.subscribe(e=>console.log("reseting instances"))
   
-
-  bomActions.clearBomEntries$.subscribe(e=>console.log("reseting bom1"))
   /*let foo$ = Rx.Observable.just("bar")
   let reset2$ = DOM.select('.reset').events("click")
   DOM.select('.reset').events("click").subscribe(e=>console.log("reseting bom1"))
