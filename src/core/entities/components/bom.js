@@ -13,11 +13,11 @@ function makeBomSystem(){
     return state
   }
 
-  let actions = {removeComponent$: new Rx.Subject()
+  let actions = {removeComponents$: new Rx.Subject()
     , addBomEntry$:new Rx.Subject()
     , removeBomEntry$: new Rx.Subject()}
 
-  let updateFns = {removeComponent, addBomEntry, removeBomEntry}
+  let updateFns = {removeComponents, addBomEntry, removeBomEntry}
   let meta$ = makeModelNoHistory(defaults, updateFns, actions)
 
   return {bom$,bomActions:actions}

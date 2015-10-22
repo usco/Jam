@@ -15,7 +15,6 @@ import selections from  '../../core/selections'
 import entityTypes from '../../core/entities/entityTypes'
 import bom         from '../../core/bom'
 
-
 /*
   let intents = entityIntents(interactions)  
 
@@ -197,24 +196,16 @@ export default function model(props$, actions, drivers){
     })
     .shareReplay(1)
 
-  //FIXME : horrid
-  /*coreActions.createComponent$.onNext({id:instUid,  value:{ id:instUid, typeUid, name:instance.name }})
-  //boundActions.createComponent$.onNext({id:instUid, value:{bbox} })
-  meshActions.createComponent$.onNext({id:instUid,  value:{ mesh }})
-  transformActions.createComponent$.onNext({id:instUid, value:{pos:[0,0,zOffset]} })*/
-
   function remapCoreActions(entityActions, componentBase$, currentSelections$){
-    const createComponent$ = componentBase$
+    const createComponents$ = componentBase$
       .filter(c=>c.length>0)
       .map(function(datas){
         return datas.map(function({instUid, typeUid, instance}){
           return { id:instUid,  value:{ id:instUid, typeUid, name:instance.name } }
         })
       })
-      //hack for now , needs to be plural based
-      .map(e=>e[0])
 
-    const removeComponent$ = entityActions.deleteEntityInstance$
+    const removeComponents$ = entityActions.deleteEntityInstance$
       .withLatestFrom(currentSelections$,function(_,selections){
         console.log("selections core to remove",selections)
         return selections
@@ -224,25 +215,23 @@ export default function model(props$, actions, drivers){
     const setAttribs$      = Rx.Observable.never()
 
     return {
-      createComponent$
-      ,removeComponent$
+      createComponents$
+      ,removeComponents$
       ,clear:reset$
       ,setAttribs$
     }
   }
 
   function remapMeshActions(entityActions, componentBase$, currentSelections$){
-    const createComponent$ = componentBase$
+    const createComponents$ = componentBase$
       .filter(c=>c.length>0)
       .map(function(datas){
         return datas.map(function({instUid, mesh}){
           return { id:instUid,  value:{ mesh } }
         })
       })
-      //hack for now , needs to be plural based
-      .map(e=>e[0])
 
-    const removeComponent$ = entityActions.deleteEntityInstance$
+    const removeComponents$ = entityActions.deleteEntityInstance$
       .withLatestFrom(currentSelections$,function(_,selections){
         console.log("selections mesh to remove",selections)
         return selections
@@ -252,24 +241,22 @@ export default function model(props$, actions, drivers){
     const setAttribs$      = Rx.Observable.never()
 
     return {
-      createComponent$
-      ,removeComponent$
+      createComponents$
+      ,removeComponents$
       ,clear:reset$
     }
   }
 
   function remapTransformActions(entityActions, componentBase$, currentSelections$){
-    const createComponent$ = componentBase$
+    const createComponents$ = componentBase$
       .filter(c=>c.length>0)
       .map(function(datas){
         return datas.map(function({instUid, zOffset}){
           return { id:instUid, value:{pos:[0,0,zOffset]} }
         })
       })
-      //hack for now , needs to be plural based
-      .map(e=>e[0])
 
-    const removeComponent$ = entityActions.deleteEntityInstance$
+    const removeComponents$ = entityActions.deleteEntityInstance$
       .withLatestFrom(currentSelections$,function(_,selections){
         return selections
       })
@@ -277,8 +264,8 @@ export default function model(props$, actions, drivers){
     const reset$           = entityActions.reset$
 
     return {
-      createComponent$
-      ,removeComponent$
+      createComponents$
+      ,removeComponents$
       ,clear:reset$
     }
   }
@@ -345,9 +332,9 @@ export default function model(props$, actions, drivers){
     .subscribe(function({e,instances}){
       let instIds = Object.keys(instances)
       instIds.map(function(id){
-        coreActions.removeComponent$.onNext({id})
-        meshActions.removeComponent$.onNext({id})
-        transformActions.removeComponent$.onNext({id})
+        coreActions.removeComponents$.onNext({id})
+        meshActions.removeComponents$.onNext({id})
+        transformActions.removeComponents$.onNext({id})
       })
     })*/
 

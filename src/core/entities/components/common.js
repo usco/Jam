@@ -3,6 +3,7 @@ import {makeModelNoHistory, mergeData} from '../../../utils/modelUtils'
 import {generateUUID} from '../../../utils/utils'
 import {combineLatestObj} from '../../../utils/obsUtils'
 let just = Rx.Observable.just
+import {isEmpty} from 'ramda'
 
 //possible helpers
 function addEntity(inputs){
@@ -11,7 +12,7 @@ function addEntity(inputs){
 
 function deleteEntity(id){
   return actions.map(function(action){
-    action.removeComponent$.onNext({id})
+    action.removeComponents$.onNext({id})
   })
 }
 
@@ -23,51 +24,59 @@ function duplicateEntity(id){
 
 /////////
 //used for all
-export function createComponent(defaults, state, input){
-  console.log("createComponent",defaults)
+export function createComponents(defaults, state, inputs){
+  console.log("createComponents")
 
-  let inputValue =  {}
-  if(input && input.value) inputValue = input.value
-  const newAttrs = mergeData(defaults,inputValue)
+  return inputs.reduce(function(state,input){
 
-  //auto increment ?
-  //auto generate ?
-  let id = generateUUID()
-  if(input && input.id) id = input.id
+    let inputValue =  {}
+    if(input && input.value) inputValue = input.value
+    const newAttrs = mergeData(defaults,inputValue)
 
-  state = mergeData({},state)
-  state[id] = newAttrs
-  //FIXME big hack, use mutability
+    //auto increment ?
+    //auto generate ?
+    let id = generateUUID()
+    if(input && input.id) id = input.id
 
-  console.log("done createComponent",state)
-  return state 
+    state = mergeData({},state)
+    state[id] = newAttrs
+    //FIXME big hack, use mutability
+
+    console.log("done createComponents",state)
+    return state 
+
+  },state)
+
+ 
 }
 
-export function removeComponent(state, input){
+export function removeComponents(state, inputs){
+  console.log("removeComponents",inputs)
 
-  state = input.map(function(selection){
-    console.log("removeComponent")
-    let id = selection
+  return inputs.reduce(function(state,selection){   
+    state = mergeData({},state)
+    //FIXME big hack, use mutability
+    delete state[selection]
+    return state 
+  },state)
+
+
+}
+
+export function duplicateComponents(state, inputs){
+  console.log("duplicateComponents",inputs)
+
+  return inputs.reduce(function(state,input){
+    let {id,newId} = input
+
+    let clone = mergeData({},state[id]) 
 
     state = mergeData({},state)
     //FIXME big hack, use mutability
-    delete state[id]
+    state[newId] = clone
     return state 
   })
-
-  return state
-}
-
-export function duplicateComponent(state,input){
-  console.log("duplicateEntity")
-  let {id,newId} = input
-
-  let clone = mergeData({},state[id]) 
-
-  state = mergeData({},state)
-  //FIXME big hack, use mutability
-  state[newId] = clone
-  return state 
+  
 }
 
 //other helpers

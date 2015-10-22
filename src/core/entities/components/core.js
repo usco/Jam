@@ -1,5 +1,5 @@
 import {Rx} from '@cycle/core'
-import {createComponent,removeComponent,makeActionsFromApiFns} from './common'
+import {createComponents,removeComponents,makeActionsFromApiFns} from './common'
 import {makeModelNoHistory, mergeData} from '../../../utils/modelUtils'
 
 ////Entity Core//////
@@ -50,8 +50,8 @@ export function makeCoreSystem(actions){
   let updateFns = {
     setAttribs
     //, clone
-    , createComponent: createComponent.bind(null,componentDefaults)
-    , removeComponent
+    , createComponents: createComponents.bind(null,componentDefaults)
+    , removeComponents
     , clear
   }
 

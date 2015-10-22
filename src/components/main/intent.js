@@ -58,6 +58,7 @@ export default function intent (drivers) {
 
   ///entity actions
 
+  
 
   const reset$         = DOM.select('.reset').events("click")
   

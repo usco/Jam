@@ -1,5 +1,5 @@
 import {Rx} from '@cycle/core'
-import {createComponent,removeComponent,makeActionsFromApiFns} from './common'
+import {createComponents,removeComponents,makeActionsFromApiFns} from './common'
 import {makeModelNoHistory, mergeData} from '../../../utils/modelUtils'
 
 ////Transforms//////
@@ -62,8 +62,8 @@ export function makeTransformsSystem(actions){
   }
 
   let updateFns = { updateRotation, updatePosition, updateScale, updateTransforms
-    , createComponent: createComponent.bind(null,transformDefaults)
-    , removeComponent }
+    , createComponents: createComponents.bind(null,transformDefaults)
+    , removeComponents }
 
   if(!actions){
     actions   = makeActionsFromApiFns(updateFns)

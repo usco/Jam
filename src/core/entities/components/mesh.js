@@ -1,5 +1,5 @@
 import {Rx} from '@cycle/core'
-import {createComponent,removeComponent,makeActionsFromApiFns} from './common'
+import {createComponents,removeComponents,makeActionsFromApiFns} from './common'
 import {makeModelNoHistory, mergeData} from '../../../utils/modelUtils'
 
 
@@ -8,29 +8,33 @@ export function makeMeshSystem(actions){
   const defaults ={
   }
 
-  function createComponentMesh(defaults,state,input){
-    console.log("createComponent for mesh", input)
-    let inputValue =  {}
-    if(input && input.value) inputValue = input.value
+  function createComponentsMesh(defaults, state, inputs){
+    console.log("createComponents for mesh", inputs)
 
-    let newAttrs = inputValue.mesh //{mesh: inputValue.mesh }// mergeData(defaults,inputValue)
+    return inputs.reduce(function(state,input){
+      let inputValue =  {}
+      if(input && input.value) inputValue = input.value
 
-    //auto increment ?
-    //auto generate ?
-    //let id = generateUUID()
-    //if(input && input.id) id = input.id
-    let id = input.id
+      let newAttrs = inputValue.mesh //{mesh: inputValue.mesh }// mergeData(defaults,inputValue)
 
-    state = mergeData({},state)
-    state[id] = newAttrs
-    //FIXME big hack, use mutability
-    return state 
+      //auto increment ?
+      //auto generate ?
+      //let id = generateUUID()
+      //if(input && input.id) id = input.id
+      let id = input.id
+
+      state = mergeData({},state)
+      state[id] = newAttrs
+      //FIXME big hack, use mutability
+      return state 
+    },state)
+
   }
-  
+
   //TODO: should defaults be something like a stand in cube ?
   let updateFns = {
-    createComponent: createComponentMesh.bind(null,undefined)
-    , removeComponent}
+    createComponents: createComponentsMesh.bind(null,undefined)
+    , removeComponents}
   
   if(!actions){
     actions   = makeActionsFromApiFns(updateFns)
