@@ -4,7 +4,7 @@ import {makeModelNoHistory, mergeData} from '../../../utils/modelUtils'
 
 
 ////BoundingBox//////
-export function makeBoundingSystem(){
+export function makeBoundingSystem(actions){
   const defaults = {}
 
   const  boundsDefaults ={
@@ -16,7 +16,11 @@ export function makeBoundingSystem(){
     createComponents: createComponents.bind(null,boundsDefaults)
     , removeComponents}
 
-  let actions = makeActionsFromApiFns(updateFns)
+
+  if(!actions){
+    actions   = makeActionsFromApiFns(updateFns)
+  }
+
   let bounds$ = makeModelNoHistory(defaults, updateFns, actions)
 
   return {bounds$,boundActions:actions}

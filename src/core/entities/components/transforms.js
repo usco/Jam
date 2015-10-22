@@ -49,19 +49,28 @@ export function makeTransformsSystem(actions){
     return state
   }
 
-  function updateTransforms(state, input){
-    //console.log("updateTransforms", input.id)
-    state = mergeData({},state)
+  function updateComponents(state, inputs){
+    console.log("updating transforms", inputs)
 
-    let {id} = input
-    let transforms = input.value || transformDefaults
+    return inputs.reduce(function(state,input){
+      state = mergeData({},state)
+
+      let {id} = input
+      let transforms = input.value || transformDefaults
+      
+      //FIXME big hack, use mutability
+      state[id] = transforms
+      return state
+    },state)
+
     
-    //FIXME big hack, use mutability
-    state[id] = transforms
-    return state
   }
 
-  let updateFns = { updateRotation, updatePosition, updateScale, updateTransforms
+  let updateFns = { 
+    updateRotation
+    , updatePosition
+    , updateScale
+    , updateComponents
     , createComponents: createComponents.bind(null,transformDefaults)
     , removeComponents }
 

@@ -1,5 +1,5 @@
 import {Rx} from '@cycle/core'
-import {createComponents,removeComponents,makeActionsFromApiFns} from './common'
+import {createComponents,removeComponents,duplicateComponents,makeActionsFromApiFns} from './common'
 import {makeModelNoHistory, mergeData} from '../../../utils/modelUtils'
 
 
@@ -34,7 +34,9 @@ export function makeMeshSystem(actions){
   //TODO: should defaults be something like a stand in cube ?
   let updateFns = {
     createComponents: createComponentsMesh.bind(null,undefined)
-    , removeComponents}
+    , duplicateComponents
+    , removeComponents
+  }
   
   if(!actions){
     actions   = makeActionsFromApiFns(updateFns)

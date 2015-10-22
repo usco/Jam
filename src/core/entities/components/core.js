@@ -1,5 +1,5 @@
 import {Rx} from '@cycle/core'
-import {createComponents,removeComponents,makeActionsFromApiFns} from './common'
+import {createComponents,removeComponents,duplicateComponents,makeActionsFromApiFns} from './common'
 import {makeModelNoHistory, mergeData} from '../../../utils/modelUtils'
 
 ////Entity Core//////
@@ -14,16 +14,21 @@ export function makeCoreSystem(actions){
     color: "#07a9ff"
   }
 
-  function setAttribs(state, input){
-    let id  = input.id
+  function updateComponents(state, inputs){
+    console.log("update core attributes",inputs)//, coreChanges, instIds)
 
-    let newAttrs = input.value
-    let orig = state[id]
+    return inputs.reduce(function(state,input){
+      let id  = input.id
 
-    state = mergeData({},state)
-    //FIXME big hack, use mutability
-    state[id] = mergeData(orig,newAttrs)
-    return state
+      let newAttrs = input.value
+      let orig = state[id]
+
+      state = mergeData({},state)
+      //FIXME big hack, use mutability
+      state[id] = mergeData(orig,newAttrs)
+      return state
+    },state)
+    
   }
 
   function clone(state, input){
@@ -48,9 +53,10 @@ export function makeCoreSystem(actions){
   }
 
   let updateFns = {
-    setAttribs
+    updateComponents
     //, clone
     , createComponents: createComponents.bind(null,componentDefaults)
+    , duplicateComponents
     , removeComponents
     , clear
   }
