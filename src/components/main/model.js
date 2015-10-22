@@ -1,5 +1,7 @@
 import {Rx} from '@cycle/core'
 let merge = Rx.Observable.merge
+import {nameCleanup} from '../../utils/formatters'
+
 
 import {combineLatestObj,replicateStream} from '../../utils/obsUtils'
 import {generateUUID} from '../../utils/utils'
@@ -139,8 +141,20 @@ export default function model(props$, actions, drivers){
   const entityTypes$   = entityTypes( actions.entityTypeActions)
   const comments$      = comments( actions.commentActions)
 
-  const entityInstancesBase$  =  entityInstanceIntents(entityTypes$)
-    .addInstances$
+  //TODO : modify entityInstanceIntents
+  const entityInstancesBase$  = entityActions
+    .addEntityInstanceCandidates$
+    .withLatestFrom(entityTypes$,function(candidateData,entityTypes){
+      //let cleanedName = nameCleanup( candidateData.resource.name )
+      //here what we do is find types by mesh name, if any
+      let typeUid = entityTypes.meshNameToPartTypeUId[candidateData.resource.name]
+      let tData = entityTypes
+        .typeData[typeUid]
+
+      let addedInstanceTypeData = tData
+      
+      return [tData]
+    })
     .map(function(newTypes){
       return newTypes.map(function(typeData){
         let instUid = generateUUID()//Math.round( Math.random()*100 )
@@ -156,6 +170,29 @@ export default function model(props$, actions, drivers){
       })
     })
     .shareReplay(1)
+
+  /*entityInstanceIntents(entityTypes$)
+    .addInstances$//this one is certain */
+
+  /*const entityInstancesBase$  =  entityInstanceIntents(entityTypes$)
+    .addInstances$
+    .map(function(newTypes){
+      return newTypes.map(function(typeData){
+        let instUid = generateUUID()//Math.round( Math.random()*100 )
+        let typeUid = typeData.id
+        let instName = typeData.name+"_"+instUid
+
+        let instanceData = {
+          id:instUid
+          ,typeUid
+          ,name:instName
+        }
+        return instanceData
+      })
+    })
+    .shareReplay(1)*/
+
+
 
 
   //create various components' baseis
@@ -176,7 +213,9 @@ export default function model(props$, actions, drivers){
         bbox = { min:bbox.min.toArray(), max:bbox.max.toArray() }
 
         //injecting data like this is the right way ?
+        mesh.material = mesh.material.clone()
         mesh = mesh.clone()
+        
         mesh.userData.entity = {
           iuid:instUid
         }

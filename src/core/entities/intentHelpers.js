@@ -43,6 +43,7 @@ export function entityInstanceIntents(entityTypes$){
       let changes = extractChanges(prev,cur)
     return changes
   })
+  .shareReplay(1)
 
   const addInstances$ = baseOps$
     .pluck("added")

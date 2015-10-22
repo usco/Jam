@@ -36,39 +36,16 @@ export default function intent (drivers) {
   
   //const selectionActions = selectionsIntents({DOM,events}, typesInstancesRegistry$)
 
-  const entityTypeActions = entityTypeIntents({meshSources$,srcSources$})
-  
-
-  /*let createEntityBase$  =  entityInstanceIntents(entityTypes$)
-    .addInstances$
-    .map(function(newTypes){
-      return newTypes.map(function(typeData){
-        let instUid = Math.round( Math.random()*100 )
-        let typeUid = typeData.id
-        let instName = typeData.name+"_"+instUid
-
-        let instanceData = {
-          id:instUid
-          ,typeUid
-          ,name:instName
-        }
-        return instanceData
-      })
-      console.log("DONE with entityInstancesBase")
-    })
-    .shareReplay(1)*/
-
 
   ///entity actions
-
-
-
-  const reset$         = DOM.select('.reset').events("click")
-  
+  const entityTypeActions = entityTypeIntents({meshSources$,srcSources$})
+  const reset$         = DOM.select('.reset').events("click")  
   const removeEntityType$ = undefined //same as delete type/ remove bom entry
-
   const deleteEntityInstance$    = DOM.select('.delete').events("click")
   const duplicateEntityInstance$ = DOM.select('.duplicate').events("click")
+
+  const addEntityInstanceCandidates$ =  entityTypeActions //these MIGHT become instances, not 100% sure
+    .registerTypeFromMesh$
 
   const updateCoreComponent$ = events
     .select("entityInfos")
@@ -92,9 +69,10 @@ export default function intent (drivers) {
     )
 
   const entityActions = {
-     deleteEntityInstance$
-    ,duplicateEntityInstance$
+    addEntityInstanceCandidates$
     ,updateComponent$
+    ,duplicateEntityInstance$
+    ,deleteEntityInstance$
     ,reset$
   }
 
