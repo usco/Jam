@@ -29,21 +29,6 @@ export function applyTransform(data$, transform){
   })
 }
 
-export function makeModel(updateFns, actions, defaults, source){
-  let mods$ =  makeModifications(actions,updateFns)
-
-  //let source$ =  Rx.Observable.just( defaults )//Immutable(defaults) )
-  let source$ = source || just(defaults)
-  source$ = applyDefaults(source$,defaults)
-
-  return mods$
-    .merge(source$)
-    .scan((currentData, modFn) => modFn(currentData))//combine existing data with new one
-    //.distinctUntilChanged()
-    .shareReplay(1)
-  
-}
-
 function logHistory(currentData, history){ 
   let past   = [currentData].concat(history.past)
   let future = []
@@ -53,67 +38,9 @@ function logHistory(currentData, history){
   return history
 }
 
-export function makeModifications(actions, updateFns){
-  let mods$ =  Object.keys(actions).map(function(key){
-    //console.log("actions in makeModifications",key)
-    let op     = actions[key]
-    let opName = key.replace(/\$/g, "")
-    let modFn  = updateFns[opName]
-
-    //here is where the "magic happens"
-    //for each "operation/action" we map it to an observable with history & state
-    let mod$   = op
-      .map((input) => ({state,history}) => {
-
-      history = {}//logHistory(state, history)
-      state   = modFn(state, input)//call the adapted function
-
-      return {state,history}//Immutable({state,history})
-    })
-
-    //console.log("op",op,"opName",opName,"modFn",modFn)
-    if(modFn){
-      return mod$ 
-    }
-
-    //how to make this better? 
-    /*if(opName==="undo"){
-      return actions.undo$
-        .map((toggleInfo) => ({state,history}) => {
-          console.log("Undoing")
-
-          let nState     = history.past[0]
-          let past   = history.past.slice(1)
-          let future = [state].concat(history.future)
-
-          history = mergeData(history,{past,future})
-
-          return Immutable({state:nState,history})
-        })
-    }
-    if(opName === "redo"){
-      return actions.redo$
-        .map((toggleInfo) => ({state,history}) => {
-          console.log("Redoing")
-
-          let nState = history.future[0]
-          let past = [state].concat(history.past) 
-          let future = history.future.slice(1)
-
-          history = mergeData(history,{past,future})
-
-          return Immutable({state:nState,history})
-        })
-    }*/
-
-  })
-  .filter(e=>e!==undefined)
-
-  /*
-  //handle undo & redo seperatly, they are alway the same
-  //we need to seperate this somehow?
-  //why does this not work ??
-  let undoMod$ = actions.undo$
+//history
+function makeUndoMod$(actions){
+  return actions.undo$
     .map((toggleInfo) => ({state,history}) => {
       console.log("Undoing")
 
@@ -125,8 +52,10 @@ export function makeModifications(actions, updateFns){
 
       return Immutable({state:nState,history})
     })
+}
 
-  let redoMod$ = actions.redo$
+function makeRedoMod$(actions){
+  return actions.redo$
     .map((toggleInfo) => ({state,history}) => {
       console.log("Redoing")
 
@@ -137,18 +66,16 @@ export function makeModifications(actions, updateFns){
       history = mergeData(history,{past,future})
 
       return Immutable({state:nState,history})
-    })*/
-
-  return merge(
-    mods$
-  )
+    })
 }
+
 
 
 ///
 let transform = Immutable
 
-export function makeModificationsNoHistory(actions, updateFns, doApplyTransform){
+export function makeModifications(actions, updateFns, options){
+
 
   let mods$ =  Object.keys(actions).map(function(key){
     //console.log("actions in makeModifications",key)
@@ -156,21 +83,33 @@ export function makeModificationsNoHistory(actions, updateFns, doApplyTransform)
     let opName = key.replace(/\$/g, "")
     let modFn  = updateFns[opName]
 
+     //how to make this better? 
+    if(opName==="undo") return makeUndoMod$(actions)
+    if(opName === "redo") return makeRedoMod$(actions)
+
     //here is where the "magic happens"
     //for each "operation/action" we map it to an observable with history & state
     let mod$   = op
       .map((input) => (state) => {
 
-      //history = logHistory(state, history)
-      state   = modFn(state, input)//call the adapted function
+        if(options.history)
+        { 
+          let history = logHistory(state, state.history)
+        }
+        state   = modFn(state, input)//call the adapted function
 
-      if(doApplyTransform)//if we need to coerce it to immutable etc
-      {
-        state = transform(state)
-      }
+        if(options.history){
+          state = {state ,history}
+        }
 
-      return state //,history})
-    })
+
+        if(options.doApplyTransform)//if we need to coerce data  to immutable etc
+        {
+          state = transform(state)
+        }
+
+        return state
+      })
 
     //console.log("op",op,"opName",opName,"modFn",modFn)
     if(modFn){
@@ -179,20 +118,21 @@ export function makeModificationsNoHistory(actions, updateFns, doApplyTransform)
   })
   .filter(e=>e!==undefined)
 
-  return Rx.Observable.merge(
+  return merge(
     mods$
   )
 }
 
 
-export function makeModelNoHistory(defaults, updateFns, actions, source, doApplyTransform=false){
-  let mods$ =  makeModificationsNoHistory(actions,updateFns, doApplyTransform)
+
+export function makeModel(defaults, updateFns, actions, source, options={doApplyTransform:false} ){
+  let mods$ =  makeModifications(actions, updateFns, options)
   
   let source$ = source || just( defaults)
 
   source$ = applyDefaults(source$, defaults)
 
-  if(doApplyTransform){
+  if(options.doApplyTransform){
     source$ = applyTransform( source$, transform )
   }
 
