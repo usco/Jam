@@ -8,7 +8,7 @@ let log = logger("comments")
 log.setLevel("info")
 
 import {toArray, generateUUID} from '../utils/utils'
-import {makeModelNoHistory, mergeData} from '../utils/modelUtils'
+import {makeModel, mergeData} from '../utils/modelUtils'
 
 //"comments" system
 //helper function to get data by key
@@ -51,7 +51,7 @@ function comments(actions, source){
   }
 
   let updateFns  = {addComments}
-  return makeModelNoHistory(defaults, updateFns, actions, source,true)
+  return makeModel(defaults, updateFns, actions, source, {doApplyTransform:true})
 }
 
 export default comments

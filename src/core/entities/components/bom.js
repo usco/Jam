@@ -18,7 +18,7 @@ function makeBomSystem(){
     , removeBomEntry$: new Rx.Subject()}
 
   let updateFns = {removeComponents, addBomEntry, removeBomEntry}
-  let meta$ = makeModelNoHistory(defaults, updateFns, actions)
+  let meta$ = makeModel(defaults, updateFns, actions)
 
   return {bom$,bomActions:actions}
 }

@@ -1,5 +1,5 @@
 import {Rx} from '@cycle/core'
-import {makeModelNoHistory, mergeData} from '../../../utils/modelUtils'
+import {makeModel, mergeData} from '../../../utils/modelUtils'
 import {generateUUID} from '../../../utils/utils'
 import {combineLatestObj} from '../../../utils/obsUtils'
 let just = Rx.Observable.just

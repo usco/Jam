@@ -1,6 +1,6 @@
 import {Rx} from '@cycle/core'
 import {createComponents,removeComponents,makeActionsFromApiFns} from './common'
-import {makeModelNoHistory, mergeData} from '../../../utils/modelUtils'
+import {makeModel, mergeData} from '../../../utils/modelUtils'
 
 ////Transforms//////
 
@@ -78,7 +78,7 @@ export function makeTransformsSystem(actions){
     actions   = makeActionsFromApiFns(updateFns)
   }
 
-  let transforms$ = makeModelNoHistory(defaults, updateFns, actions)
+  let transforms$ = makeModel(defaults, updateFns, actions)
 
   return {transforms$,transformActions:actions}
 }

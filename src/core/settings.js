@@ -3,15 +3,17 @@ let fromEvent = Rx.Observable.fromEvent
 let Observable = Rx.Observable
 let merge = Rx.Observable.merge
 import combineTemplate from 'rx.observable.combinetemplate'
-import {makeModelNoHistory, mergeData} from '../utils/modelUtils'
+import {makeModel, mergeData} from '../utils/modelUtils'
 
 
  function remapStructure(input){
+  console.log("remapStructure",input)
     if(input.showGrid !==undefined ) return {grid:{show:input.showGrid}}
     if(input.showAnnot !==undefined ) return {annotations:{show:input.showAnnot}}
     if(input.autoRotate !==undefined ) return {camera:{autoRotate:input.autoRotate}}
 
     if(input.appMode !==undefined ) return {mode:input.appMode}
+    if(input.setActiveTool !== undefined) return {activeTool:input.activeTool}
 
     return input
 }
@@ -47,7 +49,7 @@ function settings(actions, source){
   }
 
   let updateFns  = {changeSetting}
-  return makeModelNoHistory(defaults, updateFns, actions, source)
+  return makeModel(defaults, updateFns, actions, source)
 }
 
 export default settings

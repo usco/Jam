@@ -10,7 +10,7 @@ log.setLevel("debug")
 import {generateUUID} from '../../utils/utils'
 import {nameCleanup} from '../../utils/formatters'
 import {computeBoundingBox,computeBoundingSphere} from 'glView-helpers/src/meshTools/computeBounds'
-import {makeModelNoHistory} from '../../utils/modelUtils'
+import {makeModel, mergeData} from '../../utils/modelUtils'
 
 
 function typeUidFromMeshName(meshNameToPartTypeUId, meshName){
@@ -41,13 +41,13 @@ function typeFromMeshData(data, typeUidFromMeshName){
 
 function updateTypesData(newTypeData, currentData){
   //save new data
-  let regData = currentData
+  let regData = currentData//.asMutable() //FIXME ...errr
   let {id, name, meshName,templateMesh} = newTypeData
   
-  let typeData              = regData.typeData || {}
-  let meshNameToPartTypeUId = regData.meshNameToPartTypeUId || {}
-  let typeUidToMeshName     = regData.typeUidToMeshName || {}
-  let typeUidToTemplateMesh = regData.typeUidToTemplateMesh || {}
+  let typeData              = regData.typeData//.asMutable()
+  let meshNameToPartTypeUId = regData.meshNameToPartTypeUId//.asMutable()
+  let typeUidToMeshName     = regData.typeUidToMeshName//.asMutable()
+  let typeUidToTemplateMesh = regData.typeUidToTemplateMesh//.asMutable()
 
   if(id && meshName && templateMesh){
     typeUidToMeshName[id]      = meshName
@@ -55,7 +55,7 @@ function updateTypesData(newTypeData, currentData){
     meshNameToPartTypeUId[meshName] = id
 
     typeData[id]={
-        id
+      id
       ,name
     }
   }
@@ -74,7 +74,7 @@ function updateTypesData(newTypeData, currentData){
 
 function registerTypeFromMesh(state,input){
   //log.info("I would register something", state, input)
-  //console.log("I would register something", state, input)
+  console.log("I would register something", state, input)
 
   //prepare lookup function for finding already registered meshes
   let typeUidLookup = typeUidFromMeshName.bind(null,state.meshNameToPartTypeUId)
@@ -100,7 +100,7 @@ function entityTypes(actions, source){
   }
 
   let updateFns  = {registerTypeFromMesh, clearTypes}
-  return makeModelNoHistory(defaults, updateFns, actions)
+  return makeModel(defaults, updateFns, actions, undefined, {doApplyTransform:false})//since we store meshes, we cannot use immutable data
 }
 
 export default entityTypes

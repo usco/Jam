@@ -3,7 +3,7 @@ let Observable = Rx.Observable
 let merge = Rx.Observable.merge
 
 import {toArray} from '../utils/utils'
-import {makeModelNoHistory, mergeData} from '../utils/modelUtils'
+import {makeModel, mergeData} from '../utils/modelUtils'
 
 
 function selectEntities(state, input){
@@ -30,7 +30,7 @@ function selections(actions, source){
   }
 
   let updateFns  = {selectEntities,selectBomEntries}
-  return makeModelNoHistory(defaults, updateFns, actions)
+  return makeModel(defaults, updateFns, actions)
 }
 
 export default selections

@@ -1,6 +1,6 @@
 import {Rx} from '@cycle/core'
 import {createComponents,removeComponents,duplicateComponents,makeActionsFromApiFns} from './common'
-import {makeModelNoHistory, mergeData} from '../../../utils/modelUtils'
+import {makeModel, mergeData} from '../../../utils/modelUtils'
 
 
 ////Mesh//////
@@ -42,7 +42,7 @@ export function makeMeshSystem(actions){
     actions   = makeActionsFromApiFns(updateFns)
   }
 
-  let meshes$ = makeModelNoHistory(defaults, updateFns, actions, undefined, false)//last flag set to false because we
+  let meshes$ = makeModel(defaults, updateFns, actions, undefined, {doApplyTransform:false})//last flag set to false because we
   //do not want immutable data for meshes ?
 
   return {meshes$,meshActions:actions}

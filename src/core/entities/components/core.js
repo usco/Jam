@@ -1,6 +1,6 @@
 import {Rx} from '@cycle/core'
 import {createComponents,removeComponents,duplicateComponents,makeActionsFromApiFns} from './common'
-import {makeModelNoHistory, mergeData} from '../../../utils/modelUtils'
+import {makeModel, mergeData} from '../../../utils/modelUtils'
 
 ////Entity Core//////
 export function makeCoreSystem(actions){
@@ -65,7 +65,7 @@ export function makeCoreSystem(actions){
     actions   = makeActionsFromApiFns(updateFns)
   }
 
-  let core$ = makeModelNoHistory(defaults, updateFns, actions)
+  let core$ = makeModel(defaults, updateFns, actions)
 
   return {core$,coreActions:actions}
 }

@@ -1,6 +1,6 @@
 import {Rx} from '@cycle/core'
 import {createComponents,removeComponents,makeActionsFromApiFns} from './common'
-import {makeModelNoHistory, mergeData} from '../../../utils/modelUtils'
+import {makeModel, mergeData} from '../../../utils/modelUtils'
 
 
 ////BoundingBox//////
@@ -21,7 +21,7 @@ export function makeBoundingSystem(actions){
     actions   = makeActionsFromApiFns(updateFns)
   }
 
-  let bounds$ = makeModelNoHistory(defaults, updateFns, actions)
+  let bounds$ = makeModel(defaults, updateFns, actions)
 
   return {bounds$,boundActions:actions}
 }

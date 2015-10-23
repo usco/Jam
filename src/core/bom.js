@@ -5,7 +5,7 @@ let merge = Rx.Observable.merge
 
 import {toArray} from '../utils/utils'
 import {exists} from '../utils/obsUtils'
-import {makeModelNoHistory, mergeData} from '../utils/modelUtils'
+import {makeModel, mergeData} from '../utils/modelUtils'
 
 import {findIndex,propEq,adjust} from 'ramda'
 
@@ -93,7 +93,7 @@ function updateBomEntriesCount(state, inputs){
       (item) => mergeData({},item,{qty:item.qty+offset})
       , findIndex(propEq('id', id))(state.entries) //get index of the one we want to change
       , state.entries)
-    
+
     return {entries,byId:{}}
   },state)
 
@@ -103,7 +103,7 @@ function updateBomEntriesCount(state, inputs){
 function bom(actions, source) {
   //let updateFns  = {addBomEntries,createBomEntries,removeBomEntries,clearBomEntries}
   let updateFns = {addBomEntries, updateBomEntries, updateBomEntriesCount, clearBomEntries}
-  return makeModelNoHistory(defaults, updateFns, actions, source, false)
+  return makeModel(defaults, updateFns, actions, source, {doApplyTransform:false})
 }
 
 
