@@ -23,13 +23,32 @@ function eventDriver(outgoing$){
     catch(error){}
   }
 
-  function getData(path){
+  function makeEventsSelector(source$){
+    return function events(eventName){
 
-    return outgoing$.map( deep_value.bind(null,path) ).filter(e=>e!==undefined)
+      return source$.flatMapLatest(source => {
+        if (!source) {
+          return Rx.Observable.empty()
+        }
+        return source[eventName]
+      }).share()
+    }
+  }
+
+
+  function makeSourceSelector(path){
+    const source$ = outgoing$
+      .map( deep_value.bind(null,path) )
+      .filter(e=>e!==undefined)
+      //.shareReplay(1)
+    const events = makeEventsSelector(source$)
+    return {
+      events 
+    }
   }
 
   return {
-    select: getData
+    select: makeSourceSelector
   }
 }
 

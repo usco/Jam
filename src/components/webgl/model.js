@@ -75,31 +75,38 @@ export default function model(props$, actions){
     //.distinctUntilChanged()
     //.do(e=>console.log("DONE with items in GLView",e))
 
+  //"external" selected meshes
   const selectedMeshesFromSelections$ = selections$
     .withLatestFrom(meshes$,function(selections,meshes){
-      return selections.map(function(s){
-        return meshes[s.id]
-      })
+      return selections
+        .filter(exists)
+        .map(function(s){
+          return meshes[s.id]
+        })
     })
     .distinctUntilChanged()
     .shareReplay(1)
 
-  const selectedMeshes$ = actions.selectMeshes$
-    //this limits "selectability" to transforms & default 
-    . withLatestFrom(activeTool$,function(meshes,tool)
-      {
-        let idx = ["translate","rotate","scale",undefined].indexOf(tool)
-        let result = (idx > -1) ? meshes : [];
-        return result
-    })
+  const selectedMeshes$ = actions.selectMeshes$//these are only selections made WITHIN the GL view
     .merge(
       selectedMeshesFromSelections$
     )
+    //this limits "selectability" to transforms & default 
+    .withLatestFrom(activeTool$,function(meshes,tool)
+      { 
+        let idx = ["translate","rotate","scale",undefined].indexOf(tool)
+        let result = (idx > -1) ? meshes : [];
+
+        return result
+    })
+    .distinctUntilChanged()
     .startWith([])
+
 
   return combineLatestObj({
     items$
     ,selectedMeshes$
   })
+
  
 }

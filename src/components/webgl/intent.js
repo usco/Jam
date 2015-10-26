@@ -107,7 +107,7 @@ export default function intent(drivers, data){
       ,longTapsWPicking$.map( meshFrom )
     )
     .map(toArray)//important !!
-    .distinctUntilChanged()
+    //.distinctUntilChanged()
     .shareReplay(1)
 
 
@@ -137,7 +137,6 @@ export default function intent(drivers, data){
         sca:t.scale.toArray()
       }
     })
-
 
   return {
     userAction$

@@ -13,68 +13,45 @@ export function reverseSelections(intents, idsMapper$){
   }
 
   //what we want is actually typeUid!
-  //so typeUidFromInstUid()
-
   //select bom entries from entities
-  let selectBomEntries$ = intents
+  const selectBomEntries$ = intents
     .selectEntities$
-    .do(e=>console.log("reversing selections to selectBomEntries"))
+    .do(e=>console.log("reversing instance selections to selectBomEntries"))
     .withLatestFrom(idsMapper$,function(entityIds,idsMapper){
-
-
       return flatten( entityIds.map(id=>idsMapper.typeUidFromInstUid[id]) ).filter(exists)
     })
     //.do(e=>console.log("selectedBomEntries",e))
-
+    .merge(intents.selectBomEntries$)
     
-  //select entities from bom entries
-  //in this case instUidFromTypeUid
-  
-  let selectEntities$ = intents
+  //select entities from bom entries  
+  const selectEntities$ = intents
     .selectBomEntries$ 
-    .do(e=>console.log("reversing selections to selectEntities"))
-    .withLatestFrom(idsMapper$,function(bomIds,idsMapper){
-      
+    .do(e=>console.log("reversing BOM selections to selectEntities"))
+    .withLatestFrom(idsMapper$,function(bomIds,idsMapper){ 
       return flatten( bomIds.map(id=>idsMapper.instUidFromTypeUid[id]) ).filter(exists)
     })
     //.do(e=>console.log("selectedEntities",e))
+    .merge(intents.selectEntities$)
     
-    /*.withLatestFrom(entities$,function(bomIds,entities){
-      return bomIds.flatMap(function(typeUid){
-        return entities.instances.filter( i => i.typeUid === typeUid ).map( i => i.iuid )
-      })
-    })*/
-  //selectEntities$.subscribe(e=>console.log("for these bomEntries, instIds are",e))
-  //selectBomEntries$.subscribe(e=>console.log("for these entities, typeUids are",e))
-
-  selectEntities$   = selectEntities$.merge(intents.selectEntities$)
-  selectBomEntries$ = selectBomEntries$.merge(intents.selectBomEntries$)
-
+    
   return{
-    selectEntities$
-    ,selectBomEntries$
+    selectEntities$:selectEntities$.distinctUntilChanged(null,equals)
+    ,selectBomEntries$:selectBomEntries$.distinctUntilChanged(null,equals)
   }
 }
 
 
 export function selectionsIntents(drivers, idsMapper$){
-  //console.log("selectionsIntents")
-  let selectEntities$ = drivers.events.select("gl")//.events("selectedMeshes$")
-    .flatMap(e=>e.selectedMeshes$)
-    .do(e=>console.log("gl select",e))
-    //.filter(exists)
+  
+  let selectEntities$ = drivers.events.select("gl").events("selectedMeshes$")
     .map(extractEntities)
+    .do(e=>console.log("gl select2",e))
     .map(toArray)
-    .distinctUntilChanged(null,equals)
     .shareReplay(1)
 
-  let selectBomEntries$ = drivers.events.select("bom")//.events("entryTaps$")
-    .flatMap(e=>e.entryTapped$)
-    .do(e=>console.log("bom select",e))
-    //.filter(exists)
+  let selectBomEntries$ = drivers.events.select("bom").events("entryTapped$")
     .map(toArray)
     .do(e=>console.log("bom select2",e))
-    .distinctUntilChanged(null,equals)
     .shareReplay(1)
 
   return reverseSelections({

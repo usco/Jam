@@ -48,16 +48,19 @@ export default function intent (drivers) {
 
   const updateCoreComponent$ = events
     .select("entityInfos")
-    .flatMap(e=>e.changeCore$)
+    .events("changeCore$")
+    //.flatMap(e=>e.changeCore$)
     .map(c=>( {target:"core",data:c}))
 
   const updateTransformComponent$ = events
     .select("entityInfos")
-    .flatMap(e=>e.changeTransforms$)
+    .events("changeTransforms$")
+    //.flatMap(e=>e.changeTransforms$)
     .merge(
       events
         .select("gl")
-        .flatMap(e=>e.selectionsTransforms$)
+        .events("selectionsTransforms$")
+        //.flatMap(e=>e.selectionsTransforms$)
         .debounce(20)
     )
     .map(c=>( {target:"transforms",data:c}))

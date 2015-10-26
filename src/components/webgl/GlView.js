@@ -505,7 +505,6 @@ function GLView({DOM, props$}){
   //transformControls handling
   //we modify the transformControls mode based on the active tool
   //every time either activeTool or selection changes, reset/update transform controls
-  let selectedMeshes$ = Rx.Observable.just([])
   let selectedMeshesChanges$ = state$.pluck("selectedMeshes").distinctUntilChanged()
     .scan({prev:[],cur:[]},function(acc, x){
       let cur  = x
@@ -550,7 +549,7 @@ function GLView({DOM, props$}){
       
     ,fromEvent(controls,'change')
     ,fromEvent(transformControls,'change')
-    //,selections$
+    ,state$.pluck("selectedMeshes")
 
     ,windowResizes$.do(handleResize)//we need the resize to take place before we render
   )
@@ -603,7 +602,7 @@ function GLView({DOM, props$}){
       ,longTaps$:actions.longTapsWPicking$
 
       ,selectionsTransforms$:actions.selectionsTransforms$
-      ,selectedMeshes$:state$.pluck("selectedMeshes").distinctUntilChanged()
+      ,selectedMeshes$:actions.selectMeshes$
     }
   }
 }
