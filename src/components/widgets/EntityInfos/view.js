@@ -112,6 +112,7 @@ function transformInputs(transforms, fieldName, displayName, controlsStep, numbe
 
     transforms[fieldName].forEach(function(entry, index){
       entry = formatNumberTo(entry, numberPrecision)
+      entry = entry.slice(0,3) //we only want x,y,z values, nothing else
       inputs.push(
         <input type="number" value={entry} step={controlsStep} className={`transformsInput`}
           attributes={ {'data-transform': `${fieldName}_${index}` } }>
@@ -131,8 +132,7 @@ export default function view(state$){
   let numberPrecision = 2
   let controlsStep = 0.1
 
-  return combineLatest(state$
-    ,function(state){
+  return state$.map(function(state){
       let {core,transforms} = state
 
       if(!core || !transforms){
@@ -140,7 +140,8 @@ export default function view(state$){
       }
       if(transforms.length>0) transforms = transforms[0]
       if(core.length>0) core = core[0]
-        //console.log("core,transforms",core,transforms)
+      
+      //console.log("core,transforms",core,transforms)
 
       return <div className="toolBarBottom entityInfos">
         {nameInput(core)}

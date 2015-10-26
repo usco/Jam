@@ -20,6 +20,8 @@ function model(props$, actions){
   let transforms$ = props$.pluck('transforms').filter(exists).startWith(undefined)
 
   return combineLatestObj({core$, transforms$, comments$})
+    .distinctUntilChanged()
+    .shareReplay(1)
 }
 
 //err bad naming ..also should this be part of the model 
