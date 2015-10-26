@@ -2,6 +2,7 @@ import {Rx} from '@cycle/core'
 let just = Rx.Observable.just
 
 import {getExtension, itemsEqual, exists} from '../../utils/utils'
+import {equals} from 'Ramda'
 import {combineLatestObj} from '../../utils/obsUtils'
 
 //views etc
@@ -26,10 +27,9 @@ export function EntityInfosWrapper(state$, DOM) {
       .pluck("selections")
       .map(s=>s.instIds)
       .filter(s=>s !== undefined)
-      .distinctUntilChanged(null,itemsEqual)
+      .distinctUntilChanged(null,equals)
 
     return selectedInstIds$
-      .do(e=>console.log("selectedInstIds",e))
       .combineLatest(state$,function(ids,state){
         
         let transforms = ids.map(function(id){
@@ -74,7 +74,7 @@ export function GLWrapper(state$, DOM){
     .pluck("selections")
     .map(s=>s.instIds)
     .filter(s=>s !== undefined)
-    .distinctUntilChanged(null,itemsEqual)
+    .distinctUntilChanged(null,equals)
 
   const selections$ = selectedInstIds$
     .withLatestFrom(state$,function(ids,state){
@@ -107,7 +107,7 @@ export function CommentsWrapper(state$, DOM){
     .pluck("selections")
     .map(s=>s.instIds)
     .filter(s=>s !== undefined)
-    .distinctUntilChanged(null,itemsEqual)
+    .distinctUntilChanged(null,equals)
 
   const selections$ = selectedInstIds$
     .combineLatest(state$,function(ids,state){

@@ -36,11 +36,10 @@ export default function intent (drivers) {
   
   //const selectionActions = selectionsIntents({DOM,events}, typesInstancesRegistry$)
 
-
   ///entity actions
-  const entityTypeActions = entityTypeIntents({meshSources$,srcSources$})
-  const reset$         = DOM.select('.reset').events("click")  
-  const removeEntityType$ = undefined //same as delete type/ remove bom entry
+  const entityTypeActions        = entityTypeIntents({meshSources$,srcSources$})
+  const reset$                   = DOM.select('.reset').events("click")
+  const removeEntityType$        = undefined //same as delete type/ remove bom entry
   const deleteEntityInstance$    = DOM.select('.delete').events("click")
   const duplicateEntityInstance$ = DOM.select('.duplicate').events("click")
 
@@ -76,8 +75,8 @@ export default function intent (drivers) {
     ,reset$
   }
 
-  const bomActions = bomIntent(drivers)
-  
+  //const bomActions = bomIntent(drivers)
+  const bomActions = {}  
   /*let foo$ = Rx.Observable.just("bar")
   let reset2$ = DOM.select('.reset').events("click")
   DOM.select('.reset').events("click").subscribe(e=>console.log("reseting bom1"))

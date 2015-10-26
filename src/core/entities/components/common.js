@@ -5,22 +5,7 @@ import {combineLatestObj} from '../../../utils/obsUtils'
 let just = Rx.Observable.just
 import {isEmpty} from 'ramda'
 
-//possible helpers
-function addEntity(inputs){
 
-}
-
-function deleteEntity(id){
-  return actions.map(function(action){
-    action.removeComponents$.onNext({id})
-  })
-}
-
-function duplicateEntity(id){
-  return actions.map(function(action){
-    action.cloneComponent$.onNext({id})
-  })
-}
 
 /////////
 //used for all
@@ -56,7 +41,7 @@ export function removeComponents(state, inputs){
   return inputs.reduce(function(state,selection){   
     state = mergeData({},state)
     //FIXME big hack, use mutability
-    delete state[selection]
+    delete state[selection.id]
     return state 
   },state)
 

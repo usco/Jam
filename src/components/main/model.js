@@ -1,10 +1,11 @@
 import {Rx} from '@cycle/core'
 let merge = Rx.Observable.merge
+import {flatten} from 'Ramda'
+
 import {nameCleanup} from '../../utils/formatters'
 
-
 import {combineLatestObj,replicateStream} from '../../utils/obsUtils'
-import {generateUUID} from '../../utils/utils'
+import {generateUUID,exists,toArray} from '../../utils/utils'
 
 import {makeCoreSystem} from '../../core/entities/components/core' 
 import {makeTransformsSystem} from '../../core/entities/components/transforms' 
@@ -95,7 +96,7 @@ import bom         from '../../core/bom'
   //entityTypes$.subscribe(e=>console.log("entityTypes",e))
   //entityInstancesBase$.subscribe(e=>console.log("entityInstancesBase",e))
 
-function makeRegistry(instances$,types$){
+function makeRegistry(instances$, types$){
   //register type=> instance & vice versa
   let base = {typeUidFromInstUid:{},instUidFromTypeUid:{}}
 
@@ -192,9 +193,6 @@ export default function model(props$, actions, drivers){
     })
     .shareReplay(1)*/
 
-
-
-
   //create various components' baseis
   let componentBase$ = entityInstancesBase$
     .withLatestFrom(entityTypes$,function(instances,types){
@@ -253,7 +251,7 @@ export default function model(props$, actions, drivers){
     const updateComponents$ = entityActions.updateComponent$
        .filter(u=>u.target === "core")
        .pluck("data")
-       .withLatestFrom(currentSelections$,function(coreChanges, instIds){
+       .withLatestFrom(currentSelections$.map(s => s.map(s=>s.id)),function(coreChanges, instIds){
           return instIds.map(function(instId){
             return {id:instId, value:coreChanges}
           })
@@ -307,7 +305,8 @@ export default function model(props$, actions, drivers){
     const updateComponents$ = entityActions.updateComponent$
        .filter(u=>u.target === "transforms")
        .pluck("data")
-       .withLatestFrom(currentSelections$,function(transforms, instIds){
+       .withLatestFrom(currentSelections$.map(s => s.map(s=>s.id)),function(transforms, instIds){
+          console.log("instIds",instIds)
           return instIds.map(function(instId){
             return {id:instId, value:transforms}
           })
@@ -336,21 +335,19 @@ export default function model(props$, actions, drivers){
         return selections
       })
     
-    const reset$           = entityActions.reset$
-
     return {
       createComponents$
       ,removeComponents$
-      ,clear:reset$
+      ,clear: entityActions.reset$
     }
   }
 
   const proxySelections$ = new Rx.ReplaySubject(1)
 
-  let coreActions      = remapCoreActions(entityActions,componentBase$,proxySelections$)
-  let meshActions      = remapMeshActions(entityActions,componentBase$,proxySelections$)
-  let transformActions = remapTransformActions(entityActions,componentBase$,proxySelections$)
-  let boundActions     = remapBoundsActions(entityActions,componentBase$,proxySelections$)
+  let coreActions      = remapCoreActions(entityActions, componentBase$, proxySelections$)
+  let meshActions      = remapMeshActions(entityActions, componentBase$, proxySelections$)
+  let transformActions = remapTransformActions(entityActions, componentBase$, proxySelections$)
+  let boundActions     = remapBoundsActions(entityActions, componentBase$, proxySelections$)
 
   let {core$}          = makeCoreSystem(coreActions)
   let {meshes$}        = makeMeshSystem(meshActions)
@@ -358,20 +355,30 @@ export default function model(props$, actions, drivers){
   let {bounds$}        = makeBoundingSystem(boundActions)
 
 
-  const typesInstancesRegistry$ =  makeRegistry(core$,entityTypes$)
+  const typesInstancesRegistry$ =  makeRegistry(core$, entityTypes$)  
   const selections$  = selections( selectionsIntents({DOM,events}, typesInstancesRegistry$) )
-  const currentSelections$ = selections$.pluck("instIds")
+  const currentSelections$ = selections$//selections$.pluck("instIds")
+    .withLatestFrom(typesInstancesRegistry$,function(selections,registry){
+      return selections.instIds.map(function(id){
+        const typeUid = registry.typeUidFromInstUid[id]
+        return {id, typeUid}
+      })
+    })
     .distinctUntilChanged()
     .shareReplay(1)
+
+  /*currentSelections$
+    .subscribe(e=>console.log("currentSelections",e))
+  currentSelections$
+    .map(s => s.map(s=>s.id))
+    .subscribe(e=>console.log("currentSelections, ids",e))
+  typesInstancesRegistry$
+    .subscribe(e=>console.log("registry updated",e))*/
 
   //close some cycles
   replicateStream(currentSelections$,proxySelections$)
 
-
   //BOM
-  function createBomActions(){
-  }
-
   const addBomEntries$ = entityInstanceIntents(entityTypes$)
     .addInstances$//in truth this just mean "a new type was added"
     .map(function(typeDatas){
@@ -389,10 +396,12 @@ export default function model(props$, actions, drivers){
           return {offset:1,id}
         })
     })
+
   const decreaseBomEntries$ = coreActions
     .removeComponents$
     .map(function(data){
       return data
+        .map(d=>d.typeUid)
         .map(function(id){
           return {offset:-1,id}
         })
@@ -402,8 +411,18 @@ export default function model(props$, actions, drivers){
     increaseBomEntries$
     , decreaseBomEntries$
   )
-  
-  let bomActions = Object.assign( {addBomEntries$,updateBomEntriesCount$},actions.bomActions )
+
+  let clearBomEntries$ = merge(
+    entityActions.reset$//this works
+    //drivers.DOM.select('.clearAll').events('click')//this does not
+    //,drivers.DOM.select('.reset').events('click')//DEBUG ONLY
+    //, drivers.postMessage
+    //  .filter(hasClear)
+  )
+  clearBomEntries$.subscribe(e=>console.log("gnagna",e))
+
+
+  let bomActions = Object.assign( {addBomEntries$, updateBomEntriesCount$, clearBomEntries$} )
   const bom$ = bom(bomActions)
 
   //loading flag , mostly for viewer mode
@@ -413,6 +432,8 @@ export default function model(props$, actions, drivers){
       ,addInstance$
         .map(false)
     ).startWith(false)*/
+
+  
 
   //combine all the above 
   const state$ = combineLatestObj({

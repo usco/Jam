@@ -1,5 +1,6 @@
 import {toArray,exists} from '../../../utils/utils'
 import {hasEntity, getEntity} from '../../../utils/entityUtils'
+import {flatten,equals} from 'Ramda'
 
 function extractEntities(data){
   return data.filter(hasEntity).map(getEntity).map(e=>e.iuid)
@@ -20,7 +21,8 @@ export function reverseSelections(intents, idsMapper$){
     .do(e=>console.log("reversing selections to selectBomEntries"))
     .withLatestFrom(idsMapper$,function(entityIds,idsMapper){
 
-      return entityIds.map(id=>idsMapper.typeUidFromInstUid[id]).filter(exists)
+
+      return flatten( entityIds.map(id=>idsMapper.typeUidFromInstUid[id]) ).filter(exists)
     })
     //.do(e=>console.log("selectedBomEntries",e))
 
@@ -33,7 +35,7 @@ export function reverseSelections(intents, idsMapper$){
     .do(e=>console.log("reversing selections to selectEntities"))
     .withLatestFrom(idsMapper$,function(bomIds,idsMapper){
       
-      return bomIds.map(id=>idsMapper.instUidFromTypeUid[id]).filter(exists)
+      return flatten( bomIds.map(id=>idsMapper.instUidFromTypeUid[id]) ).filter(exists)
     })
     //.do(e=>console.log("selectedEntities",e))
     
@@ -59,16 +61,20 @@ export function selectionsIntents(drivers, idsMapper$){
   //console.log("selectionsIntents")
   let selectEntities$ = drivers.events.select("gl")//.events("selectedMeshes$")
     .flatMap(e=>e.selectedMeshes$)
-    .filter(exists)
+    .do(e=>console.log("gl select",e))
+    //.filter(exists)
     .map(extractEntities)
-    .distinctUntilChanged()
+    .map(toArray)
+    .distinctUntilChanged(null,equals)
     .shareReplay(1)
 
   let selectBomEntries$ = drivers.events.select("bom")//.events("entryTaps$")
     .flatMap(e=>e.entryTapped$)
-    .filter(exists)
+    .do(e=>console.log("bom select",e))
+    //.filter(exists)
     .map(toArray)
-    .distinctUntilChanged()
+    .do(e=>console.log("bom select2",e))
+    .distinctUntilChanged(null,equals)
     .shareReplay(1)
 
   return reverseSelections({

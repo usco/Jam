@@ -16,12 +16,14 @@ export function bomIntent(drivers){
 
   const clearBomEntries$ = merge(
     drivers.DOM.select('.clearAll').events('click')
-    ,drivers.DOM.select('.reset').events('click')//DEBUG ONLY
+    , drivers.DOM.select('.reset').events('click')//DEBUG ONLY
     , drivers.postMessage
       .filter(hasClear)
   )
-    .map(true)
-    .shareReplay(1)
+    //.map(true)
+    //.shareReplay(1)
+
+  //clearBomEntries$.subscribe(e=>console.log("clearBomEntries",e))
 
   return {
     //removeEntries$:deleteInstances$
