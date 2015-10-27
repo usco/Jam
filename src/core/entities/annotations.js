@@ -11,7 +11,6 @@ import {exists} from '../../utils/obsUtils'
 
 //import {clearActiveTool$} from 
 
-
 import logger from '../../utils/log'
 let log = logger("annotations")
 log.setLevel("info")
@@ -31,14 +30,14 @@ function generateNoteData(data){
   
   let annotation = {
     typeUid:"A1",
-    iuid:generateUUID(),
+    id:generateUUID(),
     cid:1,
     name:"note", 
     target:{
       point:point.toArray(), 
       normal:normal.toArray(),
       typeUid:undefined,
-      iuid:object.userData.entity.iuid//here we could toggle, instance vs type
+      id:object.userData.entity.id//here we could toggle, instance vs type
     }
   }
 
@@ -52,13 +51,13 @@ function generateThicknessData(data){
 
   let {object, entryPoint, exitPoint, thickness} = data
 
-  let iuid   = object.userData.entity.iuid
+  let id   = object.userData.entity.id
   entryPoint = entryPoint.toArray()
   exitPoint  = exitPoint.toArray()
 
   let annotation = {
     typeUid:"A2",
-    iuid:generateUUID(),
+    id:generateUUID(),
     cid:2,
     name:"thickness", 
     value:thickness,
@@ -67,7 +66,7 @@ function generateThicknessData(data){
       exitPoint: exitPoint,
       normal:undefined,
       typeUid:undefined,
-      iuid:object.userData.entity.iuid//here we could toggle, instance vs type
+      id:object.userData.entity.id//here we could toggle, instance vs type
     }
   }
 
@@ -84,7 +83,7 @@ function generateDistanceData(data){
 
   let annotation = {
     typeUid:"A4",
-    iuid:generateUUID(),
+    id:generateUUID(),
     cid:3,//categoryId
     name:"distance", 
     value:distance,
@@ -92,12 +91,12 @@ function generateDistanceData(data){
       start:{
         point  : start.point.toArray(), 
         typeUid:undefined,
-        iuid:start.object.userData.entity.iuid
+        id:start.object.userData.entity.id
       }, 
       end: {
         point  : end.point.toArray(), 
         typeUid:undefined,
-        iuid:end.object.userData.entity.iuid
+        id:end.object.userData.entity.id
       }
     }
   }
@@ -113,7 +112,7 @@ function generateDiameterData(data){
 
   let annotation = {
     typeUid:"A3",
-    iuid:generateUUID(),
+    id:generateUUID(),
     cid:4,//categoryId
     name:"diameter", 
     value:diameter,
@@ -121,7 +120,7 @@ function generateDiameterData(data){
       normal:normal.toArray(),
       point:center.toArray(),
       typeUid:undefined,
-      iuid:start.object.userData.entity.iuid
+      id:start.object.userData.entity.id
     }
   }
 
@@ -138,7 +137,7 @@ function generateAngleData(data){
 
   let annotation = {
     typeUid:"A5",
-    iuid:generateUUID(),
+    id:generateUUID(),
     cid:5,//categoryId
     name:"angle", 
     value:angle,
@@ -146,17 +145,17 @@ function generateAngleData(data){
       start:{
         point  : start.point.toArray(), 
         typeUid:undefined,
-        iuid:start.object.userData.entity.iuid
+        id:start.object.userData.entity.id
       }, 
       mid:{
         point  : mid.point.toArray(), 
         typeUid:undefined,
-        iuid:mid.object.userData.entity.iuid
+        id:mid.object.userData.entity.id
       },
       end: {
         point  : end.point.toArray(), 
         typeUid:undefined,
-        iuid:end.object.userData.entity.iuid
+        id:end.object.userData.entity.id
       }
     }
   }
@@ -165,7 +164,7 @@ function generateAngleData(data){
 }
 
 ///////////////
-//FIXME: where do these belong ? they are not really model side, so intent ?
+//FIXME: where do these belong ? they are not really model side, so actions ?
 //also, they are indepdendant from other aspects, but they are "sinks"
 //also, perhaps each tool type shouls specify what cursor it wants ?
 /*toggleNote$
@@ -202,58 +201,52 @@ function handleCursor(input){
 
 
 function hasEntity(data){
-  return (data.object.userData.entity && data.object.userData.entity.iuid)
+  return (data.object.userData.entity && data.object.userData.entity.id)
 }
 
 ///////////////
-//FIXME: is this more of an intent ??
-export function addAnnotationMod(intent){
-
-  let activeTool$ = intent.settings$.pluck("activeTool")
-  let baseStream$ = intent.creationStep$
-    .withLatestFrom(
-      activeTool$,
-      (s1, s2)=> { return {data:s1, activeTool:s2} }
-    )
-    //.filter(exists)
-
+//FIXME: is this more of an actions ??
+export function addAnnotation(actions, settings$){
   function dataOnly(entry){ return entry.data }
 
-  let noteAnnot$ = baseStream$
+  const activeTool$ = settings$.pluck("activeTool")
+  const baseStream$ = actions.creationStep$
+    .withLatestFrom(
+      activeTool$,
+      (data, activeTool)=> { return {data, activeTool} }
+    )  
+
+  const noteAnnot$ = baseStream$
     .filter((data)=>data.activeTool === "addNote" )
     .map(dataOnly)
     .map(getObjectPointNormal)
     .filter(hasEntity)//we need data to have entity infos
-    //.take(1)//only need one point
     .map(generateNoteData)
 
-  let thickessAnnot$ = baseStream$
+  const thickessAnnot$ = baseStream$
     .filter((data)=>data.activeTool === "measureThickness" )
     .map(dataOnly)
     .map(getEntryExitThickness)
     .filter(hasEntity)//we need data to have entity infos
-    //.take(1)//only need one point
     .map(generateThicknessData)
 
-  let distanceAnnot$ = baseStream$
+  const distanceAnnot$ = baseStream$
     .filter((data)=>data.activeTool === "measureDistance" )
     .map(dataOnly)
     .map(getObjectPointNormal)
     .filter(hasEntity)//we need data to have entity infos
-    //.take(2)//only need two point
     .bufferWithCount(2)//we need 2 data points to generate a distance
     .map(generateDistanceData)
 
-  let diameterAnnot$ = baseStream$
+  const diameterAnnot$ = baseStream$
     .filter((data)=>data.activeTool === "measureDiameter" )
     .map(dataOnly)
     .map(getObjectPointNormal)
     .filter(hasEntity)//we need data to have entity infos
-    //.take(3)//need three points
     .bufferWithCount(3)//we need 3 data points to generate a diameter
     .map(generateDiameterData)
 
-  let angleAnnot$ = baseStream$
+  const angleAnnot$ = baseStream$
     .filter((data)=>data.activeTool === "measureAngle" )
     .map(dataOnly)
     .map(getObjectPointNormal)
@@ -261,20 +254,14 @@ export function addAnnotationMod(intent){
     .bufferWithCount(3)//we need 3 data points to generate an angle
     .map(generateAngleData)
 
-  let additions$ = merge(
-    noteAnnot$,
-    thickessAnnot$,
-    distanceAnnot$,
-    diameterAnnot$,
-    angleAnnot$
+  const additions$ = merge(
+      noteAnnot$,
+      thickessAnnot$,
+      distanceAnnot$,
+      diameterAnnot$,
+      angleAnnot$
     )
-    //.repeat()
     .share()
 
   return additions$
 }
-
-
-
-
-

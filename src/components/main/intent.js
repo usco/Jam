@@ -1,6 +1,8 @@
 import {Rx} from '@cycle/core'
 const merge = Rx.Observable.merge
 
+import {first,toggleCursor} from '../../utils/otherUtils'
+
 import {observableDragAndDrop} from '../../interactions/dragAndDrop'
 
 import {entityTypeIntents, entityInstanceIntents} from '../../core/entities/intentHelpers'
@@ -40,7 +42,7 @@ export default function intent (drivers) {
   const entityTypeActions        = entityTypeIntents({meshSources$,srcSources$})
   const reset$                   = DOM.select('.reset').events("click")
   const removeEntityType$        = undefined //same as delete type/ remove bom entry
-  const deleteEntityInstance$    = DOM.select('.delete').events("click")
+  const deleteEntityInstances$    = DOM.select('.delete').events("click")
   const duplicateEntityInstances$ = DOM.select('.duplicate').events("click")
 
   const addEntityInstanceCandidates$ =  entityTypeActions //these MIGHT become instances, not 100% sure
@@ -71,9 +73,27 @@ export default function intent (drivers) {
     addEntityInstanceCandidates$
     ,updateComponent$
     ,duplicateEntityInstances$
-    ,deleteEntityInstance$
+    ,deleteEntityInstances$
     ,reset$
   }
+
+
+  //annotations
+  const shortSingleTaps$ = events.select("gl").events("shortSingleTaps$")
+    shortSingleTaps$.subscribe(e=>console.log("shortSingleTaps",e))
+
+  const createAnnotationStep$ = shortSingleTaps$
+    .map( (event)=>event.detail.pickingInfos)
+    .filter( (pickingInfos)=>pickingInfos.length>0)
+    .map(first)
+    .share()  
+
+  createAnnotationStep$.subscribe(e=>console.log("createAnnotationStep",e))
+
+  const annotationsActions =  {
+    creationStep$: createAnnotationStep$
+  }
+
 
   //const bomActions = bomIntent(drivers)
   const bomActions = {}  
@@ -97,6 +117,7 @@ export default function intent (drivers) {
     //,selectionActions
     ,entityActions
     ,entityTypeActions
+    ,annotationsActions
 
     ,bomActions
 

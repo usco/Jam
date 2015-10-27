@@ -12,8 +12,9 @@ import {makeTransformsSystem} from '../../core/entities/components/transforms'
 import {makeMeshSystem} from '../../core/entities/components/mesh' 
 import {makeBoundingSystem} from '../../core/entities/components/bounds' 
 
-
 import {entityTypeIntents, entityInstanceIntents} from '../../core/entities/intentHelpers'
+
+import {addAnnotation} from '../../core/entities/annotations'
 
 import {selectionsIntents} from './intents/selections'
 
@@ -23,79 +24,10 @@ import selections from  '../../core/selections'
 import entityTypes from '../../core/entities/entityTypes'
 import bom         from '../../core/bom'
 
-/*
-  let intents = entityIntents(interactions)  
-
-  //register meshes <=> types
-  let registry = require('./core/entities/registry')
-  let partTypes$ = registry({
-    combos$:meshResources$
-    ,reset$: intents.deleteAllInstances$
-  })
-
-  //get new instances from "types"
- 
-  //annotations
-  let aIntents = annotationIntents(interactions)
-  let aIntent = {
-    creationStep$:aIntents.creationStep$,
-    settings$:settings$
-  }
-  let addAnnotation$ = addAnnotationMod(aIntent)
-
-  addAnnotation$
-    .withLatestFrom(settings$,function(annotation,settings){
-      if(!settings.repeatTool){
-        clearActiveTool$()
-      }
-      //console.log("ok I am done with annotation",annotation,settings)
-    })
-    .subscribe(e=>e)
-
-  let addInstance$ = newInstFromTypes$.merge(addAnnotation$)
-  
-  function remapEntityIntents(intent, addInstance$, settings$){
-    return  {
-      createInstance$:new Rx.Subject(),//createInstance$,
-      addInstances$: addInstance$,
-
-      updateInstance$: intent.selectionTransforms$,//
-      deleteInstances$: intent.deleteInstances$,
-      duplicateInstances$: intent.duplicateInstances$,  
-      deleteAllInstances$: intent.deleteAllInstances$, 
-
-      replaceAll$:intent.replaceAll$,
-      settings$:settings$
-    }
-  }
-  //entities
-  let entities$ = entities(remapEntityIntents(intents,addInstance$,settings$))
-
-  //bom
-  let bomIntent = entriesFromEntities( bomIntents(interactions), entities$ )
-  bomIntent.partTypes$ = partTypes$
-  bomIntent.combos$    = meshResources$
- 
-  let bom$ = Bom(bomIntent)
-
-  let {getVisual,addVisualProvider } = createVisualMapper(partTypes$, entities$)
-
-  //selections 
-  let selections$ = selections( reverseSelections(selectionsIntents(interactions),entities$) )
+import {remapEntityActions,remapCoreActions,
+  remapMeshActions,remapTransformActions,remapBoundsActions} from './helpers'
 
  
-  //TODO:remove
-  let contextTaps$ = intents.contextTaps$*/
-
-  /*let foo$ = Rx.Observable.just(42)
-    let fooS1$ = foo$.map(e=>({value:e,from:"fooS1"}))
-    let fooS2$ = foo$.map(e=>({value:e,from:"fooS2"}))
-    fooS1$.subscribe(e=>console.log("first",e))
-    fooS2$.subscribe(e=>console.log("second",e))*/
-
-  //entityTypes$.subscribe(e=>console.log("entityTypes",e))
-  //entityInstancesBase$.subscribe(e=>console.log("entityInstancesBase",e))
-
 function makeRegistry(instances$, types$){
   //register type=> instance & vice versa
   let base = {typeUidFromInstUid:{},instUidFromTypeUid:{}}
@@ -178,7 +110,6 @@ export default function model(props$, actions, drivers){
       //console.log("instances",instances, "types",types)
 
       let data =  instances.map(function(instance){
-
         let instUid = instance.id
         let typeUid = instance.typeUid
 
@@ -207,147 +138,36 @@ export default function model(props$, actions, drivers){
     })
     .shareReplay(1)
 
+  ///main stuff  
 
-  //function to add extra data to entityActions
-  function remapEntityActions(entityActions, currentSelections$){
-
-    const duplicateEntityInstances$ = entityActions.duplicateEntityInstances$
-      .withLatestFrom(currentSelections$,function(_,selections){
-        console.log("selections to duplicate",selections)
-        const newId = generateUUID()
-        return selections.map(s=>Object.assign({},s,{newId}) )
-      })
-      .share()
-
-    return Object.assign({},entityActions, {duplicateEntityInstances$:duplicateEntityInstances$})
+  //annotations
+  let addAnnotations$ = addAnnotation(actions.annotationsActions, settings$)
+    .map(toArray)
+  addAnnotations$.subscribe(e=>console.log("addAnnotation",e))
+  /* //annotations
+  let aIntent = {
+    creationStep$:aIntents.creationStep$,
+    settings$:settings$
   }
+  let addAnnotation$ = addAnnotationMod(aIntent)
 
+  addAnnotation$
+    .withLatestFrom(settings$,function(annotation,settings){
+      if(!settings.repeatTool){
+        clearActiveTool$()
+      }
+      //console.log("ok I am done with annotation",annotation,settings)
+    })
+    .subscribe(e=>e)
 
-  function remapCoreActions(entityActions, componentBase$, currentSelections$){
-    const createComponents$ = componentBase$
-      .filter(c=>c.length>0)
-      .map(function(datas){
-        return datas.map(function({instUid, typeUid, instance}){
-          return { id:instUid,  value:{ id:instUid, typeUid, name:instance.name } }
-        })
-      })
+  let addInstance$ = newInstFromTypes$.merge(addAnnotation$)*/
 
-    const removeComponents$ = entityActions.deleteEntityInstance$
-      .withLatestFrom(currentSelections$,function(_,selections){
-        console.log("selections core to remove",selections)
-        return selections
-      })
-      .shareReplay(1)
-    
-    const updateComponents$ = entityActions.updateComponent$
-       .filter(u=>u.target === "core")
-       .pluck("data")
-       .withLatestFrom(currentSelections$.map(s => s.map(s=>s.id)),function(coreChanges, instIds){
-          return instIds.map(function(instId){
-            return {id:instId, value:coreChanges}
-          })
-        })
-
-    const duplicateComponents$ = entityActions.duplicateEntityInstances$
-
-    return {
-      createComponents$
-      ,removeComponents$
-      ,clear:entityActions.reset$
-      ,updateComponents$
-      ,duplicateComponents$
-    }
-  }
-
-  function remapMeshActions(entityActions, componentBase$, currentSelections$){
-    const createComponents$ = componentBase$
-      .filter(c=>c.length>0)
-      .map(function(datas){
-        return datas.map(function({instUid, mesh}){
-          return { id:instUid,  value:{ mesh } }
-        })
-      })
-
-    const removeComponents$ = entityActions.deleteEntityInstance$
-      .withLatestFrom(currentSelections$,function(_,selections){
-        console.log("selections mesh to remove",selections)
-        return selections
-      })
-
-    const duplicateComponents$ = entityActions.duplicateEntityInstances$
-
-    return {
-      createComponents$
-      ,duplicateComponents$
-      ,removeComponents$
-      ,clear:entityActions.reset$
-    }
-  }
-
-  function remapTransformActions(entityActions, componentBase$, currentSelections$){
-    const createComponents$ = componentBase$
-      .filter(c=>c.length>0)
-      .map(function(datas){
-        return datas.map(function({instUid, zOffset}){
-          return { id:instUid, value:{pos:[0,0,zOffset]} }
-        })
-      })
-
-    const removeComponents$ = entityActions.deleteEntityInstance$
-      .withLatestFrom(currentSelections$,function(_,selections){
-        return selections
-      })
-
-    const updateComponents$ = entityActions.updateComponent$
-       .filter(u=>u.target === "transforms")
-       .pluck("data")
-       .withLatestFrom(currentSelections$.map(s => s.map(s=>s.id)),function(transforms, instIds){
-          console.log("instIds",instIds)
-          return instIds.map(function(instId){
-            return {id:instId, value:transforms}
-          })
-        })
-
-    const duplicateComponents$ = entityActions.duplicateEntityInstances$
-
-    return {
-      createComponents$
-      ,removeComponents$
-      ,clear:entityActions.reset$
-      ,updateComponents$
-      ,duplicateComponents$
-    }
-  }
-
-
-  function remapBoundsActions(entityActions, componentBase$, currentSelections$){
-    const createComponents$ = componentBase$
-      .filter(c=>c.length>0)
-      .map(function(datas){
-        return datas.map(function({instUid, bbox}){
-          return { id:instUid, value:bbox }
-        })
-      })
-
-    const removeComponents$ = entityActions.deleteEntityInstance$
-      .withLatestFrom(currentSelections$,function(_,selections){
-        return selections
-      })
-
-    const duplicateComponents$ = entityActions.duplicateEntityInstances$
-    
-    return {
-      createComponents$
-      ,duplicateComponents$
-      ,removeComponents$
-      ,clear: entityActions.reset$
-    }
-  }
-
+  
   const proxySelections$ = new Rx.ReplaySubject(1)
+
   entityActions        = remapEntityActions(entityActions,proxySelections$)
 
-  let coreActions      = remapCoreActions(entityActions, componentBase$, proxySelections$)
+  let coreActions      = remapCoreActions(entityActions, componentBase$, proxySelections$,addAnnotations$)
   let meshActions      = remapMeshActions(entityActions, componentBase$, proxySelections$)
   let transformActions = remapTransformActions(entityActions, componentBase$, proxySelections$)
   let boundActions     = remapBoundsActions(entityActions, componentBase$, proxySelections$)
@@ -379,8 +199,13 @@ export default function model(props$, actions, drivers){
     .subscribe(e=>console.log("currentSelections, ids",e))
   typesInstancesRegistry$
     .subscribe(e=>console.log("registry updated",e))*/
+
   //close some cycles
   replicateStream(currentSelections$,proxySelections$)
+
+
+ 
+
 
   //BOM
   const addBomEntries$ = entityInstanceIntents(entityTypes$)

@@ -3,7 +3,7 @@ import {hasEntity, getEntity} from '../../../utils/entityUtils'
 import {flatten,equals} from 'Ramda'
 
 function extractEntities(data){
-  return data.filter(hasEntity).map(getEntity).map(e=>e.iuid)
+  return data.filter(hasEntity).map(getEntity).map(e=>e.id)
 }
 
 export function reverseSelections(intents, idsMapper$){

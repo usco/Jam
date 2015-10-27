@@ -16,7 +16,7 @@ function dataFromMesh(objTransform$){
     .map(
       function(m){ 
         return {
-          iuids:m.userData.entity.iuid, 
+          ids:m.userData.entity.id, 
           pos:toArray(m.position),
           rot:toArray(m.rotation),
           sca:toArray(m.scale)
@@ -43,7 +43,7 @@ export function entityIntents(drivers){
 
   let selectionTransforms$ = Rx.Observable.merge(
     //interactions.get(".glview","selectionsTransforms$").pluck("detail").filter(hasEntity)
-    //  .map(function(m){ return {iuids:m.userData.entity.iuid, pos:m.position,rot:m.rot,sca:m.sca} })
+    //  .map(function(m){ return {ids:m.userData.entity.id, pos:m.position,rot:m.rot,sca:m.sca} })
     dataFromMesh( interactions.get(".glview","selectionsTransforms$").pluck("detail") )
     ,interactions.get(".entityInfos","selectionTransforms$").pluck("detail")
   )
@@ -57,7 +57,7 @@ export function entityIntents(drivers){
 
   let contextMenuActions$ = interactions.get(".contextMenu", "actionSelected$").pluck("detail")
   let deleteInstances$     = contextMenuActions$.filter(e=>e.action === "delete").pluck("selections")
-    .map(entities=> entities.map( e=>e.iuid) )
+    .map(entities=> entities.map( e=>e.id) )
   let deleteAllInstances$  = contextMenuActions$.filter(e=>e.action === "deleteAll").pluck("selections")
   let duplicateInstances$  = contextMenuActions$.filter(e=>e.action === "duplicate").pluck("selections")
 
