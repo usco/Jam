@@ -10,7 +10,7 @@ import {isEmpty} from 'ramda'
 /////////
 //used for all
 export function createComponents(defaults, state, inputs){
-  console.log("createComponents")
+  console.log("createComponents",inputs)
 
   return inputs.reduce(function(state,input){
 
@@ -60,7 +60,7 @@ export function duplicateComponents(state, inputs){
       clone = source.clone()
       clone.material=source.material.clone()
       clone.userData.entity = {
-        iuid:newId
+        id:newId
       }
 
     }else{

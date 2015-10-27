@@ -78,7 +78,7 @@ export function entityVisualComparer(prev,cur){
       if(sortedCur[i].typeUid !== sortedPrev[i].typeUid) 
         return false
 
-      if(sortedCur[i].iuid !== sortedPrev[i].iuid) 
+      if(sortedCur[i].id !== sortedPrev[i].id) 
         return false
 
      

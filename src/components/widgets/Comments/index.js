@@ -9,9 +9,9 @@ function addExtraData(actions,props$){
   function getIds(entity){
     console.log("getIds")
     if(entity){
-      return {typeUid:entity.typeUid, iuid:entity.id}
+      return {typeUid:entity.typeUid, id:entity.id}
     }
-    return {typeUid:undefined, iuid:undefined}
+    return {typeUid:undefined, id:undefined}
   }
 
   const addComment$ = actions.addComment$

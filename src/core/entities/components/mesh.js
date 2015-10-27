@@ -18,9 +18,7 @@ export function makeMeshSystem(actions){
       let mesh = inputValue.mesh //{mesh: inputValue.mesh }// mergeData(defaults,inputValue)
       let id = input.id
 
-      mesh.userData.entity = {
-        iuid:id
-      }
+      mesh.userData.entity = {id}
 
       state = mergeData({},state)
       state[id] = mesh

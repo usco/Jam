@@ -26,11 +26,11 @@ function addComments(state, input){
 
   const comments = state.data.concat(
       newComments.map(function(comment){
-        let {iuid,typeUid} = comment.target
+        let {id,typeUid} = comment.target
         let text           = comment.text 
         let author         = "jon doe"  //FIXME: how to deal with authors ? 
 
-        let key = [iuid,typeUid]
+        let key = [id,typeUid]
         let entry = {text, author, key}
         return entry
       })
