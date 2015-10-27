@@ -51,8 +51,8 @@ export function EntityInfosWrapper(state$, DOM) {
 
 export function BOMWrapper(state$, DOM){
   function makeBomProps(state$){
-    let fieldNames = ["name","qty","unit","version"]
-    let sortableFields = ["id","name","qty","unit"]   
+    let fieldNames = ["name","qty","unit","version","printable"]
+    let sortableFields = ["id","name","qty","unit","printable"]   
     let fieldNames$ = just(fieldNames)
     let sortableFields$ = just(sortableFields)
     let selectedEntries$ = state$.pluck("selections").pluck("bomIds")

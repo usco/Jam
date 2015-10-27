@@ -11,7 +11,7 @@ export default function view (state$) {
     .map(function({entries, selectedEntries
       , fieldNames, sortFieldName, sortablesDirection}){
 
-      entries = entries.asMutable()//FIXME: not sure
+      //entries = entries.asMutable()//FIXME: not sure
 
       console.log("selectedEntries in BOM",selectedEntries)
 
@@ -37,8 +37,12 @@ export default function view (state$) {
       
       
       let rows    = entries.map( function(row, index){
-        let cells = fieldNames.map(function(name){         
-          return(<td className="bomEntry cell">{row[name]}</td>)
+        let cells = fieldNames.map(function(name){      
+          let value = row[name]//JSON.stringify(row[name])
+          if(typeof(row[name]) === "boolean"){
+            value = <input type="checkbox" checked={value} />
+          }
+          return(<td className="bomEntry cell">{value}</td>)
         })
 
         cells.push(<td className="bomEntry cell"> <button>Change Model</button> </td>)
