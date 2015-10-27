@@ -1,5 +1,5 @@
 import {Rx} from '@cycle/core'
-import {createComponents,removeComponents,makeActionsFromApiFns} from './common'
+import {createComponents,removeComponents,duplicateComponents,makeActionsFromApiFns} from './common'
 import {makeModel, mergeData} from '../../../utils/modelUtils'
 
 ////Transforms//////
@@ -72,6 +72,7 @@ export function makeTransformsSystem(actions){
     , updateScale
     , updateComponents
     , createComponents: createComponents.bind(null,transformDefaults)
+    , duplicateComponents
     , removeComponents }
 
   if(!actions){

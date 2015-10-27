@@ -15,16 +15,15 @@ export function makeMeshSystem(actions){
       let inputValue =  {}
       if(input && input.value) inputValue = input.value
 
-      let newAttrs = inputValue.mesh //{mesh: inputValue.mesh }// mergeData(defaults,inputValue)
-
-      //auto increment ?
-      //auto generate ?
-      //let id = generateUUID()
-      //if(input && input.id) id = input.id
+      let mesh = inputValue.mesh //{mesh: inputValue.mesh }// mergeData(defaults,inputValue)
       let id = input.id
 
+      mesh.userData.entity = {
+        iuid:id
+      }
+
       state = mergeData({},state)
-      state[id] = newAttrs
+      state[id] = mesh
       //FIXME big hack, use mutability
       return state 
     },state)

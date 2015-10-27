@@ -1,5 +1,5 @@
 import {Rx} from '@cycle/core'
-import {createComponents,removeComponents,makeActionsFromApiFns} from './common'
+import {createComponents,removeComponents,duplicateComponents,makeActionsFromApiFns} from './common'
 import {makeModel, mergeData} from '../../../utils/modelUtils'
 
 
@@ -14,6 +14,7 @@ export function makeBoundingSystem(actions){
 
   let updateFns = {
     createComponents: createComponents.bind(null,boundsDefaults)
+    , duplicateComponents
     , removeComponents}
 
 

@@ -1,5 +1,5 @@
 import {Rx} from '@cycle/core'
-let merge = Rx.Observable.merge
+const merge = Rx.Observable.merge
 
 import {observableDragAndDrop} from '../../interactions/dragAndDrop'
 
@@ -41,7 +41,7 @@ export default function intent (drivers) {
   const reset$                   = DOM.select('.reset').events("click")
   const removeEntityType$        = undefined //same as delete type/ remove bom entry
   const deleteEntityInstance$    = DOM.select('.delete').events("click")
-  const duplicateEntityInstance$ = DOM.select('.duplicate').events("click")
+  const duplicateEntityInstances$ = DOM.select('.duplicate').events("click")
 
   const addEntityInstanceCandidates$ =  entityTypeActions //these MIGHT become instances, not 100% sure
     .registerTypeFromMesh$
@@ -49,18 +49,15 @@ export default function intent (drivers) {
   const updateCoreComponent$ = events
     .select("entityInfos")
     .events("changeCore$")
-    //.flatMap(e=>e.changeCore$)
     .map(c=>( {target:"core",data:c}))
 
   const updateTransformComponent$ = events
     .select("entityInfos")
     .events("changeTransforms$")
-    //.flatMap(e=>e.changeTransforms$)
     .merge(
       events
         .select("gl")
         .events("selectionsTransforms$")
-        //.flatMap(e=>e.selectionsTransforms$)
         .debounce(20)
     )
     .map(c=>( {target:"transforms",data:c}))
@@ -73,7 +70,7 @@ export default function intent (drivers) {
   const entityActions = {
     addEntityInstanceCandidates$
     ,updateComponent$
-    ,duplicateEntityInstance$
+    ,duplicateEntityInstances$
     ,deleteEntityInstance$
     ,reset$
   }

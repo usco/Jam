@@ -136,7 +136,7 @@ export default function model(props$, actions, drivers){
   const DOM      = drivers.DOM
   const events   = drivers.events
 
-  const entityActions = actions.entityActions
+  let entityActions = actions.entityActions
 
   const settings$      = settings( actions.settingActions, actions.settingsSources$ ) 
   const entityTypes$   = entityTypes( actions.entityTypeActions)
@@ -172,27 +172,6 @@ export default function model(props$, actions, drivers){
     })
     .shareReplay(1)
 
-  /*entityInstanceIntents(entityTypes$)
-    .addInstances$//this one is certain */
-
-  /*const entityInstancesBase$  =  entityInstanceIntents(entityTypes$)
-    .addInstances$
-    .map(function(newTypes){
-      return newTypes.map(function(typeData){
-        let instUid = generateUUID()//Math.round( Math.random()*100 )
-        let typeUid = typeData.id
-        let instName = typeData.name+"_"+instUid
-
-        let instanceData = {
-          id:instUid
-          ,typeUid
-          ,name:instName
-        }
-        return instanceData
-      })
-    })
-    .shareReplay(1)*/
-
   //create various components' baseis
   let componentBase$ = entityInstancesBase$
     .withLatestFrom(entityTypes$,function(instances,types){
@@ -214,10 +193,6 @@ export default function model(props$, actions, drivers){
         mesh.material = mesh.material.clone()
         mesh = mesh.clone()
         
-        mesh.userData.entity = {
-          iuid:instUid
-        }
-
         return {
           instUid
           ,typeUid
@@ -231,6 +206,22 @@ export default function model(props$, actions, drivers){
       return data
     })
     .shareReplay(1)
+
+
+  //function to add extra data to entityActions
+  function remapEntityActions(entityActions, currentSelections$){
+
+    const duplicateEntityInstances$ = entityActions.duplicateEntityInstances$
+      .withLatestFrom(currentSelections$,function(_,selections){
+        console.log("selections to duplicate",selections)
+        const newId = generateUUID()
+        return selections.map(s=>Object.assign({},s,{newId}) )
+      })
+      .share()
+
+    return Object.assign({},entityActions, {duplicateEntityInstances$:duplicateEntityInstances$})
+  }
+
 
   function remapCoreActions(entityActions, componentBase$, currentSelections$){
     const createComponents$ = componentBase$
@@ -257,11 +248,14 @@ export default function model(props$, actions, drivers){
           })
         })
 
+    const duplicateComponents$ = entityActions.duplicateEntityInstances$
+
     return {
       createComponents$
       ,removeComponents$
       ,clear:entityActions.reset$
       ,updateComponents$
+      ,duplicateComponents$
     }
   }
 
@@ -279,10 +273,12 @@ export default function model(props$, actions, drivers){
         console.log("selections mesh to remove",selections)
         return selections
       })
-    
+
+    const duplicateComponents$ = entityActions.duplicateEntityInstances$
 
     return {
       createComponents$
+      ,duplicateComponents$
       ,removeComponents$
       ,clear:entityActions.reset$
     }
@@ -312,11 +308,14 @@ export default function model(props$, actions, drivers){
           })
         })
 
+    const duplicateComponents$ = entityActions.duplicateEntityInstances$
+
     return {
       createComponents$
       ,removeComponents$
       ,clear:entityActions.reset$
       ,updateComponents$
+      ,duplicateComponents$
     }
   }
 
@@ -334,15 +333,19 @@ export default function model(props$, actions, drivers){
       .withLatestFrom(currentSelections$,function(_,selections){
         return selections
       })
+
+    const duplicateComponents$ = entityActions.duplicateEntityInstances$
     
     return {
       createComponents$
+      ,duplicateComponents$
       ,removeComponents$
       ,clear: entityActions.reset$
     }
   }
 
   const proxySelections$ = new Rx.ReplaySubject(1)
+  entityActions        = remapEntityActions(entityActions,proxySelections$)
 
   let coreActions      = remapCoreActions(entityActions, componentBase$, proxySelections$)
   let meshActions      = remapMeshActions(entityActions, componentBase$, proxySelections$)
@@ -357,6 +360,8 @@ export default function model(props$, actions, drivers){
 
   const typesInstancesRegistry$ =  makeRegistry(core$, entityTypes$)  
   const selections$  = selections( selectionsIntents({DOM,events}, typesInstancesRegistry$) )
+    .merge(coreActions.removeComponents$.map(a=> ({instIds:[],bomIds:[]}) )) //after an instance is remove, unselect
+
   const currentSelections$ = selections$//selections$.pluck("instIds")
     .withLatestFrom(typesInstancesRegistry$,function(selections,registry){
       return selections.instIds.map(function(id){
@@ -374,7 +379,6 @@ export default function model(props$, actions, drivers){
     .subscribe(e=>console.log("currentSelections, ids",e))
   typesInstancesRegistry$
     .subscribe(e=>console.log("registry updated",e))*/
-
   //close some cycles
   replicateStream(currentSelections$,proxySelections$)
 
@@ -383,7 +387,7 @@ export default function model(props$, actions, drivers){
     .addInstances$//in truth this just mean "a new type was added"
     .map(function(typeDatas){
       return typeDatas.map(function({id,name}){
-        return {id,name,qty:0,version:"0.0.1",unit:"QA"}
+        return {id,name,qty:0,version:"0.0.1",unit:"QA",printable:true}
       })
     })
 
@@ -396,11 +400,21 @@ export default function model(props$, actions, drivers){
           return {offset:1,id}
         })
     })
+    .merge(
+      coreActions.duplicateComponents$
+      .map(function(data){
+        return data.map(function(dat){
+          return {offset:1,id:dat.typeUid}
+        })
+      })
+    )
 
   const decreaseBomEntries$ = coreActions
     .removeComponents$
+    .do(d=>console.log("removing",d))
     .map(function(data){
       return data
+        .filter(d=>d.id !== undefined)
         .map(d=>d.typeUid)
         .map(function(id){
           return {offset:-1,id}

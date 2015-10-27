@@ -49,18 +49,32 @@ export function removeComponents(state, inputs){
 }
 
 export function duplicateComponents(state, inputs){
-  console.log("duplicateComponents",inputs)
+  console.log("duplicatING Components",inputs)
 
   return inputs.reduce(function(state,input){
     let {id,newId} = input
 
-    let clone = mergeData({},state[id]) 
+    const source = state[id]
+    let   clone  = undefined
+    if('clone' in source){
+      clone = source.clone()
+      clone.material=source.material.clone()
+      clone.userData.entity = {
+        iuid:newId
+      }
+
+    }else{
+      clone = mergeData({},source) 
+      clone.id = newId
+    }
 
     state = mergeData({},state)
     //FIXME big hack, use mutability
     state[newId] = clone
+
+    console.log("done duplicateComponents",state)
     return state 
-  })
+  },state)
   
 }
 
