@@ -18,25 +18,26 @@ function typeUidFromMeshName(meshNameToPartTypeUId, meshName){
 }
 
 function typeFromMeshData(data, typeUidFromMeshName){
-  let meshName      = data.resource.name || ""
-  let cleanedName   = nameCleanup(meshName)
+  let meshName = data.resource.name || ""
+  let name     = nameCleanup(meshName)
 
   let id = typeUidFromMeshName(meshName)
   let templateMesh = undefined
+  let printable    = true
 
   //no id was given, it means we have a mesh with no entity (yet !)
   if( !id ) {
     id = generateUUID()
-
     //extract usefull information
     //we do not return the shape since that becomes the "reference shape/mesh", not the
     //one that will be shown
     templateMesh = data.mesh
     computeBoundingSphere(templateMesh)
     computeBoundingBox(templateMesh)
+
   }
 
-  return {id, name:cleanedName, meshName, templateMesh } 
+  return {id, name, meshName, templateMesh, printable } 
 }
 
 function updateTypesData(newTypeData, currentData){
@@ -79,7 +80,7 @@ function registerTypeFromMesh(state,input){
   //prepare lookup function for finding already registered meshes
   let typeUidLookup = typeUidFromMeshName.bind(null,state.meshNameToPartTypeUId)
   //create new data
-  let newData = typeFromMeshData(input,typeUidLookup)
+  let newData = typeFromMeshData(input, typeUidLookup)
   //update data
   return updateTypesData(newData,state)
 }
