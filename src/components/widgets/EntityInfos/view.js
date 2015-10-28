@@ -110,9 +110,10 @@ function transformInputs(transforms, fieldName, displayName, controlsStep, numbe
   let inputs = []
   if(transforms && transforms[fieldName]){
 
-    transforms[fieldName].forEach(function(entry, index){
+    transforms[fieldName]
+    .slice(0,3) //we only want x,y,z values, nothing else
+    .forEach(function(entry, index){
       entry = formatNumberTo(entry, numberPrecision)
-      entry = entry.slice(0,3) //we only want x,y,z values, nothing else
       inputs.push(
         <input type="number" value={entry} step={controlsStep} className={`transformsInput`}
           attributes={ {'data-transform': `${fieldName}_${index}` } }>
@@ -130,7 +131,7 @@ function transformInputs(transforms, fieldName, displayName, controlsStep, numbe
 
 export default function view(state$){
   let numberPrecision = 2
-  let controlsStep = 0.1
+  let controlsStep = undefined// 0.1
 
   return state$.map(function(state){
       let {core,transforms} = state
