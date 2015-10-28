@@ -33,14 +33,14 @@
 }
 
 .titleBar{
-  background: #fff; /*#f5f5f5;*/
+  /*background: #fff; #f5f5f5;*/
   width:'100%';
   height:'100%';
   padding: 0;/*5 0 0 10; */
 
   position: absolute;
   top: 0px;
-  width: 100%;
+  
 }
 
 .titleBar h1{
@@ -286,7 +286,12 @@
 .bom{
   position: absolute;
   right: 0px;
-  top:140px;
+  top: 10px;
+}
+
+.bom table{
+  font-size: 12px;
+  border-collapse: collapse;
 }
 
 .bom tr:hover
@@ -298,11 +303,10 @@
 
 .bom tr.selected
 {
-   background-color: #F4F4F4;
-   color:#F99305;
-   /*
-#F99305;
-   color: red;*/
+   /*background-color: #F4F4F4;
+   color:#F99305;*/
+   background-color: #484848;
+   color:white;
    font-weight: bold;
 }
 
@@ -313,6 +317,7 @@
 .bom .bomEntry .cell{
   text-align: center;
   vertical-align: middle;
+  padding: 0 5 0 5;
 }
 
 .foo{
@@ -325,18 +330,20 @@
 
 .fullScreenToggler{
   position: absolute;
-  bottom: 20px;
+
+  bottom: 15px;
   right: 20px;
 
-  bottom: 20px;
-  right: 20px;
-  width: 24px;
-  height: 24px;
   background: white;
   border: none;
   padding: 0px;
   margin: 0px;
 }
+.fullScreenToggler button{
+     margin: 0;
+    padding: 0; 
+}
+
 
 button path{fill:#60C4F8!important;}
 button:focus path{fill:#60C4F8!important;}
@@ -352,12 +359,17 @@ button {
   background: whitesmoke;
 }
 
+button:hover{
+  background:#60C4F8;
+  color:white;
+}
+
 
 /*//////////////////*/
 .settings{
   position: absolute;
-  right: 20px;
-  top:10px;
+  right: 60px;
+  bottom:15px;
   background: white;
 }
 
@@ -367,20 +379,19 @@ button {
   /*border-bottom: 1px solid #e0e0e0;*/
 }
 
-.settings .content{
-  background:  white;/*rgb(247, 247, 247); */
+.settings .content {
+  background: white;
   font-size: 0.8em;
   position: absolute;
   right: 0px;
-  top: 30px;
+  top: -60px;
   width: 200px;
- 
-
 }
 
-.settings .toggled{
-  border: 1px solid #FFFFFF !important;
+.settings .toggled {
+    border: 1px solid #F7F6F6 !important;
 }
+
 
 
 .icon{
@@ -416,7 +427,6 @@ button {
 }
 
 .settings button{
-  background: white;
   border: none;
   margin: 0;
   padding: 0;

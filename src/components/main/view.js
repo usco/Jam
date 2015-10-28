@@ -72,6 +72,27 @@ function renderWebglError(){
   )
 }*/
 
+
+const translateIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" version="1.1" 
+  width="16" height="16" data-icon="move" viewBox="0 0 16 16">
+  <path d="M8 0l-3 3h2v4h-4v-2l-3 3 3 3v-2h4v4h-2l2 2 1 1 1-1 2-2h-2v-4h4v2l3-3-3-3v2h-4v-4h2l-3-3z" />
+</svg>`
+
+const rotateIconSvg = `<svg version="1.1" id="CCW" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
+  width="16" height="16" data-icon="rotate" viewBox="0 0 20 20">
+  <path d="M0.685,10h2.372V9.795c0.108-4.434,3.724-7.996,8.169-7.996c4.515,0,8.174,3.672,8.174,8.201s-3.659,8.199-8.174,8.199
+  c-1.898,0-3.645-0.65-5.033-1.738l1.406-1.504c1.016,0.748,2.27,1.193,3.627,1.193c3.386,0,6.131-2.754,6.131-6.15
+  c0-3.396-2.745-6.15-6.131-6.15c-3.317,0-6.018,2.643-6.125,5.945V10h2.672l-3.494,3.894L0.685,10z"/>
+</svg>`
+
+const duplicateIconSvg = `<svg version="1.1" id="Copy" xmlns="http://www.w3.org/2000/svg" 
+  width="16" height="16" x="0px" y="0px" data-icon="duplicate" viewBox="0 0 20 20">
+<path d="M11,0H3C2.447,0,2,0.447,2,1v12c0,0.552,0.447,1,1,1h5v2h2v-2H8.001v-2H10v-2H8v2H4V2h6v4h2V1C12,0.448,11.553,0,11,0z M8,7
+  v1h2V6H9C8.447,6,8,6.447,8,7z M12,20h2v-2h-2V20z M12,8h2V6h-2V8z M8,19c0,0.552,0.447,1,1,1h1v-2H8V19z M17,6h-1v2h2V7
+  C18,6.448,17.553,6,17,6z M16,20h1c0.553,0,1-0.448,1-1v-1h-2V20z M16,12h2v-2h-2V12z M16,16h2v-2h-2V16z"/>
+</svg>`
+
+
 export default function view(settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree$, entityInfosVtree$, commentVTree$){
   return combineLatest(settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree$, entityInfosVtree$, commentVTree$
     ,function(settings, fsToggler, bom, gl, entityInfos, comments){
@@ -90,10 +111,16 @@ export default function view(settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree
 
           <button className="clearAll"> Delete all </button>
           <button className="delete">Delete</button>
-          <button className="duplicate">Duplicate</button>
+          <button className="duplicate">
+            <span innerHTML={duplicateIconSvg}> </span>
+          </button>
 
-          <button className="toTranslateMode">Translate</button>
-          <button className="toRotateMode">Rotate</button>
+          <button className="toTranslateMode">
+            <span innerHTML={translateIconSvg}> </span>
+          </button>
+          <button className="toRotateMode">
+            <span innerHTML={rotateIconSvg}> </span>
+          </button>
           <button className="toScaleMode">Scale</button>
 
           <button className="addNote">addNote</button>
