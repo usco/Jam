@@ -45,7 +45,7 @@ export default function view (state$) {
           return(<td className="bomEntry cell">{value}</td>)
         })
 
-        cells.push(<td className="bomEntry cell"> <button>Change Model</button> </td>)
+        //cells.push(<td className="bomEntry cell"> <button>Change Model</button> </td>)
 
         let selected = selectedEntries.indexOf(row.id) > -1
         

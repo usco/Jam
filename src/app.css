@@ -1,3 +1,8 @@
+body{
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
 /*
   #f5f5f5 //ultimaker site pale blue
 */
@@ -20,6 +25,13 @@
   height: 100%;
 }
 
+.wrapper{
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+}
+
 .jam {
   background-color: #fff;/*#f5f5f5;*/
   z-index: 9999;
@@ -39,8 +51,8 @@
   padding: 0;/*5 0 0 10; */
 
   position: absolute;
-  top: 0px;
-  
+  top: 10px;
+  left:10px;
 }
 
 .titleBar h1{
@@ -122,10 +134,18 @@
 /*entity infos*/
 
 .toolbarBottom{
-  font-size: 0.8em;
+  font-size: 13px;
   position: absolute;
-  bottom:5px;
+  bottom:10px;
   left: 50px;
+
+  background: white;
+  width: 100%;
+}
+
+.nameInput {
+  width: 300px !important;
+  max-width: none !important;
 }
 
 .toolbarBottom input[type=text]{
@@ -171,6 +191,28 @@
 
 .toolbarBottom input[type=number]:focus{
   outline: none;
+}
+
+.entityInfos .icon{
+  width: 16px;
+  height: 16px;
+  top:8px;
+  position: relative;
+}
+
+.entityInfos .icon path{
+  fill:#989898;
+}
+
+.entityInfos .icon:hover path{
+  background:none;
+  color:none;
+  fill:#989898;
+}
+
+
+.entityInfos .transformInput{
+  padding: 7 0 0 13px;
 }
 
 /*//////////////////*/
@@ -285,13 +327,19 @@
 
 .bom{
   position: absolute;
-  right: 0px;
+  right: 10px;
   top: 10px;
+  border: 1px solid #F7F6F6 !important;
+  background: white;
 }
 
 .bom table{
-  font-size: 12px;
+  font-size: 13px;
   border-collapse: collapse;
+}
+
+.bom thead tr{
+  border-bottom: 1px solid #F7F6F6 !important;
 }
 
 .bom tr:hover
@@ -317,7 +365,7 @@
 .bom .bomEntry .cell{
   text-align: center;
   vertical-align: middle;
-  padding: 0 5 0 5;
+  padding: 5 5 5 5;
 }
 
 .foo{
@@ -331,21 +379,23 @@
 .fullScreenToggler{
   position: absolute;
 
-  bottom: 15px;
+  bottom: 10px;
   right: 20px;
 
   background: white;
   border: none;
   padding: 0px;
   margin: 0px;
+
+  z-index: 2;
 }
 .fullScreenToggler button{
-     margin: 0;
-    padding: 0; 
+  margin: 0;
+  padding: 0; 
 }
 
 
-button path{fill:#60C4F8!important;}
+button path{fill:#555555!important;}
 button:focus path{fill:#60C4F8!important;}
 button:focus {outline:0;}
 
@@ -357,6 +407,7 @@ button {
   border-radius: 0;
   border: 0;
   background: whitesmoke;
+  padding: 0;
 }
 
 button:hover{
@@ -369,8 +420,9 @@ button:hover{
 .settings{
   position: absolute;
   right: 60px;
-  bottom:15px;
+  bottom:10px;
   background: white;
+  z-index: 2;
 }
 
 
@@ -391,7 +443,6 @@ button:hover{
 .settings .toggled {
     border: 1px solid #F7F6F6 !important;
 }
-
 
 
 .icon{
@@ -417,6 +468,7 @@ button:hover{
   border-right: 1px solid #dddddd;
   border-bottom: 1px solid #dddddd;
 }*/
+/*ICONS*/
 
 .icon path{
   fill:#dddddd;
@@ -568,7 +620,7 @@ div.largeIcon{
 
 .comments{
   position: absolute;
-  bottom: 10px;
+  bottom: 15px;
   left: 10px;
   font-size: 0.7em;
 }

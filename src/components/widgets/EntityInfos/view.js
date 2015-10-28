@@ -89,7 +89,7 @@ function absSizeInput(entity , controlsStep, numberPrecision, changeHandler){
 function nameInput(core){
    if(core && core.name){
     return (
-      <span>
+      <span className="inputWrapper">
         <input type="text" value={core.name} className="nameInput"/> 
       </span>
     )
@@ -106,8 +106,38 @@ function colorInput(core){
   } 
 }
 
+
+//TODO : this is a duplicate, refactor
+const translateIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" version="1.1" 
+  width="16" height="16" data-icon="move" viewBox="0 0 16 16" class="icon">
+  <path d="M8 0l-3 3h2v4h-4v-2l-3 3 3 3v-2h4v4h-2l2 2 1 1 1-1 2-2h-2v-4h4v2l3-3-3-3v2h-4v-4h2l-3-3z" />
+</svg>`
+
+const rotateIconSvg = `<svg version="1.1" id="CCW" xmlns="http://www.w3.org/2000/svg" x="0px" y="0px"
+  width="16" height="16" data-icon="rotate" viewBox="0 0 20 20" class="icon">
+  <path d="M0.685,10h2.372V9.795c0.108-4.434,3.724-7.996,8.169-7.996c4.515,0,8.174,3.672,8.174,8.201s-3.659,8.199-8.174,8.199
+  c-1.898,0-3.645-0.65-5.033-1.738l1.406-1.504c1.016,0.748,2.27,1.193,3.627,1.193c3.386,0,6.131-2.754,6.131-6.15
+  c0-3.396-2.745-6.15-6.131-6.15c-3.317,0-6.018,2.643-6.125,5.945V10h2.672l-3.494,3.894L0.685,10z"/>
+</svg>`
+
+const scaleIconSvg = `<svg 
+  width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" class="icon">
+    <!-- Generator: Sketch 3.4 (15575) - http://www.bohemiancoding.com/sketch -->
+    <title>Untitled</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
+        <path d="M16,8 L13,5 L13,7 L9,7 L9,9 L13,9 L13,11 L16,8 L16,8 Z M3,11 L3,9 L7,9 L7,7 L3,7 L3,5 L0,8 L3,11 L3,11 Z M8,16 C8.553,16 9,15.951 9,15.4 L9,0.6 C9,0.047 8.553,0 8,0 C7.448,0 7,0.047 7,0.6 L7,15.4 C7,15.951 7.448,16 8,16 L8,16 Z" fill="#555555" sketch:type="MSShapeGroup"></path>
+    </g>
+</svg>`
+
 function transformInputs(transforms, fieldName, displayName, controlsStep, numberPrecision){
   let inputs = []
+  let iconsPerTransform = {
+    'pos':translateIconSvg
+    ,'rot':rotateIconSvg
+    ,'sca':scaleIconSvg
+  }
   if(transforms && transforms[fieldName]){
 
     transforms[fieldName]
@@ -120,10 +150,11 @@ function transformInputs(transforms, fieldName, displayName, controlsStep, numbe
         </input>
       )
     })
-
+    
+    const iconSvg = iconsPerTransform[fieldName]
     return (
-      <span>
-        <span> {displayName}: </span> {inputs}
+      <span className="transformInput">
+        <span>{displayName}<span innerHTML={iconSvg}/> </span> {inputs}
       </span>
     )
   }
@@ -145,11 +176,11 @@ export default function view(state$){
       //console.log("core,transforms",core,transforms)
 
       return <div className="toolBarBottom entityInfos">
-        {nameInput(core)}
         {colorInput(core)}
-        {transformInputs(transforms, "pos", "P", controlsStep, numberPrecision)}
-        {transformInputs(transforms, "rot", "R", controlsStep, numberPrecision)}
-        {transformInputs(transforms, "sca", "S", controlsStep, numberPrecision)}
+        {nameInput(core)}
+        {transformInputs(transforms, "pos", undefined, controlsStep, numberPrecision)}
+        {transformInputs(transforms, "rot", undefined, controlsStep, numberPrecision)}
+        {transformInputs(transforms, "sca", undefined, controlsStep, numberPrecision)}
       </div>   
     })
 }
