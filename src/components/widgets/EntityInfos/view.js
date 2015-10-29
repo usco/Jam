@@ -162,7 +162,7 @@ function transformInputs(transforms, fieldName, displayName, controlsStep, numbe
 
 export default function view(state$){
   let numberPrecision = 2
-  let controlsStep = undefined// 0.1
+  let controlsStep =  0.1
 
   return state$.map(function(state){
       let {core,transforms} = state
