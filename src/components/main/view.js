@@ -124,9 +124,11 @@ const deleteIconSvg = `<svg version="1.1" id="Trash" xmlns="http://www.w3.org/20
 
 */
 
-export default function view(settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree$, entityInfosVtree$, commentVTree$){
-  return combineLatest(settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree$, entityInfosVtree$, commentVTree$
-    ,function(settings, fsToggler, bom, gl, entityInfos, comments){
+export default function view(settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree$, entityInfosVtree$, commentVTree$, selections$){
+  return combineLatest(settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree$, entityInfosVtree$, commentVTree$,selections$
+    ,function(settings, fsToggler, bom, gl, entityInfos, comments, selections){
+      //console.log("selections",selections)
+      const toggleControls  = (selections && selections.instIds.length>0)
       return <div className="wrapper">
         {settings}
         {fsToggler}
@@ -147,10 +149,10 @@ export default function view(settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree
           <button className="toScaleMode">
             <span innerHTML={scaleIconSvg}/> 
           </button>
-          <button className="duplicate">
+          <button className="duplicate" disabled={!toggleControls}>
             <span innerHTML={duplicateIconSvg}/>
           </button>
-          <button className="delete">
+          <button className="delete" disabled={!toggleControls}>
             <span innerHTML={deleteIconSvg}/>
           </button>
         </div>

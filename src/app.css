@@ -183,6 +183,8 @@ body{
   margin: 0;
   border: 0px;
   background: none;
+  padding: 0px;
+  height: 20px;
 }
 
 .toolbarBottom input[type=text]:focus{
@@ -411,9 +413,21 @@ button {
 }
 
 button:hover{
-  background:#60C4F8;
-  color:white;
+  background:#555555;
 }
+
+button:hover path{
+  fill:white !important;
+}
+
+button[disabled=disabled], button:disabled path{
+  fill:#AAAAAA !important;
+}
+
+button[disabled=disabled]:hover, button:disabled:hover{
+  background: whitesmoke;
+}
+
 
 
 /*//////////////////*/
