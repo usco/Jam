@@ -1,11 +1,11 @@
 require("../../app.css")
 import {Rx} from '@cycle/core'
-let just = Rx.Observable.just
+const just = Rx.Observable.just
 
 //views & wrappers
 import Settings from '../../components/widgets/Settings'
 import FullScreenToggler from '../../components/widgets/FullScreenToggler/index'
-import {EntityInfosWrapper,BOMWrapper,GLWrapper,CommentsWrapper} from '../../components/main/wrappers'
+import {EntityInfosWrapper,BOMWrapper,GLWrapper,CommentsWrapper,progressBarWrapper} from '../../components/main/wrappers'
 
 
 import intent from './intent'
@@ -26,10 +26,12 @@ export default function main(drivers) {
   const bom         = BOMWrapper(state$,DOM)
   const settingsC   = Settings({DOM, props$:state$})
   const fsToggler   = FullScreenToggler({DOM})
-
+  const progressBar = progressBarWrapper(state$,DOM)
 
   //outputs 
-  const vtree$  = view(settingsC.DOM, fsToggler.DOM, bom.DOM,gl.DOM,entityInfos.DOM,comments.DOM, state$.pluck("selections"))
+  const vtree$  = view(settingsC.DOM, fsToggler.DOM, bom.DOM,gl.DOM
+    , entityInfos.DOM, comments.DOM, progressBar.DOM
+    , state$.pluck("selections"))
   const events$ = just( {gl:gl.events, entityInfos:entityInfos.events, bom:bom.events, comments:comments.events} )
   //output to localStorage
   //in this case, settings

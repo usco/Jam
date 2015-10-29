@@ -124,12 +124,14 @@ const deleteIconSvg = `<svg version="1.1" id="Trash" xmlns="http://www.w3.org/20
 
 */
 
-export default function view(settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree$, entityInfosVtree$, commentVTree$, selections$){
-  return combineLatest(settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree$, entityInfosVtree$, commentVTree$,selections$
-    ,function(settings, fsToggler, bom, gl, entityInfos, comments, selections){
+export default function view(settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree$, entityInfosVtree$, commentVTree$, progressBarVTree$, selections$){
+  return combineLatest(settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree$, entityInfosVtree$, commentVTree$, progressBarVTree$, selections$
+    ,function(settings, fsToggler, bom, gl, entityInfos, comments, progressBar, selections){
       //console.log("selections",selections)
       const toggleControls  = (selections && selections.instIds.length>0)
       return <div className="wrapper">
+        {progressBar}
+        
         {settings}
         {fsToggler}
 

@@ -144,8 +144,9 @@ body{
 }
 
 .nameInput {
-  width: 300px !important;
+  width: 200px !important;
   max-width: none !important;
+  font-weight: 700;
 }
 
 .toolbarBottom input[type=text]{
@@ -464,9 +465,14 @@ button[disabled=disabled]:hover, button:disabled:hover{
 
 
 .icon{
-  width: 24px;
+  /*width: 24px;
   height: 24px;
-  padding: 4px;
+  padding: 4px;*/
+  width: 16px;
+  height: 16px;
+  padding: 8px;
+
+
   /*stroke: #60C4F8;
   stroke-width: 2;*/
 }
@@ -744,6 +750,21 @@ div.largeIcon{
 .commentsList .item{
   padding-top: 10px;
   padding-bottom: 5px;
+}
+
+
+/*progressbar*/
+.progressBar{
+  height: 5px;
+  width: 100%;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+}
+.progressBar .fill{
+  background: rgb(0, 178, 255);
+  height: 100%;
+  position: absolute;
 }
 
 

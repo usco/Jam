@@ -1,15 +1,16 @@
 import {Rx} from '@cycle/core'
-let just = Rx.Observable.just
+const just = Rx.Observable.just
 
 import {getExtension, itemsEqual, exists} from '../../utils/utils'
 import {equals} from 'Ramda'
 import {combineLatestObj} from '../../utils/obsUtils'
 
-//views etc
-import Bom from '../Bom/Bom'
-import GLView from '../webgl/GlView'
-import EntityInfos       from '../widgets/EntityInfos'
-import Comments from '../widgets/Comments'
+//nested dialogues etc
+import Bom         from '../Bom/Bom'
+import GLView      from '../webgl/GlView'
+import EntityInfos from '../widgets/EntityInfos'
+import Comments    from '../widgets/Comments'
+import ProgressBar from '../widgets/ProgressBar'
 
 //for settings
  /*just({
@@ -135,5 +136,13 @@ export function CommentsWrapper(state$, DOM){
   })
 
   return Comments({DOM,props$})
+}
+
+export function progressBarWrapper(state$, DOM){
+  const props$ = just({progress:0.32})
+
+  //state$.pluck("remoteOperations").subscribe(e=>console.log("remoteOperations",e))
+
+  return ProgressBar({DOM,props$})
 }
 
