@@ -3,8 +3,7 @@ import Cycle from '@cycle/core'
 import {Rx} from '@cycle/core'
 import {hJSX} from '@cycle/dom'
 import Class from "classnames"
-let combineLatest = Rx.Observable.combineLatest
-
+const combineLatest = Rx.Observable.combineLatest
 
 //spinner /loader
 /*
@@ -124,11 +123,19 @@ const deleteIconSvg = `<svg version="1.1" id="Trash" xmlns="http://www.w3.org/20
 
 */
 
-export default function view(settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree$, entityInfosVtree$, commentVTree$, progressBarVTree$, selections$){
-  return combineLatest(settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree$, entityInfosVtree$, commentVTree$, progressBarVTree$, selections$
-    ,function(settings, fsToggler, bom, gl, entityInfos, comments, progressBar, selections){
-      //console.log("selections",selections)
+export default function view(state$, settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree$, entityInfosVtree$, commentVTree$, progressBarVTree$){
+
+  return combineLatest(state$, settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree$, entityInfosVtree$, commentVTree$, progressBarVTree$
+    ,function(state, settings, fsToggler, bom, gl, entityInfos, comments, progressBar){
+      console.log("main state in view",state)
+      const selections = state.selections
+      const activeTool = state.settings.activeTool
       const toggleControls  = (selections && selections.instIds.length>0)
+
+      const translateModeToggled = activeTool === 'translate'
+      const rotateModeToggled    = activeTool === 'rotate'
+      const scaleModeToggled     = activeTool === 'scale'
+
       return <div className="wrapper">
         {progressBar}
         
@@ -142,13 +149,13 @@ export default function view(settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree
         {entityInfos}
 
         <div className="topToolbar titlebar">
-          <button className="toTranslateMode">
+          <button className={Class("toTranslateMode", {active: translateModeToggled})} >
             <span innerHTML={translateIconSvg}/>
           </button>
-          <button className="toRotateMode">
+          <button className={Class("toRotateMode", {active: rotateModeToggled})} >
             <span innerHTML={rotateIconSvg}/>
           </button>
-          <button className="toScaleMode">
+          <button className={Class("toScaleMode", {active: scaleModeToggled})} >
             <span innerHTML={scaleIconSvg}/> 
           </button>
           <button className="duplicate" disabled={!toggleControls}>

@@ -339,8 +339,18 @@ input[type=color]:focus{
 }
 
 .active{
-  background: rgb(255, 223, 0);
+  /*background: rgb(255, 223, 0);*/
+  background: #555555;
+  fill:white !important;
 }
+
+.active path{
+  /*fill:#60C4F8;*/
+  fill:white !important;
+}
+
+
+
 
 
 /*//////////////*/
