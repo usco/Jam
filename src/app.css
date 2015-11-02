@@ -136,11 +136,11 @@ body{
 .toolbarBottom{
   font-size: 13px;
   position: absolute;
-  bottom:10px;
+  bottom: 0px;
   left: 50px;
-
   background: white;
   width: 100%;
+  padding: 10px;
 }
 
 .nameInput {
@@ -203,8 +203,9 @@ input[type=color]:focus{
 .entityInfos .icon{
   width: 16px;
   height: 16px;
-  top:8px;
+  top: 4px;
   position: relative;
+  padding: 0;
 }
 
 .entityInfos .icon path{
@@ -221,6 +222,51 @@ input[type=color]:focus{
 .entityInfos .transformInput{
   padding: 7 0 0 13px;
 }
+
+
+.color{
+  width: 24px;
+  margin: 0;
+  border: 0px;
+  padding: 0px;
+  height: 20px;
+  display: inline;
+  outline: none;
+
+      position: static;
+    float: left;
+    bottom: 0px;
+    left: 0px;
+}
+
+.colorPicker{
+
+}
+
+.colorPicker .body{
+  width: 150px;
+  height: 90px;
+  position: absolute;
+  bottom: 35px;
+  border: 1px solid #D8D8D8;
+  padding: 5px;
+}
+
+.colorPicker .body .mainGradient{
+  height: 70px;
+  width: 100%;
+  margin: 2px;
+}
+
+.colorPicker .body .smallGradient{
+  height: 20px;
+  width: 100%;
+  margin: 2px;
+  background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
+
+}
+
+
 
 /*//////////////////*/
 /*spinner/loader*/
@@ -455,7 +501,7 @@ button[disabled=disabled]:hover, button:disabled:hover{
   font-size: 0.8em;
   position: absolute;
   right: 0px;
-  top: -60px;
+  top: -63px;
   width: 200px;
 }
 
