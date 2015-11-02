@@ -393,6 +393,8 @@ input[type=color]:focus{
   right: 20px;
   top: 10px;
   background: white;
+
+  cursor: default;
 }
 .bom button{
   right: 10px;
@@ -412,6 +414,7 @@ input[type=color]:focus{
 
 .bom thead tr{
   border-bottom: 1px solid #F7F6F6 !important;
+  cursor: pointer;
 }
 
 .bom tr:hover
@@ -481,6 +484,8 @@ button {
   border: 0;
   background: whitesmoke;
   padding: 0;
+
+  cursor: pointer;
 }
 
 button:hover{
@@ -583,6 +588,7 @@ button[disabled=disabled]:hover, button:disabled:hover{
 .glView{
   width: 100%;
   height: 100%;
+  cursor: default;
 }
 
 /*----------------*/
