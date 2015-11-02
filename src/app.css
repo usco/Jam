@@ -380,15 +380,24 @@ input[type=color]:focus{
 
 .bom{
   position: absolute;
-  right: 10px;
+  right: 20px;
   top: 10px;
-  border: 1px solid #F7F6F6 !important;
   background: white;
+}
+.bom button{
+  right: 10px;
+  position: fixed;
 }
 
 .bom table{
   font-size: 13px;
   border-collapse: collapse;
+  border: 1px solid #F7F6F6 !important;
+
+  position: absolute;
+  right: 0px;
+  top: 31px;
+  display: inline-block;
 }
 
 .bom thead tr{
@@ -449,8 +458,9 @@ input[type=color]:focus{
 
 
 button path{fill:#555555!important;}
-button:focus path{fill:white!important;}
-button:focus {background:#555555; outline:0;}
+button:focus {outline:0;}
+/*button:focus path{fill:white!important;}
+button:focus {background:#555555; outline:0;}*/
 
 button {
   margin: 0 10px 0 0;

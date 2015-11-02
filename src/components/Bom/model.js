@@ -50,5 +50,7 @@ export default function model(props$, actions){
       return output
     })
 
-  return combineLatestObj({entries$:sortedEntries$, selectedEntries$, fieldNames$, sortFieldName$, sortablesDirection$})
+  const toggled$ = actions.toggle$.startWith(false)
+
+  return combineLatestObj({entries$:sortedEntries$, selectedEntries$, fieldNames$, sortFieldName$, sortablesDirection$, toggled$})
 }
