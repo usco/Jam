@@ -730,9 +730,10 @@ div.largeIcon{
   margin: -10px 0px;
 }
 
+/*comments*/
 .comments{
   position: absolute;
-  bottom: 15px;
+  bottom: 10px;
   left: 10px;
   font-size: 0.7em;
 }
@@ -759,10 +760,9 @@ div.largeIcon{
 }
 
 .comments .icon{
-  position: relative;
-      top: 10px;
+  /*position: relative;
+  top: 10px;*/
 }
-
 
 /*for adding new comments*/
 .commentDetails .new .textInput{

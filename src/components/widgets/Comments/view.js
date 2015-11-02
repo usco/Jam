@@ -103,7 +103,7 @@ function renderComments(toggled, comments, entity, newCommentContent){
     }
 
     commentsList = bykey(key)
-    commentsList=commentsList.asMutable()
+    commentsList = commentsList.asMutable()
     console.log("entity", entity, "key",key,"commentsList",commentsList)
     if(!commentsList){
       commentsList = []
@@ -122,8 +122,11 @@ function renderComments(toggled, comments, entity, newCommentContent){
   
   return (
     <div className="comments">
-      <span className="commentsBtn" innerHTML={iconSvg} />
-       {commentDetails}
+      <button className={Class("commentsToggler", {toggled: toggled})} 
+        innerHTML={iconSvg}>
+      </button>
+
+      {commentDetails}
     </div>
   )
 }
@@ -133,7 +136,6 @@ export default function view(state$){
        /*let fakeComments = {
           bykey:{}
         }
-
         fakeComments.bykey[[undefined,undefined]] = [
         {
           text: "foo bar baz"
@@ -146,13 +148,6 @@ export default function view(state$){
 
         return renderComments( toggled, comments, entity, newCommentContent )
         
-        if(toggled){
-          return <div className="comments"> Foo </div>
-        }
-        else{
-          return <div className="comments"> Bar </div>
-        }
-
       }
     )
 }

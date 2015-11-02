@@ -3,9 +3,8 @@ let merge = Rx.Observable.merge
 let just  = Rx.Observable.just
 
 export default function intent(DOM){
-  const toggle$    = DOM.select(".commentsBtn").events("click")
+  const toggle$    = DOM.select(".commentsToggler").events("click")
     .map(true)
-    .startWith(false)
     .scan((acc,val)=>!acc)
 
   const newCommentContent$ = merge(//stream containing new comment, if any
