@@ -79,8 +79,6 @@ export default function view (state$) {
           </table> 
       }
 
-         
-
       return (
         <div className="bom">
           <button className={Class("bomToggler", {toggled: toggled})} 
