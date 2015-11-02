@@ -3,14 +3,38 @@ import Cycle from '@cycle/core'
 import {Rx} from '@cycle/core'
 import {hJSX} from '@cycle/dom'
 import Class from 'classnames'
-let merge = Rx.Observable.merge
-let combineLatest = Rx.Observable.combineLatest
+const merge = Rx.Observable.merge
+const combineLatest = Rx.Observable.combineLatest
+const just  = Rx.Observable.just
 
 import {combineLatestObj, preventDefault,isTextNotEmpty,formatData,exists} from '../../../utils/obsUtils'
 
 import Comments from '../Comments'
 import view from './view'
 import intent from './intent'
+
+
+////////
+import ColorPicker from '../ColorPicker'
+
+export function colorPickerWrapper(state$, DOM){
+  console.log("making colorPicker")
+  const props$ = //just({color:"#FF00FF"})
+    state$.map(function(state){
+      let {core,transforms} = state
+
+      if(!core || !transforms){
+        return undefined
+      }
+      if(transforms.length>0) transforms = transforms[0]
+      if(core.length>0) core = core[0]
+
+      return {color:core.color}
+    })
+ 
+
+  return ColorPicker({DOM,props$})
+}
 
 ////////
 
@@ -44,27 +68,16 @@ function refineActions(props$, actions){
 }
 
 
-function CommentsWrapper(state$, DOM){
-  const commentsEntity$ = state$.pluck("core")
-    .filter(exists)
-    .map(e=>e[0])
-    .startWith(undefined)
-
-  const props$ = combineLatestObj({
-    entity:commentsEntity$
-    ,comments:state$.pluck("comments")
-  })
-
-  return Comments({DOM,props$})
-}
-
 
 function EntityInfos({DOM, props$}, name = '') {
   const state$ = model(props$)
 
   const {changeCore$, changeTransforms$} = refineActions( props$, intent(DOM) )
 
-  const vtree$ = view(state$)
+
+  const colorPicker = colorPickerWrapper(state$, DOM)
+
+  const vtree$ = view(state$, colorPicker.DOM)
   
   return {
     DOM: vtree$,

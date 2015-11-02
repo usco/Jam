@@ -8,6 +8,17 @@ let combineLatest = Rx.Observable.combineLatest
 
 import {formatNumberTo, absSizeFromBBox} from '../../../utils/formatters'
 
+
+////////
+import ColorPicker from '../ColorPicker'
+
+export function colorPickerWrapper(state$, DOM){
+
+  const props$ = just({color:"#FF00FF"})
+
+  return ColorPicker({DOM,props$})
+}
+
 function absSizeInput(entity , controlsStep, numberPrecision, changeHandler){
   /*display / control object transforms: posistion,rotation,scale etc
   in doubt about change handler
@@ -97,6 +108,7 @@ function nameInput(core){
 }
 
 function colorInput(core){
+
   if(core && core.color){
     return (
       <span>
@@ -154,16 +166,19 @@ function transformInputs(transforms, fieldName, displayName, controlsStep, numbe
     const iconSvg = iconsPerTransform[fieldName]
     return (
       <span className="transformInput">
-        <span>{displayName}<span innerHTML={iconSvg}/> </span> {inputs}
+        <span innerHTML={iconSvg}> {displayName} </span> {inputs}
       </span>
     )
   }
 }
 
-export default function view(state$){
+export default function view(state$, colorPicker){
   let numberPrecision = 2
   let controlsStep =  0.1
 
+  
+  // /
+  //{colorPicker}
   return state$.map(function(state){
       let {core,transforms} = state
 
@@ -176,7 +191,9 @@ export default function view(state$){
       //console.log("core,transforms",core,transforms)
 
       return <div className="toolBarBottom entityInfos">
+        
         {colorInput(core)}
+
         {nameInput(core)}
         {transformInputs(transforms, "pos", undefined, controlsStep, numberPrecision)}
         {transformInputs(transforms, "rot", undefined, controlsStep, numberPrecision)}
