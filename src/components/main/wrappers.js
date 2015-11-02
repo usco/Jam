@@ -139,10 +139,36 @@ export function CommentsWrapper(state$, DOM){
 }
 
 export function progressBarWrapper(state$, DOM){
-  const props$ = just({progress:0.32})
+  //const props$ = just({progress:0.32})
 
-  //state$.pluck("remoteOperations").subscribe(e=>console.log("remoteOperations",e))
+  const props$ = state$.distinctUntilChanged()
+    .pluck("remoteOperations")
+    .filter(exists)
+    .distinctUntilChanged()
+    .pluck("resource")
+    .map(function(resource){
+      let progress = 0
+      //FIXME: horrid
+      if(resource.fetched && resource.loaded){
+        progress = 100
+      }
+      else
+      {
+        console.log("resource.fetchProgress",resource.fetchProgress)
+        progress = resource.fetchProgress
+      }
+      return {progress}
+    })
+    .startWith({progress:100})
+  //props$
+  //.subscribe(e=>console.log("remoteOperations",e))
+
+  function extractData(resource){
+    resource.fetchProgress
+    resource.parseProgress 
+  }
 
   return ProgressBar({DOM,props$})
 }
+
 

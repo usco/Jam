@@ -8,10 +8,11 @@ export function entityTypeIntents(sources){
   let srcSources$ = sources.srcSources$
 
   //TODO: get rid of this
-  let assetManager = makeInternals()
+  let assetManager   = makeInternals()
   let meshResources$ = meshResources(meshSources$, assetManager)
   //meshResources$.subscribe(e=>console.log("meshResources",e))
 
+  console.log("meshResources")
   //let entityInstance = undefined
   //return meshResources$.map(e=>e.mesh).map(testHack2).shareReplay(1)
 

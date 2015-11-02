@@ -272,7 +272,14 @@ export default function model(props$, actions, drivers){
         .map(false)
     ).startWith(false)*/
 
-  
+  //not entirely sure, we need a way to observe any fetch/updload etc operation
+  const remoteOperations$ = entityActions
+    .addEntityInstanceCandidates$
+    .shareReplay(1)
+    .startWith(undefined)
+
+  //remoteOperations$.subscribe(e=>console.log("remoteOperations",e))
+
 
   //combine all the above 
   const state$ = combineLatestObj({
@@ -280,11 +287,13 @@ export default function model(props$, actions, drivers){
     ,selections$
     ,bom$
     ,comments$
+    ,remoteOperations$
 
+    //entity components
     ,core$
     ,transforms$
     ,meshes$
-  })
+  }).shareReplay(1)
 
 
   return state$
