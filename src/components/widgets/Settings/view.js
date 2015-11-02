@@ -44,7 +44,7 @@ export default function view (state$) {
 
       return(
        <div className="settings">
-        <button id="toggler" className={Class("toggler", {toggled: toggled})} 
+        <button className={Class("settingsToggler", {toggled: toggled})} 
           innerHTML={iconSvg}>
         </button>
         <section className={Class("content", {toggled: toggled})}>
