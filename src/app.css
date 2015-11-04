@@ -110,6 +110,12 @@ body{
   padding-right: 5px;
 }
 
+.titlebar section{
+  display: inline-block;
+  /* padding-left: 15px; */
+  padding-right: 25px;
+}
+
 /*//////////////*/
 /*contextMenu*/
 .contextMenu{
