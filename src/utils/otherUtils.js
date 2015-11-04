@@ -55,16 +55,4 @@ export function setPropertyByPath(obj, path, value) {
     }
 }
 
-/////////////////////////////////
-//app utils
-function isToolSelected(){
-  return self.state.activeTool
-}
 
-//annoying
-export function isNoToolSelected(activeTool){
-  return !activeTool
-}
-
-
-/////////////////////////////////
