@@ -7,6 +7,7 @@ let merge = Rx.Observable.merge
 let combineLatest = Rx.Observable.combineLatest
 
 import {formatNumberTo, absSizeFromBBox, toDegree} from '../../../utils/formatters'
+import {isEmpty} from '../../../utils/utils'
 ////////
 import ColorPicker from '../ColorPicker'
 
@@ -96,18 +97,21 @@ function absSizeInput(entity , controlsStep, numberPrecision, changeHandler){
 
 
 function nameInput(core){
-   if(core && core.name){
+  if(core && "name" in core){
+    let name = core.name
+    if(isEmpty(name)){
+      name = undefined
+    }
     return (
       <span className="inputWrapper">
-        <input type="text" value={core.name} className="nameInput"/> 
+        <input type="text" value={name} placeholder="Type name here..." className="nameInput"/> 
       </span>
     )
   } 
 }
 
 function colorInput(core){
-
-  if(core && core.color){
+  if(core && "color" in core){
     return (
       <span>
         <input type="color" value={core.color} className="colorInput" /> 
