@@ -6,9 +6,7 @@ import Class from 'classnames'
 let merge = Rx.Observable.merge
 let combineLatest = Rx.Observable.combineLatest
 
-import {formatNumberTo, absSizeFromBBox} from '../../../utils/formatters'
-
-
+import {formatNumberTo, absSizeFromBBox, toDegree} from '../../../utils/formatters'
 ////////
 import ColorPicker from '../ColorPicker'
 
@@ -154,10 +152,14 @@ function transformInputs(transforms, fieldName, displayName, controlsStep, numbe
 
     transforms[fieldName]
     .slice(0,3) //we only want x,y,z values, nothing else
-    .forEach(function(entry, index){
-      entry = formatNumberTo(entry, numberPrecision)
+    .forEach(function(value, index){  
+      if(fieldName==="rot")//convert rotation information to degree
+      {
+        value = toDegree(value)
+      }
+      value = formatNumberTo(value, numberPrecision)
       inputs.push(
-        <input type="number" value={entry} step={controlsStep} className={`transformsInput`}
+        <input type="number" value={value} step={controlsStep} className={`transformsInput`}
           attributes={ {'data-transform': `${fieldName}_${index}` } }>
         </input>
       )
@@ -174,10 +176,8 @@ function transformInputs(transforms, fieldName, displayName, controlsStep, numbe
 
 export default function view(state$, colorPicker){
   let numberPrecision = 2
-  let controlsStep =  0.1
+  let controlsStep    =  0.5
 
-  
-  // /
   //{colorPicker}
   return state$.map(function(state){
       let {core,transforms} = state
@@ -193,7 +193,6 @@ export default function view(state$, colorPicker){
       return <div className="toolBarBottom entityInfos">
         
         {colorInput(core)}
-
         {nameInput(core)}
         {transformInputs(transforms, "pos", undefined, controlsStep, numberPrecision)}
         {transformInputs(transforms, "rot", undefined, controlsStep, numberPrecision)}

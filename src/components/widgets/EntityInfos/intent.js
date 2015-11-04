@@ -2,6 +2,7 @@ import {Rx} from '@cycle/core'
 let merge = Rx.Observable.merge
 let combineLatest = Rx.Observable.combineLatest
 import {combineLatestObj} from '../../../utils/obsUtils'
+import {toRadian} from '../../../utils/formatters'
 
 
 export default function intent(DOM){
@@ -31,6 +32,9 @@ export default function intent(DOM){
       let val = parseFloat(e.target.value)
       let dtrans = e.target.attributes["data-transform"].value
       let [trans,idx]   = dtrans.split("_")
+      if(trans === "rot"){//convert rotated values back from degrees to radians
+        val = toRadian(val)
+      }
       return {val,trans,idx:parseInt(idx)}
     })
     .distinctUntilChanged()
