@@ -5,6 +5,8 @@ const just = Rx.Observable.just
 //views & wrappers
 import Settings from '../../components/widgets/Settings'
 import FullScreenToggler from '../../components/widgets/FullScreenToggler/index'
+import Help from '../../components/widgets/Help'
+
 import {EntityInfosWrapper,BOMWrapper,GLWrapper,CommentsWrapper,progressBarWrapper} from '../../components/main/wrappers'
 
 
@@ -24,13 +26,15 @@ export default function main(drivers) {
   const comments    = CommentsWrapper(state$,DOM)
   const gl          = GLWrapper(state$,DOM)
   const bom         = BOMWrapper(state$,DOM)
+  const progressBar = progressBarWrapper(state$,DOM)
+
   const settingsC   = Settings({DOM, props$:state$})
   const fsToggler   = FullScreenToggler({DOM})
-  const progressBar = progressBarWrapper(state$,DOM)
+  const help        = Help({DOM, props$:state$})
 
   //outputs 
   const vtree$  = view(state$, settingsC.DOM, fsToggler.DOM, bom.DOM,gl.DOM
-    , entityInfos.DOM, comments.DOM, progressBar.DOM)
+    , entityInfos.DOM, comments.DOM, progressBar.DOM, help.DOM)
   const events$ = just( {gl:gl.events, entityInfos:entityInfos.events
     , bom:bom.events, comments:comments.events} )
   //output to localStorage

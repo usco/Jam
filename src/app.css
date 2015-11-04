@@ -57,6 +57,41 @@ body{
   box-shadow:none;
 }
 
+button path{fill:#555555!important;}
+button:focus {outline:0;}
+/*button:focus path{fill:white!important;}
+button:focus {background:#555555; outline:0;}*/
+
+button {
+  margin: 0 10px 0 0;
+  line-height: 1.8;
+  appearance: none;
+  box-shadow: none;
+  border-radius: 0;
+  border: 0;
+  background: whitesmoke;
+  padding: 0;
+
+  cursor: pointer;
+}
+
+button:hover{
+  background:#555555;
+}
+
+button:hover path{
+  fill:white !important;
+}
+
+button[disabled=disabled], button:disabled path{
+  fill:#AAAAAA !important;
+}
+
+button[disabled=disabled]:hover, button:disabled:hover{
+  background: whitesmoke;
+}
+
+
 
 .titleBar{
   /*background: #fff; #f5f5f5;*/
@@ -288,6 +323,7 @@ input[type=color]:focus{
 
 
 
+
 /*//////////////////*/
 /*spinner/loader*/
 @keyframes spinner {
@@ -506,47 +542,34 @@ input[type=color]:focus{
   padding: 0; 
 }
 
-
-button path{fill:#555555!important;}
-button:focus {outline:0;}
-/*button:focus path{fill:white!important;}
-button:focus {background:#555555; outline:0;}*/
-
-button {
-  margin: 0 10px 0 0;
-  line-height: 1.8;
-  appearance: none;
-  box-shadow: none;
-  border-radius: 0;
-  border: 0;
-  background: whitesmoke;
-  padding: 0;
-
-  cursor: pointer;
+/*//////////////////*/
+/*help*/
+.help{
+  position: absolute;
+  bottom: 10px;
+  right: 55px;
+  z-index: 2;
 }
 
-button:hover{
-  background:#555555;
+.help .content {
+  background: white;
+  font-size: 0.8em;
+  position: absolute;
+  right: 10px;
+  top: -145px;
+  width: 250px;
+  padding: 5px;
 }
 
-button:hover path{
-  fill:white !important;
+.help .toggled {
+  border: 1px solid #F7F6F6 !important;
 }
-
-button[disabled=disabled], button:disabled path{
-  fill:#AAAAAA !important;
-}
-
-button[disabled=disabled]:hover, button:disabled:hover{
-  background: whitesmoke;
-}
-
 
 
 /*//////////////////*/
 .settings{
   position: absolute;
-  right: 60px;
+  right: 110px;
   bottom:10px;
   background: white;
   z-index: 2;
@@ -568,7 +591,7 @@ button[disabled=disabled]:hover, button:disabled:hover{
 }
 
 .settings .toggled {
-    border: 1px solid #F7F6F6 !important;
+  border: 1px solid #F7F6F6 !important;
 }
 
 
@@ -955,12 +978,12 @@ http://cbracco.me/a-simple-css-tooltip/
 /* Show the entire tooltip on hover and focus */
 [data-tooltip]:hover:before,
 [data-tooltip]:hover:after,
-[data-tooltip]:focus:before,
-[data-tooltip]:focus:after,
+/*[data-tooltip]:focus:before,
+[data-tooltip]:focus:after,*/
 .tooltip:hover:before,
-.tooltip:hover:after,
-.tooltip:focus:before,
-.tooltip:focus:after {
+.tooltip:hover:after
+/*.tooltip:focus:before,
+.tooltip:focus:after*/ {
   visibility: visible;
   -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";
   filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
@@ -1021,16 +1044,16 @@ http://cbracco.me/a-simple-css-tooltip/
 
 [data-tooltip]:hover:before,
 [data-tooltip]:hover:after,
-[data-tooltip]:focus:before,
-[data-tooltip]:focus:after,
+/*[data-tooltip]:focus:before,
+[data-tooltip]:focus:after,*/
 .tooltip:hover:before,
 .tooltip:hover:after,
-.tooltip:focus:before,
-.tooltip:focus:after,
+/*.tooltip:focus:before,
+.tooltip:focus:after,*/
 .tooltip-top:hover:before,
-.tooltip-top:hover:after,
-.tooltip-top:focus:before,
-.tooltip-top:focus:after {
+.tooltip-top:hover:after
+/*.tooltip-top:focus:before,
+.tooltip-top:focus:after*/ {
   -webkit-transform: translateY(-12px);
   -moz-transform:    translateY(-12px);
   transform:         translateY(-12px); 
@@ -1054,9 +1077,9 @@ http://cbracco.me/a-simple-css-tooltip/
 }
 
 .tooltip-left:hover:before,
-.tooltip-left:hover:after,
-.tooltip-left:focus:before,
-.tooltip-left:focus:after {
+.tooltip-left:hover:after
+/*.tooltip-left:focus:before,
+.tooltip-left:focus:after*/ {
   -webkit-transform: translateX(-12px);
   -moz-transform:    translateX(-12px);
   transform:         translateX(-12px); 
@@ -1079,9 +1102,9 @@ http://cbracco.me/a-simple-css-tooltip/
 }
 
 .tooltip-bottom:hover:before,
-.tooltip-bottom:hover:after,
-.tooltip-bottom:focus:before,
-.tooltip-bottom:focus:after {
+.tooltip-bottom:hover:after
+/*.tooltip-bottom:focus:before,
+.tooltip-bottom:focus:after */{
   -webkit-transform: translateY(12px);
   -moz-transform:    translateY(12px);
   transform:         translateY(12px); 
@@ -1103,9 +1126,9 @@ http://cbracco.me/a-simple-css-tooltip/
 }
 
 .tooltip-right:hover:before,
-.tooltip-right:hover:after,
-.tooltip-right:focus:before,
-.tooltip-right:focus:after {
+.tooltip-right:hover:after
+/*.tooltip-right:focus:before,
+.tooltip-right:focus:after */{
   -webkit-transform: translateX(12px);
   -moz-transform:    translateX(12px);
   transform:         translateX(12px); 

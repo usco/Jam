@@ -160,19 +160,15 @@ const measureAngleIconSvg = `<svg version="1.1" xmlns="http://www.w3.org/2000/sv
           <button className="clearAll"> Delete all </button>
 */
 
-/*function tooltipIconBtn(toggleCondition, iconSvg, mainClass, tooltip, tooltipPos = "bottom", disabledCondition=false){
-  return <button 
-    disabled = {disabledCondition}
-    className={Class(mainClass,`tooltip-${tooltipPos}`, {active: toggleCondition})} 
-    attributes={{"data-tooltip": tooltip}}>
-    <span innerHTML={iconSvg}/>
-  </button>
-}*/
 
-export default function view(state$, settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree$, entityInfosVtree$, commentVTree$, progressBarVTree$){
 
-  return combineLatest(state$, settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree$, entityInfosVtree$, commentVTree$, progressBarVTree$
-    ,function(state, settings, fsToggler, bom, gl, entityInfos, comments, progressBar){
+export default function view(state$, settingsVTree$, fsTogglerVTree$, bomVtree$
+  , glVtree$, entityInfosVtree$, commentVTree$, progressBarVTree$, helpVTree$){
+
+  return combineLatest(state$, settingsVTree$, fsTogglerVTree$, bomVtree$
+    , glVtree$, entityInfosVtree$, commentVTree$, progressBarVTree$, helpVTree$
+
+    ,function(state, settings, fsToggler, bom, gl, entityInfos, comments, progressBar, help){
       //console.log("main state in view",state)
       const selections = state.selections
       const activeTool = state.settings.activeTool
@@ -189,7 +185,9 @@ export default function view(state$, settingsVTree$, fsTogglerVTree$, bomVtree$,
         {progressBar}
         
         {settings}
+        {help}
         {fsToggler}
+
 
         {bom}
         {gl}
@@ -197,6 +195,7 @@ export default function view(state$, settingsVTree$, fsTogglerVTree$, bomVtree$,
         {comments}
         {entityInfos}
 
+      
         <div className="topToolbar titlebar">
 
           <section>
