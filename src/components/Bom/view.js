@@ -4,6 +4,9 @@ import {Rx} from '@cycle/core'
 import {hJSX} from '@cycle/dom'
 import Class from "classnames"
 
+import tooltipIconBtn from '../widgets/TooltipIconButton'
+
+
 export default function view (state$) {
 
   return state$
@@ -81,9 +84,8 @@ export default function view (state$) {
 
       return (
         <div className="bom">
-          <button className={Class("bomToggler", {toggled: toggled})} 
-          innerHTML={iconSvg}>
-          </button>
+          {tooltipIconBtn(toggled
+            , iconSvg, "bomToggler", "bom/list of parts", "left")}
           {content}
         </div>
       )

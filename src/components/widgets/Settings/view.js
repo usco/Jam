@@ -1,6 +1,7 @@
 /** @jsx hJSX */
 import {hJSX} from '@cycle/dom'
 import Class from "classnames"
+import tooltipIconBtn from '../TooltipIconButton'
 
 
 export default function view (state$) {
@@ -44,9 +45,9 @@ export default function view (state$) {
 
       return(
        <div className="settings">
-        <button className={Class("settingsToggler", {toggled: toggled})} 
-          innerHTML={iconSvg}>
-        </button>
+        {tooltipIconBtn(toggled
+            , iconSvg, "settingsToggler", "settings", "top")}
+
         <section className={Class("content", {toggled: toggled})}>
         {fields}
         </section>

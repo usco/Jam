@@ -10,6 +10,8 @@ import {preventDefault,isTextNotEmpty,formatData,exists} from '../../../utils/ob
 import Immutable from 'seamless-immutable'
 import {equals} from 'ramda'
 
+import tooltipIconBtn from '../TooltipIconButton'
+
 
 
 function renderCommentsList (comments) {
@@ -122,9 +124,9 @@ function renderComments(toggled, comments, entity, newCommentContent){
   
   return (
     <div className="comments">
-      <button className={Class("commentsToggler", {toggled: toggled})} 
-        innerHTML={iconSvg}>
-      </button>
+
+      {tooltipIconBtn(toggled
+              , iconSvg, "commentsToggler", "comments", "top")}
 
       {commentDetails}
     </div>

@@ -5,6 +5,7 @@ import {hJSX} from '@cycle/dom'
 import Class from "classnames"
 const combineLatest = Rx.Observable.combineLatest
 
+import tooltipIconBtn from '../widgets/TooltipIconButton'
 //spinner /loader
 /*
 
@@ -159,6 +160,15 @@ const measureAngleIconSvg = `<svg version="1.1" xmlns="http://www.w3.org/2000/sv
           <button className="clearAll"> Delete all </button>
 */
 
+/*function tooltipIconBtn(toggleCondition, iconSvg, mainClass, tooltip, tooltipPos = "bottom", disabledCondition=false){
+  return <button 
+    disabled = {disabledCondition}
+    className={Class(mainClass,`tooltip-${tooltipPos}`, {active: toggleCondition})} 
+    attributes={{"data-tooltip": tooltip}}>
+    <span innerHTML={iconSvg}/>
+  </button>
+}*/
+
 export default function view(state$, settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree$, entityInfosVtree$, commentVTree$, progressBarVTree$){
 
   return combineLatest(state$, settingsVTree$, fsTogglerVTree$, bomVtree$, glVtree$, entityInfosVtree$, commentVTree$, progressBarVTree$
@@ -171,7 +181,7 @@ export default function view(state$, settingsVTree$, fsTogglerVTree$, bomVtree$,
       const translateModeToggled = activeTool === 'translate'
       const rotateModeToggled    = activeTool === 'rotate'
       const scaleModeToggled     = activeTool === 'scale'
-      
+
       const measureDistanceModeToggled    = activeTool === 'rotate'
       const measureThicknessModeToggled   = activeTool === 'scale'
 
@@ -190,43 +200,40 @@ export default function view(state$, settingsVTree$, fsTogglerVTree$, bomVtree$,
         <div className="topToolbar titlebar">
 
           <section>
-            <button className={Class("toTranslateMode", {active: translateModeToggled})} >
-              <span innerHTML={translateIconSvg}/>
-            </button>
-            <button className={Class("toRotateMode", {active: rotateModeToggled})} >
-              <span innerHTML={rotateIconSvg}/>
-            </button>
-            <button className={Class("toScaleMode", {active: scaleModeToggled})} >
-              <span innerHTML={scaleIconSvg}/> 
-            </button>
+            {tooltipIconBtn(translateModeToggled
+              , translateIconSvg, "toTranslateMode", "move", "bottom")}
+
+            {tooltipIconBtn(rotateModeToggled
+              , rotateIconSvg, "toRotateMode", "rotate", "bottom")}
+
+            {tooltipIconBtn(scaleModeToggled
+              , scaleIconSvg, "toScaleMode", "scale", "bottom")}
           </section>
 
 
           <section>
-            <button className={Class("addNote", {active: activeTool === 'addNote'})} >
-              <span innerHTML={addNoteIconSvg}/> 
-            </button>
-            <button className={Class("measureDistance", {active: activeTool === 'measureDistance'})} >
-              <span innerHTML={measureDistanceIconSvg}/> 
-            </button>
-            <button className={Class("measureDiameter", {active: activeTool === 'measureDiameter'})} >
-              <span innerHTML={measureDiameterIconSvg}/> 
-            </button>
-            <button className={Class("measureAngle", {active: activeTool === 'measureAngle'})} >
-              <span innerHTML={measureAngleIconSvg}/> 
-            </button>
+            {tooltipIconBtn(activeTool === 'addNote'
+              , addNoteIconSvg, "addNote", "add note", "bottom")}
+
+            {tooltipIconBtn(activeTool === 'measureDistance'
+              , measureDistanceIconSvg, "measureDistance", "measure distance", "bottom")}
+
+            {tooltipIconBtn(activeTool === 'measureDiameter'
+              , measureDiameterIconSvg, "measureDiameter", "measure diameter", "bottom")}
+
+            {tooltipIconBtn(activeTool === 'measureAngle'
+              , measureAngleIconSvg, "measureAngle", "measure angle", "bottom")}   
+
           </section>
 
           <section>
-            <button className="duplicate" disabled={!toggleControls}>
-              <span innerHTML={duplicateIconSvg}/>
-            </button>
-            <button className="delete" disabled={!toggleControls}>
-              <span innerHTML={deleteIconSvg}/>
-            </button>
-          </section>
+            {tooltipIconBtn(undefined
+              , duplicateIconSvg, "duplicate", "duplicate", "bottom",!toggleControls)}   
 
-         
+            {tooltipIconBtn(undefined
+              , deleteIconSvg, "delete", "delete", "bottom",!toggleControls)}   
+
+          </section>
 
         </div>
 
