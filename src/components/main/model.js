@@ -204,8 +204,6 @@ export default function model(props$, actions, drivers){
   replicateStream(currentSelections$,proxySelections$)
 
 
- 
-
 
   //BOM
   const addBomEntries$ = entityInstanceIntents(entityTypes$)
@@ -260,8 +258,9 @@ export default function model(props$, actions, drivers){
   )
   clearBomEntries$.subscribe(e=>console.log("gnagna",e))
 
+  const updateBomEntries$ = actions.bomActions.updateBomEntries$
 
-  let bomActions = Object.assign( {addBomEntries$, updateBomEntriesCount$, clearBomEntries$} )
+  let bomActions = Object.assign( {addBomEntries$, updateBomEntriesCount$, clearBomEntries$, updateBomEntries$} )
   const bom$ = bom(bomActions)
 
   //loading flag , mostly for viewer mode

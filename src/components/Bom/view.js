@@ -12,10 +12,10 @@ export default function view (state$) {
   return state$
     .distinctUntilChanged()
     .map(function({entries, selectedEntries
-      , fieldNames, sortFieldName, sortablesDirection, toggled}){
+      , fieldNames, sortFieldName, sortablesDirection, editableFields, toggled}){
 
       //entries = entries.asMutable()//FIXME: not sure
-      console.log("selectedEntries in BOM",selectedEntries)
+      console.log( "selectedEntries in BOM",selectedEntries)
 
       let direction = sortablesDirection
       //generate headers
@@ -44,7 +44,12 @@ export default function view (state$) {
           if(typeof(row[name]) === "boolean"){
             value = <input type="checkbox" checked={value} />
           }
-          return(<td className="bomEntry cell">{value}</td>)
+
+          //editable fields need to be represented differently (hack for now)
+          if(editableFields.indexOf(name) > -1){
+            value = <input type="text" value={value} />
+          }
+          return(<td className="bomEntry cell" attributes={{"data-name": name, "data-id":row.id}} >{value}</td>)
         })
 
         //cells.push(<td className="bomEntry cell"> <button>Change Model</button> </td>)

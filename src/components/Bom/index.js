@@ -18,6 +18,7 @@ export default function Bom({DOM, props$}) {
     DOM: vtree$,
     events: {
       entryTapped$:actions.entryTapped$
+      ,editEntry$:actions.editEntry$
     }
   }
 }

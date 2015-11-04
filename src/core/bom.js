@@ -14,6 +14,11 @@ let log = logger("app")
 log.setLevel("debug")
 
 
+function updateEntry(){
+
+}
+
+
 const defaults = {
   entries:[]
   ,byId:{}
@@ -80,9 +85,24 @@ function clearBomEntries(state, input){
   return Object.assign({},defaults)
 }
 
-function updateBomEntries(state, input){
-  console.log("updating BOM", input, state)
-  return state
+function updateBomEntries(state, inputs){
+  //console.log("updating BOM", inputs, state)
+
+  return inputs.reduce(function(state, {id,attrName,value}){ 
+
+    const entries = adjust(
+      function(item){
+        let updatedData = {} 
+        updatedData[attrName] = value
+        return mergeData({},item,updatedData)
+      }
+      , findIndex(propEq('id', id))(state.entries) //get index of the one we want to change
+      , state.entries)//input data
+
+    return {entries,byId:{}}
+
+  },state)
+
 }
 
 function updateBomEntriesCount(state, inputs){

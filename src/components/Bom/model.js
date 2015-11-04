@@ -17,6 +17,7 @@ function sortBy(fieldName){
 export default function model(props$, actions){
   const fieldNames$      = props$.pluck('fieldNames').startWith([]).filter(exists)
   const sortableFields$  = props$.pluck('sortableFields').startWith([]).filter(exists)
+  const editableFields$  = props$.pluck('editableFields').startWith([]).filter(exists)
   const entries$         = props$.pluck('entries').startWith([]).filter(exists)
   const selectedEntries$ = props$.pluck('selectedEntries').startWith([]).filter(exists)
     .distinctUntilChanged()
@@ -52,5 +53,6 @@ export default function model(props$, actions){
 
   const toggled$ = actions.toggle$.startWith(true)
 
-  return combineLatestObj({entries$:sortedEntries$, selectedEntries$, fieldNames$, sortFieldName$, sortablesDirection$, toggled$})
+  return combineLatestObj({entries$:sortedEntries$, selectedEntries$
+    , fieldNames$, sortFieldName$, sortablesDirection$, editableFields$, toggled$})
 }

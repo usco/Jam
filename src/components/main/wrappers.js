@@ -6,7 +6,7 @@ import {equals} from 'Ramda'
 import {combineLatestObj} from '../../utils/obsUtils'
 
 //nested dialogues etc
-import Bom         from '../Bom/Bom'
+import Bom         from '../Bom'
 import GLView      from '../webgl/GlView'
 import EntityInfos from '../widgets/EntityInfos'
 import Comments    from '../widgets/Comments'
@@ -53,8 +53,11 @@ export function EntityInfosWrapper(state$, DOM) {
 export function BOMWrapper(state$, DOM){
   function makeBomProps(state$){
     let fieldNames = ["name","qty","unit","version","printable"]
-    let sortableFields = ["id","name","qty","unit","printable"]   
+    let sortableFields = ["id","name","qty","unit","printable"]  
+    let editableFields = ["name"] 
+
     let fieldNames$ = just(fieldNames)
+    let editableFields$ = just(editableFields)
     let sortableFields$ = just(sortableFields)
     let selectedEntries$ = state$.pluck("selections").pluck("bomIds")
 
@@ -62,7 +65,7 @@ export function BOMWrapper(state$, DOM){
       .map(s=>s.bom.entries)
       .distinctUntilChanged()
 
-    let bomProps$ = combineLatestObj( {fieldNames$,sortableFields$,entries$,selectedEntries$ })
+    let bomProps$ = combineLatestObj( {fieldNames$,sortableFields$,editableFields$,entries$,selectedEntries$ })
 
     return bomProps$
   }

@@ -2,6 +2,7 @@ import {Rx} from '@cycle/core'
 const merge = Rx.Observable.merge
 
 import {first,toggleCursor} from '../../utils/otherUtils'
+import {exists,toArray} from '../../utils/utils'
 
 import {observableDragAndDrop} from '../../interactions/dragAndDrop'
 
@@ -96,7 +97,9 @@ export default function intent (drivers) {
 
 
   //const bomActions = bomIntent(drivers)
-  const bomActions = {}  
+  const bomActions = {
+    updateBomEntries$:events.select("bom").events("editEntry$").map(toArray)
+  }  
   /*let foo$ = Rx.Observable.just("bar")
   let reset2$ = DOM.select('.reset').events("click")
   DOM.select('.reset').events("click").subscribe(e=>console.log("reseting bom1"))

@@ -465,6 +465,21 @@ input[type=color]:focus{
   padding: 5 5 5 5;
 }
 
+.bom input[type=text]{
+  min-width: 150px;
+  border: none;
+  background: none;
+  color: #555555;
+}
+
+.bom tr.selected input[type=text]{
+  min-width: 150px;
+  border: none;
+  background: none;
+  color: white;
+}
+
+
 .foo{
   position: absolute;
   right: 0px;

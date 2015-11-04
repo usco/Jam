@@ -31,7 +31,8 @@ export default function main(drivers) {
   //outputs 
   const vtree$  = view(state$, settingsC.DOM, fsToggler.DOM, bom.DOM,gl.DOM
     , entityInfos.DOM, comments.DOM, progressBar.DOM)
-  const events$ = just( {gl:gl.events, entityInfos:entityInfos.events, bom:bom.events, comments:comments.events} )
+  const events$ = just( {gl:gl.events, entityInfos:entityInfos.events
+    , bom:bom.events, comments:comments.events} )
   //output to localStorage
   //in this case, settings
   const localStorage$ = state$
