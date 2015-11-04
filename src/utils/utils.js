@@ -6,6 +6,11 @@ export function exists(input){
   return input !== null && input !== undefined
 }
 
+//utiity to determine if a string is empty, null, or full of whitespaces
+export function isEmpty(str) {
+    return (!str || /^\s*$/.test(str) || str.length === 0 || !str.trim())
+}
+
 export function itemsEqual(a,b){
   //perhaps an immutable library would not require such horrors?
   if(JSON.stringify(a)===JSON.stringify(b)){
