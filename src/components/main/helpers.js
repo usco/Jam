@@ -1,6 +1,8 @@
 import {Rx} from '@cycle/core'
 const merge = Rx.Observable.merge
 import {generateUUID,exists,toArray} from '../../utils/utils'
+import {mergeData} from '../../utils/modelUtils'
+
 
 //function to add extra data to entityActions
 export function remapEntityActions(entityActions, currentSelections$){
@@ -9,7 +11,7 @@ export function remapEntityActions(entityActions, currentSelections$){
     .withLatestFrom(currentSelections$,function(_,selections){
       console.log("selections to duplicate",selections)
       const newId = generateUUID()
-      return selections.map(s=>Object.assign({},s,{newId}) )
+      return selections.map(s=>mergeData(s,{newId}) )
     })
     .share()
 
@@ -20,7 +22,7 @@ export function remapEntityActions(entityActions, currentSelections$){
     })
     .share()
 
-  return Object.assign({},entityActions, 
+  return mergeData(entityActions, 
     {
       duplicateEntityInstances$
       ,deleteEntityInstances$

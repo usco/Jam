@@ -34,6 +34,7 @@
     "classnames": "^1.2.0",
     "cycle-react": "^0.27.0",
     "deep-diff": "^0.3.2",
+    "fast.js": "^0.1.1",
     "glView-helpers": "usco/glView-helpers",
     "immutable": "^3.7.0",
     "install": "^0.1.8",

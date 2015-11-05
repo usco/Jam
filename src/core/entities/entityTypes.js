@@ -87,7 +87,7 @@ function registerTypeFromMesh(state,input){
 
 function clearTypes(state, input){
   //log.info("New design, clearing registry",regData)
-  return Object.assign({},defaults)
+  return mergeData(defaults)
 }
 
 function entityTypes(actions, source){

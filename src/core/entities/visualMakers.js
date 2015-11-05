@@ -1,6 +1,8 @@
 import helpers from 'glView-helpers'
 let annotations = helpers.annotations
 import THREE from 'three'
+import {mergeData} from '../../../utils/modelUtils'
+
 
 function meshesFromDeps(deps, getVisual, entities$){
   /*let observables = deps
@@ -39,7 +41,7 @@ function makeNoteVisual(entity, subJ, params){
     let params = {
       point:pt,
       object:mesh}
-    params = Object.assign(params,annotStyle)
+    params = mergeData(params,annotStyle)
 
     return new annotations.NoteVisual(params)
   }
@@ -69,7 +71,7 @@ export function foo(core){
     let params = {
       point:pt,
       object:mesh}
-    params = Object.assign(params,annotStyle)
+    params = mergeData(params,annotStyle)
 
     return new annotations.NoteVisual(params)
   }

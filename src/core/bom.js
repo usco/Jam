@@ -82,7 +82,7 @@ function removeBomEntries(state,input){
 
 function clearBomEntries(state, input){
   console.log("clearing BOM", input, state)
-  return Object.assign({},defaults)
+  return mergeData({},defaults)
 }
 
 function updateBomEntries(state, inputs){

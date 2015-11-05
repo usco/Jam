@@ -111,7 +111,7 @@ export function createVisualMapper(types$, entities$){
 
   //ugh !! this is needed to be OUTSIDE the scope of "getVisual" otherwise, each call returns a new instance
   //of the cache : ie NO CACHE
-  let iuidToMesh = {}
+  let idToMesh = {}
   let typeUidToTemplateMesh = {}
   let visualProviders = {}
 
@@ -128,7 +128,7 @@ export function createVisualMapper(types$, entities$){
     
     //now each resolver  needs to fire "onNext on this subject"
     let subJ = new Rx.ReplaySubject()
-    let {iuid, typeUid} = entity
+    let {id, typeUid} = entity
    
     //what we want as "user" is a refined, updated result
     //note: is this always the case or only with geometry?
@@ -138,9 +138,9 @@ export function createVisualMapper(types$, entities$){
     }
 
     function cache(mesh){
-      if(!iuidToMesh[iuid]){//needed ?
-        //console.log("caching mesh",mesh, "total cache",iuidToMesh)
-        iuidToMesh[entity.iuid] = mesh
+      if(!idToMesh[id]){//needed ?
+        //console.log("caching mesh",mesh, "total cache",idToMesh)
+        idToMesh[entity.id] = mesh
       }
     }
 
@@ -153,7 +153,7 @@ export function createVisualMapper(types$, entities$){
       return mesh
     }
 
-    if(!iuidToMesh[iuid]){
+    if(!idToMesh[id]){
       let entities = [entity]
       let typeUid  = entity.typeUid
       let cid      = entity.cid
@@ -167,8 +167,8 @@ export function createVisualMapper(types$, entities$){
       //obsByTypes(entities,["A0"]).map()
 
     }else{
-      //console.log("reusing mesh from cache by iuid",iuid)
-      let mesh = iuidToMesh[iuid]
+      //console.log("reusing mesh from cache by id",id)
+      let mesh = idToMesh[id]
       //FIXME: hack for now
       subJ.onNext(mesh)
       postProcess(entity,mesh)
@@ -202,7 +202,7 @@ function noteVisualProvider(entity, subJ, params){
   console.log("note annot",entity)
   let {getVisual,entities$} = params
   let point = entity.target.point
-  let deps = [entity.target.iuid]
+  let deps = [entity.target.id]
 
   function visual(mesh){
     //mesh.updateMatrix()
@@ -226,7 +226,7 @@ function noteVisualProvider(entity, subJ, params){
 
 function thicknessVisualProvider(entity, subJ, params){
   let {getVisual,entities$} = params
-  let deps = [entity.target.iuid]
+  let deps = [entity.target.id]
   let entryPoint = entity.target.entryPoint
   let exitPoint  = entity.target.exitPoint
                     
@@ -257,7 +257,7 @@ function distanceVisualProvider(entity, subJ, params){
   let start = entity.target.start
   let end = entity.target.end
 
-  let deps = [start.iuid, end.iuid]
+  let deps = [start.id, end.id]
 
   function visual(startMesh, endMesh){
     let startPt = new THREE.Vector3().fromArray(start.point)
@@ -290,7 +290,7 @@ function diameterVisualProvider(entity, subJ, params){
   let point = entity.target.point
   let normal = entity.target.normal
   let diameter = entity.value
-  let deps = [entity.target.iuid]
+  let deps = [entity.target.id]
   
   function visual(mesh){
     point    = new THREE.Vector3().fromArray(point)
@@ -323,7 +323,7 @@ function angleVisualProvider(entity, subJ, params){
   let end   = entity.target.end
   let angle = entity.value
 
-  let deps = [start, mid, end].map(d=>d.iuid)
+  let deps = [start, mid, end].map(d=>d.id)
   console.log("angleVisualProvider",entity, params)
   
   function visual(startObject, midObject, endObject){
@@ -357,14 +357,14 @@ function angleVisualProvider(entity, subJ, params){
 /*for testing
 let fakeEntities$= Rx.Observable.just({
     byId:{
-        5:{typeUid:"A0",iuid:5,name:"PART1",pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]},
-        2: {typeUid:"A0",iuid:2,name:"PART2",pos:[0,0,40],rot:[0,45,0],sca:[1,1,1]},
-        7: {typeUid:"A0",iuid:7,name:"PART3",pos:[10,-20,0],rot:[0,0,0],sca:[1,1,1]},
+        5:{typeUid:"A0",id:5,name:"PART1",pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]},
+        2: {typeUid:"A0",id:2,name:"PART2",pos:[0,0,40],rot:[0,45,0],sca:[1,1,1]},
+        7: {typeUid:"A0",id:7,name:"PART3",pos:[10,-20,0],rot:[0,0,0],sca:[1,1,1]},
 
 
-        10:{typeUid:"A1",iuid:10,name:"ANNOT3",deps:[5,2,7],                     pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]},
-        11:{typeUid:"A2",iuid:11,name:"Note ANNOT",value:"some text", deps:[2],  pos:[0,0,0],rot:[0,0,0],sca:[1,1,1],
-          target:{point:[10,5,0],iuid:2}
+        10:{typeUid:"A1",id:10,name:"ANNOT3",deps:[5,2,7],                     pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]},
+        11:{typeUid:"A2",id:11,name:"Note ANNOT",value:"some text", deps:[2],  pos:[0,0,0],rot:[0,0,0],sca:[1,1,1],
+          target:{point:[10,5,0],id:2}
         },
       }
     })
@@ -373,27 +373,27 @@ let fakeEntities$= Rx.Observable.just({
   let {getVisual,addVisualProvider } = createVisualMapper(partTypes$, fakeEntities$)
 
   Rx.Observable.from([
-    {typeUid:"A0",iuid:5,name:"PART1",pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]},
-    {typeUid:"A0",iuid:2,name:"PART2",pos:[0,0,40],rot:[0,45,0],sca:[1,1,1]},
-    {typeUid:"A0",iuid:7,name:"PART3",pos:[10,-20,0],rot:[0,0,0],sca:[1,1,1]},
-    //{typeUid:"A1",iuid:10,name:"ANNOT3",deps:[5,2,7],pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]},
-    {typeUid:"A1",iuid:11,name:"Note ANNOT",value:"some text",
+    {typeUid:"A0",id:5,name:"PART1",pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]},
+    {typeUid:"A0",id:2,name:"PART2",pos:[0,0,40],rot:[0,45,0],sca:[1,1,1]},
+    {typeUid:"A0",id:7,name:"PART3",pos:[10,-20,0],rot:[0,0,0],sca:[1,1,1]},
+    //{typeUid:"A1",id:10,name:"ANNOT3",deps:[5,2,7],pos:[0,0,0],rot:[0,0,0],sca:[1,1,1]},
+    {typeUid:"A1",id:11,name:"Note ANNOT",value:"some text",
       pos:[0,0,0],rot:[0,0,0],sca:[1,1,1],
-      target:{point:[10,5,0],iuid:2}
+      target:{point:[10,5,0],id:2}
     },
-    {typeUid:"A2",iuid:12,name:"thickness ANNOT",value:150.45,
+    {typeUid:"A2",id:12,name:"thickness ANNOT",value:150.45,
       pos:[0,0,0],rot:[0,0,0],sca:[1,1,1],
-      target:{entryPoint:[10,5,0], exitPoint:[0,-7.2,19],iuid:5}
+      target:{entryPoint:[10,5,0], exitPoint:[0,-7.2,19],id:5}
     },
-    {typeUid:"A3",iuid:13,name:"Diameter ANNOT",value:34.09,
+    {typeUid:"A3",id:13,name:"Diameter ANNOT",value:34.09,
       pos:[0,0,0],rot:[0,0,0],sca:[1,1,1],
-      target:{point:[10,5,0],normal:[1,0,0],iuid:7}
+      target:{point:[10,5,0],normal:[1,0,0],id:7}
     },
-    {typeUid:"A4",iuid:14,name:"distance ANNOT",value:56.22,
+    {typeUid:"A4",id:14,name:"distance ANNOT",value:56.22,
       pos:[0,0,0],rot:[0,0,0],sca:[1,1,1],
       target:{
-        start:{point:[10,5,0],iuid:2}, 
-        end:{point:[0,-7.2,19],iuid:5}
+        start:{point:[10,5,0],id:2}, 
+        end:{point:[0,-7.2,19],id:5}
       }
     }
   ])

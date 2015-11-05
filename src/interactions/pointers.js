@@ -9,6 +9,8 @@ log.setLevel("info")
 
 import {preventDefault,isTextNotEmpty,formatData,exists} from '../utils/obsUtils'
 import {normalizeWheel} from './utils'
+import assign from 'fast.js/object/assign'//faster object.assign
+
 
 //various helpers
 
@@ -97,7 +99,7 @@ function altMouseMoves( mouseMoves ){
             delta:{x: a.clientX - b.clientX, y: a.clientY - b.clientY}
           }
         
-          return Object.assign(data, b)
+          return assign(data, b)
         }
       )
 }
@@ -211,7 +213,7 @@ function drags3(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
             top: mm.clientY - startY
         }
         //console.log("delta",delta)
-        return Object.assign(mm, delta)
+        return assign(mm, delta)
       })
       .takeUntil(mouseUps)
   })

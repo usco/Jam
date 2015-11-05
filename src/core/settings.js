@@ -20,7 +20,7 @@ import {makeModel, mergeData} from '../utils/modelUtils'
 
 function changeSetting(state, input){
   //console.log("currentData",state,input)
-  let output = Object.assign({},state,remapStructure(input) )
+  let output = mergeData(state,remapStructure(input) )
   return output
 }
 

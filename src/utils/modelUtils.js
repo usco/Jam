@@ -5,6 +5,7 @@ let merge = Rx.Observable.merge
 let just  = Rx.Observable.just
 
 import Immutable from 'seamless-immutable'
+import assign from 'fast.js/object/assign'//faster object.assign
 
 //TODO: this needs to be an external lib, for re-use
 //merge the current data with any number of input data
@@ -12,7 +13,7 @@ export function mergeData(currentData, ...inputs){
   if("merge" in currentData){
     return currentData.merge(inputs)
   }
-  return Object.assign({}, currentData, ...inputs)
+  return assign({}, currentData, ...inputs)
 }
 
 //need to make sure source data structure is right 

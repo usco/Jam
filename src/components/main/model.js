@@ -6,6 +6,7 @@ import {nameCleanup} from '../../utils/formatters'
 
 import {combineLatestObj,replicateStream} from '../../utils/obsUtils'
 import {generateUUID,exists,toArray} from '../../utils/utils'
+import {mergeData} from '../../utils/modelUtils'
 
 import {makeCoreSystem} from '../../core/entities/components/core' 
 import {makeTransformsSystem} from '../../core/entities/components/transforms' 
@@ -27,6 +28,7 @@ import bom         from '../../core/bom'
 import {remapEntityActions,remapCoreActions,
   remapMeshActions,remapTransformActions,remapBoundsActions} from './helpers'
 
+ 
  
 function makeRegistry(instances$, types$){
   //register type=> instance & vice versa
@@ -260,7 +262,7 @@ export default function model(props$, actions, drivers){
 
   const updateBomEntries$ = actions.bomActions.updateBomEntries$
 
-  let bomActions = Object.assign( {addBomEntries$, updateBomEntriesCount$, clearBomEntries$, updateBomEntries$} )
+  let bomActions = mergeData( {addBomEntries$, updateBomEntriesCount$, clearBomEntries$, updateBomEntries$} )
   const bom$ = bom(bomActions)
 
   //loading flag , mostly for viewer mode

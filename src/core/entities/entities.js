@@ -2,6 +2,7 @@
 //quadruplets? 
 //mesh(bin),source, params , metadata, 
 
+/*
 import {
   addEntityInstances$, 
   updateInstance$, 
@@ -10,6 +11,8 @@ import {
   deleteAllInstances$,
   selectEntities$
    } from './actions'
+
+   */
 
 
 import {exists} from '../../utils/obsUtils'
@@ -38,7 +41,7 @@ const defaults = {
 ///helper functions
 function reduceToIuidBasedHash(instances){
   return instances.reduce(function(prev,cur){
-      prev[cur.iuid] = cur
+      prev[cur.id] = cur
       return prev
     },{})
 }
@@ -57,7 +60,7 @@ function addInstances(state, {input,settings}){
   //set selections, if need be
   if(settings.autoSelectNewEntities){
     //FIXME !! issue with ordering of things: at this stage, state is not updated !!
-    //selectEntities$( entities.map(i=>i.iuid) )
+    //selectEntities$( entities.map(i=>i.id) )
   }
   return state
 }
@@ -69,7 +72,7 @@ function deleteInstance(state, input){
   log.info("removing entities ", input)
 
   let instances = state.instances
-    .filter( entity => (input.indexOf(entity.iuid)===-1) )
+    .filter( entity => (input.indexOf(entity.id)===-1) )
   let byId = reduceToIuidBasedHash(instances)
 
   state = mergeData( state, {instances, byId} )
@@ -103,15 +106,15 @@ function updateInstances(state, input){
   let newData = toArray(input)
 
   let updatedEntities = newData
-    .filter(e=>e.iuids !== undefined)
+    .filter(e=>e.ids !== undefined)
     .map(function(entry){
-      let iuid = entry.iuids
-      let tgtEntity = state.byId[iuid]
+      let id = entry.ids
+      let tgtEntity = state.byId[id]
       tgtEntity = mergeData(tgtEntity, entry)
       return tgtEntity
     })
     .reduce(function(prev,cur){
-      prev[cur.iuid] = cur
+      prev[cur.id] = cur
       return prev
     },{})
 
@@ -130,11 +133,11 @@ function duplicateInstances(state, {input,settings}){
   let sources = toArray(input)
 
   function duplicate(original){
-    let doNotCopy = ["iuid","name"]
+    let doNotCopy = ["id","name"]
     let onlyCopy = ["cid","pos","rot","sca","color","typeUid"]
 
     let dupe = {
-      iuid:generateUUID()
+      id:generateUUID()
     }
     for(let key in original ){
       if( onlyCopy.indexOf( key ) > -1 ){
@@ -153,7 +156,7 @@ function duplicateInstances(state, {input,settings}){
   state = mergeData( state, {instances, byId} )
    
   //set selections, if need be
-  //if(settings.autoSelectNewEntities) selectEntities$( dupes.map(i=>i.iuid) )
+  //if(settings.autoSelectNewEntities) selectEntities$( dupes.map(i=>i.id) )
 
   return state
 }
