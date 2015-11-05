@@ -549,6 +549,8 @@ input[type=color]:focus{
   bottom: 10px;
   right: 55px;
   z-index: 2;
+
+  cursor: default;
 }
 
 .help .content {
@@ -561,9 +563,22 @@ input[type=color]:focus{
   padding: 5px;
 }
 
+.help .content ul{
+  /*list-style: none;*/
+  margin-left: 0;
+  border: none;
+  padding: 0 0 0 20;
+}
+.help .content li{
+  /*padding: 5px;
+  background: #f4f4f4;*/
+}
+
 .help .toggled {
   border: 1px solid #F7F6F6 !important;
 }
+
+
 
 
 /*//////////////////*/
