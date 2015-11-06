@@ -6,6 +6,7 @@ let combineLatest = Rx.Observable.combineLatest
 import {preventDefault,isTextNotEmpty,formatData,exists,combineLatestObj} from '../../utils/obsUtils'
 import {equals} from 'ramda'
 
+import {makeNoteVisual} from './visualMakers'
 
 let requestAnimationFrameScheduler = Rx.Scheduler.requestAnimationFrame
    //problem : this fires BEFORE the rest is ready
@@ -38,7 +39,6 @@ function makeRemoteMeshVisual(core,transform,mesh){
     {
       mesh.scale.fromArray( transform.sca )
     }
-    
     //color is stored in core component
     mesh.material.color.set( core.color )
     return setFlags(mesh)
@@ -58,6 +58,7 @@ function getVisual(components){
 
     if(core.typeUid === "A1")//typeUid:"A1"=> notes
     {   
+      return makeNoteVisual(core, components.meshes)
     }
     else{
       return makeRemoteMeshVisual(core,transform,mesh)
