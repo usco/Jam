@@ -130,6 +130,13 @@ const measureDistanceIconSvg = `<svg version="1.1" id="Ruler" xmlns="http://www.
   l0.759-0.76L16.072,6.206z M16.071,3.171l-0.759,0.759l-1.896-1.898l0.759-0.758L16.071,3.171z"/>
 </svg>`
 
+const measureThicknessIconSvg = `<svg version="1.1" id="Vertical_align_middle" xmlns="http://www.w3.org/2000/svg" 
+   width="16" height="16" x="0px" y="0px" viewBox="0 0 20 20" enable-background="new 0 0 20 20" xml:space="preserve" class="icon">
+<path fill="#FFFFFF" d="M10,12l-3,3h2v4h2v-4h2L10,12z M13,5h-2V1H9v4H7l3,3L13,5z M18,10c0-0.553-0.048-1-0.6-1H2.6
+  C2.048,9,2,9.447,2,10c0,0.551,0.048,1,0.6,1h14.8C17.952,11,18,10.551,18,10z"/>
+</svg>`
+
+
 const measureDiameterIconSvg = `<svg version="1.1"   xmlns="http://www.w3.org/2000/svg"
   width="22px" height="22px" viewBox="0 0 22 22" class="icon">
     <title>Untitled</title>
@@ -216,6 +223,9 @@ export default function view(state$, settingsVTree$, fsTogglerVTree$, bomVtree$
 
             {tooltipIconBtn(activeTool === 'measureDistance'
               , measureDistanceIconSvg, "measureDistance", "measure distance", "bottom")}
+
+            {tooltipIconBtn(activeTool === 'measureThickness'
+              , measureThicknessIconSvg, "measureThickness", "measure thickness", "bottom")}
 
             {tooltipIconBtn(activeTool === 'measureDiameter'
               , measureDiameterIconSvg, "measureDiameter", "measure diameter", "bottom")}
