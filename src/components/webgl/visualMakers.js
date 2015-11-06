@@ -111,3 +111,65 @@ export function makeThicknessVisual(core, meshes){
 
   return combineData(core, deps, meshes, makeVisual)
 }
+
+
+export function makeDiameterVisual(core, meshes){
+  let point = core.target.point
+  let normal = core.target.normal
+  let diameter = core.value
+  let deps = [core.target.id]
+  
+  function makeVisual([mesh]){
+    point    = new THREE.Vector3().fromArray(point)
+    normal   = new THREE.Vector3().fromArray(normal)
+    //mesh.updateMatrix()
+    //mesh.updateMatrixWorld()
+    point = mesh.localToWorld(point)
+
+    let params = {
+         center:point,
+         diameter,
+         orientation:normal
+      }
+    params = Object.assign(params,annotStyle)
+
+    return new annotations.DiameterVisual(params)
+  }
+     
+  return combineData(core, deps, meshes, makeVisual)
+}
+
+
+export function makeAngleVisual(core, meshes){
+  let start = core.target.start
+  let mid   = core.target.mid
+  let end   = core.target.end
+  let angle = core.value
+
+  let deps = [start, mid, end].map(d=>d.id)
+  console.log("makeAngleVisual",core, params)
+  
+  function makeVisual([startObject, midObject, endObject]){
+    let startPt = new THREE.Vector3().fromArray(start.point)
+    let midPt   = new THREE.Vector3().fromArray(mid.point)
+    let endPt   = new THREE.Vector3().fromArray(end.point)
+
+
+    let params = {
+         start:startPt
+         ,mid:midPt
+         ,end:endPt
+
+         ,startObject
+         ,midObject
+         ,endObject
+
+         ,angle
+      }
+    params = Object.assign(params,annotStyle)
+
+    return new annotations.AngleVisual(params)
+  }
+     
+  return combineData(core, deps, meshes, makeVisual)
+}

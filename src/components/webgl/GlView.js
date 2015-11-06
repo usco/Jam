@@ -20,7 +20,6 @@ Rx.config.longStackSupport = true
 import {pointerInteractions,interactionsFromCEvents,preventScroll} from '../../interactions/pointers'
 import {windowResizes} from '../../interactions/sizing'
 
-import Selector from './deps/Selector'
 import {preventDefault,isTextNotEmpty,formatData,exists,combineLatestObj} from '../../utils/obsUtils'
 import {toArray,itemsEqual} from '../../utils/utils'
 

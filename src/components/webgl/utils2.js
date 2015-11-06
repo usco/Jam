@@ -15,6 +15,7 @@ export function selectionAt(event, mouseCoords, camera, hiearchyRoot){
   //let intersects = selector.pickAlt({x:event.clientX,y:event.clientY}, rect, width, height, rootObject)
   let intersects = pick(mouseCoords, camera, hiearchyRoot )//, ortho = false, precision=10)
 
+  console.log("intersects",intersects)
   let outEvent = {}
   outEvent.clientX = event.clientX
   outEvent.clientY = event.clientY

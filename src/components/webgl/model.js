@@ -6,7 +6,8 @@ let combineLatest = Rx.Observable.combineLatest
 import {preventDefault,isTextNotEmpty,formatData,exists,combineLatestObj} from '../../utils/obsUtils'
 import {equals} from 'ramda'
 
-import {makeNoteVisual, makeDistanceVisual, makeThicknessVisual} from './visualMakers'
+import {makeNoteVisual, makeDistanceVisual, makeThicknessVisual,
+makeDiameterVisual, makeAngleVisual} from './visualMakers'
 
 let requestAnimationFrameScheduler = Rx.Scheduler.requestAnimationFrame
    //problem : this fires BEFORE the rest is ready
@@ -56,6 +57,7 @@ function getVisual(components){
     let transform = components.transforms[key]
     let mesh = components.meshes[key]
 
+    //TODO: refactor this horror
     if(core.typeUid === "A1")//typeUid:"A1"=> notes
     {   
       return makeNoteVisual(core, components.meshes)
@@ -63,8 +65,14 @@ function getVisual(components){
     else if(core.typeUid === "A2"){
       return makeThicknessVisual(core, components.meshes)
     }
+    else if(core.typeUid === "A3"){
+      return makeDiameterVisual(core, components.meshes)
+    }
     else if(core.typeUid === "A4"){
       return makeDistanceVisual(core, components.meshes)
+    }
+    else if(core.typeUid === "A5"){
+      return makeAngleVisual(core, components.meshes)
     }
     else{
       return makeRemoteMeshVisual(core,transform,mesh)
