@@ -6,56 +6,6 @@ import {mergeData} from '../../utils/modelUtils'
 import {find,propEq} from 'ramda'
 
 
-
-function meshesFromDeps(deps, getVisual, entities$){
-  /*let observables = deps
-    .map(getEntityByIuid)
-    .map(getVisual)
-    .map(s=>s.take(1))//only need one, also, otherwise, forkjoin will not fire
-  //return Rx.Observable.forkJoin( observables )*/
-
-  return Rx.Observable.just(null)//how can I not use this one ?
-    .combineLatest(entities$.pluck("byId"),function(x,byId){
-      //console.log("byId",byId,deps)
-      return deps
-        .map(d=>byId[d])
-        .filter(x=>x!==undefined)
-        .map(getVisual)
-        .map(s=>s.take(1))
-    })
-    //.do(e=>console.log("got some data",e))
-    .flatMap(Rx.Observable.forkJoin)
-    //.do(e=>console.log("got some data2",e))
-    //.subscribe(x=>console.log("deps",x))
-}
-
-function makeNoteVisual_old(entity, subJ, params){
-  console.log("note annot",entity)
-  let {getVisual,entities$} = params
-  let point = entity.target.point
-  let deps = [entity.target.id]
-
-  function visual(mesh){
-    //mesh.updateMatrix()
-    //mesh.updateMatrixWorld()
-    let pt = new THREE.Vector3().fromArray(point)//.add(mesh.position)
-    pt = mesh.localToWorld(pt)
-
-    let params = {
-      point:pt,
-      object:mesh}
-    params = mergeData(params,annotStyle)
-
-    return new annotations.NoteVisual(params)
-  }
-
-  meshesFromDeps(deps, getVisual, entities$)
-    .subscribe(function(data){
-      subJ.onNext(visual(data[0]))
-    })
-}
-
-
   let annotStyle = {
     crossColor:"#000",
     textColor:"#000",
@@ -66,48 +16,32 @@ function makeNoteVisual_old(entity, subJ, params){
     fontFace:"Open Sans"
   }
 
-function resolveMeshes(deps, visualCallback, meshes){
-  /*return Rx.Observable.just(null)//how can I not use this one ?
-    .combineLatest(entities$.pluck("byId"),function(x,byId){
-      //console.log("byId",byId,deps)
-      return deps
-        .map(d=>byId[d])
-        .filter(x=>x!==undefined)
-        .map(getVisual)
-        .map(s=>s.take(1))
-    })
-    //.do(e=>console.log("got some data",e))
-    .flatMap(Rx.Observable.forkJoin)*/
-
-  let bla = deps.map(function(dep){
+function resolveMeshes(deps, meshes){
+  return deps.map(function(dep){
       return meshes[dep]
     })
-
-  console.log("bla",bla)
-
-  return bla.reduce(function(acc,cur){
-      console.log("reduce",acc,cur)
-      return visualCallback(cur)
-    },[])
-
-  /*return deps.map(function(dep){
-      return meshes[dep]
-    })
-    //.filter(x=>x!==undefined)
-    .reduce(function(acc,cur){
-      console.log("reduce",acc,cur)
-      return visualCallback(cur)
-    })*/
-  
-
+    .filter(x=>x!==undefined)
 }
+
+function addCoreData(core,visual){
+  visual.userData.entity = {id : core.id}
+  return visual
+}
+
+function combineData(core, deps, meshes, makeVisual){
+  const depMeshes = resolveMeshes(deps, meshes) 
+  const visual    = makeVisual(depMeshes)
+  return addCoreData(core, visual)
+}
+
+//actual visual makers
 
 export function makeNoteVisual(core, meshes){
   console.log("makeNoteVisual",core, meshes)
   let point = core.target.point
   let deps  = [core.target.id]
 
-  function visual(object){
+  function makeVisual([object]){
     //mesh.updateMatrix()
     //mesh.updateMatrixWorld()
     let pt = new THREE.Vector3().fromArray(point)//.add(mesh.position)
@@ -121,5 +55,59 @@ export function makeNoteVisual(core, meshes){
     return new annotations.NoteVisual(params)
   }
 
-  return resolveMeshes(deps, visual, meshes)
+  return combineData(core, deps, meshes, makeVisual)
+}
+
+
+
+export function makeDistanceVisual(core, meshes){
+  let start = core.target.start
+  let end = core.target.end
+
+  let deps = [start.id, end.id]
+
+  function makeVisual([startMesh, endMesh]){
+    let startPt = new THREE.Vector3().fromArray(start.point)
+    let endPt   = new THREE.Vector3().fromArray(end.point)
+    startMesh.localToWorld(startPt)
+    endMesh.localToWorld(endPt)
+    //startMesh.worldToLocal(startPt)
+    //endMesh.worldToLocal(endPt)
+
+    let params = {
+      start:startPt,
+      startObject:startMesh,
+      end: endPt,
+      endObject: endMesh
+    }
+    params = mergeData(params, annotStyle)
+
+    return new annotations.DistanceVisual(params)
+  }
+
+  return combineData(core, deps, meshes, makeVisual)
+}
+
+export function makeThicknessVisual(core, meshes){
+  let deps = [core.target.id]
+  let entryPoint = core.target.entryPoint
+  let exitPoint  = core.target.exitPoint
+                    
+  function makeVisual([object]){
+
+    entryPoint= new THREE.Vector3().fromArray(entryPoint)
+    exitPoint = new THREE.Vector3().fromArray(exitPoint)
+    entryPoint = object.localToWorld(entryPoint)
+    exitPoint = object.localToWorld(exitPoint)
+
+    let params = {
+      entryPoint,
+      exitPoint,
+      object
+    }
+    params = mergeData(params,annotStyle)
+    return new annotations.ThicknessVisual(params)
+  }
+
+  return combineData(core, deps, meshes, makeVisual)
 }
