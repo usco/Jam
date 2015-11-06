@@ -59,13 +59,13 @@ function view(state$){
 
     if(toggled){
       content = <section className={Class("content", {toggled: toggled})}>
-        <span> Jam version xxx</span>
         <ul>
           <li>Click/tap and drag to rotate.</li>
           <li>Mouse wheel to zoom.</li>
           <li>Single click/tap to select items.</li>
           <li>Double click/tap to zoom on points/objects.</li>
         </ul>
+        <span className="appVersion"> Jam version xxx</span>
       </section>
     }
 
