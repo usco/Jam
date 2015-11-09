@@ -69,10 +69,10 @@ export function pick(mouseCoords, camera, hiearchyRoot, ortho = false, precision
   //remove invisibles, dedupe ?? 
   //TODO: use transducers.js ?
   intersects = intersects
+  .filter(intersect => intersect.object && intersect.object.visible ===true )//&& intersect.object.pickable)
   .sort(function(a, b) {
     return a.distance - b.distance
   })
-  .filter(intersect => intersect.object && intersect.object.visible ===true)
   //.reverse()
 
   return intersects
