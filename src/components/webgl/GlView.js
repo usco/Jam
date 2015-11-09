@@ -39,8 +39,7 @@ let annotations = helpers.annotations
 
 let ZoomInOnObject= helpers.objectEffects.ZoomInOnObject
 
-import {selectionAt,meshFrom,isTransformTool,targetObject,
-  makeCamera, makeControls, makeLight, renderMeta
+import {makeCamera, makeControls, makeLight, renderMeta
 } from './utils2'
 
 import {presets} from './presets' //default configuration for lighting, cameras etc
