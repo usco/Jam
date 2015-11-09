@@ -25,6 +25,8 @@ function resolveMeshes(deps, meshes){
 
 function addCoreData(core,visual){
   visual.userData.entity = {id : core.id}
+  //special attributes
+  visual.pickable = true
   return visual
 }
 

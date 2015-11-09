@@ -19,6 +19,7 @@ export function makeMeshSystem(actions){
       let id = input.id
 
       mesh.userData.entity = {id}
+      mesh.pickable = true
 
       state = mergeData({},state)
       state[id] = mesh

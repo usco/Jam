@@ -58,10 +58,12 @@ export function duplicateComponents(state, inputs){
     let   clone  = undefined
     if('clone' in source){
       clone = source.clone()
+      //FIXME specific to mesh components, move it elsewhere
       clone.material=source.material.clone()
       clone.userData.entity = {
         id:newId
       }
+      clone.pickable = source.pickable
 
     }else{
       clone = mergeData({},source) 
