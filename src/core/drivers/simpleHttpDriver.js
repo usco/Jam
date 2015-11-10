@@ -9,9 +9,11 @@ export function createResponse$(options={responseType:"text",method:"get"}){
   let xmlhttp = new XMLHttpRequest()
 
   function handleProgress(e){
-    if (e.lengthComputable) {
-      obs.onNext({progress: (e.loaded / e.total)}) 
-    }
+    [e]
+      .filter(e=>e.lengthComputable)
+      .forEach(function(e){
+        obs.onNext({progress: (e.loaded / e.total),total:e.total}) 
+      })  
   }
   function handleComplete(e){
     let response = xmlhttp.response
@@ -22,7 +24,7 @@ export function createResponse$(options={responseType:"text",method:"get"}){
 
   function handleError(e){
     console.log("error",xmlhttp.statusText)
-    e=>obs.onError(e)
+    obs.onError(e)
   }
 
   xmlhttp.addEventListener("progress", handleProgress)
