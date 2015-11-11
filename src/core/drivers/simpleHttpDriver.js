@@ -3,7 +3,13 @@ import Rx from 'rx'
 
 //TODO : merge this with existing XHR-store
 
-export function createResponse$(options={responseType:"text",method:"get"}){
+export function createResponse$(options){
+  const defaults = {
+    responseType:"text"
+    ,method:"get"
+  }
+  options = Object.assign(options,defaults)
+
   let obs = new Rx.Subject()
 
   let xmlhttp = new XMLHttpRequest()
