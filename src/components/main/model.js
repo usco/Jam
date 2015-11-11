@@ -1,5 +1,6 @@
 import {Rx} from '@cycle/core'
-let merge = Rx.Observable.merge
+const merge = Rx.Observable.merge
+const just  = Rx.Observable.just
 import {flatten} from 'Ramda'
 
 import {nameCleanup} from '../../utils/formatters'
@@ -281,6 +282,10 @@ export default function model(props$, actions, drivers){
 
   //remoteOperations$.subscribe(e=>console.log("remoteOperations",e))
 
+  //////other data
+  const appData$ = just({
+    version:'0.2.3'
+  })
 
   //combine all the above 
   const state$ = combineLatestObj({
@@ -294,6 +299,8 @@ export default function model(props$, actions, drivers){
     ,core$
     ,transforms$
     ,meshes$
+
+    ,appData$
   }).shareReplay(1)
 
 

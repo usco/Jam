@@ -32,9 +32,10 @@ function intent(DOM){
 
 
 function model(props$, actions){
-  const toggled$ = actions.toggle$.startWith(false)
+  const toggled$    = actions.toggle$.startWith(false)
+  const appVersion$ = props$.map(e=>e.appData.version)
 
-  return combineLatestObj({toggled$})
+  return combineLatestObj({toggled$,appVersion$})
 }
 
 
@@ -53,7 +54,7 @@ function view(state$){
     </g>
     </svg>`
 
-  return state$.map(function({toggled}){
+  return state$.map(function({toggled,appVersion}){
 
     let content = undefined
 
@@ -65,7 +66,7 @@ function view(state$){
           <li>Single click/tap to select items.</li>
           <li>Double click/tap to zoom on points/objects.</li>
         </ul>
-        <span className="appVersion"> Jam version xxx</span>
+        <span className="appVersion"> Jam version {appVersion}</span>
       </section>
     }
 
