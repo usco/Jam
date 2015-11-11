@@ -4,11 +4,12 @@ import {makeDOMDriver, hJSX} from '@cycle/dom'
 
 import main from './components/main/index'
 
-import {postMessageDriver}  from './core/drivers/postMessageDriver'
-import {localStorageDriver} from './core/drivers/localStorageDriver'
-import {addressbarDriver} from './core/drivers/addressbarDriver'
-import browserCapsDriver from './core/drivers/browserCapabilities'
-import eventDriver from './core/drivers/eventDriver'
+import postMessageDriver  from './core/drivers/postMessageDriver'
+import localStorageDriver from './core/drivers/localStorageDriver'
+import addressbarDriver   from './core/drivers/addressbarDriver'
+import browserCapsDriver  from './core/drivers/browserCapabilities'
+import eventDriver        from './core/drivers/eventDriver'
+import makeHttpDriver     from './core/drivers/simpleHttpDriver'
 
 
 //////////setup drivers
@@ -18,6 +19,7 @@ let postMessage  = postMessageDriver
 let localStorage = localStorageDriver
 let addressbar   = addressbarDriver
 let browserCaps  = browserCapsDriver
+let httpDriver   = makeHttpDriver()
 
 let drivers = {
    DOM: domDriver
@@ -26,6 +28,7 @@ let drivers = {
    ,addressbar
    ,browserCaps
    ,events:eventDriver
+   ,http:httpDriver
 }
 
 console.log("---READY TO START JAM!---v 0.2.3")

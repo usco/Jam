@@ -6,7 +6,7 @@ let just      = Observable.just
 import {safeJSONParse, toArray} from '../../utils/utils'
 
 
-export function localStorageDriver(outgoing$){
+export default function localStorageDriver(outgoing$){
   function getItem(item){
     return just( localStorage.getItem(item) ).map(safeJSONParse)
   }

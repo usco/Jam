@@ -11,8 +11,7 @@ function isOriginValid(origins,event){
   return origins.indexOf(event.origin) > -1 
 }
 
-
-export function postMessageDriver(outgoing$){
+export default function postMessageDriver(outgoing$){
   if(outgoing$){
     outgoing$.subscribe(sendMessage)
   }

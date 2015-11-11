@@ -16,7 +16,7 @@ addressbar.value = "http://localhost:3001/index.html?foo=42"
 
 */
 
-export function addressbarDriver(outgoing$){
+export default function addressbarDriver(outgoing$){
 
   let address$ = Rx.Observable.fromEvent(addressbar,"change")
     .map(e=>e.target.value)
