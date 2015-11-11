@@ -16,6 +16,9 @@ import {bomIntent} from         './intents/bom'
 
 
 import {equals, cond, T, always} from 'ramda'
+import {getExtension} from '../../utils/utils'
+import StlParser    from 'usco-stl-parser'
+
 
 export default function intent (drivers) {
   const DOM      = drivers.DOM
@@ -69,9 +72,12 @@ export default function intent (drivers) {
     
     let res$ = resources$$.mergeAll().pluck("response").filter(exists)
 
-    Rx.Observable.combineLatest(url$,res$,function(url,res){
-      console.log("url",url ,"res")
+    let resData$ = Rx.Observable.combineLatest(url$,res$,function(url,res){
+      console.log("url", url, "res")
+      return {url,res,ext:getExtension(url)}
     })
+
+    resData$
       .forEach(e=>e)
 
     Rx.Observable.combineLatest(url$,progress$,function(url,progress){
@@ -79,11 +85,19 @@ export default function intent (drivers) {
     })
       .forEach(e=>e)
 
-    /*resources$$ 
-      .mergeAll()
-      .forEach(e=>console.log("http responses2",e))*/
+    let parsers = {}
+      parsers["stl"] = new StlParser()
+    
+    const parsed$ = resData$
+      .map(function({url,res,ext}){
+        const parseOptions={}
+        return parsers[ext].parse(res, parseOptions).promise
+      })
+      .flatMap(Rx.Observable.fromPromise)
+      .forEach(e=>console.log("parsed",e))
   }
   bla(drivers)
+
 
 
   const fn = cond([
