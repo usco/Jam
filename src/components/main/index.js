@@ -1,5 +1,5 @@
 require("../../app.css")
-import {Rx} from '@cycle/core'
+import Rx from 'rx'
 const just = Rx.Observable.just
 
 //views & wrappers
@@ -14,6 +14,10 @@ import intent from './intent'
 import model  from './model'
 import view   from './view'
 
+
+function requests(){
+  return Rx.Observable.never()
+}
 
 export default function main(drivers) {
   const {DOM} = drivers
@@ -37,6 +41,9 @@ export default function main(drivers) {
     , entityInfos.DOM, comments.DOM, progressBar.DOM, help.DOM)
   const events$ = just( {gl:gl.events, entityInfos:entityInfos.events
     , bom:bom.events, comments:comments.events} )
+  const requests$ = actions.requests$ //requests()
+
+    requests$.forEach(e=>console.log("outgoing requests",e))
   //output to localStorage
   //in this case, settings
   const localStorage$ = state$
@@ -48,7 +55,7 @@ export default function main(drivers) {
       DOM: vtree$
       ,events: events$
       ,localStorage:localStorage$
-
+      ,http: requests$
   }
 }
 

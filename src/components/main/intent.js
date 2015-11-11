@@ -14,6 +14,9 @@ import {commentsIntents} from   './intents/comments'
 import {selectionsIntents} from './intents/selections'
 import {bomIntent} from         './intents/bom'
 
+
+import {equals, cond, T, always} from 'ramda'
+
 export default function intent (drivers) {
   const DOM      = drivers.DOM
   const localStorage = drivers.localStorage
@@ -38,6 +41,61 @@ export default function intent (drivers) {
   const commentActions   = commentsIntents(drivers)
   
   //const selectionActions = selectionsIntents({DOM,events}, typesInstancesRegistry$)
+
+  //experimental test to work around asset manager
+  function foo({meshSources$,srcSources$})
+  {
+    return meshSources$
+      .flatMap(Rx.Observable.fromArray)
+      .map(
+        s=>({
+          url: s
+          , method: 'get'
+          , responseType:"json"
+          , type: 'resource'
+        }))
+  }
+  let requests$ = foo({meshSources$,srcSources$})
+
+  
+  function bla(drivers){
+    let resources$$ = drivers.http
+      .filter(res$ => res$.request.type === 'resource')
+    
+    let url$ = resources$$.pluck("request").pluck("url")
+
+    let progress$ = resources$$
+      .mergeAll().pluck("progress").filter(exists)
+    
+    let res$ = resources$$.mergeAll().pluck("response").filter(exists)
+
+    Rx.Observable.combineLatest(url$,res$,function(url,res){
+      console.log("url",url ,"res")
+    })
+      .forEach(e=>e)
+
+    Rx.Observable.combineLatest(url$,progress$,function(url,progress){
+      console.log("url",url ,"progress",progress)
+    })
+      .forEach(e=>e)
+
+    /*resources$$ 
+      .mergeAll()
+      .forEach(e=>console.log("http responses2",e))*/
+  }
+  bla(drivers)
+
+
+  const fn = cond([
+    [equals(0),   always('water freezes at 0°C')],
+    [equals(100), always('water boils at 100°C')],
+    [T,           temp => 'nothing special happens at ' + temp + '°C']
+  ])
+
+  console.log( fn(0) ) //=> 'water freezes at 0°C'
+  console.log( fn(50) ) //=> 'nothing special happens at 50°C'
+  console.log( fn(100) ) //=> 'water boils at 100°C'
+
 
   ///entity actions
   const entityTypeActions        = entityTypeIntents({meshSources$,srcSources$})
@@ -81,7 +139,7 @@ export default function intent (drivers) {
 
   //annotations
   const shortSingleTaps$ = events.select("gl").events("shortSingleTaps$")
-    shortSingleTaps$.subscribe(e=>console.log("shortSingleTaps",e))
+    //shortSingleTaps$.subscribe(e=>console.log("shortSingleTaps",e))
 
   const createAnnotationStep$ = shortSingleTaps$
     .map( (event)=>event.detail.pickingInfos)
@@ -123,6 +181,8 @@ export default function intent (drivers) {
     ,annotationsActions
 
     ,bomActions
+
+    ,requests$
 
   }
 }
