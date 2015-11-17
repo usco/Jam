@@ -5,6 +5,8 @@ import Rx from 'rx'
 export default function makeDesktopDriver(){
 
   return function desktopDriver(request$){
+
+
     function read(uri){
       let obs = new Rx.Subject()
       let reader = new FileReader()
@@ -22,7 +24,7 @@ export default function makeDesktopDriver(){
           .filter(e=>e.lengthComputable)
           .forEach(function(e){
             //log.debug("fetching percent", percentComplete)
-            obs.onNext({progress: (e.loaded / e.total),total:e.total} * 100) 
+            obs.onNext({progress: (e.loaded / e.total),total:e.total}) 
           })
       }
 
@@ -35,14 +37,39 @@ export default function makeDesktopDriver(){
       //reader.onloadend = onLoad
       reader.onprogress = onProgress
       reader.onerror = onError
-      reader.readAsBinaryString(uri)
-      
+      reader.readAsBinaryString(uri)    
       return obs
     }
 
-    return {
-      read
+    function createResponse$(options){
+      if(options.method === 'get'){
+        return read(options.uri)
+      }
     }
+
+
+
+    request$
+      .forEach(e=>console.log("request for desktop-store",e))
+
+    let response$$ = request$
+      .map(reqOptions => {
+        let response$ = createResponse$(reqOptions)
+        response$.request = reqOptions
+        return response$
+      })
+      .replay(null, 1)
+    response$$.connect()
+
+    return response$$
+
+    
+
+    /*return {
+      read
+    }*/
+    //return request$
+    //  .map(read)
     
   }
 
