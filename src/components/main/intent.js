@@ -16,7 +16,8 @@ import {bomIntent} from         './intents/bom'
 
 
 import {equals, cond, T, always} from 'ramda'
-import {getExtension} from '../../utils/utils'
+import {getExtension,isValidFile} from '../../utils/utils'
+import {combineLatestObj} from '../../utils/obsUtils'
 import StlParser    from 'usco-stl-parser'
 
 
@@ -46,55 +47,83 @@ export default function intent (drivers) {
   //const selectionActions = selectionsIntents({DOM,events}, typesInstancesRegistry$)
 
   //experimental test to work around asset manager
-  function foo({meshSources$,srcSources$})
+  function http({meshSources$,srcSources$})
   {
     return meshSources$
+      .merge(srcSources$)
       .flatMap(Rx.Observable.fromArray)
+      .filter(e=>!isValidFile(e))
       .map(
         s=>({
           url: s
           , method: 'get'
-          , responseType:"json"
+          , responseType: 'json'
           , type: 'resource'
         }))
   }
-  let requests$ = foo({meshSources$,srcSources$})
+  //request from desktop store (source only)
+  function desktop({meshSources$,srcSources$}){
+    return meshSources$
+      .merge(srcSources$)
+      .flatMap(Rx.Observable.fromArray)
+      .filter(isValidFile)
+      .map(
+        s=>({
+          uri: s
+          , method: 'get'
+          , type: 'resource'
+        }))
+  }
+  let requests$ = http({meshSources$,srcSources$})
+  let desktop$  = desktop({meshSources$,srcSources$})
 
   
   function bla(drivers){
     let resources$$ = drivers.http
+      .merge(drivers.desktop)
       .filter(res$ => res$.request.type === 'resource')
-    
-    let url$ = resources$$.pluck("request").pluck("url")
+      .retry(3)
+      .catch(function(e){
+        console.log("ouch , problem fetching data ",e)
+        return Rx.Observable.empty()
+      })
+      .flatMap(function(e){
+        const request  = Rx.Observable.just(e.request)
+        const response = e.pluck("response")
+        const progress = e.pluck("progress")
+        return combineLatestObj({response,request,progress})
+      })
 
-    let progress$ = resources$$
-      .mergeAll().pluck("progress").filter(exists)
-    
-    let res$ = resources$$.mergeAll().pluck("response").filter(exists)
 
-    let resData$ = Rx.Observable.combineLatest(url$,res$,function(url,res){
-      console.log("url", url, "res")
-      return {url,res,ext:getExtension(url)}
-    })
+    resources$$.forEach(e=>console.log("resources",e))
+    const progress$ = resources$$
+      .pluck("progress")
+      .filter(exists)
 
-    resData$
-      .forEach(e=>e)
-
-    Rx.Observable.combineLatest(url$,progress$,function(url,progress){
-      console.log("url",url ,"progress",progress)
-    })
-      .forEach(e=>e)
+    progress$
+      .forEach(e=>console.log("progress",e))
 
     let parsers = {}
       parsers["stl"] = new StlParser()
-    
-    const parsed$ = resData$
+
+    const parsed$ = resources$$
+      .filter(data=>parsers[data.ext]!==undefined)//does parser exist?
+      .filter(data=>data.response!==undefined)
+      .map(data=> ({url:data.request.url,res:data.response,ext:getExtension(data.request.url)}) )
       .map(function({url,res,ext}){
         const parseOptions={}
-        return parsers[ext].parse(res, parseOptions).promise
+        let deferred = parsers[ext].parse(res, parseOptions)
+        deferred.promise.then(function(a){
+          console.log("blaaaaa",a)
+        })
+        return deferred.promise
       })
       .flatMap(Rx.Observable.fromPromise)
       .forEach(e=>console.log("parsed",e))
+
+    return {
+      parseProgress:progress$
+    }
   }
   bla(drivers)
 
@@ -197,6 +226,7 @@ export default function intent (drivers) {
     ,bomActions
 
     ,requests$
+    ,desktop$
 
   }
 }

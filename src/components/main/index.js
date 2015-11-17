@@ -41,6 +41,7 @@ export default function main(drivers) {
     , entityInfos.DOM, comments.DOM, progressBar.DOM, help.DOM)
   const events$ = just( {gl:gl.events, entityInfos:entityInfos.events
     , bom:bom.events, comments:comments.events} )
+
   const requests$ = actions.requests$ //requests()
 
     requests$.forEach(e=>console.log("outgoing requests",e))
@@ -55,7 +56,9 @@ export default function main(drivers) {
       DOM: vtree$
       ,events: events$
       ,localStorage:localStorage$
+
       ,http: requests$
+      ,desktop:actions.desktop$
   }
 }
 
