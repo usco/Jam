@@ -10,6 +10,7 @@ import addressbarDriver   from './core/drivers/addressbarDriver'
 import browserCapsDriver  from './core/drivers/browserCapabilities'
 import eventDriver        from './core/drivers/eventDriver'
 import makeHttpDriver     from './core/drivers/simpleHttpDriver'
+import makeDesktopDriver  from './core/drivers/desktopStoreDriver'
 
 
 //////////setup drivers
@@ -20,6 +21,7 @@ let localStorage = localStorageDriver
 let addressbar   = addressbarDriver
 let browserCaps  = browserCapsDriver
 let httpDriver   = makeHttpDriver()
+let desktopStoreDriver = makeDesktopDriver()
 
 let drivers = {
    DOM: domDriver
@@ -28,7 +30,9 @@ let drivers = {
    ,addressbar
    ,browserCaps
    ,events:eventDriver
+
    ,http:httpDriver
+   ,desktop:desktopStoreDriver
 }
 
 console.log("---READY TO START JAM!---v 0.2.3")
