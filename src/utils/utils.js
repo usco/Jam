@@ -40,6 +40,11 @@ export function getExtension(fname){
   return fname.substr((~-fname.lastIndexOf(".") >>> 0) + 2).toLowerCase()
 }
 
+export function isValidFile(file){
+  return ((typeof file !== "undefined" && file !== null) && file instanceof File)
+}
+
+
 //TODO: taken from three.js ,do correct attribution
 export function generateUUID() {
 
