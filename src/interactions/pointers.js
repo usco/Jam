@@ -198,26 +198,95 @@ function drags2(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
 */
 
 //based on http://jsfiddle.net/mattpodwysocki/pfCqq/
-function drags3(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
-  return mouseDowns.flatMap(function (md) {
+function drags3(mouseDowns$, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
+  return mouseDowns$.flatMap(function (md) {
     //console.log("drags3 mousedown",md)
     // calculate offsets when mouse down
     var startX = md.offsetX, startY = md.offsetY
     // Calculate delta with mousemove until mouseup
     return mouseMoves
-      .map(function (mm) {
+      .map(function (e) {
         //console.log("drags3 mousemove",mm);
         //(mm.preventDefault) ? mm.preventDefault() : mm.returnValue = false 
         let delta = {
-            left: mm.clientX - startX,
-            top: mm.clientY - startY
+            left: e.clientX - startX,
+            top: e.clientY - startY
         }
         //console.log("delta",delta)
-        return assign(mm, delta)
+        return assign({}, e, delta)
       })
       .takeUntil(mouseUps)
   })
 }
+
+
+function touchDrags(touchStart$, touchEnd$, touchMove$){
+  /*touchStart$
+    .forEach(e=>console.log("touchStart",e))
+  touchEnd$
+    .forEach(e=>console.log("touchend",e))
+  touchMove$
+    .forEach(e=>console.log("touchMove",e))*/
+
+  return touchStart$
+    .flatMap(function(ts){
+
+      let startX = ts.touches[0].pageX
+      let startY = ts.touches[0].pageY
+
+      return touchMove$
+        .map(function (e) {
+
+          let x = (e.touches[0].pageX - startX)/5.0
+          let y = (e.touches[0].pageY - startY)/5.0
+
+          let delta = {
+            left: x
+            , top: y
+            , x
+            , y
+          }
+
+          let output = assign({}, e, {delta})
+          return output
+
+        })
+        .takeUntil(touchEnd$)
+
+    })
+
+  /*touchMoves$ = 
+    touchMoves$
+    .map(function(e){
+      console.log("modding touchMoves")
+      let start = e.changedTouches[0]
+      let startX = 0
+      let startY = 0
+      if(start)
+      {
+        let startX = start.clientX
+        let startY = start.clientY
+      }
+      let mm = e.changedTouches[e.changedTouches.length-1]
+      if(mm){
+
+        let delta = {
+          left: mm.clientX - startX
+          ,top: mm.clientY - startY
+          ,x:(mm.clientX - startX)/1000
+          ,y:(mm.clientY - startY)/1000
+        }
+
+        const output = assign({}, mm, {delta})
+        return output
+
+      }
+      
+    })*/
+
+  
+}
+
 
 //pinch, taken from https://github.com/hugobessaa/rx-react-pinch
 function pinches(touchstarts, touchmoves, touchEnds) {
@@ -277,9 +346,12 @@ export function interactionsFromCEvents(targetEl, rTarget='canvas'){
   let touchMoves$ = fromCEvent(targetEl,'touchmove')//dom.touchmove(window)
   let touchEnd$    = fromCEvent(targetEl,'touchend')//dom.touchend(window)
 
+ 
+  
+
   /*setTimeout(function() {
     let elem = document.querySelector(".glView")
-    fromEvent(elem, 'mousemove').subscribe(e=>console.log("mouseMoves",e))
+    fromEvent(elem, 'mousemove').forEach(e=>console.log("mouseMoves",e))
     let elem2 = document.querySelector(".container")
 
 
@@ -310,7 +382,7 @@ export function pointerInteractions (baseInteractions){
     touchStart$, touchMoves$, touchEnd$,
     zooms$ } = baseInteractions
 
-  //mouseMoves$.subscribe(e=>console.log("mousemove",e))
+  //mouseMoves$.forEach(e=>console.log("mousemove",e))
 
   ///// now setup the more complex interactions
   let taps$ = taps( 
@@ -342,11 +414,11 @@ export function pointerInteractions (baseInteractions){
   //drag move interactions (continuously firing)
   let dragMoves$   = merge(
     drags3(mouseDowns$, mouseUps$, mouseMoves$, longPressDelay, deltaSqr),
-    touchMoves$
+    touchDrags(touchStart$, touchEnd$, touchMoves$)
   )
     .takeUntil(longTaps$).repeat()//no drag moves if there is a context action already taking place
 
-  //dragMoves$.subscribe(e=>console.log("dragMoves",e))
+  //dragMoves$.forEach(e=>console.log("dragMoves",e))
 
   return {
     taps:tapStream$, 
@@ -361,7 +433,7 @@ export function pointerInteractions (baseInteractions){
 
 ///////
 export function preventScroll(targetEl){
-  fromEvent(targetEl, 'mousewheel').subscribe(preventDefault)
-  fromEvent(targetEl, 'DOMMouseScroll').subscribe(preventDefault)
-  fromEvent(targetEl, 'wheel').subscribe(preventDefault)
+  fromEvent(targetEl, 'mousewheel').forEach(preventDefault)
+  fromEvent(targetEl, 'DOMMouseScroll').forEach(preventDefault)
+  fromEvent(targetEl, 'wheel').forEach(preventDefault)
 }
