@@ -21,16 +21,16 @@ function model(props$, actions){
 
 function view(state$) {
   return state$.map(function(state){
-    //console.log("state",state)
+    
     const progress = state.progress
     const style = `width:${progress}%`
 
-    let element = <span className='progressBar'> 
+    let element = <div className='progressBar'> 
         <span className='fill' attributes={ {style} }/> 
-      </span>
+      </div>
 
     if(state.hideOnDone && progress === 100 ){
-      element = undefined 
+      element = <div/> //returning "undefined" can have weird side effects ! carefull
     }
     return element
   })
