@@ -227,7 +227,7 @@ function GLView({DOM, props$}){
   const state$  = model(props$, actions)
 
   //react to actions
-  actions.zoomInOnPoint$.subscribe( (oAndP) => zoomInOnObject.execute( oAndP.object, {position:oAndP.point} ) )
+  actions.zoomInOnPoint$.forEach( (oAndP) => zoomInOnObject.execute( oAndP.object, {position:oAndP.point} ) )
   let windowResizes$ = windowResizes(1) //get from intents/interactions ?
 
 
@@ -243,25 +243,18 @@ function GLView({DOM, props$}){
     }
   }
 
-  function addMeshToScene(mesh){
-     scene.dynamicInjector.add(mesh)
+  function addToScene(object){
+    scene.dynamicInjector.add(object)
+  }
+  function removeFromScene(object){
+    scene.dynamicInjector.remove(object)
   }
   
   function setupScene(){
-    var sphereGeometry = new THREE.SphereGeometry( 20, 32, 16 ) 
-    var sphereMaterial = new THREE.MeshLambertMaterial( {color: 0x8888ff} );
-    sphere = new THREE.Mesh(sphereGeometry, sphereMaterial)
-    sphere.position.set(0, 0, 30)
-    sphere.geometry.computeBoundingSphere()
-    sphere.geometry.computeBoundingBox()
-    sphere.selectTrickleUp = false 
-    sphere.selectable = true
-    sphere.castShadow = true
-    //scene.add(sphere)
-    for( let light of config.scenes["main"])
-    {
-      scene.add( makeLight( light ) )
-    }
+    config.scenes["main"]
+      //TODO , update to be more generic
+      .map(light=>makeLight( light ))
+      .forEach(light=>scene.add(light))
   }
     
   function render(scene, camera){
@@ -277,7 +270,7 @@ function GLView({DOM, props$}){
     //if(camViewControls) camViewControls.update()
   }
 
-  function configureStep1(container){
+  function configure(container){
     //log.debug("initializing into container", container)
     console.log("initializing into container",container)
 
@@ -303,7 +296,7 @@ function GLView({DOM, props$}){
     transformControls.setDomElement( container )
 
     //more init
-    controls.setObservables(actions.filteredInteractions$)
+    controls.setObservables( actions.filteredInteractions$ )
     controls.addObject( camera )
 
     //not a fan
@@ -383,7 +376,7 @@ function GLView({DOM, props$}){
     selections:selectedMeshesChanges$
     ,tool:activeTool$.distinctUntilChanged()
   })
-  .subscribe(function({selections,tool}){
+  .forEach(function({selections,tool}){
     //console.log("updating transformControls",selections,tool)
     //remove transformControls from removed meshes
     selections.removed.map(mesh=>transformControls.detach(mesh))
@@ -418,8 +411,8 @@ function GLView({DOM, props$}){
   ///////////
   setupScene()
 
-  update$.subscribe( update )
-  reRender$.subscribe( render )
+  update$.forEach( update )
+  reRender$.forEach( render )
 
   //settings handling
   settings$ = settings$
@@ -427,10 +420,10 @@ function GLView({DOM, props$}){
     .distinctUntilChanged()
 
   settings$.map(s => s.camera.autoRotate)
-    .subscribe(autoRotate => controls.autoRotate = autoRotate )
+    .forEach(autoRotate => controls.autoRotate = autoRotate )
 
   settings$.map(s => s.grid.show)
-    .subscribe(function(showGrid){
+    .forEach(function(showGrid){
       scene.remove(grid)
       if(showGrid){
         scene.add(grid)
@@ -440,15 +433,15 @@ function GLView({DOM, props$}){
   //react based on diffs
   itemChanges$
     .do(function(changes){
-      changes.added.map( m=>addMeshToScene(m) )
-      changes.removed.map( m=>scene.dynamicInjector.remove(m) )
+      changes.added.map( m=>addToScene(m) )
+      changes.removed.map( m=> removeFromScene(m)  )
     })
     .do(e=>render())
-    .subscribe(e=>e)
+    .forEach(e=>e)
 
   //we do not want to change our container (DOM) but the contents (gl)
-  const gLWidgeHelper = new GLWidgeHelper(configureStep1)
-  //new GLWidgeHelper(configureStep1)}
+  const gLWidgeHelper = new GLWidgeHelper(configure)
+  //new GLWidgeHelper(configure)}
   //gLWidgeHelper.setup()
 
   const vtree$ = Rx.Observable.just(
