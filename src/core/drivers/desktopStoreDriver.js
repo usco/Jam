@@ -6,7 +6,6 @@ export default function makeDesktopDriver(){
 
   return function desktopDriver(request$){
 
-
     function read(data){
       let obs = new Rx.Subject()
       let reader = new FileReader()
@@ -58,14 +57,9 @@ export default function makeDesktopDriver(){
 
     return response$$
 
-    
-
     /*return {
       read
-    }*/
-    //return request$
-    //  .map(read)
-    
+    }*/    
   }
 
 }
