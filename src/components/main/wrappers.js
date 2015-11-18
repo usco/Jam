@@ -145,11 +145,18 @@ export function progressBarWrapper(state$, DOM){
   //const props$ = just({progress:0.32})
 
   const props$ = state$.distinctUntilChanged()
-    .pluck("remoteOperations")
+    .pluck("operationsInProgress")
     .filter(exists)
-    .distinctUntilChanged()
-    .pluck("resource")
-    .map(function(resource){
+    //.pluck("totalProgress")
+    //.distinctUntilChanged(null,equals)
+    //.do(e=>console.log("operationsInProgress",e))
+    .map(progress=>progress*100)
+    .map(function(progress){
+      console.log("progress",progress)
+      return {progress}
+    })
+    //.pluck("resource")
+    /*.map(function(resource){
       let progress = 0
       //FIXME: horrid
       if(resource.fetched && resource.loaded){
@@ -161,15 +168,11 @@ export function progressBarWrapper(state$, DOM){
         progress = resource.fetchProgress
       }
       return {progress}
-    })
+    })*/
     .startWith({progress:100})
   //props$
   //.subscribe(e=>console.log("remoteOperations",e))
 
-  function extractData(resource){
-    resource.fetchProgress
-    resource.parseProgress 
-  }
 
   return ProgressBar({DOM,props$})
 }

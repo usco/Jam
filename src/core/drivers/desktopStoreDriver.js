@@ -47,11 +47,6 @@ export default function makeDesktopDriver(){
       }
     }
 
-
-
-    request$
-      .forEach(e=>console.log("request for desktop-store",e))
-
     let response$$ = request$
       .map(reqOptions => {
         let response$ = createResponse$(reqOptions)

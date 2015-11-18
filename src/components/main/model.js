@@ -275,10 +275,7 @@ export default function model(props$, actions, drivers){
     ).startWith(false)*/
 
   //not entirely sure, we need a way to observe any fetch/updload etc operation
-  const remoteOperations$ = entityActions
-    .addEntityInstanceCandidates$
-    .shareReplay(1)
-    .startWith(undefined)
+  const operationsInProgress$ = actions.progress.combinedProgress$.startWith(undefined)
 
   //remoteOperations$.subscribe(e=>console.log("remoteOperations",e))
 
@@ -293,7 +290,8 @@ export default function model(props$, actions, drivers){
     ,selections$
     ,bom$
     ,comments$
-    ,remoteOperations$
+
+    ,operationsInProgress$
 
     //entity components
     ,core$

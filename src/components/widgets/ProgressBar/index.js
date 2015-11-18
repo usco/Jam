@@ -21,7 +21,7 @@ function model(props$, actions){
 
 function view(state$) {
   return state$.map(function(state){
-    console.log("state",state)
+    //console.log("state",state)
     const progress = state.progress
     const style = `width:${progress}%`
 

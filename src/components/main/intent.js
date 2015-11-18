@@ -88,44 +88,84 @@ export default function intent (drivers) {
         return Rx.Observable.empty()
       })
       .flatMap(function(e){
+        //console.log("BAAARG",e.request.uri.name)
         const request  = Rx.Observable.just(e.request)
         const response = e.pluck("response")
         const progress = e.pluck("progress")
         return combineLatestObj({response,request,progress})
       })
+      .share()
 
 
-    resources$$.forEach(e=>console.log("resources",e))
+
+    //combined data
+    let combinedProgress$ = resources$$.scan({entries:{}},function(combined,entry){
+      //console.log("acc",acc,"curURL",cur.request.url,cur.request.uri.name)
+      let uri = entry.request.url || entry.request.uri.name
+      if(entry.progress){
+        combined.entries[uri]  = entry.progress
+
+        let totalProgress = Object.keys(combined.entries)
+          .reduce(function(acc,cur){
+            return acc + combined.entries[cur]
+          },0)
+
+        totalProgress /= Object.keys(combined.entries).length
+        //console.log("totalProgress", totalProgress)
+        combined.totalProgress = totalProgress
+      }
+      
+      if(entry.response){
+        combined.entries[uri]  = 1
+
+        let totalProgress = Object.keys(combined.entries)
+          .reduce(function(acc,cur){
+            return acc + combined.entries[cur]
+          },0)
+
+        totalProgress /= Object.keys(combined.entries).length
+        //console.log("totalProgress", totalProgress)
+        combined.totalProgress = totalProgress
+      }
+      return combined
+    })
+    .pluck("totalProgress")
+    .distinctUntilChanged(null, equals)
+
+    /*combinedProgress$
+      .forEach(e=>console.log("combined resources",e))*/
+
+
+    //other
+    //resources$$.forEach(e=>console.log("resources",e))
     const progress$ = resources$$
       .pluck("progress")
       .filter(exists)
 
-    progress$
-      .forEach(e=>console.log("progress",e))
+    /*progress$
+      .forEach(e=>console.log("progress",e))*/
 
     let parsers = {}
       parsers["stl"] = new StlParser()
 
-    const parsed$ = resources$$
+    /*const parsed$ = resources$$
       .filter(data=>parsers[data.ext]!==undefined)//does parser exist?
       .filter(data=>data.response!==undefined)
       .map(data=> ({url:data.request.url,res:data.response,ext:getExtension(data.request.url)}) )
       .map(function({url,res,ext}){
         const parseOptions={}
         let deferred = parsers[ext].parse(res, parseOptions)
-        deferred.promise.then(function(a){
-          console.log("blaaaaa",a)
-        })
         return deferred.promise
       })
       .flatMap(Rx.Observable.fromPromise)
-      .forEach(e=>console.log("parsed",e))
+      .forEach(e=>console.log("parsed",e))*/
 
     return {
       parseProgress:progress$
+      ,combinedProgress$
     }
   }
-  bla(drivers)
+  let progress = bla(drivers)
 
 
 
@@ -224,6 +264,9 @@ export default function intent (drivers) {
     ,annotationsActions
 
     ,bomActions
+
+
+    ,progress
 
     ,requests$
     ,desktop$
