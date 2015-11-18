@@ -1,4 +1,4 @@
-import {Rx} from '@cycle/core'
+import Rx from 'rx'
 const merge = Rx.Observable.merge
 import {generateUUID,exists,toArray} from '../../utils/utils'
 import {mergeData} from '../../utils/modelUtils'

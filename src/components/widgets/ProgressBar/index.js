@@ -1,6 +1,6 @@
 /** @jsx hJSX */
 import Cycle from '@cycle/core'
-import {Rx} from '@cycle/core'
+import Rx from 'rx'
 import {hJSX} from '@cycle/dom'
 import Class from "classnames"
 const combineLatest = Rx.Observable.combineLatest

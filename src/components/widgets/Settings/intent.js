@@ -1,4 +1,4 @@
-import {Rx} from '@cycle/core'
+import Rx from 'rx'
 let fromEvent = Rx.Observable.fromEvent
 
 

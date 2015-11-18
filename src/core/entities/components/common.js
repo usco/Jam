@@ -1,4 +1,4 @@
-import {Rx} from '@cycle/core'
+import Rx from 'rx'
 import {makeModel, mergeData} from '../../../utils/modelUtils'
 import {generateUUID} from '../../../utils/utils'
 import {combineLatestObj} from '../../../utils/obsUtils'

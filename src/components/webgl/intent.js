@@ -1,4 +1,4 @@
-import {Rx} from '@cycle/core'
+import Rx from 'rx'
 let fromEvent = Rx.Observable.fromEvent
 let merge = Rx.Observable.merge
 let combineLatest = Rx.Observable.combineLatest
@@ -83,7 +83,7 @@ export default function intent(drivers, data){
     .shareReplay(1)
   const shortDoubleTapsWPicking$ = addPickingInfos(shortDoubleTaps$, windowResizes$, camera, scene)
     .shareReplay(1)
-  let longTapsWPicking$        = addPickingInfos(longTaps$, windowResizes$, camera, scene)
+  let longTapsWPicking$          = addPickingInfos(longTaps$, windowResizes$, camera, scene)
     .shareReplay(1)
 
   //contextmenu observable should return undifined when any other basic interaction

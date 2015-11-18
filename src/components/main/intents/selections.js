@@ -16,7 +16,7 @@ export function reverseSelections(intents, idsMapper$){
   //select bom entries from entities
   const selectBomEntries$ = intents
     .selectEntities$
-    .do(e=>console.log("reversing instance selections to selectBomEntries"))
+    //.do(e=>console.log("reversing instance selections to selectBomEntries"))
     .withLatestFrom(idsMapper$,function(entityIds,idsMapper){
       return flatten( entityIds.map(id=>idsMapper.typeUidFromInstUid[id]) ).filter(exists)
     })
@@ -26,7 +26,7 @@ export function reverseSelections(intents, idsMapper$){
   //select entities from bom entries  
   const selectEntities$ = intents
     .selectBomEntries$ 
-    .do(e=>console.log("reversing BOM selections to selectEntities"))
+    //.do(e=>console.log("reversing BOM selections to selectEntities"))
     .withLatestFrom(idsMapper$,function(bomIds,idsMapper){ 
       return flatten( bomIds.map(id=>idsMapper.instUidFromTypeUid[id]) ).filter(exists)
     })
@@ -45,13 +45,11 @@ export function selectionsIntents(drivers, idsMapper$){
   
   let selectEntities$ = drivers.events.select("gl").events("selectedMeshes$")
     .map(extractEntities)
-    .do(e=>console.log("gl select2",e))
     .map(toArray)
     .shareReplay(1)
 
   let selectBomEntries$ = drivers.events.select("bom").events("entryTapped$")
     .map(toArray)
-    .do(e=>console.log("bom select2",e))
     .shareReplay(1)
 
   return reverseSelections({

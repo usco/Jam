@@ -1,4 +1,4 @@
-import {Rx} from '@cycle/core'
+import Rx from 'rx'
 let merge = Rx.Observable.merge
 let combineLatest = Rx.Observable.combineLatest
 import {combineLatestObj} from '../../../utils/obsUtils'

@@ -1,4 +1,4 @@
-import {Rx} from '@cycle/core'
+import Rx from 'rx'
 const merge = Rx.Observable.merge
 
 import {first,toggleCursor} from '../../utils/otherUtils'
@@ -96,10 +96,8 @@ export default function intent (drivers) {
       })
       .share()
 
-
-
     //combined data
-    let combinedProgress$ = resources$$.scan({entries:{}},function(combined,entry){
+    const combinedProgress$ = resources$$.scan(function(combined,entry){
       //console.log("acc",acc,"curURL",cur.request.url,cur.request.uri.name)
       let uri = entry.request.url || entry.request.uri.name
       if(entry.progress){
@@ -114,7 +112,7 @@ export default function intent (drivers) {
         //console.log("totalProgress", totalProgress)
         combined.totalProgress = totalProgress
       }
-      
+
       if(entry.response){
         combined.entries[uri]  = 1
 
@@ -128,27 +126,16 @@ export default function intent (drivers) {
         combined.totalProgress = totalProgress
       }
       return combined
-    })
+    },{entries:{}})
     .pluck("totalProgress")
     .distinctUntilChanged(null, equals)
 
-    /*combinedProgress$
-      .forEach(e=>console.log("combined resources",e))*/
-
-
+    combinedProgress$.subscribe(e=>console.log("combinedProgress",e))
     //other
-    //resources$$.forEach(e=>console.log("resources",e))
-    const progress$ = resources$$
-      .pluck("progress")
-      .filter(exists)
-
-    /*progress$
-      .forEach(e=>console.log("progress",e))*/
-
-    let parsers = {}
+    /*let parsers = {}
       parsers["stl"] = new StlParser()
 
-    /*const parsed$ = resources$$
+    const parsed$ = resources$$
       .filter(data=>parsers[data.ext]!==undefined)//does parser exist?
       .filter(data=>data.response!==undefined)
       .map(data=> ({url:data.request.url,res:data.response,ext:getExtension(data.request.url)}) )
@@ -161,8 +148,7 @@ export default function intent (drivers) {
       .forEach(e=>console.log("parsed",e))*/
 
     return {
-      parseProgress:progress$
-      ,combinedProgress$
+      combinedProgress$
     }
   }
   let progress = bla(drivers)

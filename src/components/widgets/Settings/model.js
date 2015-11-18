@@ -1,4 +1,4 @@
-import {Rx} from '@cycle/core'
+import Rx from 'rx'
 import {combineLatestObj} from '../../../utils/obsUtils'
 
 export default function model(props$,actions){

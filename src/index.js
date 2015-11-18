@@ -35,7 +35,7 @@ let drivers = {
    ,desktop:desktopStoreDriver
 }
 
-console.log("---READY TO START JAM!---v 0.2.3")
+console.log("---READY TO START JAM!---")
 
 Cycle.run(main, drivers)
 

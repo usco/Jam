@@ -1,6 +1,6 @@
 /** @jsx hJSX */
 import Cycle from '@cycle/core'
-import {Rx} from '@cycle/core'
+import Rx from 'rx'
 import {hJSX} from '@cycle/dom'
 import Class from "classnames"
 const combineLatest = Rx.Observable.combineLatest
@@ -176,7 +176,7 @@ export default function view(state$, settingsVTree$, fsTogglerVTree$, bomVtree$
     , glVtree$, entityInfosVtree$, commentVTree$, progressBarVTree$, helpVTree$
 
     ,function(state, settings, fsToggler, bom, gl, entityInfos, comments, progressBar, help){
-      //console.log("main state in view",state)
+      console.log("main state in view",state)
       const selections = state.selections
       const activeTool = state.settings.activeTool
       const toggleControls  = (selections && selections.instIds.length>0)

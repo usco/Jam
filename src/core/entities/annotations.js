@@ -197,6 +197,8 @@ function handleCursor(input){
         toggleCursor(true,"crosshair")
       }
     })
+
+  //document.getElementById("mydiv").style.cursor="move";
 }
 
 
@@ -215,6 +217,7 @@ export function addAnnotation(actions, settings$){
       activeTool$,
       (data, activeTool)=> { return {data, activeTool} }
     )  
+
 
   const noteAnnot$ = baseStream$
     .filter((data)=>data.activeTool === "addNote" )
@@ -236,6 +239,8 @@ export function addAnnotation(actions, settings$){
     .map(getObjectPointNormal)
     .filter(hasEntity)//we need data to have entity infos
     .bufferWithCount(2)//we need 2 data points to generate a distance
+    .do(e=>console.log("measuring  distance",e))
+
     .map(generateDistanceData)
 
   const diameterAnnot$ = baseStream$

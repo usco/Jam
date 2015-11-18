@@ -1,4 +1,4 @@
-import {Rx} from '@cycle/core'
+import Rx from 'rx'
 import {createComponents,removeComponents,duplicateComponents,makeActionsFromApiFns} from './common'
 import {makeModel, mergeData} from '../../../utils/modelUtils'
 

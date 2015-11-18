@@ -1,4 +1,4 @@
-import {Rx} from '@cycle/core'
+import Rx from 'rx'
 const merge = Rx.Observable.merge
 const just  = Rx.Observable.just
 import {flatten} from 'Ramda'
@@ -276,6 +276,10 @@ export default function model(props$, actions, drivers){
 
   //not entirely sure, we need a way to observe any fetch/updload etc operation
   const operationsInProgress$ = actions.progress.combinedProgress$.startWith(undefined)
+  /*Rx.Observable
+    .interval(500)
+    .take(4)
+    .map(function(){return Math.random()})*/ //Rx.Observable.just(0.5)//actions.progress.combinedProgress$.startWith(undefined)
 
   //remoteOperations$.subscribe(e=>console.log("remoteOperations",e))
 

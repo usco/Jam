@@ -1,5 +1,5 @@
 //import Rx from 'rx'
-import {Rx} from '@cycle/core'
+import Rx from 'rx'
 
 let merge = Rx.Observable.merge
 

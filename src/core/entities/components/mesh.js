@@ -1,4 +1,4 @@
-import {Rx} from '@cycle/core'
+import Rx from 'rx'
 import {createComponents,removeComponents,duplicateComponents,makeActionsFromApiFns} from './common'
 import {makeModel, mergeData} from '../../../utils/modelUtils'
 
@@ -24,6 +24,8 @@ export function makeMeshSystem(actions){
       state = mergeData({},state)
       state[id] = mesh
       //FIXME big hack, use mutability
+
+      console.log("done createComponents (mesh)", state)
       return state 
     },state)
 

@@ -4,7 +4,7 @@ import Detector from './deps/Detector.js'
 
 /** @jsx hJSX */
 import Cycle from '@cycle/core'
-import {Rx} from '@cycle/core'
+import Rx from 'rx'
 import {hJSX} from '@cycle/dom'
 
 import {equals} from 'ramda'
@@ -279,6 +279,7 @@ function GLView({DOM, props$}){
 
   function configureStep1(container){
     //log.debug("initializing into container", container)
+    console.log("initializing into container",container)
 
     if(!Detector.webgl){
       //TODO: handle lacking webgl
@@ -346,17 +347,18 @@ function GLView({DOM, props$}){
   }
 
   //combine All needed components to apply any "transforms" to their visuals
-  let items$ = state$.pluck("items").distinctUntilChanged()
+  let items$ = state$.pluck("items")//.distinctUntilChanged()
 
   //do diffing to find what was added/changed
-  let itemChanges$ = items$.scan({prev:undefined,cur:undefined},function(acc, x){
+  let itemChanges$ = items$.scan(function(acc, x){
       let cur  = x
       let prev = acc.cur   
       return {cur,prev} 
-    })
+    },{prev:undefined,cur:undefined})
     .map(function(typeData){
       let {cur,prev} = typeData
       let changes = extractChanges(prev,cur)
+      console.log("changes",changes)
     return changes
     })  
 
@@ -364,11 +366,11 @@ function GLView({DOM, props$}){
   //we modify the transformControls mode based on the active tool
   //every time either activeTool or selection changes, reset/update transform controls
   let selectedMeshesChanges$ = state$.pluck("selectedMeshes").distinctUntilChanged()
-    .scan({prev:[],cur:[]},function(acc, x){
+    .scan(function(acc, x){
       let cur  = x
       let prev = acc.cur   
       return {cur,prev} 
-    })
+    },{prev:[],cur:[]})
     .map(function(typeData){
       let {cur,prev} = typeData
       let changes = extractChanges(prev,cur)
@@ -445,9 +447,13 @@ function GLView({DOM, props$}){
     .subscribe(e=>e)
 
   //we do not want to change our container (DOM) but the contents (gl)
+  const gLWidgeHelper = new GLWidgeHelper(configureStep1)
+  //new GLWidgeHelper(configureStep1)}
+  //gLWidgeHelper.setup()
+
   const vtree$ = Rx.Observable.just(
     <div className="glView" >
-      {new GLWidgeHelper(configureStep1)}
+      {gLWidgeHelper}
     </div>
   )
 
@@ -472,17 +478,26 @@ function GLWidgeHelper(configureFn, configCallback) {
   this.configCallback = configCallback
 }
 
+GLWidgeHelper.prototype.setup = function(){
+  this.configureFn(this.elem,this.configCallback)
+}
+
 GLWidgeHelper.prototype.init = function () {
-  let elem = document.createElement('div')
-  elem.className = "container"
-  this.configureFn(elem,this.configCallback)
-  this.elem = elem
-  return elem
+  console.log("init GLWidgeHelper",this.elem)
+  //if(!this.elem)//in weird cases, this gets called for SOME ?? reason
+  //{
+    let elem = document.createElement('div')
+    elem.className = "container"
+    this.elem = elem
+    this.setup() 
+  //}
+  
+  return this.elem
 }
 
 GLWidgeHelper.prototype.update = function (prev, elem) {
-  this.elem = this.elem || prev.elem
   console.log("update GLWidgeHelper" )
+  this.elem = this.elem || prev.elem
 }
 
 export default GLView

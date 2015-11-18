@@ -15,10 +15,6 @@ import model  from './model'
 import view   from './view'
 
 
-function requests(){
-  return Rx.Observable.never()
-}
-
 export default function main(drivers) {
   const {DOM} = drivers
   
@@ -42,9 +38,8 @@ export default function main(drivers) {
   const events$ = just( {gl:gl.events, entityInfos:entityInfos.events
     , bom:bom.events, comments:comments.events} )
 
-  const requests$ = actions.requests$ //requests()
+  const requests$ = actions.requests$
 
-    requests$.forEach(e=>console.log("outgoing requests",e))
   //output to localStorage
   //in this case, settings
   const localStorage$ = state$

@@ -33,10 +33,10 @@ export default function model(props$, actions){
   //ascending, descending, neutral 
   const sortablesDirection$ = actions.headerTapped$
     .map( e => undefined)
-    .scan(false, function (acc, x) { 
+    .scan(function (acc, x) { 
       if(!acc) return true
       return !acc
-    })
+    },false)
     .startWith(undefined)
 
   //actual entries (filtered, sorted etc)

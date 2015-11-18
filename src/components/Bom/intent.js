@@ -1,4 +1,4 @@
-import {Rx} from '@cycle/core'
+import Rx from 'rx'
 const fromEvent = Rx.Observable.fromEvent
 
 export default function intent(DOM){

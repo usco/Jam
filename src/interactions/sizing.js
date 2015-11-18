@@ -17,7 +17,7 @@ require("rx-dom")
   }
 
   let throttledWinResize = fromEvent(window, 'resize')
-  .throttleFirst(throttle /* ms */)
+  .throttle(throttle /* ms */)
   .map( extractSize )
   .startWith({width:window.innerWidth, height:window.innerHeight, aspect:window.innerWidth/window.innerHeight, bRect:undefined})
 
@@ -35,7 +35,7 @@ export function elementResizes (element, throttle=250){
   }
 
   return Rx.DOM.resize(element) 
-  .throttleFirst(throttle /* ms */)
+  .throttle(throttle /* ms */)
   .map( extractSize )
 
  }

@@ -1,11 +1,11 @@
-import {Rx} from '@cycle/core'
+import Rx from 'rx'
 import {makeInternals, meshResources} from '../meshResources'
 import {extractChanges} from '../../utils/diffPatchUtils'
 
 
 export function entityTypeIntents(sources){
   let meshSources$ = sources.meshSources$
-  let srcSources$ = sources.srcSources$
+  let srcSources$  = sources.srcSources$
 
   //TODO: get rid of this
   let assetManager   = makeInternals()
@@ -29,7 +29,7 @@ export function entityInstanceIntents(entityTypes$){
   const baseOps$ = entityTypes$
     //.distinctUntilChanged()//no worky ?
     .pluck("typeData")
-    .scan({prev:undefined,cur:undefined},function(acc, x){
+    .scan(function(acc, x){
       let cur  = x
       let prev = acc.cur
 
@@ -37,7 +37,7 @@ export function entityInstanceIntents(entityTypes$){
         return cur[key]
       })      
       return {cur,prev} 
-    })
+    },{prev:undefined,cur:undefined})
     .map(function(typeData){
       let {cur,prev} = typeData
 

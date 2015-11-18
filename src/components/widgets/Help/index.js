@@ -3,7 +3,7 @@ import {hJSX} from '@cycle/dom'
 import Class from "classnames"
 import tooltipIconBtn from '../TooltipIconButton'
 
-import {Rx} from '@cycle/core'
+import Rx from 'rx'
 const fromEvent = Rx.Observable.fromEvent
 
 import {combineLatestObj} from '../../../utils/obsUtils'

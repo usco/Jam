@@ -1,4 +1,4 @@
-import {Rx} from '@cycle/core'
+import Rx from 'rx'
 const just = Rx.Observable.just
 
 import {getExtension, itemsEqual, exists} from '../../utils/utils'
@@ -148,7 +148,7 @@ export function progressBarWrapper(state$, DOM){
     .pluck("operationsInProgress")
     .filter(exists)
     //.pluck("totalProgress")
-    //.distinctUntilChanged(null,equals)
+    .distinctUntilChanged(null,equals)
     //.do(e=>console.log("operationsInProgress",e))
     .map(progress=>progress*100)
     .map(function(progress){
