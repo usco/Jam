@@ -38,7 +38,8 @@ export function extractChanges(prev, cur){
 
         //console.log("added",result.added)
         //console.log("removed",result.removed)
-        
+    }else if(prev === undefined){//not handled right in the above case for some reason ??
+      result.added = cur
     }
 
     return result
