@@ -7,10 +7,10 @@ export default function makeDesktopDriver(){
   return function desktopDriver(request$){
 
 
-    function read(uri){
+    function read(data){
       let obs = new Rx.Subject()
       let reader = new FileReader()
-      //log.debug("reading from " + uri)
+      //log.debug("reading from " + data)
 
       function onLoad(e) {
         [e]
@@ -37,13 +37,13 @@ export default function makeDesktopDriver(){
       //reader.onloadend = onLoad
       reader.onprogress = onProgress
       reader.onerror = onError
-      reader.readAsBinaryString(uri)    
+      reader.readAsBinaryString(data)    
       return obs
     }
 
     function createResponse$(options){
       if(options.method === 'get'){
-        return read(options.uri)
+        return read(options.data)
       }
     }
 
