@@ -16,8 +16,9 @@ import {bomIntent} from         './intents/bom'
 
 
 import {equals, cond, T, always} from 'ramda'
-import {getExtension,isValidFile} from '../../utils/utils'
+import {getExtension,getNameAndExtension,isValidFile} from '../../utils/utils'
 import {combineLatestObj} from '../../utils/obsUtils'
+import {mergeData} from '../../utils/modelUtils'
 import StlParser    from 'usco-stl-parser'
 
 
@@ -55,7 +56,8 @@ export default function intent (drivers) {
       .filter(e=>!isValidFile(e))
       .map(
         s=>({
-          url: s
+          uri: s
+          , url: s
           , method: 'get'
           , responseType: 'json'
           , type: 'resource'
@@ -69,7 +71,8 @@ export default function intent (drivers) {
       .filter(isValidFile)
       .map(
         s=>({
-          uri: s
+          uri: s.name
+          , data:s
           , method: 'get'
           , type: 'resource'
         }))
@@ -77,6 +80,8 @@ export default function intent (drivers) {
   let requests$ = http({meshSources$,srcSources$})
   let desktop$  = desktop({meshSources$,srcSources$})
 
+
+  
   
   function bla(drivers){
     let resources$$ = drivers.http
@@ -88,8 +93,7 @@ export default function intent (drivers) {
         return Rx.Observable.empty()
       })
       .flatMap(function(e){
-        //console.log("BAAARG",e.request.uri.name)
-        const request  = Rx.Observable.just(e.request)
+        const request  = Rx.Observable.just( e.request )
         const response = e.pluck("response")
         const progress = e.pluck("progress")
         return combineLatestObj({response,request,progress})
@@ -99,7 +103,7 @@ export default function intent (drivers) {
     //combined data
     const combinedProgress$ = resources$$.scan(function(combined,entry){
       //console.log("acc",acc,"curURL",cur.request.url,cur.request.uri.name)
-      let uri = entry.request.url || entry.request.uri.name
+      const uri = entry.request.uri
       if(entry.progress){
         combined.entries[uri]  = entry.progress
 
@@ -129,28 +133,45 @@ export default function intent (drivers) {
     },{entries:{}})
     .pluck("totalProgress")
     .distinctUntilChanged(null, equals)
+    .debounce(10)
 
     combinedProgress$.subscribe(e=>console.log("combinedProgress",e))
     //other
-    /*let parsers = {}
+    let parsers = {}
       parsers["stl"] = new StlParser()
 
+
+    /*resources$$
+      .filter(data=>(data.response!==undefined && data.progress === undefined))
+      .forEach(e=>console.log("resources",e))*/
+
     const parsed$ = resources$$
-      .filter(data=>parsers[data.ext]!==undefined)//does parser exist?
-      .filter(data=>data.response!==undefined)
-      .map(data=> ({url:data.request.url,res:data.response,ext:getExtension(data.request.url)}) )
-      .map(function({url,res,ext}){
-        const parseOptions={}
-        let deferred = parsers[ext].parse(res, parseOptions)
-        return deferred.promise
+      .filter(data=>(data.response!==undefined && data.progress === undefined))
+      .map(function(data){
+        const uri = data.request.uri
+        const {name,ext} = getNameAndExtension(uri)
+        return {uri, data:data.response, ext, name}
       })
-      .flatMap(Rx.Observable.fromPromise)
-      .forEach(e=>console.log("parsed",e))*/
+      //actual parsing part
+      .filter(data=>parsers[data.ext]!==undefined)//does parser exist?
+      .flatMap(function({uri, data, ext, name}){
+        const parseOptions={}
+
+        const deferred = parsers[ext].parse(data, parseOptions)
+        const data$  = Rx.Observable.fromPromise(deferred.promise)
+        const meta$    = Rx.Observable.just({uri, ext, name})
+        return combineLatestObj({meta$,data$})
+      })
+    
+    parsed$
+      .forEach(e=>console.log("parsed",e))
 
     return {
       combinedProgress$
+      , parsed$
     }
   }
+
   let progress = bla(drivers)
 
 
