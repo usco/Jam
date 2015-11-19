@@ -15,11 +15,16 @@ import {selectionsIntents} from './intents/selections'
 import {bomIntent} from         './intents/bom'
 
 
+const of = Rx.Observable.of
 import {equals, cond, T, always} from 'ramda'
 import {getExtension,getNameAndExtension,isValidFile} from '../../utils/utils'
 import {combineLatestObj} from '../../utils/obsUtils'
 import {mergeData} from '../../utils/modelUtils'
 import StlParser    from 'usco-stl-parser'
+
+import postProcessMesh from '../../utils/meshUtils'
+import helpers         from 'glView-helpers'
+const centerMesh         = helpers.mesthTools.centerMesh
 
 
 export default function intent (drivers) {
@@ -41,7 +46,6 @@ export default function intent (drivers) {
   //settings
   const settingsSources$ = localStorage.get("jam!-settings")
   const settingActions   = settingsIntent(drivers)
-
   //comments
   const commentActions   = commentsIntents(drivers)
   
@@ -50,8 +54,10 @@ export default function intent (drivers) {
   //experimental test to work around asset manager
   function http({meshSources$,srcSources$})
   {
-    return meshSources$
-      .merge(srcSources$)
+    return merge(
+        meshSources$
+        ,srcSources$
+      )
       .flatMap(Rx.Observable.fromArray)
       .filter(e=>!isValidFile(e))
       .map(
@@ -65,8 +71,10 @@ export default function intent (drivers) {
   }
   //request from desktop store (source only)
   function desktop({meshSources$,srcSources$}){
-    return meshSources$
-      .merge(srcSources$)
+    return merge(
+        meshSources$
+        ,srcSources$
+      )
       .flatMap(Rx.Observable.fromArray)
       .filter(isValidFile)
       .map(
@@ -76,16 +84,39 @@ export default function intent (drivers) {
           , method: 'get'
           , type: 'resource'
         }))
+      .do(e=>console.log("desktop store request"))
   }
+
+  //FIXME: caching should be done at a higher level , to prevent useless requests
+  const resourceCache$ = undefined
+  const cache = {}
+  function getCached({meshSources$,srcSources$}){
+
+  }
+
+  //OUTbound
   let requests$ = http({meshSources$,srcSources$})
   let desktop$  = desktop({meshSources$,srcSources$})
 
+  function postProcessParsedData(data){
+    let mesh = data 
+    mesh = postProcessMesh(mesh)
+    mesh = centerMesh(mesh)
+    return mesh
+  }
 
+/*
+       => p =>
+  =====       ======>
+       => p =>
+*/
   
-  
-  function bla(drivers){
-    let resources$$ = drivers.http
-      .merge(drivers.desktop)
+  function resources(drivers){
+    
+    const resources$$ = merge(
+         drivers.http
+        ,drivers.desktop
+      )
       .filter(res$ => res$.request.type === 'resource')
       .retry(3)
       .catch(function(e){
@@ -93,7 +124,7 @@ export default function intent (drivers) {
         return Rx.Observable.empty()
       })
       .flatMap(function(e){
-        const request  = Rx.Observable.just( e.request )
+        const request  = of( e.request )
         const response = e.pluck("response")
         const progress = e.pluck("progress")
         return combineLatestObj({response,request,progress})
@@ -102,10 +133,9 @@ export default function intent (drivers) {
 
     //combined data
     const combinedProgress$ = resources$$.scan(function(combined,entry){
-      //console.log("acc",acc,"curURL",cur.request.url,cur.request.uri.name)
       const uri = entry.request.uri
-      if(entry.progress){
-        combined.entries[uri]  = entry.progress
+      if(entry.progress || entry.response){
+        combined.entries[uri]  = entry.progress || 1
 
         let totalProgress = Object.keys(combined.entries)
           .reduce(function(acc,cur){
@@ -113,40 +143,32 @@ export default function intent (drivers) {
           },0)
 
         totalProgress /= Object.keys(combined.entries).length
-        //console.log("totalProgress", totalProgress)
         combined.totalProgress = totalProgress
       }
 
-      if(entry.response){
-        combined.entries[uri]  = 1
-
-        let totalProgress = Object.keys(combined.entries)
-          .reduce(function(acc,cur){
-            return acc + combined.entries[cur]
-          },0)
-
-        totalProgress /= Object.keys(combined.entries).length
-        //console.log("totalProgress", totalProgress)
-        combined.totalProgress = totalProgress
-      }
       return combined
     },{entries:{}})
     .pluck("totalProgress")
     .distinctUntilChanged(null, equals)
     .debounce(10)
 
-    combinedProgress$.subscribe(e=>console.log("combinedProgress",e))
+
     //other
     let parsers = {}
       parsers["stl"] = new StlParser()
-
 
     /*resources$$
       .filter(data=>(data.response!==undefined && data.progress === undefined))
       .forEach(e=>console.log("resources",e))*/
 
-    const parsed$ = resources$$
-      .filter(data=>(data.response!==undefined && data.progress === undefined))
+    const parseBase$ = resources$$
+      .filter(data=>(data.response !== undefined && data.progress === undefined))
+      .distinctUntilChanged(d=>d.request.uri,equals)
+      .debounce(10)
+      .shareReplay(1)
+
+    const parsed$ = parseBase$
+      //.do(e=>console.log("parsedA",e))
       .map(function(data){
         const uri = data.request.uri
         const {name,ext} = getNameAndExtension(uri)
@@ -155,13 +177,18 @@ export default function intent (drivers) {
       //actual parsing part
       .filter(data=>parsers[data.ext]!==undefined)//does parser exist?
       .flatMap(function({uri, data, ext, name}){
-        const parseOptions={}
+        const parseOptions={useWorker:true,useBuffers:true}
 
         const deferred = parsers[ext].parse(data, parseOptions)
+
         const data$  = Rx.Observable.fromPromise(deferred.promise)
-        const meta$    = Rx.Observable.just({uri, ext, name})
+          .map(postProcessParsedData) 
+        const meta$    = of({uri, ext, name})
+
+        console.log("basics ready")
         return combineLatestObj({meta$,data$})
       })
+      .do(e=>console.log("parsed data ready",e))
     
     parsed$
       .forEach(e=>console.log("parsed",e))
@@ -172,11 +199,15 @@ export default function intent (drivers) {
     }
   }
 
-  let progress = bla(drivers)
+  let progress = resources(drivers)
+
+  let   registerTypeFromMesh$ = progress.parsed$
+  const entityTypeIntents2 = {
+    registerTypeFromMesh$
+  }
 
 
-
-  const fn = cond([
+  /*const fn = cond([
     [equals(0),   always('water freezes at 0°C')],
     [equals(100), always('water boils at 100°C')],
     [T,           temp => 'nothing special happens at ' + temp + '°C']
@@ -184,17 +215,17 @@ export default function intent (drivers) {
 
   console.log( fn(0) ) //=> 'water freezes at 0°C'
   console.log( fn(50) ) //=> 'nothing special happens at 50°C'
-  console.log( fn(100) ) //=> 'water boils at 100°C'
+  console.log( fn(100) ) //=> 'water boils at 100°C'*/
 
 
   ///entity actions
-  const entityTypeActions        = entityTypeIntents({meshSources$,srcSources$})
-  const reset$                   = DOM.select('.reset').events("click")
-  const removeEntityType$        = undefined //same as delete type/ remove bom entry
+  const entityTypeActions         = entityTypeIntents2//entityTypeIntents({meshSources$,srcSources$})
+  const reset$                    = DOM.select('.reset').events("click")
+  const removeEntityType$         = undefined //same as delete type/ remove bom entry
   const deleteEntityInstances$    = DOM.select('.delete').events("click")
   const duplicateEntityInstances$ = DOM.select('.duplicate').events("click")
 
-  const addEntityInstanceCandidates$ =  entityTypeActions //these MIGHT become instances, not 100% sure
+  const addEntityInstanceCandidates$ =  entityTypeActions //these MIGHT become instances, we just are not 100% sure
     .registerTypeFromMesh$
 
   const updateCoreComponent$ = events
@@ -227,9 +258,8 @@ export default function intent (drivers) {
   }
 
 
-  //annotations
+  //measurements
   const shortSingleTaps$ = events.select("gl").events("shortSingleTaps$")
-    //shortSingleTaps$.subscribe(e=>console.log("shortSingleTaps",e))
 
   const createAnnotationStep$ = shortSingleTaps$
     .map( (event)=>event.detail.pickingInfos)

@@ -18,7 +18,8 @@ function typeUidFromMeshName(meshNameToPartTypeUId, meshName){
 }
 
 function typeFromMeshData(data, typeUidFromMeshName){
-  let meshName = data.resource.name || ""
+  console.log("typeFromMeshData",data)
+  let meshName = data.meta.name || ""
   let name     = nameCleanup(meshName)
 
   let id = typeUidFromMeshName(meshName)
@@ -31,10 +32,12 @@ function typeFromMeshData(data, typeUidFromMeshName){
     //extract usefull information
     //we do not return the shape since that becomes the "reference shape/mesh", not the
     //one that will be shown
-    templateMesh = data.mesh
+    let mesh = data.data
+   
+
+    templateMesh = mesh
     computeBoundingSphere(templateMesh)
     computeBoundingBox(templateMesh)
-
   }
 
   return {id, name, meshName, templateMesh, printable } 

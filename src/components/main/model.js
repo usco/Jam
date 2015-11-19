@@ -77,23 +77,35 @@ export default function model(props$, actions, drivers){
   const entityTypes$   = entityTypes( actions.entityTypeActions)
   const comments$      = comments( actions.commentActions)
 
+
+
+  /*
+
+  //addInstanceCandidates => -------------------------
+  //addType               => --T----------------------
+  
+
+  */
+
   //TODO : modify entityInstanceIntents
   const entityInstancesBase$  = entityActions
     .addEntityInstanceCandidates$
     .withLatestFrom(entityTypes$,function(candidateData,entityTypes){
       //let cleanedName = nameCleanup( candidateData.resource.name )
       //here what we do is find types by mesh name, if any
-      let typeUid = entityTypes.meshNameToPartTypeUId[candidateData.resource.name]
-      let tData = entityTypes
-        .typeData[typeUid]
-
-      let addedInstanceTypeData = tData
-      
-      return [tData]
+      let typeUid = entityTypes.meshNameToPartTypeUId[candidateData.meta.name]
+      if(typeUid){
+        let tData = entityTypes
+          .typeData[typeUid]
+        let addedInstanceTypeData = tData
+        return [tData]
+      }
+      return undefined
     })
+    .filter(exists)
     .map(function(newTypes){
       return newTypes.map(function(typeData){
-        let instUid = generateUUID()//Math.round( Math.random()*100 )
+        let instUid = generateUUID()
         let typeUid = typeData.id
         let instName = typeData.name+"_"+instUid
 
