@@ -1,14 +1,208 @@
-import {exists} from './utils'
+import Rx from 'rx'
+const merge = Rx.Observable.merge
+const of = Rx.Observable.of
+
+import {exists,getExtension,getNameAndExtension,isValidFile} from './utils'
+
+import postProcessMesh from './meshUtils'
+import helpers         from 'glView-helpers'
+const centerMesh         = helpers.mesthTools.centerMesh
+
+import {equals, cond, T, always} from 'ramda'
+import {combineLatestObj} from './obsUtils'
+import {mergeData} from './modelUtils'
+import StlParser    from 'usco-stl-parser'
 
 
+
+export function requests({meshSources$,srcSources$}){
+  // request from http driver 
+  function httpRequests({meshSources$,srcSources$})
+  {
+    return merge(
+        meshSources$
+        ,srcSources$
+      )
+      .flatMap(Rx.Observable.fromArray)
+      .filter(e=>!isValidFile(e))
+      .do(e=>console.log("gna httpRequests"))
+      .map(
+        s=>({
+          uri: s
+          , url: s
+          , method: 'get'
+          , responseType: 'json'
+          , type: 'resource'
+        }))
+      .do(e=>console.log("httpRequests",e))
+  }
+  //request from desktop store (source only)
+  function desktopRequests({meshSources$,srcSources$}){
+
+    return merge(
+        meshSources$
+        ,srcSources$
+      )
+      .flatMap(Rx.Observable.fromArray)
+      .do(e=>console.log("gna desktopRequests"))
+      .filter(isValidFile)
+      .map(
+        s=>({
+          uri: s.name
+          , data:s
+          , method: 'get'
+          , type: 'resource'
+        }))
+      .do(e=>console.log("desktopRequests",e))
+  }
+
+  return {
+    httpRequests:httpRequests.bind(null,{meshSources$,srcSources$})
+    ,desktopRequests:desktopRequests.bind(null,{meshSources$,srcSources$})
+  }
+}
+
+
+
+
+function makeParsers(){
+  //other
+  let parsers = {}
+  parsers["stl"] = new StlParser()
+  return parsers
+}
+const parsers = makeParsers()
+
+
+function postProcessParsedData(data){
+  let mesh = data 
+  mesh = postProcessMesh(mesh)
+  mesh = centerMesh(mesh)
+  return mesh
+}
+
+function fetch(drivers){
+  const fetched$ = merge(
+       drivers.http
+      ,drivers.desktop
+    )
+    .filter(res$ => res$.request.type === 'resource')
+    .retry(3)
+    .catch(function(e){
+      console.log("ouch , problem fetching data ",e)
+      return Rx.Observable.empty()
+    })
+    .flatMap(function(e){
+      const request  = of( e.request )
+      const response = e.pluck("response")
+      const progress = e.pluck("progress")
+      return combineLatestObj({response,request,progress})
+    })
+    .share()
+
+  return fetched$
+}
+
+function parse(fetched$){
+  const parseBase$ = fetched$
+    .filter(data=>(data.response !== undefined && data.progress === undefined))
+    .distinctUntilChanged(d=>d.request.uri,equals)
+    //.debounce(10)
+    .shareReplay(1)
+
+  const parsed$ = parseBase$
+    //.do(e=>console.log("parsedA",e))
+    .map(function(data){
+      const uri = data.request.uri
+      const {name,ext} = getNameAndExtension(uri)
+      return {uri, data:data.response, ext, name}
+    })
+    //actual parsing part
+    .filter(data=>parsers[data.ext]!==undefined)//does parser exist?
+    .flatMap(function({uri, data, ext, name}){
+      const parseOptions={useWorker:true,useBuffers:true}
+
+      const deferred = parsers[ext].parse(data, parseOptions)
+
+      const data$  = Rx.Observable.fromPromise(deferred.promise)
+        .map(postProcessParsedData) 
+      const meta$    = of({uri, ext, name})
+
+      console.log("basics ready")
+      return combineLatestObj({meta$,data$})
+    })
+    .do(e=>console.log("parsed data ready",e))
+
+  return parsed$
+}
+
+function computeCombinedFetchProgress(resources$){
+  const combinedProgress$ = resources$.scan(function(combined,entry){
+    const uri = entry.request.uri
+    if(entry.progress || entry.response){
+      combined.entries[uri]  = entry.progress || 1
+
+      let totalProgress = Object.keys(combined.entries)
+        .reduce(function(acc,cur){
+          return acc + combined.entries[cur]
+        },0)
+
+      totalProgress /= Object.keys(combined.entries).length
+      combined.totalProgress = totalProgress
+    }
+
+    return combined
+  },{entries:{}})
+  .pluck("totalProgress")
+  .distinctUntilChanged(null, equals)
+  .debounce(10)
+
+  return combinedProgress$
+}
+
+
+ 
+/*
+       => p =>
+  =====       ======>
+       => p =>
+*/
+  /*const fn = cond([
+    [equals(0),   always('water freezes at 0°C')],
+    [equals(100), always('water boils at 100°C')],
+    [T,           temp => 'nothing special happens at ' + temp + '°C']
+  ])
+
+  console.log( fn(0) ) //=> 'water freezes at 0°C'
+  console.log( fn(50) ) //=> 'nothing special happens at 50°C'
+  console.log( fn(100) ) //=> 'water boils at 100°C'*/
+
+export function resources(drivers){
+  //FIXME: caching should be done at a higher level , to prevent useless requests
+  const resourceCache$ = undefined
+  const cache = {}
+  function getCached({meshSources$,srcSources$}){
+    //this one needs to be store independant too
+  }
+
+  const fetched$ = fetch(drivers)
+  const parsed$  = parse(fetched$)
+  const combinedProgress$ = computeCombinedFetchProgress(fetched$)
+
+  parsed$
+    .forEach(e=>console.log("parsed",e))
+
+  return {
+    combinedProgress$
+    , parsed$
+  }
+}
+
+/*
 function makeAssetManager(drivers){
 
 }
 
-
-function isValidFile(file){
-  return (typeof File !== "undefined" && File !== null) && file instanceof File))
-}
 
 function load(fileUri, options){
   const defaults = {
@@ -26,11 +220,8 @@ function load(fileUri, options){
   input
     .filter(exists)
 
-
-  //
   if (fileUri == null) {
     error = "Invalid file name : " + fileUri
-
   }
 
   input
@@ -58,7 +249,6 @@ function load(fileUri, options){
     ,file:_file//FIXME a bit of a hack: for future uploads we keep the original file?
   }
 
-
   //the resource was already loaded, return it 
   if (filename in this.assetCache){
     log.info("resource already in cache, returning cached version")
@@ -81,7 +271,6 @@ function load(fileUri, options){
   }
 
 
-
   //if extension not in @codeExtensions
   //get prefered input data type for parser/extension
   //FIXME: do this more elegantly 
@@ -98,7 +287,7 @@ function load(fileUri, options){
 
   function parseRawData(rawData){
     //returns observable
-    return parser.parse(loadedResource, parseOptions)
+    return parser.parse(rawData, parseOptions)
   }
 
   function onSuccess(loadedResource) 
@@ -140,22 +329,8 @@ function load(fileUri, options){
   return obs
 
 }
+*/
 
 
 
 
-
-/** 
-   * fileUri : path to the file, starting with the node prefix
-   * options: object : additionnal options for loading resource
-   *  options.parentUri : string : not sure we should have this here : for relative path resolution
-   *  options.transient : boolean : if true, don't store the resource in cache, defaultfalse
-   *  options.keepRawData: boolean: if true, keep a copy of the original data (un-parsed)
-   *  options.noParse: boolean: if true, do not attempt to parse the raw data
-   * 
-   * If no store is specified, file paths are expected to be relative
-   */
-  load(fileUri, options) {
-    //TODO: cleann this all up
-    //load resource, store it in resource map, return it for use
-  }

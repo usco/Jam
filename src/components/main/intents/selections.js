@@ -1,6 +1,6 @@
 import {toArray,exists} from '../../../utils/utils'
 import {hasEntity, getEntity} from '../../../utils/entityUtils'
-import {flatten,equals} from 'Ramda'
+import {flatten,equals} from 'ramda'
 
 function extractEntities(data){
   return data.filter(hasEntity).map(getEntity).map(e=>e.id)

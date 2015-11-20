@@ -1,7 +1,7 @@
 import Rx from 'rx'
 const merge = Rx.Observable.merge
 const just  = Rx.Observable.just
-import {flatten} from 'Ramda'
+import {flatten} from 'ramda'
 
 import {nameCleanup} from '../../utils/formatters'
 
@@ -80,12 +80,39 @@ export default function model(props$, actions, drivers){
 
 
   /*
-
   //addInstanceCandidates => -------------------------
   //addType               => --T----------------------
-  
-
   */
+
+  //TODO: go back to basics : some candidate have access to already exisiting types, some others not (first time)
+
+  
+    
+
+  const addInstanceFromTypes$   = entityInstanceIntents(entityTypes$).addInstances$
+  const addInstancesCandidates$ = entityActions.addEntityInstanceCandidates$
+    .withLatestFrom(entityTypes$,function(candidateData,entityTypes){
+      let typeUid = entityTypes.meshNameToPartTypeUId[candidateData.meta.name]
+      if(typeUid){
+        let tData = entityTypes
+          .typeData[typeUid]
+        let addedInstanceTypeData = tData
+        return ["boo"]
+      }
+      return undefined
+    })
+    .filter(exists)
+
+  const addInstance$ = Rx.Observable.merge(
+      addInstanceFromTypes$
+      ,addInstancesCandidates$
+    )
+    .filter(d=>d.length>0)
+    //.take(1)
+    //.repeat()
+    .forEach(e=>console.log("entityInstanceIntents",e))
+    
+
 
   //TODO : modify entityInstanceIntents
   const entityInstancesBase$  = entityActions
@@ -97,6 +124,8 @@ export default function model(props$, actions, drivers){
       if(typeUid){
         let tData = entityTypes
           .typeData[typeUid]
+
+
         let addedInstanceTypeData = tData
         return [tData]
       }
@@ -158,7 +187,7 @@ export default function model(props$, actions, drivers){
   //annotations
   let addAnnotations$ = addAnnotation(actions.annotationsActions, settings$)
     .map(toArray)
-  addAnnotations$.subscribe(e=>console.log("addAnnotation",e))
+  addAnnotations$.forEach(e=>console.log("addAnnotation",e))
   /* //annotations
   let aIntent = {
     creationStep$:aIntents.creationStep$,
@@ -173,7 +202,7 @@ export default function model(props$, actions, drivers){
       }
       //console.log("ok I am done with annotation",annotation,settings)
     })
-    .subscribe(e=>e)
+    .forEach(e=>e)
 
   let addInstance$ = newInstFromTypes$.merge(addAnnotation$)*/
 
@@ -208,12 +237,12 @@ export default function model(props$, actions, drivers){
     .shareReplay(1)
 
   /*currentSelections$
-    .subscribe(e=>console.log("currentSelections",e))
+    .forEach(e=>console.log("currentSelections",e))
   currentSelections$
     .map(s => s.map(s=>s.id))
-    .subscribe(e=>console.log("currentSelections, ids",e))
+    .forEach(e=>console.log("currentSelections, ids",e))
   typesInstancesRegistry$
-    .subscribe(e=>console.log("registry updated",e))*/
+    .forEach(e=>console.log("registry updated",e))*/
 
   //close some cycles
   replicateStream(currentSelections$,proxySelections$)
@@ -271,7 +300,7 @@ export default function model(props$, actions, drivers){
     //, drivers.postMessage
     //  .filter(hasClear)
   )
-  clearBomEntries$.subscribe(e=>console.log("gnagna",e))
+  clearBomEntries$.forEach(e=>console.log("gnagna",e))
 
   const updateBomEntries$ = actions.bomActions.updateBomEntries$
 
@@ -293,7 +322,7 @@ export default function model(props$, actions, drivers){
     .take(4)
     .map(function(){return Math.random()})*/ //Rx.Observable.just(0.5)//actions.progress.combinedProgress$.startWith(undefined)
 
-  //remoteOperations$.subscribe(e=>console.log("remoteOperations",e))
+  //remoteOperations$.forEach(e=>console.log("remoteOperations",e))
 
   //////other data
   const appData$ = just({

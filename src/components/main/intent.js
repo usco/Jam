@@ -20,12 +20,9 @@ import {equals, cond, T, always} from 'ramda'
 import {getExtension,getNameAndExtension,isValidFile} from '../../utils/utils'
 import {combineLatestObj} from '../../utils/obsUtils'
 import {mergeData} from '../../utils/modelUtils'
-import StlParser    from 'usco-stl-parser'
 
-import postProcessMesh from '../../utils/meshUtils'
-import helpers         from 'glView-helpers'
-const centerMesh         = helpers.mesthTools.centerMesh
 
+import {requests,resources} from '../../utils/assetManager'
 
 export default function intent (drivers) {
   const DOM      = drivers.DOM
@@ -52,171 +49,18 @@ export default function intent (drivers) {
   //const selectionActions = selectionsIntents({DOM,events}, typesInstancesRegistry$)
 
   //experimental test to work around asset manager
-  function http({meshSources$,srcSources$})
-  {
-    return merge(
-        meshSources$
-        ,srcSources$
-      )
-      .flatMap(Rx.Observable.fromArray)
-      .filter(e=>!isValidFile(e))
-      .map(
-        s=>({
-          uri: s
-          , url: s
-          , method: 'get'
-          , responseType: 'json'
-          , type: 'resource'
-        }))
-  }
-  //request from desktop store (source only)
-  function desktop({meshSources$,srcSources$}){
-    return merge(
-        meshSources$
-        ,srcSources$
-      )
-      .flatMap(Rx.Observable.fromArray)
-      .filter(isValidFile)
-      .map(
-        s=>({
-          uri: s.name
-          , data:s
-          , method: 'get'
-          , type: 'resource'
-        }))
-      .do(e=>console.log("desktop store request"))
-  }
-
-  //FIXME: caching should be done at a higher level , to prevent useless requests
-  const resourceCache$ = undefined
-  const cache = {}
-  function getCached({meshSources$,srcSources$}){
-
-  }
 
   //OUTbound
-  let requests$ = http({meshSources$,srcSources$})
-  let desktop$  = desktop({meshSources$,srcSources$})
+  let _requests = requests({meshSources$,srcSources$})
+  let requests$ = _requests.httpRequests()
+  let desktop$  = _requests.desktopRequests()
 
-  function postProcessParsedData(data){
-    let mesh = data 
-    mesh = postProcessMesh(mesh)
-    mesh = centerMesh(mesh)
-    return mesh
-  }
-
-/*
-       => p =>
-  =====       ======>
-       => p =>
-*/
   
-  function resources(drivers){
-    
-    const resources$$ = merge(
-         drivers.http
-        ,drivers.desktop
-      )
-      .filter(res$ => res$.request.type === 'resource')
-      .retry(3)
-      .catch(function(e){
-        console.log("ouch , problem fetching data ",e)
-        return Rx.Observable.empty()
-      })
-      .flatMap(function(e){
-        const request  = of( e.request )
-        const response = e.pluck("response")
-        const progress = e.pluck("progress")
-        return combineLatestObj({response,request,progress})
-      })
-      .share()
-
-    //combined data
-    const combinedProgress$ = resources$$.scan(function(combined,entry){
-      const uri = entry.request.uri
-      if(entry.progress || entry.response){
-        combined.entries[uri]  = entry.progress || 1
-
-        let totalProgress = Object.keys(combined.entries)
-          .reduce(function(acc,cur){
-            return acc + combined.entries[cur]
-          },0)
-
-        totalProgress /= Object.keys(combined.entries).length
-        combined.totalProgress = totalProgress
-      }
-
-      return combined
-    },{entries:{}})
-    .pluck("totalProgress")
-    .distinctUntilChanged(null, equals)
-    .debounce(10)
-
-
-    //other
-    let parsers = {}
-      parsers["stl"] = new StlParser()
-
-    /*resources$$
-      .filter(data=>(data.response!==undefined && data.progress === undefined))
-      .forEach(e=>console.log("resources",e))*/
-
-    const parseBase$ = resources$$
-      .filter(data=>(data.response !== undefined && data.progress === undefined))
-      .distinctUntilChanged(d=>d.request.uri,equals)
-      .debounce(10)
-      .shareReplay(1)
-
-    const parsed$ = parseBase$
-      //.do(e=>console.log("parsedA",e))
-      .map(function(data){
-        const uri = data.request.uri
-        const {name,ext} = getNameAndExtension(uri)
-        return {uri, data:data.response, ext, name}
-      })
-      //actual parsing part
-      .filter(data=>parsers[data.ext]!==undefined)//does parser exist?
-      .flatMap(function({uri, data, ext, name}){
-        const parseOptions={useWorker:true,useBuffers:true}
-
-        const deferred = parsers[ext].parse(data, parseOptions)
-
-        const data$  = Rx.Observable.fromPromise(deferred.promise)
-          .map(postProcessParsedData) 
-        const meta$    = of({uri, ext, name})
-
-        console.log("basics ready")
-        return combineLatestObj({meta$,data$})
-      })
-      .do(e=>console.log("parsed data ready",e))
-    
-    parsed$
-      .forEach(e=>console.log("parsed",e))
-
-    return {
-      combinedProgress$
-      , parsed$
-    }
-  }
-
   let progress = resources(drivers)
 
-  let   registerTypeFromMesh$ = progress.parsed$
   const entityTypeIntents2 = {
-    registerTypeFromMesh$
+    registerTypeFromMesh$:progress.parsed$
   }
-
-
-  /*const fn = cond([
-    [equals(0),   always('water freezes at 0°C')],
-    [equals(100), always('water boils at 100°C')],
-    [T,           temp => 'nothing special happens at ' + temp + '°C']
-  ])
-
-  console.log( fn(0) ) //=> 'water freezes at 0°C'
-  console.log( fn(50) ) //=> 'nothing special happens at 50°C'
-  console.log( fn(100) ) //=> 'water boils at 100°C'*/
-
 
   ///entity actions
   const entityTypeActions         = entityTypeIntents2//entityTypeIntents({meshSources$,srcSources$})
@@ -225,8 +69,18 @@ export default function intent (drivers) {
   const deleteEntityInstances$    = DOM.select('.delete').events("click")
   const duplicateEntityInstances$ = DOM.select('.duplicate').events("click")
 
-  const addEntityInstanceCandidates$ =  entityTypeActions //these MIGHT become instances, we just are not 100% sure
-    .registerTypeFromMesh$
+
+  const addEntityInstanceCandidates$ =  progress.parsed$//these MIGHT become instances, we just are not 100% sure
+  /*possible sources of instances
+    directly:
+    - addressBar
+    - postMessage
+    - drag & drop
+    Indirectly:
+      - duplicates of other instances
+      - design
+
+  */
 
   const updateCoreComponent$ = events
     .select("entityInfos")
