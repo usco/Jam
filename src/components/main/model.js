@@ -77,17 +77,12 @@ export default function model(props$, actions, drivers){
   const entityTypes$   = entityTypes( actions.entityTypeActions)
   const comments$      = comments( actions.commentActions)
 
-
-
   /*
   //addInstanceCandidates => -------------------------
   //addType               => --T----------------------
   */
 
   //TODO: go back to basics : some candidate have access to already exisiting types, some others not (first time)
-
-  
-    
 
   const addInstanceFromTypes$   = entityInstanceIntents(entityTypes$).addInstances$
   const addInstancesCandidates$ = entityActions.addEntityInstanceCandidates$
@@ -97,25 +92,26 @@ export default function model(props$, actions, drivers){
         let tData = entityTypes
           .typeData[typeUid]
         let addedInstanceTypeData = tData
-        return ["boo"]
+        return [tData]
       }
       return undefined
     })
     .filter(exists)
 
   const addInstance$ = Rx.Observable.merge(
-      addInstanceFromTypes$
-      ,addInstancesCandidates$
+      //addInstanceFromTypes$
+      addInstancesCandidates$
     )
     .filter(d=>d.length>0)
+    .do(e=>console.log("addInstance",e))
     //.take(1)
     //.repeat()
-    .forEach(e=>console.log("entityInstanceIntents",e))
+    //.forEach(e=>console.log("entityInstanceIntents",e))
     
 
 
   //TODO : modify entityInstanceIntents
-  const entityInstancesBase$  = entityActions
+  const entityInstancesBase$  = /*entityActions
     .addEntityInstanceCandidates$
     .withLatestFrom(entityTypes$,function(candidateData,entityTypes){
       //let cleanedName = nameCleanup( candidateData.resource.name )
@@ -131,7 +127,8 @@ export default function model(props$, actions, drivers){
       }
       return undefined
     })
-    .filter(exists)
+    .filter(exists)*/
+    addInstance$
     .map(function(newTypes){
       return newTypes.map(function(typeData){
         let instUid = generateUUID()

@@ -50,9 +50,15 @@ export default function intent (drivers) {
 
   //experimental test to work around asset manager
 
+  meshSources$
+    .forEach(e=>console.log("meshSources",e))
+
   //OUTbound
   let _requests = requests({meshSources$,srcSources$})
   let requests$ = _requests.requests.http$
+    //.do(e=>console.log("requests2",e))
+  //.delay(5000).do(e=>console.log("requests",e))
+
   let desktop$  = _requests.requests.desktop$
 
   
