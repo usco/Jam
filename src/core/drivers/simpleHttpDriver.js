@@ -5,14 +5,19 @@ import Rx from 'rx'
 
 export function createResponse$(options){
   const defaults = {
-    responseType:"text"
-    ,method:"get"
+    method:"get"
+    ,encoding:'utf8'
+    ,mimeType:'text/plain; charset=x-user-defined'
+    ,responseType:undefined//"text"
+    
+    ,timeout:undefined
   }
   options = Object.assign(options,defaults)
+  console.log("createResponse")
 
   let obs = new Rx.Subject()
 
-  let xmlhttp = new XMLHttpRequest()
+  let request = new XMLHttpRequest()
 
   function handleProgress(e){
     [e]
@@ -22,25 +27,32 @@ export function createResponse$(options){
       })  
   }
   function handleComplete(e){
-    let response = xmlhttp.response
+    let response = request.response || request.responseText
+
     response = options.responseType === 'json' ? JSON.parse(response) : response
     obs.onNext({response})
     obs.onCompleted()
   }
 
   function handleError(e){
-    console.log("error",xmlhttp.statusText)
+    console.log("error",request.statusText)
     obs.onError(e)
   }
 
-  xmlhttp.addEventListener("progress", handleProgress)
-  xmlhttp.addEventListener("load"    , handleComplete)
-  xmlhttp.addEventListener("error"   , handleError)
-  xmlhttp.addEventListener("abort"   , handleError)
+  request.addEventListener("progress", handleProgress)
+  request.addEventListener("load"    , handleComplete)
+  request.addEventListener("error"   , handleError)
+  request.addEventListener("abort"   , handleError)
 
 
-  xmlhttp.open(options.method,options.url, true)
-  xmlhttp.send()
+  request.open(options.method,options.url, true)
+  if ((options.mimeType !== null) && (request.overrideMimeType !== null)) {
+    request.overrideMimeType(options.mimeType)
+  }
+  request.timeout      = options.timeout
+  request.responseType = options.responseType
+
+  request.send()
 
   return obs
 }
