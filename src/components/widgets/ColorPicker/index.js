@@ -9,7 +9,7 @@ const combineLatest = Rx.Observable.combineLatest
 const just = Rx.Observable.just 
 import {combineLatestObj} from '../../../utils/obsUtils'
 import {exists} from '../../../utils/utils'
-import {equals} from 'Ramda'
+import {equals} from 'ramda'
 
 function intent({DOM}){
   console.log("intent for colorPicker")

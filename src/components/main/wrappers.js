@@ -2,7 +2,7 @@ import Rx from 'rx'
 const just = Rx.Observable.just
 
 import {getExtension, itemsEqual, exists} from '../../utils/utils'
-import {equals} from 'Ramda'
+import {equals} from 'ramda'
 import {combineLatestObj} from '../../utils/obsUtils'
 
 //nested dialogues etc

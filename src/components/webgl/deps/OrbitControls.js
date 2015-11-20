@@ -270,6 +270,7 @@ var OrbitControls = function ( object, domElement, upVector ) {
           angle.x = 2 * Math.PI * delta.x / PIXELS_PER_ROUND * scope.userRotateSpeed
           angle.y = -2 * Math.PI * delta.y / PIXELS_PER_ROUND * scope.userRotateSpeed
               
+          //console.log("rotate by angle",angle)
           /*if ( angle === undefined ) {
             angle = 2 * Math.PI /180  * scope.userRotateSpeed
           } */     

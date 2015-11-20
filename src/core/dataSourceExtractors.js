@@ -103,12 +103,12 @@ export function extractSourceSources( rawSources, extensions){
 
   //sources of meshes
   //meshSources are either urls or files (direct data, passed by drag & drop etc)
-  const soureSources$ = merge(
+  const sourceSources$ = merge(
     dndSourceFiles$
     ,dndSourceUris$
     ,postMessages$.filter(hasModelUrl).pluck("sourceUrl") //url sent by postMessage
     ,addressbarSourceUris$
   )
 
-  return soureSources$
+  return sourceSources$
 }
