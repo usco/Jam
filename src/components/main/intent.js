@@ -52,8 +52,8 @@ export default function intent (drivers) {
 
   //OUTbound
   let _requests = requests({meshSources$,srcSources$})
-  let requests$ = _requests.httpRequests()
-  let desktop$  = _requests.desktopRequests()
+  let requests$ = _requests.requests.http$
+  let desktop$  = _requests.requests.desktop$
 
   
   let progress = resources(drivers)

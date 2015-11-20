@@ -1,6 +1,7 @@
 import Rx from 'rx'
 const merge = Rx.Observable.merge
 const of = Rx.Observable.of
+const scase = Rx.Observable.case
 
 import {exists,getExtension,getNameAndExtension,isValidFile} from './utils'
 
@@ -13,52 +14,105 @@ import {combineLatestObj} from './obsUtils'
 import {mergeData} from './modelUtils'
 import StlParser    from 'usco-stl-parser'
 
+import assign from 'fast.js/object/assign'//faster object.assign
 
 
-export function requests({meshSources$,srcSources$}){
-  // request from http driver 
-  function httpRequests({meshSources$,srcSources$})
-  {
-    return merge(
-        meshSources$
-        ,srcSources$
-      )
-      .flatMap(Rx.Observable.fromArray)
-      .filter(e=>!isValidFile(e))
-      .do(e=>console.log("gna httpRequests"))
-      .map(
-        s=>({
-          uri: s
-          , url: s
-          , method: 'get'
-          , responseType: 'json'
-          , type: 'resource'
-        }))
-      .do(e=>console.log("httpRequests",e))
+function dataSource(data){
+  if(isValidFile(data)){
+    return {
+      src:'desktop'
+      ,uri: data.name
+    }
   }
-  //request from desktop store (source only)
-  function desktopRequests({meshSources$,srcSources$}){
+  else{
+    return {
+      src:'http'
+      ,uri:data
+    }
+  }
+}
 
-    return merge(
-        meshSources$
-        ,srcSources$
-      )
-      .flatMap(Rx.Observable.fromArray)
-      .do(e=>console.log("gna desktopRequests"))
-      .filter(isValidFile)
-      .map(
-        s=>({
-          uri: s.name
-          , data:s
-          , method: 'get'
-          , type: 'resource'
-        }))
-      .do(e=>console.log("desktopRequests",e))
+export function requests(inputs, drivers){
+  const {meshSources$,srcSources$} = inputs
+
+  //FIXME: caching should be done at a higher level , to prevent useless requests
+  const resourceCache$ = undefined
+  const cache = {}
+  function getCached({meshSources$,srcSources$}){
+    //this one needs to be store independant too
+  }
+
+  const baseRequest$ = merge(
+      meshSources$
+      ,srcSources$
+    )
+    .flatMap(Rx.Observable.fromArray)
+    .map(function(data){
+      const source     = dataSource(data)
+      const uri        = source.uri
+      const {name,ext} = getNameAndExtension(uri)
+      return {src:source.src, uri, data, ext, name}
+    })
+    .filter(function(req){
+      const cached = cache[req.uri]
+      return cached ===undefined
+    })
+
+  baseRequest$
+    .forEach(e=>console.log("sort of requests",e))
+
+  /*const results$ = merge(
+      fetch(drivers)
+      //TODO: merge with cached results
+    )*/
+
+  //
+
+  /*const request  = of( e.request )
+      const response = e.pluck("response")
+      const progress = e.pluck("progress")
+      return combineLatestObj({response,request,progress})*/
+
+  /*var sources = {
+    'desktop': of("desktop"),
+    'http': of("bar")
+  }
+  var source = Rx.Observable.case(
+    function(){
+      return 'http'
+    }
+    ,sources)
+    .forEach(e=>console.log("testing",e))*/
+
+  // request from http driver 
+  const httpRequests$ = baseRequest$
+    .filter(r=>r.src==="http")
+    .map(function(req){
+      return assign({
+        url:req.uri
+        ,method:'get'
+        ,responseType:'json'
+        ,type:'resource'},req)
+    })
+
+  //request from desktop store (source only)
+  const desktopRequests$ = baseRequest$
+    .filter(r=>r.src==="desktop")
+    .map(function(req){
+      return assign({
+        url:req.uri
+        ,method:'get'
+        ,responseType:'json'
+        ,type:'resource'},req)
+    })
+
+  const requests = {
+    http$:httpRequests$
+    ,desktop$:desktopRequests$
   }
 
   return {
-    httpRequests:httpRequests.bind(null,{meshSources$,srcSources$})
-    ,desktopRequests:desktopRequests.bind(null,{meshSources$,srcSources$})
+    requests 
   }
 }
 
@@ -81,11 +135,13 @@ function postProcessParsedData(data){
   return mesh
 }
 
-function fetch(drivers){
-  const fetched$ = merge(
-       drivers.http
-      ,drivers.desktop
-    )
+function fetch(drivers, sourceNames=["http","desktop"]){
+  const chosenDrivers = sourceNames
+    .map(function(name){
+      return drivers[name]
+    })
+
+  const fetched$ = merge(...chosenDrivers)
     .filter(res$ => res$.request.type === 'resource')
     .retry(3)
     .catch(function(e){
@@ -160,30 +216,15 @@ function computeCombinedFetchProgress(resources$){
   return combinedProgress$
 }
 
-
- 
 /*
        => p =>
   =====       ======>
        => p =>
 */
-  /*const fn = cond([
-    [equals(0),   always('water freezes at 0°C')],
-    [equals(100), always('water boils at 100°C')],
-    [T,           temp => 'nothing special happens at ' + temp + '°C']
-  ])
 
-  console.log( fn(0) ) //=> 'water freezes at 0°C'
-  console.log( fn(50) ) //=> 'nothing special happens at 50°C'
-  console.log( fn(100) ) //=> 'water boils at 100°C'*/
 
 export function resources(drivers){
-  //FIXME: caching should be done at a higher level , to prevent useless requests
-  const resourceCache$ = undefined
-  const cache = {}
-  function getCached({meshSources$,srcSources$}){
-    //this one needs to be store independant too
-  }
+ 
 
   const fetched$ = fetch(drivers)
   const parsed$  = parse(fetched$)
@@ -197,6 +238,17 @@ export function resources(drivers){
     , parsed$
   }
 }
+
+
+  /*const fn = cond([
+    [equals(0),   always('water freezes at 0°C')],
+    [equals(100), always('water boils at 100°C')],
+    [T,           temp => 'nothing special happens at ' + temp + '°C']
+  ])
+
+  console.log( fn(0) ) //=> 'water freezes at 0°C'
+  console.log( fn(50) ) //=> 'nothing special happens at 50°C'
+  console.log( fn(100) ) //=> 'water boils at 100°C'*/
 
 /*
 function makeAssetManager(drivers){
