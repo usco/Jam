@@ -5,7 +5,7 @@ const scase = Rx.Observable.case
 
 import {exists,getExtension,getNameAndExtension,isValidFile} from './utils'
 
-import postProcessMesh from './meshUtils'
+import {postProcessMesh,geometryFromBuffers} from './meshUtils'
 import helpers         from 'glView-helpers'
 const centerMesh         = helpers.mesthTools.centerMesh
 
@@ -53,13 +53,15 @@ export function requests(inputs, drivers){
       const {name,ext} = getNameAndExtension(uri)
       return {src:source.src, uri, data, ext, name}
     })
+
+  //baseRequest$
+  //  .forEach(e=>console.log("sort of requests",e))
+
+  const requests$ = baseRequest$
     .filter(function(req){
       const cached = cache[req.uri]
       return cached ===undefined
     })
-
-  baseRequest$
-    .forEach(e=>console.log("sort of requests",e))
 
   /*const results$ = merge(
       fetch(drivers)
@@ -85,24 +87,23 @@ export function requests(inputs, drivers){
     .forEach(e=>console.log("testing",e))*/
 
   // request from http driver 
-  const httpRequests$ = baseRequest$
+  const httpRequests$ = requests$
     .filter(r=>r.src==="http")
     .map(function(req){
       return assign({
         url:req.uri
         ,method:'get'
-        ,responseType:'json'
         ,type:'resource'},req)
     })
 
+
   //request from desktop store (source only)
-  const desktopRequests$ = baseRequest$
+  const desktopRequests$ = requests$
     .filter(r=>r.src==="desktop")
     .map(function(req){
       return assign({
         url:req.uri
         ,method:'get'
-        ,responseType:'json'
         ,type:'resource'},req)
     })
 
@@ -116,13 +117,16 @@ export function requests(inputs, drivers){
   }
 }
 
-
+//import parse as stlParser,  {outputs} from 'stlParser'
+import * as stlParser from 'stlParser'
+console.log("stlParser",stlParser)
 
 
 function makeParsers(){
   //other
   let parsers = {}
-  parsers["stl"] = new StlParser()
+  parsers["stl"] = stlParser.default//new StlParser()
+  console.log(".inputDataType",parsers["stl"].inputDataType)
   return parsers
 }
 const parsers = makeParsers()
@@ -130,6 +134,7 @@ const parsers = makeParsers()
 
 function postProcessParsedData(data){
   let mesh = data 
+  mesh = geometryFromBuffers(mesh)
   mesh = postProcessMesh(mesh)
   mesh = centerMesh(mesh)
   return mesh
@@ -143,6 +148,7 @@ function fetch(drivers, sourceNames=["http","desktop"]){
 
   const fetched$ = merge(...chosenDrivers)
     .filter(res$ => res$.request.type === 'resource')
+    .do(e=>console.log("progress",e))
     .retry(3)
     .catch(function(e){
       console.log("ouch , problem fetching data ",e)
@@ -176,39 +182,71 @@ function parse(fetched$){
     //actual parsing part
     .filter(data=>parsers[data.ext]!==undefined)//does parser exist?
     .flatMap(function({uri, data, ext, name}){
-      const parseOptions={useWorker:true,useBuffers:true}
+      const parseOptions={useWorker:true}
 
-      const deferred = parsers[ext].parse(data, parseOptions)
+      const parsedObs$ = parsers[ext](data, parseOptions)
+        //.do(e=>console.log("parsing data",e))
+        .doOnError(e=>console.log("error in parse",e))
 
-      const data$  = Rx.Observable.fromPromise(deferred.promise)
+      const data$  = parsedObs$
+        .filter(e=>e.progress === undefined)//seperate out progress data
         .map(postProcessParsedData) 
+
+      const progress$ = parsedObs$
+        .filter(e=>e.progress !== undefined)//keep ONLY progress data
+        .pluck("progress")
+        .distinctUntilChanged()
+        .startWith(0)
+
+      progress$
+        .forEach(e=>console.log("parse progress",e))
+
       const meta$    = of({uri, ext, name})
 
-      console.log("basics ready")
-      return combineLatestObj({meta$,data$})
+      return combineLatestObj({meta$, data$, progress$})
     })
-    .do(e=>console.log("parsed data ready",e))
+    .shareReplay(1)
+    //.do(e=>console.log("parsed data ready",e))
 
   return parsed$
 }
 
-function computeCombinedFetchProgress(resources$){
-  const combinedProgress$ = resources$.scan(function(combined,entry){
-    const uri = entry.request.uri
-    if(entry.progress || entry.response){
-      combined.entries[uri]  = entry.progress || 1
+function computeCombinedProgress(fetched$, parsed$){
+  const fetchToParseRatio = 0.95
 
-      let totalProgress = Object.keys(combined.entries)
-        .reduce(function(acc,cur){
-          return acc + combined.entries[cur]
-        },0)
+  function preProcess(selector,data$){
+    return data$
+      .map(selector)
+      .distinctUntilChanged()
+      .filter(d=>exists(d.progress))
+  }
 
-      totalProgress /= Object.keys(combined.entries).length
-      combined.totalProgress = totalProgress
-    }
+  //we merge fetch information with parse information
+  const progress$ = merge(
+    preProcess(f=>({id:f.request.uri,progress:f.progress}), fetched$)
+      .map(e=>({id:e.id, fetched:e.progress*fetchToParseRatio}))
+
+    ,preProcess(f=>({id:f.meta.uri,progress:f.progress}), parsed$)
+      .map(e=>({id:e.id, parsed:e.progress*(1-fetchToParseRatio)}))
+  )
+
+  const combinedProgress$ = progress$.scan(function(combined,entry){
+    const fetched  = entry.fetched || fetchToParseRatio
+    const parsed   = entry.parsed || 0
+    const progress = fetched + parsed
+
+    combined.entries[entry.id]  = progress
+
+    let totalProgress = Object.keys(combined.entries)
+      .reduce(function(acc,cur){
+        return acc + combined.entries[cur]
+      },0)
+
+    totalProgress /= Object.keys(combined.entries).length
+    combined.totalProgress = totalProgress
 
     return combined
-  },{entries:{}})
+  },{entries:{},totalProgress:0})
   .pluck("totalProgress")
   .distinctUntilChanged(null, equals)
   .debounce(10)
@@ -216,19 +254,11 @@ function computeCombinedFetchProgress(resources$){
   return combinedProgress$
 }
 
-/*
-       => p =>
-  =====       ======>
-       => p =>
-*/
-
 
 export function resources(drivers){
- 
-
   const fetched$ = fetch(drivers)
   const parsed$  = parse(fetched$)
-  const combinedProgress$ = computeCombinedFetchProgress(fetched$)
+  const combinedProgress$ = computeCombinedProgress( fetched$, parsed$ )
 
   parsed$
     .forEach(e=>console.log("parsed",e))
