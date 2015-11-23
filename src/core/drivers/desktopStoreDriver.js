@@ -7,7 +7,7 @@ export default function makeDesktopDriver(){
   return function desktopDriver(request$){
 
     function read(data){
-      let obs = new Rx.Subject()
+      const obs = new Rx.Subject()
       let reader = new FileReader()
       //log.debug("reading from " + data)
 

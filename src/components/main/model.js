@@ -102,6 +102,7 @@ export default function model(props$, actions, drivers){
       //addInstanceFromTypes$
       addInstancesCandidates$
     )
+    .filter(exists)
     .filter(d=>d.length>0)
     .do(e=>console.log("addInstance",e))
     //.take(1)

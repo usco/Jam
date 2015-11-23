@@ -152,7 +152,7 @@ export function progressBarWrapper(state$, DOM){
     //.do(e=>console.log("operationsInProgress",e))
     .map(progress=>progress*100)
     .map(function(progress){
-      console.log("progress",progress)
+      //console.log("progress",progress)
       return {progress}
     })
     //.pluck("resource")

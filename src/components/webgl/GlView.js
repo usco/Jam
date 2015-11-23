@@ -341,6 +341,7 @@ function GLView({DOM, props$}){
 
   //combine All needed components to apply any "transforms" to their visuals
   let items$ = state$.pluck("items")//.distinctUntilChanged()
+  //TODO : we DO  want distinctUntilChanged() to prevent spamming here at any state change
 
   //do diffing to find what was added/changed
   let itemChanges$ = items$.scan(function(acc, x){
@@ -351,7 +352,7 @@ function GLView({DOM, props$}){
     .map(function(typeData){
       let {cur,prev} = typeData
       let changes = extractChanges(prev,cur)
-      console.log("changes",changes)
+      //console.log("changes",changes)
     return changes
     })  
 

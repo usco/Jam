@@ -33,7 +33,6 @@ function typeFromMeshData(data, typeUidFromMeshName){
     //we do not return the shape since that becomes the "reference shape/mesh", not the
     //one that will be shown
     let mesh = data.data
-   
 
     templateMesh = mesh
     computeBoundingSphere(templateMesh)
