@@ -5,11 +5,10 @@ import Rx from 'rx'
 
 export function createResponse$(options){
   const defaults = {
-    method:"get"
+    method:'get'
     ,encoding:'utf8'
     ,mimeType:'text/plain; charset=x-user-defined'
-    ,responseType:undefined//"text"
-    
+    ,responseType:undefined
     ,timeout:undefined
   }
   options = Object.assign(options,defaults)
