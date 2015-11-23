@@ -1,7 +1,7 @@
 import THREE from "three"
 
 //TODO: UNIFY api for parsers, this is redundant
-function postProcess( shape ){
+export function postProcessMesh( shape ){
 
   //geometry
   if( !(shape instanceof THREE.Object3D) )
@@ -25,4 +25,10 @@ function postProcess( shape ){
   return shape
 }
 
-export default postProcess
+
+export function geometryFromBuffers({vertices,normals}){
+  var geometry = new THREE.BufferGeometry()
+  geometry.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) )
+  geometry.addAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) )
+  return geometry
+}
