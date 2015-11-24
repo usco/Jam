@@ -11,11 +11,6 @@ export function flipValue__(newValue, oldValue){
   return outValue 
 }
 
-//file utils ??
-
-export function getExtension(fname){
-  return fname.substr((~-fname.lastIndexOf(".") >>> 0) + 2).toLowerCase()
-}
 
 /////
 
@@ -60,35 +55,4 @@ export function setPropertyByPath(obj, path, value) {
     }
 }
 
-/////////////////////////////////
-//app utils
-function isToolSelected(){
-  return self.state.activeTool
-}
 
-//annoying
-export function isNoToolSelected(activeTool){
-  return !activeTool
-}
-
-/////////////////////////////////
-//entity utils
-export function hasEntity( input ){
-  return (input.userData && input.userData.entity)
-}
-
-export function getEntity( input ){
-  return input.userData.entity
-}
-
-/////////////////////////////////
-//ui utils
-export function toggleCursor(toggle, cursorName, element=document.body){
-  if(toggle)
-  {
-    element.style.cursor = cursorName
-  }else{
-    element.style.cursor = 'default'
-  }
-  return toggle
-}

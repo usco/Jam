@@ -3,7 +3,7 @@ let shader = {
     vertex_shader: [
       "uniform float offset;", 
       "void main() {", 
-      "vec4 pos = vec4( position + normal * offset, 1.0 );", 
+      "vec4 pos = vec4( position + normal * offset/2.0, 1.0 );", 
       "gl_Position = projectionMatrix * modelViewMatrix * pos;", "}"].join("\n"),
 
     fragment_shader: [

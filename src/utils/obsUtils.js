@@ -25,6 +25,33 @@ export function createAction(paramsMap){
 }
 
 
+/*From https://github.com/staltz/combineLatestObj*/
+export function combineLatestObj(obj) {
+  var sources = [];
+  var keys = [];
+  for (var key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      keys.push(key.replace(/\$$/, ''));
+      sources.push(obj[key]);
+    }
+  }
+  return Rx.Observable.combineLatest(sources, function () {
+    var argsLength = arguments.length;
+    var combination = {};
+    for (var i = argsLength - 1; i >= 0; i--) {
+      combination[keys[i]] = arguments[i];
+    }
+    return combination;
+  })
+}
+
+//From https://github.com/futurice/power-ui/blob/85d09645ecadc85bc753ba42fdd841d22d8bdd10/src/utils.js
+export function replicateStream(origin$, proxy$) {
+  origin$.subscribe(proxy$.asObserver())
+}
+
+
+
 export function logNext( next ){
   log.info( next )
 }
@@ -69,4 +96,9 @@ export {Observable}
 function wrapArrayParallel (items) {
   //let __items = Rx.Observable.from()
   return Rx.Observable.forkJoin.apply(null, items);
+}
+
+/*TODO: implement, we need to find a way to do inverted filtering*/
+function opposite(method){
+  
 }

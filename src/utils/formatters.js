@@ -1,20 +1,25 @@
 
 //format a number to the given precision
-export let formatNumberTo = function(input, precision) { return parseFloat(Math.round(input * 100) / 100).toFixed(precision) };
+export function formatNumberTo(input, precision) { 
+  return parseFloat(Math.round(input * 100) / 100).toFixed(precision) 
+}
 
+export function capitalize(s){
+  return s && s[0].toUpperCase() + s.slice(1)
+}
 
 //format an angle value from degrees to radian
-export let toRadian  = function(input){
-  if(!input) return 0;
-  return parseFloat( input )*Math.PI/180;
-}
-//format an angle from radian to deg
-export let toDegree  = function(input) 
-{
-  if(!input) return 0;
-  return input*180/Math.PI;
+export function toRadian (input){
+  if(!input) return 0
+  return parseFloat( input )*Math.PI/180
 }
 
+//format an angle from radian to deg
+export function toDegree (input) 
+{
+  if(!input) return 0
+  return input*180/Math.PI
+}
 
 //convert between scale and absolute size
 export function absSizeFromBBox(input) 
@@ -51,29 +56,67 @@ export function toRelSize2(input)
 
 
 //convert between html hex color and three.js color
-export let threejsColorToHex = function(input){
-  if(!input) return "#ffffff"; return "#"+input.getHexString()
+export function threejsColorToHex (input){
+  if(!input) 
+    return "#ffffff"
+  return "#"+input.getHexString()
 }
+
 //convert between three.js color & html hex color 
-export let hexToThreejsColor = function(input){
-  return new THREE.Color(value);
+export function hexToThreejsColor (input){
+  return new THREE.Color(value)
 }
 
 
  //turns a string into a camelcase string (for variable names)
- export let toCamelCase = function(input){
-  if(!input) return "";
+ export function toCamelCase (input){
+  if(!input) 
+    return ""
   return input.toLowerCase().replace(/-(.)/g, function(match, group1) {
-          return group1.toUpperCase();
-  });
+    return group1.toUpperCase()
+  })
  }
+ 
  //and back
- export let toRevCamelCase = function(input){
-    if(!input) return "";
+ export function toRevCamelCase (input){
+    if(!input) 
+      return ""
     return input.toLowerCase().replace(/-(.)/g, function(match, group1) {
-        return group1.toUpperCase();
-    });
+        return group1.toUpperCase()
+    })
  }
+
+export function hashCodeFromString(s){
+  return s.split("").reduce(function(a,b){a=((a<<5)-a)+b.charCodeAt(0);return a&a},0)           
+}
+
+
+//TODO remove redundandt ones 
+function camelCase (string) {
+  return string.replace( /-([a-z])/ig, function( all, letter ) {
+      return letter.toUpperCase()
+  })
+}
+
+function camelCase2 (string) {
+  return string.replace( /-([a-z])/ig, function( all, letter ) {
+      return letter.toUpperCase()
+  })
+}
+//TODO: do this better
+export function nameCleanup( name ){
+   let cName = name.substr(0, name.lastIndexOf('.'))
+   //cName = cName.replace(/_/g, '').replace(/-/g, '');
+   cName = camelCase(cName)
+   cName = camelCase2(cName)
+   //cName = cName.replace("_","").replace("-","");
+   return cName
+}
+
+/*generate a url-valid string from the input string :ie remove spaces, */
+export function normalizeString(string){
+  return string.toLowerCase().replace(/\./g, '-').replace(/ /g, '-')
+}
 
 
       

@@ -1,3 +1,8 @@
+body{
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+}
 /*
   #f5f5f5 //ultimaker site pale blue
 */
@@ -16,24 +21,87 @@
   -ms-user-select: none;
   user-select: none;
 
+  width: 100%;
+  height: 100%;
+}
+
+.wrapper{
+  position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
 }
 
 .jam {
   background-color: #fff;/*#f5f5f5;*/
+  z-index: 9999;
 }
 
 .jam input[type=text]{
-  background-color: #fff; /*#f5f5f5;*/
+  background-color: rgba(244, 244, 244, 0.25); /*#fff; #f5f5f5;*/
 }
 .jam input[type=number]{
-  background-color: #fff; /*#f5f5f5;*/
+  background-color: rgba(244, 244, 244, 0.25); /*#fff; #f5f5f5;*/
 }
 
+/*without this we get red outlines in number inputs*/
+:invalid {
+  box-shadow: none;
+}
+
+:-moz-submit-invalid {
+  box-shadow: none;
+}
+
+:-moz-ui-invalid {
+  box-shadow:none;
+}
+
+button path{fill:#555555!important;}
+button:focus {outline:0;}
+/*button:focus path{fill:white!important;}
+button:focus {background:#555555; outline:0;}*/
+
+button {
+  margin: 0 10px 0 0;
+  line-height: 1.8;
+  appearance: none;
+  box-shadow: none;
+  border-radius: 0;
+  border: 0;
+  background: whitesmoke;
+  padding: 0;
+
+  cursor: pointer;
+}
+
+button:hover{
+  background:#555555;
+}
+
+button:hover path{
+  fill:white !important;
+}
+
+button[disabled=disabled], button:disabled path{
+  fill:#AAAAAA !important;
+}
+
+button[disabled=disabled]:hover, button:disabled:hover{
+  background: whitesmoke;
+}
+
+
+
 .titleBar{
-  background: #fff; /*#f5f5f5;*/
+  /*background: #fff; #f5f5f5;*/
   width:'100%';
   height:'100%';
   padding: 0;/*5 0 0 10; */
+
+  position: absolute;
+  top: 10px;
+  left:10px;
 }
 
 .titleBar h1{
@@ -77,12 +145,19 @@
   padding-right: 5px;
 }
 
+.titlebar section{
+  display: inline-block;
+  /* padding-left: 15px; */
+  padding-right: 25px;
+}
+
 /*//////////////*/
 /*contextMenu*/
 .contextMenu{
   background: rgb(242, 242, 242);
   text-align: start;
-  box-shadow: 1px 2px 5px #C5C5C5
+  box-shadow: 1px 2px 5px #C5C5C5;
+  font-size: 0.9em;
 }
 
 .contextMenu .menuEntries{
@@ -97,7 +172,6 @@
 }
 .contextMenu .menuEntries li:hover{
  background: lightgrey;
-
 }
 
 .contextMenu .menuEntries button{
@@ -115,7 +189,19 @@
 /*entity infos*/
 
 .toolbarBottom{
-  font-size: 0.8em;
+  font-size: 13px;
+  position: absolute;
+  bottom: 0px;
+  left: 50px;
+  background: white;
+  width: 100%;
+  padding: 10px;
+}
+
+.nameInput {
+  width: 200px !important;
+  max-width: none !important;
+  font-weight: 700;
 }
 
 .toolbarBottom input[type=text]{
@@ -124,6 +210,13 @@
 
   border: none;
   border-width: 0px;
+
+
+  max-width: 150px;
+  border: none;
+  line-height: 0.8em;
+  font-size: 0.8em;
+  font-family: inherit;
 }
 
 .toolbarBottom input[type=number]{
@@ -132,6 +225,13 @@
 
   border: none;
   border-width: 0px;
+
+  width:10em;
+  max-width: 50px;
+  border: none;
+  line-height: 0.8em;
+  font-size: 0.8em;
+  font-family: inherit;
 }
 
 /*.tooolbarBottom */input[type=color]{
@@ -139,6 +239,12 @@
   margin: 0;
   border: 0px;
   background: none;
+  padding: 0px;
+  height: 20px;
+}
+
+input[type=color]:focus{
+  outline: none;
 }
 
 .toolbarBottom input[type=text]:focus{
@@ -149,6 +255,110 @@
   outline: none;
 }
 
+.entityInfos .icon{
+  width: 16px;
+  height: 16px;
+  top: 4px;
+  position: relative;
+  padding: 0;
+}
+
+.entityInfos .icon path{
+  fill:#989898;
+}
+
+.entityInfos .icon:hover path{
+  background:none;
+  color:none;
+  fill:#989898;
+}
+
+
+.entityInfos .transformInput{
+  padding: 7 0 0 13px;
+}
+
+
+.color{
+  width: 24px;
+  margin: 0;
+  border: 0px;
+  padding: 0px;
+  height: 20px;
+  display: inline;
+  outline: none;
+
+      position: static;
+    float: left;
+    bottom: 0px;
+    left: 0px;
+}
+
+.colorPicker{
+
+}
+
+.colorPicker .body{
+  width: 150px;
+  height: 90px;
+  position: absolute;
+  bottom: 35px;
+  border: 1px solid #D8D8D8;
+  padding: 5px;
+}
+
+.colorPicker .body .mainGradient{
+  height: 70px;
+  width: 100%;
+  margin: 2px;
+}
+
+.colorPicker .body .smallGradient{
+  height: 20px;
+  width: 100%;
+  margin: 2px;
+  background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
+
+}
+
+
+
+
+/*//////////////////*/
+/*spinner/loader*/
+@keyframes spinner {
+    to {transform: rotate(360deg);}
+}
+ 
+@-webkit-keyframes spinner {
+    to {-webkit-transform: rotate(360deg);}
+}
+ 
+.spinner {
+    min-width: 30px;
+    min-height: 30px;
+}
+ 
+.spinner:before {
+    content: 'Loading…';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 24px;
+    height: 24px;
+    margin-top: -13px;
+    margin-left: -13px;
+}
+ 
+.spinner:not(:required):before {
+    content: '';
+    border-radius: 50%;
+    border: 1px solid #ccc;
+    border-top-color: #03ade0;
+    animation: spinner .6s linear infinite;
+    -webkit-animation: spinner .6s linear infinite;
+}
+  
 /*//////////////*/
 /*camview controls overlay*/
 .camViewControls{
@@ -160,7 +370,6 @@
   left: 0px;
   bottom: 48px;
 }
-
 
 
 /*//////////////*/
@@ -181,9 +390,23 @@
   -webkit-transition: opacity 0.4s ease-out;
 }
 
-.active{
-  background: rgb(255, 223, 0);
+.visible{
+  opacity: 1;
 }
+
+.active{
+  /*background: rgb(255, 223, 0);*/
+  background: #555555;
+  fill:white !important;
+}
+
+.active path{
+  /*fill:#60C4F8;*/
+  fill:white !important;
+}
+
+
+
 
 
 /*//////////////*/
@@ -223,8 +446,33 @@
 
 .bom{
   position: absolute;
+  right: 20px;
+  top: 10px;
+  background: white;
+
+  cursor: default;
+}
+.bom button{
+  right: 10px;
+  position: fixed;
+}
+
+.bom table{
+  font-size: 13px;
+  border-collapse: collapse;
+  border: 1px solid #F7F6F6 !important;
+
+  position: absolute;
   right: 0px;
-  top:140px;
+  top: 31px;
+  display: inline-block;
+
+  background: white;
+}
+
+.bom thead tr{
+  border-bottom: 1px solid #F7F6F6 !important;
+  cursor: pointer;
 }
 
 .bom tr:hover
@@ -236,17 +484,37 @@
 
 .bom tr.selected
 {
-   background-color: #F4F4F4;
-   color:#F99305;
-   /*
-#F99305;
-   color: red;*/
+   /*background-color: #F4F4F4;
+   color:#F99305;*/
+   background-color: #484848;
+   color:white;
    font-weight: bold;
 }
 
 .bom .directionArrow{
   font-size: 0.6em;
 }
+
+.bom .bomEntry .cell{
+  text-align: center;
+  vertical-align: middle;
+  padding: 5 5 5 5;
+}
+
+.bom input[type=text]{
+  min-width: 150px;
+  border: none;
+  background: none;
+  color: #555555;
+}
+
+.bom tr.selected input[type=text]{
+  min-width: 150px;
+  border: none;
+  background: none;
+  color: white;
+}
+
 
 .foo{
   position: absolute;
@@ -258,29 +526,79 @@
 
 .fullScreenToggler{
   position: absolute;
-  bottom: 20px;
+
+  bottom: 10px;
   right: 20px;
 
-  bottom: 20px;
-  right: 20px;
-  width: 24px;
-  height: 24px;
   background: white;
   border: none;
   padding: 0px;
   margin: 0px;
+
+  z-index: 2;
+}
+.fullScreenToggler button{
+  margin: 0;
+  padding: 0; 
 }
 
-button path{fill:#60C4F8!important;}
-button:focus path{fill:#60C4F8!important;}
-button:focus {outline:0;}
+/*//////////////////*/
+/*help*/
+.help{
+  position: absolute;
+  bottom: 10px;
+  right: 55px;
+  z-index: 2;
+
+  cursor: default;
+}
+
+.help .content {
+  background: white;
+  font-size: 0.8em;
+  position: absolute;
+  right: 10px;
+  top: -145px;
+  width: 250px;
+  padding: 5px;
+}
+
+.help .content ul{
+  /*list-style: none;*/
+  margin-left: 0;
+  border: none;
+  padding: 0 0 0 20;
+}
+.help .content li{
+  /*padding: 5px;
+  background: #f4f4f4;*/
+}
+
+.help .content .appVersion{
+  text-align: center;
+  width: 100%;
+  height: 10px;
+  padding: 2px;
+  font-size: 0.8em;
+  /* border: 1px solid; */
+  display: block;
+  line-height: 1;
+}
+
+.help .toggled {
+  border: 1px solid #F7F6F6 !important;
+}
+
+
+
 
 /*//////////////////*/
 .settings{
   position: absolute;
-  right: 20px;
-  top:10px;
+  right: 110px;
+  bottom:10px;
   background: white;
+  z-index: 2;
 }
 
 
@@ -289,25 +607,31 @@ button:focus {outline:0;}
   /*border-bottom: 1px solid #e0e0e0;*/
 }
 
-.settings .content{
-  background:  white;/*rgb(247, 247, 247); */
+.settings .content {
+  background: white;
   font-size: 0.8em;
   position: absolute;
   right: 0px;
-  top: 30px;
+  top: -63px;
   width: 200px;
+  border: 1px solid white;
 
 }
 
-.settings .toggled{
-  border: 1px solid #dddddd !important;
+.settings .toggled {
+  border: 1px solid #F7F6F6 !important;
 }
 
 
 .icon{
-  width: 24px;
+  /*width: 24px;
   height: 24px;
-  padding: 4px;
+  padding: 4px;*/
+  width: 16px;
+  height: 16px;
+  padding: 8px;
+
+
   /*stroke: #60C4F8;
   stroke-width: 2;*/
 }
@@ -327,6 +651,7 @@ button:focus {outline:0;}
   border-right: 1px solid #dddddd;
   border-bottom: 1px solid #dddddd;
 }*/
+/*ICONS*/
 
 .icon path{
   fill:#dddddd;
@@ -337,7 +662,6 @@ button:focus {outline:0;}
 }
 
 .settings button{
-  background: white;
   border: none;
   margin: 0;
   padding: 0;
@@ -347,6 +671,15 @@ button:focus {outline:0;}
 .settings button:focus path{fill:#60C4F8;}
 
 
+/*----------------*/
+
+.glView{
+  width: 100%;
+  height: 100%;
+  cursor: default;
+}
+
+/*----------------*/
 /*//////////////////*/
 /*spinner/loader*/
 @keyframes spinner {
@@ -445,9 +778,399 @@ div.container-text {
 }
 
 div.largeIcon{
-
     margin: 80px auto 80px auto;
   width: 80px;
   height: 80px;
   text-align: center;
+}
+
+/*-----------------*/
+.debugDisplay{
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/*-----------------*/
+
+.textInput.placeholder{
+  color:rgb(194, 194, 194);
+}
+
+/*-----------------*/
+.toolTips .icon{
+  margin: -10px 0px;
+}
+
+/*comments*/
+.comments{
+  position: absolute;
+  bottom: 10px;
+  left: 10px;
+  font-size: 0.7em;
+}
+
+.comments textarea{
+  border: none;
+  overflow: auto;
+  outline: none;
+  -webkit-box-shadow: none;
+  -moz-box-shadow: none;
+  box-shadow: none;
+  width: 100%;
+  height: 100%;
+}
+
+.commentDetails{
+  position: absolute;
+  left:5px;
+  bottom:30px;
+  min-width: 280px;
+
+  padding: 10px;
+  background: rgba(244, 244, 244, 0.25);
+}
+
+.comments .icon{
+  /*position: relative;
+  top: 10px;*/
+}
+
+/*for adding new comments*/
+.commentDetails .new .textInput{
+  padding: 10px;
+}
+
+.commentDetails .new {
+  padding-left: 0px ;
+}
+
+.commentDetails .new .icon path{
+  fill:rgb(0, 178, 255);
+}
+
+.commentDetails .new header{
+  font-weight: 600;
+}
+
+.commentDetails .new button{
+  background-color: rgb(0, 178, 255);
+  border: none;
+  margin: 10px;
+  font-weight: 300;
+  color:white;
+
+  float: right;
+}
+
+/*for the list of comments*/
+.commentDetails header{
+    padding-bottom: 5px;
+}
+
+.commentDetails header .author{
+  text-decoration: underline;
+}
+
+.commentDetails .icon {
+  width: 16px;
+  height: 16px;
+
+  margin: -5px 10px;
+  border-radius: 50%;
+  background: rgb(237, 230, 230);
+}
+
+.commentDetails .icon path{
+  fill:rgb(137, 137, 137);
+}
+
+.commentDetails .content {
+  background: white;
+  border: 1px solid rgb(234, 231, 231);
+  padding: 10px;
+  margin-left: 30px;
+}
+.commentDetails .textInput{
+  padding: 15px;
+  line-height: 12px;
+  width: 100%;
+  text-align: center;
+  border-top: 10px;
+}
+
+.commentsList {
+  list-style: none;
+  padding-left: 0px;
+
+  max-height: 300px;
+  overflow: auto;
+}
+
+.commentsList .item{
+  padding-top: 10px;
+  padding-bottom: 5px;
+}
+
+
+/*progressbar*/
+.progressBar{
+  height: 5px;
+  width: 100%;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+}
+.progressBar .fill{
+  background: rgb(0, 178, 255);
+  height: 100%;
+  position: absolute;
+}
+
+
+
+a.tooltips {
+  position: relative;
+  display: inline;
+}
+a.tooltips span {
+  position: absolute;
+  width:140px;
+  color: #FFFFFF;
+  background: #000000;
+  height: 20px;
+  line-height: 20px;
+  text-align: center;
+  visibility: hidden;
+  border-radius: 2px;
+}
+a.tooltips span:after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -8px;
+  width: 0; height: 0;
+  border-top: 8px solid #000000;
+  border-right: 8px solid transparent;
+  border-left: 8px solid transparent;
+}
+a:hover.tooltips span {
+  visibility: visible;
+  opacity: 0.8;
+  bottom: 30px;
+  left: 50%;
+  margin-left: -76px;
+  z-index: 999;
+}
+
+/*other tooltips from:
+http://cbracco.me/a-simple-css-tooltip/
+*/
+
+/* Base styles for the element that has a tooltip */
+[data-tooltip],
+.tooltip {
+  position: relative;
+  cursor: pointer;
+}
+
+/* Base styles for the entire tooltip */
+[data-tooltip]:before,
+[data-tooltip]:after,
+.tooltip:before,
+.tooltip:after {
+  position: absolute;
+  visibility: hidden;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
+  filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=0);
+  opacity: 0;
+  -webkit-transition: 
+      opacity 0.2s ease-in-out,
+        visibility 0.2s ease-in-out,
+        -webkit-transform 0.2s cubic-bezier(0.71, 1.7, 0.77, 1.24);
+    -moz-transition:    
+        opacity 0.2s ease-in-out,
+        visibility 0.2s ease-in-out,
+        -moz-transform 0.2s cubic-bezier(0.71, 1.7, 0.77, 1.24);
+    transition:         
+        opacity 0.2s ease-in-out,
+        visibility 0.2s ease-in-out,
+        transform 0.2s cubic-bezier(0.71, 1.7, 0.77, 1.24);
+  -webkit-transform: translate3d(0, 0, 0);
+  -moz-transform:    translate3d(0, 0, 0);
+  transform:         translate3d(0, 0, 0);
+  pointer-events: none;
+}
+
+/* Show the entire tooltip on hover and focus */
+[data-tooltip]:hover:before,
+[data-tooltip]:hover:after,
+/*[data-tooltip]:focus:before,
+[data-tooltip]:focus:after,*/
+.tooltip:hover:before,
+.tooltip:hover:after
+/*.tooltip:focus:before,
+.tooltip:focus:after*/ {
+  visibility: visible;
+  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";
+  filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
+  opacity: 1;
+}
+
+/* Base styles for the tooltip's directional arrow */
+.tooltip:before,
+[data-tooltip]:before {
+  z-index: 1001;
+  border: 6px solid transparent;
+  background: transparent;
+  content: "";
+}
+
+/* Base styles for the tooltip's content area */
+.tooltip:after,
+[data-tooltip]:after {
+  z-index: 1000;
+  padding: 3px;
+  width: 60px;
+  background-color: #000;
+  background-color: hsla(0, 0%, 20%, 0.9);
+  color: #fff;
+  content: attr(data-tooltip);
+  font-size: 12px;
+  line-height: 1.0;
+}
+
+/* Directions */
+
+/* Top (default) */
+[data-tooltip]:before,
+[data-tooltip]:after,
+.tooltip:before,
+.tooltip:after,
+.tooltip-top:before,
+.tooltip-top:after {
+  bottom: 100%;
+  left: 50%;
+}
+
+[data-tooltip]:before,
+.tooltip:before,
+.tooltip-top:before {
+  margin-left: -6px;
+  margin-bottom: -12px;
+  border-top-color: #000;
+  border-top-color: hsla(0, 0%, 20%, 0.9);
+}
+
+/* Horizontally align top/bottom tooltips */
+[data-tooltip]:after,
+.tooltip:after,
+.tooltip-top:after {
+  margin-left: -20px;
+}
+
+[data-tooltip]:hover:before,
+[data-tooltip]:hover:after,
+/*[data-tooltip]:focus:before,
+[data-tooltip]:focus:after,*/
+.tooltip:hover:before,
+.tooltip:hover:after,
+/*.tooltip:focus:before,
+.tooltip:focus:after,*/
+.tooltip-top:hover:before,
+.tooltip-top:hover:after
+/*.tooltip-top:focus:before,
+.tooltip-top:focus:after*/ {
+  -webkit-transform: translateY(-12px);
+  -moz-transform:    translateY(-12px);
+  transform:         translateY(-12px); 
+}
+
+/* Left */
+.tooltip-left:before,
+.tooltip-left:after {
+  right: 100%;
+  bottom: 50%;
+  left: auto;
+}
+
+.tooltip-left:before {
+  margin-left: 0;
+  margin-right: -12px;
+  margin-bottom: 0;
+  border-top-color: transparent;
+  border-left-color: #000;
+  border-left-color: hsla(0, 0%, 20%, 0.9);
+}
+
+.tooltip-left:hover:before,
+.tooltip-left:hover:after
+/*.tooltip-left:focus:before,
+.tooltip-left:focus:after*/ {
+  -webkit-transform: translateX(-12px);
+  -moz-transform:    translateX(-12px);
+  transform:         translateX(-12px); 
+}
+
+/* Bottom */
+.tooltip-bottom:before,
+.tooltip-bottom:after {
+  top: 100%;
+  bottom: auto;
+  left: 50%;
+}
+
+.tooltip-bottom:before {
+  margin-top: -12px;
+  margin-bottom: 0;
+  border-top-color: transparent;
+  border-bottom-color: #000;
+  border-bottom-color: hsla(0, 0%, 20%, 0.9);
+}
+
+.tooltip-bottom:hover:before,
+.tooltip-bottom:hover:after
+/*.tooltip-bottom:focus:before,
+.tooltip-bottom:focus:after */{
+  -webkit-transform: translateY(12px);
+  -moz-transform:    translateY(12px);
+  transform:         translateY(12px); 
+}
+
+/* Right */
+.tooltip-right:before,
+.tooltip-right:after {
+  bottom: 50%;
+  left: 100%;
+}
+
+.tooltip-right:before {
+  margin-bottom: 0;
+  margin-left: -12px;
+  border-top-color: transparent;
+  border-right-color: #000;
+  border-right-color: hsla(0, 0%, 20%, 0.9);
+}
+
+.tooltip-right:hover:before,
+.tooltip-right:hover:after
+/*.tooltip-right:focus:before,
+.tooltip-right:focus:after */{
+  -webkit-transform: translateX(12px);
+  -moz-transform:    translateX(12px);
+  transform:         translateX(12px); 
+}
+
+/* Move directional arrows down a bit for left/right tooltips */
+.tooltip-left:before,
+.tooltip-right:before {
+  top: 3px;
+}
+
+/* Vertically center tooltip content for left/right tooltips */
+.tooltip-left:after,
+.tooltip-right:after {
+  margin-left: 0;
+  margin-bottom: -16px;
 }

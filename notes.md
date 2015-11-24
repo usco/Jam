@@ -8,3 +8,24 @@
   - clairty of processes  and the flow of data (my brain craves structure)
   - reusability of code snipets
   - heck , less code too !
+
+
+details:
+========
+
+//data sources for our main model
+
+//meshSources("from postMessage, drag & drop, passed into the adressbar")
+
+postMessage =>
+drag & drop =>  meshSources (.stl, .amf) =>
+addressbar  =>
+
+postMessage =>
+drag & drop =>  sourceSources (.scad )   =>
+addressbar  =>
+
+
+meshSources   =>
+              => entityTypeIntents
+sourceSources => 
