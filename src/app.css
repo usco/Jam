@@ -614,8 +614,6 @@ input[type=color]:focus{
   right: 0px;
   top: -63px;
   width: 200px;
-  border: 1px solid white;
-
 }
 
 .settings .toggled {

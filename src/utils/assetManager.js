@@ -12,10 +12,12 @@ const centerMesh         = helpers.mesthTools.centerMesh
 import {equals, cond, T, always} from 'ramda'
 import {combineLatestObj} from './obsUtils'
 import {mergeData} from './modelUtils'
-import StlParser    from 'usco-stl-parser'
-
 import assign from 'fast.js/object/assign'//faster object.assign
 
+
+//import parse as stlParser,  {outputs} from 'stlParser'
+import * as stlParser from 'usco-stl-parser'
+console.log("stlParser",stlParser)
 
 function dataSource(data){
   if(isValidFile(data)){
@@ -117,9 +119,7 @@ export function requests(inputs, drivers){
   }
 }
 
-//import parse as stlParser,  {outputs} from 'stlParser'
-import * as stlParser from 'stlParser'
-console.log("stlParser",stlParser)
+
 
 
 function makeParsers(){

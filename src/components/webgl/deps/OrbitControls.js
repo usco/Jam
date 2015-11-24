@@ -174,13 +174,13 @@ var OrbitControls = function ( object, domElement, upVector ) {
     }
     
     this.enable= function (){
-    	scope.enabled = true
-    	this.enabled = true
+      scope.enabled = true
+      this.enabled = true
     }
     
     this.disable = function(){
-    	scope.enabled = false
-    	this.enabled = false
+      scope.enabled = false
+      this.enabled = false
     }
 
     this.reset = function(){
@@ -289,36 +289,8 @@ var OrbitControls = function ( object, domElement, upVector ) {
         })
         //.subscribe(e=>e)//console.log("zoom",e))
     
-    this.setDomElement=function(domElement)
-    {
-      console.log("attaching orbit controls to", domElement);
-      this.domElement = domElement;
-      this.domElement.addEventListener( 'contextmenu', function ( event ) { event.preventDefault(); }, false );
-      this.domElement.addEventListener( 'pinch', onPinch, false);
-      
-      this.domElement.addEventListener( "mousedown", onPointerDown, false );
-		  this.domElement.addEventListener( "touchstart", onPointerDown, false );
-      
-      
-  		this.domElement.addEventListener( "mouseup", onPointerUp, false );
-		  this.domElement.addEventListener( "mouseout", onPointerUp, false );
-		  this.domElement.addEventListener( "touchend", onPointerUp, false );
-		  this.domElement.addEventListener( "touchcancel", onPointerUp, false );
-		  this.domElement.addEventListener( "touchleave", onPointerUp, false );      
-      
-      this.domElement.addEventListener( 'mousemove', onPointerMove, false );
-      
-      window.addEventListener( 'keydown', onKeyDown, false );
-      window.addEventListener( 'keyup', onKeyUp, false );
-      
-      //from MDN
-      var wheelSupport = "onwheel" in document.createElement("div") ? "wheel" : // Modern browsers support "wheel"
-              document.onmousewheel !== undefined ? "mousewheel" : // Webkit and IE support at least "mousewheel"
-              "DOMMouseScroll"; // let's assume that remaining browsers are older Firefox
-      
-      this.domElement.addEventListener( 'wheel', onMouseWheel, false );
-      //this.domElement.addEventListener( 'DOMMouseScroll', onMouseWheel, false ); // firefox
-    }
+  }
+}
 
 OrbitControls.prototype = Object.create( THREE.EventDispatcher.prototype )
 
