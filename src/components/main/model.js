@@ -315,17 +315,13 @@ export default function model(props$, actions, drivers){
 
   //not entirely sure, we need a way to observe any fetch/updload etc operation
   const operationsInProgress$ = actions.progress.combinedProgress$.startWith(undefined)
-  /*Rx.Observable
-    .interval(500)
-    .take(4)
-    .map(function(){return Math.random()})*/ //Rx.Observable.just(0.5)//actions.progress.combinedProgress$.startWith(undefined)
-
-  //remoteOperations$.forEach(e=>console.log("remoteOperations",e))
+ 
 
   //////other data
   const appData$ = just({
     version:'0.2.3'
   })
+
 
   //combine all the above 
   const state$ = combineLatestObj({

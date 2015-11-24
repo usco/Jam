@@ -22,22 +22,37 @@
 
 
     <script>
+      function receiveMessage(event)
+      {
+        console.log("main window recieved message",event)
+      }
+
+      window.addEventListener("message", receiveMessage, false)
+
+
       var embeded = document.getElementById("embeded").contentWindow
       setTimeout(function() {
         embeded.postMessage("hey yo","*")
         embeded.postMessage({modelUrl:"http://localhost:3000/demo-data/UM2CableChain_BedEnd.STL"},"*")
-        embeded.postMessage({designUrl:"http://localhost:3000/xxx"},"*")
-        embeded.postMessage({clear:true},"*")//to clear jam
+        //embeded.postMessage({designUrl:"http://localhost:3000/xxx"},"*")
       }, 1000)
 
 
       setTimeout(function() {
+        //to clear jam
         embeded.postMessage({clear:true},"*")
       }, 5000)
 
        setTimeout(function() {
+        //to load a model
         embeded.postMessage({modelUrl:"http://localhost:3000/demo-data/UM2CableChain_BedEnd.STL"},"*")
       }, 10000)
+
+
+      setTimeout(function() {
+        //to get transform data
+        embeded.postMessage({"getTransforms":null},"*")
+      }, 7000)
 
 
     </script>

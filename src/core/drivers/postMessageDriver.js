@@ -4,7 +4,7 @@ let fromEvent = Observable.fromEvent
 
 function sendMessage(data){
   let {target, message, targetOrigin} = data
-  otherWindow.postMessage(message, targetOrigin)// [transfer])
+  target.postMessage(message, targetOrigin)// [transfer])
 }
 
 function isOriginValid(origins,event){
@@ -13,8 +13,16 @@ function isOriginValid(origins,event){
 
 export default function postMessageDriver(outgoing$){
   if(outgoing$){
-    outgoing$.subscribe(sendMessage)
+    outgoing$
+      .subscribe(sendMessage)
   }
 
-  return fromEvent(window,'message').pluck("data")//.filter( isOriginValid.bind(null,validOrigins) )
-}
+  const incoming$ = fromEvent(window,'message')
+    .map(e=>({data:e.data, origin:e.origin, source:e.source}))
+    //.distinctUntilChanged()
+    .share()
+    //.do(e=>console.log("postMessage",e))//why does this fire multiple time ?
+
+  return incoming$//.filter( isOriginValid.bind(null,validOrigins) )
+
+} 
