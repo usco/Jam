@@ -77,7 +77,7 @@ var config= {
   module: {
     loaders: [
       { test: /\.json$/,   loader: "json-loader" },
-      { test: /-worker*\.js$/, loader: "worker-loader",include : pathsToInclude},//if any module does "require(XXX-worker)" it converts to a web worker
+      //{ test: /-worker*\.js$/, loader: "worker-loader",include : pathsToInclude},//if any module does "require(XXX-worker)" it converts to a web worker
       { test: /\.js?$/, loaders: ['react-hot', 'babel?optional[]=runtime&optional=es6.blockScoping'],include : pathsToInclude},
       { test: /\.css$/, loader: "style-loader!css-loader" }
     ],
@@ -113,10 +113,10 @@ if (production) {
   //config.output.filename = "[name].min.js"//"[name].[hash].min.js"
   //config.output.chunkFilename = '[id].js'
   config.plugins = config.plugins.concat([
-    new webpack.DefinePlugin({'process.env': {NODE_ENV: JSON.stringify('production') } }),
-    new webpack.optimize.DedupePlugin(),
-    new webpack.NoErrorsPlugin(),
-    new webpack.optimize.UglifyJsPlugin({minimize: true})
+    new webpack.DefinePlugin({'process.env': {NODE_ENV: JSON.stringify('production') } })
+    , new webpack.optimize.DedupePlugin()
+    , new webpack.NoErrorsPlugin()
+    , new webpack.optimize.UglifyJsPlugin({minimize: true})
     /*
     new webpack.optimize.UglifyJsPlugin({
       mangle: {
@@ -133,16 +133,15 @@ if (production) {
         join_vars: true,
         drop_console: true
       }
-    })*/
-    /*,
-    new CompressionPlugin({
+    })
+    , new CompressionPlugin({
       asset: "{file}.gz",
       algorithm: "gzip",
       regExp: /\.js$|\.html$/,
       threshold: 10240,
       minRatio: 0.8
     })*/
-  ]);
+  ])
 }
 else{
   config.entry = config.entry.concat([
