@@ -1,5 +1,5 @@
 <h1>
-<img src="https://raw.github.com/usco/jam/master/screenshot.png" /> Jam!
+  <img src="https://raw.githubusercontent.com/usco/Jam/master/screenshot.png" /> Jam!
 </h1>
 
 
