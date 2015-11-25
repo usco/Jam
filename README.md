@@ -8,7 +8,7 @@
 
 ## Installing
 
-  comming soon !
+  coming soon !
 
 
 ## LICENSE
