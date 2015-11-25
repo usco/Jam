@@ -58,6 +58,9 @@ import EdgeShader3 from './deps/post-process/EdgeShader3'
 import AdditiveBlendShader from './deps/post-process/AdditiveBlendShader'
 
 
+import {domElementToImage,aspectResize} from '../../utils/imgUtils'
+
+
 function setupPostProcess(camera, renderer, scene){
   //console.log("setupPostProcess")
     ////////post processing
@@ -187,7 +190,9 @@ import model from './model'
 - remove any "this", adapt code accordingly  
 */
 ////////////
-function GLView({DOM, props$}){
+function GLView({drivers, props$}){
+  const {DOM,postMessage} = drivers
+
   let config = presets
 
   let initialized$ = new Rx.BehaviorSubject(false)
@@ -277,7 +282,7 @@ function GLView({DOM, props$}){
     if(!Detector.webgl){
       //TODO: handle lacking webgl
     } else {
-      renderer = new THREE.WebGLRenderer( {antialias:false} )
+      renderer = new THREE.WebGLRenderer( {antialias:false,  preserveDrawingBuffer: true} )
     }
 
     renderer.setClearColor( "#fff" )
@@ -450,6 +455,46 @@ function GLView({DOM, props$}){
       {gLWidgeHelper}
     </div>
   )
+
+  //screencapture test
+  /*setTimeout(function() {
+    console.log("screencapture test")
+    function callBack(img){
+      console.log("img",img)
+    }
+    domElementToImage(callBack,renderer.domElement)
+
+  }, 5000)*/
+
+  postMessage
+    .filter(e=>e.hasOwnProperty("captureScreen"))
+    .flatMap(e=>{
+      let img = domElementToImage(renderer.domElement)
+      
+      let resolutions = e.captureScreen
+
+      let images$ = resolutions.map(function(resolution){
+          let [width,height] = resolution
+          console.log("resolution",resolution)
+
+          let obs = new Rx.Subject()
+          aspectResize(img, width, height, e=>{ 
+            obs.onNext(e)
+            obs.onCompleted()})
+          return obs
+        })
+      
+      let results$ = Rx.Observable.forkJoin(images$)
+        //.forEach()
+
+
+      return results$
+    })
+    .forEach(e=>{
+      e.map(img=>console.log(img))
+
+    })
+
 
   return {
     DOM: vtree$

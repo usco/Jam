@@ -72,7 +72,8 @@ export function BOMWrapper(state$, DOM){
   return Bom({DOM,props$:makeBomProps(state$)})
 }
 
-export function GLWrapper(state$, DOM){
+export function GLWrapper(state$, drivers){
+  const {DOM} = drivers
 
   const selectedInstIds$ = state$
     .pluck("selections")
@@ -100,7 +101,7 @@ export function GLWrapper(state$, DOM){
     ,transforms:state$.pluck("transforms")
   })
 
-  let glUi      = GLView({DOM,props$:glProps$})
+  let glUi      = GLView({drivers,props$:glProps$})
   return glUi
 }
 
