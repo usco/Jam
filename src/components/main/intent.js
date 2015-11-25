@@ -36,7 +36,7 @@ export default function intent (drivers) {
   const dnd$        = observableDragAndDrop(dragOvers$, drops$) 
 
   //data sources for our main model
-  let postMessages$  = postMessage
+  let postMessages$  = postMessage.pluck("data")
   const meshSources$ = extractMeshSources({dnd$, postMessages$, addressbar})
   const srcSources$  = extractSourceSources({dnd$, postMessages$, addressbar})
 
@@ -53,6 +53,19 @@ export default function intent (drivers) {
   meshSources$
     .forEach(e=>console.log("meshSources",e))
 
+  /*postMessages$
+    .forEach(e=>console.log("input postMessages",e))*/
+
+  //this one is VERY specific , not sure it should be kept here
+  const getTransforms$ = 
+    postMessage
+      .filter(exists)
+      .filter(p=>p.hasOwnProperty("data"))
+      .filter(p=>p.data.hasOwnProperty("getTransforms"))
+
+  const utilityActions = {
+    getTransforms$
+  }
 
   //OUTbound
   let _requests = requests({meshSources$,srcSources$})
@@ -157,9 +170,9 @@ export default function intent (drivers) {
     ,entityActions
     ,entityTypeActions
     ,annotationsActions
-
     ,bomActions
 
+    ,utilityActions
 
     ,progress
 

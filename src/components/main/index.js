@@ -38,7 +38,24 @@ export default function main(drivers) {
   const events$ = just( {gl:gl.events, entityInfos:entityInfos.events
     , bom:bom.events, comments:comments.events} )
 
-  const requests$ = actions.requests$
+  const http$ = actions.requests$
+  const postMsg$  = actions.utilityActions
+    .getTransforms$
+    .withLatestFrom(state$.pluck("transforms"),function(request,transforms){
+      //console.log("getTransforms",request,transforms)
+      const transformsList = Object.keys(transforms).reduce(function(acc,key){
+        //console.log("acc,cur",acc,key)
+        let trs = Object.assign({},transforms[key],{id:key})
+        let out = acc.concat([trs])
+        return out
+      },[])
+      return {request,response:transformsList}
+    })
+    .map(data=>{
+      const {request,response} = data
+      return {target: request.source, message: response, targetOrigin:request.origin} 
+    })
+    //.do(e=>console.log("transforms",e))
 
   //output to localStorage
   //in this case, settings
@@ -52,8 +69,10 @@ export default function main(drivers) {
       ,events: events$
       ,localStorage:localStorage$
 
-      ,http: requests$
+      ,http: http$
       ,desktop:actions.desktop$
+
+      ,postMessage:postMsg$
   }
 }
 
