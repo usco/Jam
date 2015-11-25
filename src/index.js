@@ -14,7 +14,7 @@ import makeDesktopDriver  from './core/drivers/desktopStoreDriver'
 
 
 //////////setup drivers
-let domDriver      = makeDOMDriver('#root')
+let domDriver      = makeDOMDriver('#jamRoot')
 //other drivers
 let postMessage  = postMessageDriver  
 let localStorage = localStorageDriver
