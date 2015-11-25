@@ -2,6 +2,7 @@
   <img src="https://raw.githubusercontent.com/usco/Jam/master/screenshot.png" /> Jam!
 </h1>
 
+[![GitHub version](https://badge.fury.io/gh/usco%2Fjam.svg)](https://badge.fury.io/gh/usco%2Fjam)
 
 > View , annotate , measure 3d designs & more !
 
@@ -14,7 +15,6 @@
 ## LICENSE
 
 [The AGLP License (AGPL)](https://github.com/usco/Jam/blob/master/LICENSE)
-
 
 - - -
 
