@@ -8,10 +8,8 @@ export function saveImage(fileName="img",format="png"){
   link.click()
 }
 
-export function domElementToImage(callback, domElement, width, height, mimeType) {
+export function domElementToImage(domElement,mimeType) {
   var srcImg, _aspectResize
-  var width  = width  || 640
-  var height = height || 480
   var mimeType = mimeType || 'image/png'
 
   if (!domElement) {
@@ -19,8 +17,14 @@ export function domElementToImage(callback, domElement, width, height, mimeType)
   }
 
   srcImg = domElement.toDataURL(mimeType)
-  aspectResize(srcImg, width, height, callback)
-
+  /*if(!width || !height){
+    callback(srcImg)
+  }else
+  {
+    aspectResize(srcImg, width, height, callback)
+  }*/
+  return srcImg
+  
 }
 
 
