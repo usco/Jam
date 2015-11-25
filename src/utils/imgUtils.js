@@ -1,4 +1,30 @@
-function aspectResize(srcUrl, dstW, dstH, callback) {
+export function saveImage(fileName="img",format="png"){
+  let link = document.createElement("a")
+  //var blob = new Blob([data],{type : 'image/'+format})
+  //var url =  window.URL.createObjectURL(blob);
+  //var blobURL = window.webkitURL.createObjectURL(blob);
+  link.href = data
+  link.download = fileName
+  link.click()
+}
+
+export function domElementToImage(callback, domElement, width, height, mimeType) {
+  var srcImg, _aspectResize
+  var width  = width  || 640
+  var height = height || 480
+  var mimeType = mimeType || 'image/png'
+
+  if (!domElement) {
+    throw new Error("Cannot Do screenshot without canvas domElement")
+  }
+
+  srcImg = domElement.toDataURL(mimeType)
+  aspectResize(srcImg, width, height, callback)
+
+}
+
+
+export function aspectResize(srcUrl, dstW, dstH, callback) {
   /* 
   resize an image to another resolution while preserving aspect
        
@@ -43,19 +69,4 @@ function aspectResize(srcUrl, dstW, dstH, callback) {
   img = new Image()
   img.onload = onLoad
   img.src = srcUrl
-}
-
-function captureScreen(callback, domElement, width, height, mimeType) {
-  var srcImg, _aspectResize
-  var width  = width  || 640
-  var height = height || 480
-  var mimeType = mimeType || 'image/png'
-
-  if (!domElement) {
-    throw new Error("Cannot Do screenshot without canvas domElement")
-  }
-
-  srcImg = domElement.toDataURL(mimeType)
-  aspectResize(srcImg, width, height, callback)
-
 }
