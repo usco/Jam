@@ -1,8 +1,9 @@
-<h1>
-  <img src="https://raw.githubusercontent.com/usco/Jam/master/screenshot.png" /> Jam!
-</h1>
+## Jam!
 
 [![GitHub version](https://badge.fury.io/gh/usco%2Fjam.svg)](https://badge.fury.io/gh/usco%2Fjam)
+
+<img src="https://raw.githubusercontent.com/usco/Jam/master/screenshot.png" /> 
+
 
 > View , annotate , measure 3d designs & more !
 
