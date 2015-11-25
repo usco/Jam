@@ -5,6 +5,7 @@
   "main": "index.js",
   "scripts": {
     "test": "mocha --compilers js:babel/register",
+    "test-browser": "testem",
     "start": "NODE_ENV=dev node server.js",
     "build": "NODE_ENV=production webpack -p",
     "profile": "webpack --profile --json > stats.json"
@@ -36,7 +37,6 @@
     "fast.js": "^0.1.1",
     "glView-helpers": "usco/glView-helpers",
     "immutable": "^3.7.0",
-    "install": "^0.1.8",
     "jsondiffpatch": "^0.1.31",
     "keymaster": "^1.6.2",
     "log-minim": "git://github.com/usco/log-minim",
@@ -50,14 +50,13 @@
     "screenfull": "^2.0.0",
     "seamless-immutable": "^4.0.1",
     "three": "^0.70.0",
-    "transducers.js": "^0.3.1",
     "tween.js": "^0.14.0",
     "usco-asset-manager": "git://github.com/usco/usco-asset-manager",
     "usco-ctm-parser": "git://github.com/usco/usco-ctm-parser",
     "usco-desktop-store": "git://github.com/usco/usco-desktop-store",
     "usco-kernel2": "git://github.com/usco/usco-kernel2",
     "usco-ply-parser": "git://github.com/usco/usco-ply-parser",
-    "usco-stl-parser": "git://github.com/usco/usco-stl-parser",
+    "usco-stl-parser": "git://github.com/kaosat-dev/usco-stl-parser#refactor",
     "usco-xhr-store": "git://github.com/usco/usco-xhr-store",
     "viewport-size": "0.0.1"
   }
