@@ -56,16 +56,17 @@ export function BOMWrapper(state$, DOM){
     let sortableFields = ["id","name","qty","unit","printable"]  
     let editableFields = ["name"] 
 
-    let fieldNames$ = just(fieldNames)
-    let editableFields$ = just(editableFields)
-    let sortableFields$ = just(sortableFields)
+    let fieldNames$      = just(fieldNames)
+    let editableFields$  = just(editableFields)
+    let sortableFields$  = just(sortableFields)
     let selectedEntries$ = state$.pluck("selections").pluck("bomIds")
+    //let show$            = state$.pluck("settings").pluck("appMode").map(mode=> mode !=='viewer')
 
     let entries$ = state$
       .map(s=>s.bom.entries)
       .distinctUntilChanged()
 
-    let bomProps$ = combineLatestObj( {fieldNames$,sortableFields$,editableFields$,entries$,selectedEntries$ })
+    let bomProps$ = combineLatestObj( {fieldNames$,sortableFields$,editableFields$,entries$,selectedEntries$} )
 
     return bomProps$
   }

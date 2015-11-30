@@ -6,25 +6,38 @@ import combineTemplate from 'rx.observable.combinetemplate'
 import {makeModel, mergeData} from '../utils/modelUtils'
 
 
- function remapStructure(input){
-  console.log("remapStructure",input)
-    if(input.showGrid !==undefined ) return {grid:{show:input.showGrid}}
-    if(input.showAnnot !==undefined ) return {annotations:{show:input.showAnnot}}
-    if(input.autoRotate !==undefined ) return {camera:{autoRotate:input.autoRotate}}
-
-    if(input.appMode !==undefined ) return {mode:input.appMode}
-    if(input.setActiveTool !== undefined) return {activeTool:input.activeTool}
-
-    return input
+function toggleShowGrid(state, input){
+  console.log("toggleShowGrid",input)
+  let output = mergeData( state, {grid:{show:input}} )
+  return output
 }
 
-function changeSetting(state, input){
-  //console.log("currentData",state,input)
-  let output = mergeData(state,remapStructure(input) )
+function toggleShowAnnot(state, input){
+  console.log("toggleShowAnnot",input)
+  let output = mergeData( state, {annotations:{show:input}} )
+  return output
+}
+
+function toggleAutoRotate(state, input){
+  console.log("toggleAutoRotate",input)
+  let output = mergeData( state, {camera:{autoRotate:input}} )
+  return output
+}
+
+function setActiveTool(state, input){
+  let output = mergeData( state, {activeTool:input})
+  console.log("setting activeTool",input)
+  return output
+}
+
+function setAppMode(state, input){
+  let output = mergeData( state, {appMode:input})
+  console.log("setting app mode",input)
   return output
 }
 
 function settings(actions, source){
+  source = source.map(src => mergeData( src, {appMode:"editor"}) )//default appMode to editor, disregard saved settings
   ///defaults, what else ?
   const defaults = {
     webglEnabled:true,
@@ -48,7 +61,7 @@ function settings(actions, source){
     }
   }
 
-  let updateFns  = {changeSetting}
+  let updateFns  = {toggleShowGrid, toggleAutoRotate, setActiveTool, setAppMode}
   return makeModel(defaults, updateFns, actions, source)
 }
 

@@ -5,6 +5,8 @@ import {hJSX} from '@cycle/dom'
 import Class from "classnames"
 const combineLatest = Rx.Observable.combineLatest
 
+import {combineLatestObj} from '../../utils/obsUtils'
+
 import tooltipIconBtn from '../widgets/TooltipIconButton'
 //spinner /loader
 /*
@@ -167,85 +169,116 @@ const measureAngleIconSvg = `<svg version="1.1" xmlns="http://www.w3.org/2000/sv
           <button className="clearAll"> Delete all </button>
 */
 
+function makeTopToolBar(state){
+  const selections = state.selections
+  const activeTool = state.settings.activeTool
+  const toggleControls  = (selections && selections.instIds.length>0)
+
+  const translateModeToggled = activeTool === 'translate'
+  const rotateModeToggled    = activeTool === 'rotate'
+  const scaleModeToggled     = activeTool === 'scale'
+
+  const measureDistanceModeToggled    = activeTool === 'rotate'
+  const measureThicknessModeToggled   = activeTool === 'scale'
+
+  //console.log("FOOO",state)
+  if(state.settings.appMode === "viewer"){
+    return <div/>
+  }else{
+     return <div className="topToolbar titlebar">
+      <section>
+        {tooltipIconBtn(translateModeToggled
+          , translateIconSvg, "toTranslateMode", "move", "bottom")}
+
+        {tooltipIconBtn(rotateModeToggled
+          , rotateIconSvg, "toRotateMode", "rotate", "bottom")}
+
+        {tooltipIconBtn(scaleModeToggled
+          , scaleIconSvg, "toScaleMode", "scale", "bottom")}
+      </section>
+
+      <section>
+        {tooltipIconBtn(activeTool === 'addNote'
+          , addNoteIconSvg, "addNote", "add note", "bottom")}
+
+        {tooltipIconBtn(activeTool === 'measureDistance'
+          , measureDistanceIconSvg, "measureDistance", "measure distance", "bottom")}
+
+        {tooltipIconBtn(activeTool === 'measureThickness'
+          , measureThicknessIconSvg, "measureThickness", "measure thickness", "bottom")}
+
+        {tooltipIconBtn(activeTool === 'measureDiameter'
+          , measureDiameterIconSvg, "measureDiameter", "measure diameter", "bottom")}
+
+        {tooltipIconBtn(activeTool === 'measureAngle'
+          , measureAngleIconSvg, "measureAngle", "measure angle", "bottom")}   
+
+      </section>
+
+      <section>
+        {tooltipIconBtn(undefined
+          , duplicateIconSvg, "duplicate", "duplicate", "bottom",!toggleControls)}   
+
+        {tooltipIconBtn(undefined
+          , deleteIconSvg, "delete", "delete", "bottom",!toggleControls)}   
+
+      </section>
+
+    </div>
+  }
+}
 
 
-export default function view(state$, settingsVTree$, fsTogglerVTree$, bomVtree$
-  , glVtree$, entityInfosVtree$, commentVTree$, progressBarVTree$, helpVTree$){
+function renderUiElements(uiElements){
+  const {state} = uiElements
+  const renderModes = {
+    "viewer":renderViewerMode
+    ,"editor":renderEditorMode
+  }
+  
+  return renderModes[state.settings.appMode](state,uiElements)
+}
 
-  return combineLatest(state$, settingsVTree$, fsTogglerVTree$, bomVtree$
-    , glVtree$, entityInfosVtree$, commentVTree$, progressBarVTree$, helpVTree$
-
-    ,function(state, settings, fsToggler, bom, gl, entityInfos, comments, progressBar, help){
-      //console.log("main state in view",state)
-      const selections = state.selections
-      const activeTool = state.settings.activeTool
-      const toggleControls  = (selections && selections.instIds.length>0)
-
-      const translateModeToggled = activeTool === 'translate'
-      const rotateModeToggled    = activeTool === 'rotate'
-      const scaleModeToggled     = activeTool === 'scale'
-
-      const measureDistanceModeToggled    = activeTool === 'rotate'
-      const measureThicknessModeToggled   = activeTool === 'scale'
-
-      return <div className="wrapper">
-        {progressBar}
-        
-        {settings}
-        {help}
-        {fsToggler}
-
-
-        {bom}
-        {gl}
-
-        {comments}
-        {entityInfos}
-
+function renderEditorMode(state, uiElements){
+  let {settings, fsToggler, bom, gl, entityInfos, comments, progressBar, help} = uiElements
+  return <div className="wrapper">
+      {progressBar}
       
-        <div className="topToolbar titlebar">
+      {settings}
+      {help}
+      {fsToggler}
 
-          <section>
-            {tooltipIconBtn(translateModeToggled
-              , translateIconSvg, "toTranslateMode", "move", "bottom")}
+      {bom}
+      
+      {gl}
 
-            {tooltipIconBtn(rotateModeToggled
-              , rotateIconSvg, "toRotateMode", "rotate", "bottom")}
+      {comments}
+      {entityInfos}
 
-            {tooltipIconBtn(scaleModeToggled
-              , scaleIconSvg, "toScaleMode", "scale", "bottom")}
-          </section>
+      {makeTopToolBar(state)}
+    </div>
+}
+
+function renderViewerMode(state, uiElements){
+  let {settings, fsToggler, gl, progressBar, help} = uiElements
+  return <div className="wrapper">
+      {progressBar}
+      {settings}
+      {help}
+      {fsToggler}
+      {gl}
+    </div>
+}
 
 
-          <section>
-            {tooltipIconBtn(activeTool === 'addNote'
-              , addNoteIconSvg, "addNote", "add note", "bottom")}
+export default function view(state$, settings$, fsToggler$, bom$
+  , gl$, entityInfos$, comment$, progressBar$, help$){
 
-            {tooltipIconBtn(activeTool === 'measureDistance'
-              , measureDistanceIconSvg, "measureDistance", "measure distance", "bottom")}
-
-            {tooltipIconBtn(activeTool === 'measureThickness'
-              , measureThicknessIconSvg, "measureThickness", "measure thickness", "bottom")}
-
-            {tooltipIconBtn(activeTool === 'measureDiameter'
-              , measureDiameterIconSvg, "measureDiameter", "measure diameter", "bottom")}
-
-            {tooltipIconBtn(activeTool === 'measureAngle'
-              , measureAngleIconSvg, "measureAngle", "measure angle", "bottom")}   
-
-          </section>
-
-          <section>
-            {tooltipIconBtn(undefined
-              , duplicateIconSvg, "duplicate", "duplicate", "bottom",!toggleControls)}   
-
-            {tooltipIconBtn(undefined
-              , deleteIconSvg, "delete", "delete", "bottom",!toggleControls)}   
-
-          </section>
-
-        </div>
-
-      </div>
+  return combineLatestObj({state$, settings$, fsToggler$, bom$
+  , gl$, entityInfos$, comment$, progressBar$, help$})
+    .map(uiElements => {
+      return renderUiElements(uiElements)
     })
+
+    
 }
