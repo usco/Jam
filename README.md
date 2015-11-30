@@ -20,6 +20,6 @@
 - - -
 
 [![experimental](http://badges.github.io/stability-badges/dist/experimental.svg)](http://github.com/badges/stability-badges)
-[![Build Status](https://travis-ci.org/usco/jam.svg?branch=master)](https://travis-ci.org/usco/jam)
+[![Build Status](https://travis-ci.org/usco/Jam.svg?branch=master)](https://travis-ci.org/usco/Jam)
 [![Dependency Status](https://david-dm.org/usco/jam.svg)](https://david-dm.org/usco/jam)
 [![devDependency Status](https://david-dm.org/usco/jam/dev-status.svg)](https://david-dm.org/usco/jam#info=devDependencies)
