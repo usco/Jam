@@ -558,7 +558,7 @@ input[type=color]:focus{
   font-size: 0.8em;
   position: absolute;
   right: 10px;
-  top: -145px;
+  bottom: 32px;
   width: 250px;
   padding: 5px;
 }
@@ -612,7 +612,7 @@ input[type=color]:focus{
   font-size: 0.8em;
   position: absolute;
   right: 0px;
-  top: -63px;
+  bottom: 32px;
   width: 200px;
 }
 
