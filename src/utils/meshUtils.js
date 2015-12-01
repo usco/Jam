@@ -19,6 +19,25 @@ export function postProcessMesh( shape ){
     geometry.computeFaceNormals()
   }
 
+  /* OLD STUFF, needs to be sorted out 
+    var vs = require('./vertShader.vert')();
+    var fs = require('./fragShader.frag')();
+
+    var material = new THREE.RawShaderMaterial( {
+            uniforms: {
+              time: { type: "f", value: 1.0 }
+            },
+            vertexShader: vs,
+            fragmentShader: fs,
+            side: THREE.DoubleSide,
+            transparent: true
+
+          } );
+    var material = new this.defaultMaterialType({color:color, specular: 0xffffff, shininess: 2, shading: THREE.FlatShading});//,vertexColors: THREE.VertexColors
+  */
+
+
+
   //Additional hack, only for buffer geometry
   if(!geometry.morphTargets) geometry.morphTargets=[]
   if(!geometry.morphNormals) geometry.morphNormals=[]
@@ -26,9 +45,12 @@ export function postProcessMesh( shape ){
 }
 
 
-export function geometryFromBuffers({vertices,normals}){
-  var geometry = new THREE.BufferGeometry()
+export function geometryFromBuffers({vertices,normals,indices,colors}){
+  let geometry = new THREE.BufferGeometry()
   geometry.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) )
   geometry.addAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) )
+  //geometry.addAttribute( 'index', new THREE.BufferAttribute( indices, 1 ) )
+  //geometry.addAttribute( 'color', new THREE.BufferAttribute( colors, 1 ) )
+
   return geometry
 }
