@@ -3,7 +3,7 @@ const merge = Rx.Observable.merge
 const of = Rx.Observable.of
 const scase = Rx.Observable.case
 
-import {exists,getExtension,getNameAndExtension,isValidFile} from './utils'
+import {exists,getExtension,getNameAndExtension,isValidFile, isEmpty} from './utils'
 
 import {postProcessMesh,geometryFromBuffers} from './meshUtils'
 import helpers         from 'glView-helpers'
@@ -49,6 +49,8 @@ export function requests(inputs, drivers){
       ,srcSources$
     )
     .flatMap(Rx.Observable.fromArray)
+    .filter(exists)
+    .filter(data=>!isEmpty(data))
     .map(function(data){
       const source     = dataSource(data)
       const uri        = source.uri
