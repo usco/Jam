@@ -54,6 +54,20 @@ describe("mesh source extractors", function() {
     })
   })
 
+  /*it("should handle different data types passed by sources gracefully(html5 File)", function(done) {
+    
+    const dnd$          = never()
+    const postMessages$ = of({modelUrl:{foo:e=>e,bar:e=>e}}) 
+    const addressbar    = {get:()=>never()}
+  
+    let meshSource$ = extractMeshSources({dnd$,postMessages$,addressbar})
+
+    meshSource$.forEach(function(meshSource){
+      assert.strictEqual(meshSource[0],"fakeModel.stl")
+      done()
+    })
+  })*/
+
 
   it("should filter out invalid data", function(done) {
     this.timeout(3000)

@@ -8,7 +8,8 @@ export function exists(input){
 
 //utiity to determine if a string is empty, null, or full of whitespaces
 export function isEmpty(str) {
-    return (!str || /^\s*$/.test(str) || str.length === 0 || !str.trim())
+  if(! (typeof str === "string")) return false //UUUGH bad way of checking not a string
+  return (!str || /^\s*$/.test(str) || str.length === 0 || !str.trim() )
 }
 
 export function itemsEqual(a,b){
