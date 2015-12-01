@@ -4,7 +4,7 @@
   "description": "jam! experimental version",
   "main": "index.js",
   "scripts": {
-    "test": "mocha --compilers js:babel/register",
+    "test": "mocha --compilers js:babel/register src/**/*spec.js test",
     "test-browser": "testem",
     "start": "NODE_ENV=dev node server.js",
     "build": "NODE_ENV=production webpack -p",

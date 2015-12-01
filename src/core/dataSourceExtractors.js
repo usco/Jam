@@ -1,8 +1,8 @@
 import Rx from 'rx'
-let merge = Rx.Observable.merge
-let fromArray = Rx.Observable.fromArray
+const merge = Rx.Observable.merge
+const fromArray = Rx.Observable.fromArray
 
-import {getExtension,exists,toArray} from '../utils/utils'
+import {getExtension,exists,toArray,isEmpty} from '../utils/utils'
 
 
 function hasModelUrl(data){
@@ -56,9 +56,12 @@ export function extractMeshSources( rawSources, extensions ){
 
   //drag & drop sources
   let dndMeshFiles$  = dnd$.filter(e=>e.type ==="file").pluck("data").flatMap(fromArray)
+    .filter(exists)
     .filter(file => validateMeshExtension(file.name) )
 
-  let dndMeshUris$    = dnd$.filter(e=> (e.type === "url") ).pluck("data").flatMap(fromArray)
+  let dndMeshUris$    = dnd$.filter(e=> (e.type === "url") ).pluck("data")
+    .flatMap(fromArray)
+    .filter(exists)
     .filter(url => validateMeshExtension(url) )
 
   let addressbarMeshUris$ = addressbar.get("modelUrl")
@@ -71,7 +74,11 @@ export function extractMeshSources( rawSources, extensions ){
     ,postMessages$.filter(hasModelUrl).pluck("modelUrl") //url sent by postMessage
     ,addressbarMeshUris$
   )
-    .map(toArray)
+  .map(toArray)
+  .filter(data => {
+    data = data.filter(exists).filter(data=>!isEmpty(data))
+    return  data.length > 0
+  })
 
   return meshSources$
 }
@@ -109,6 +116,10 @@ export function extractSourceSources( rawSources, extensions){
     ,postMessages$.filter(hasModelUrl).pluck("sourceUrl") //url sent by postMessage
     ,addressbarSourceUris$
   )
+  .filter(data => {
+    data = data.filter(exists).filter(data=>!isEmpty(data))
+    return  data.length > 0
+  })
 
   return sourceSources$
 }
