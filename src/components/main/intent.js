@@ -45,11 +45,26 @@ export default function intent (drivers) {
   const settingActions   = settingsIntent(drivers)
   //comments
   const commentActions   = commentsIntents(drivers)
+
+
+  function apiIntents(drivers){
+    /*drivers
+      .postMessage
+      .filter(e=>e.)*/
+
+    const takeScreenShot$ = Rx.Observable.just({res:[200,300]}).delay(6000)
+      takeScreenShot$
+        .forEach(e=>console.log("takeScreenShot",e))
+
+    return combineLatestObj({takeScreenShot$})
+  }
   
   //const selectionActions = selectionsIntents({DOM,events}, typesInstancesRegistry$)
 
-  //experimental test to work around asset manager
+  const apiActions  = apiIntents(drivers)
 
+
+  //experimental test to work around asset manager
   meshSources$
     .forEach(e=>console.log("meshSources",e))
 
@@ -138,7 +153,7 @@ export default function intent (drivers) {
     .map(first)
     .share()  
 
-  createAnnotationStep$.subscribe(e=>console.log("createAnnotationStep",e))
+  createAnnotationStep$.forEach(e=>console.log("createAnnotationStep",e))
 
   const annotationsActions =  {
     creationStep$: createAnnotationStep$
@@ -151,12 +166,12 @@ export default function intent (drivers) {
   }  
   /*let foo$ = Rx.Observable.just("bar")
   let reset2$ = DOM.select('.reset').events("click")
-  DOM.select('.reset').events("click").subscribe(e=>console.log("reseting bom1"))
-  DOM.select('.reset').events("click").subscribe(e=>console.log("reseting bom2"))
+  DOM.select('.reset').events("click").forEach(e=>console.log("reseting bom1"))
+  DOM.select('.reset').events("click").forEach(e=>console.log("reseting bom2"))
 
   reset2$.withLatestFrom(foo$,function(e,f){
     console.log("reset")
-  }).subscribe(e=>e)*/
+  }).forEach(e=>e)*/
 
   return {
     dnd$

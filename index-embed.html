@@ -50,9 +50,14 @@
 
 
       setTimeout(function() {
+        embeded.postMessage({captureScreen:[[240, 160],[320,200],[640,480]]},"*")
+      }, 7000)
+
+      setTimeout(function() {
         //to get transform data
         embeded.postMessage({"getTransforms":null},"*")
       }, 7000)
+
 
 
     </script>

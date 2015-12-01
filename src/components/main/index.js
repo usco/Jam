@@ -24,7 +24,7 @@ export default function main(drivers) {
   //create visual elements
   const entityInfos = EntityInfosWrapper(state$,DOM)
   const comments    = CommentsWrapper(state$,DOM)
-  const gl          = GLWrapper(state$,DOM)
+  const gl          = GLWrapper(state$, drivers)
   const bom         = BOMWrapper(state$,DOM)
   const progressBar = progressBarWrapper(state$,DOM)
 
