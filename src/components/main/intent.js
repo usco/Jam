@@ -31,8 +31,8 @@ export default function intent (drivers) {
   const postMessage  = drivers.postMessage
   const events       = drivers.events
 
-  const dragOvers$  = DOM.select("#root").events("dragover")
-  const drops$      = DOM.select("#root").events("drop")  
+  const dragOvers$  = DOM.select(':root').events("dragover")
+  const drops$      = DOM.select(':root').events("drop")  
   const dnd$        = observableDragAndDrop(dragOvers$, drops$) 
 
   //data sources for our main model

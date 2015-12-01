@@ -2,11 +2,14 @@ body{
   width: 100%;
   height: 100%;
   overflow: hidden;
+  padding: 0;
+  margin: 0;
 }
 /*
   #f5f5f5 //ultimaker site pale blue
 */
-#jamRoot{
+#jamRoot/*external wrapper aka "where to put Jam into"
+{
   font-family: 'Open Sans', sans-serif;
   /*-webkit-transition: opacity 0.5s ease-in;
   opacity:1;*/
@@ -25,16 +28,15 @@ body{
   height: 100%;
 }
 
-.wrapper{
-  position: absolute;
+
+.jam {
+  /*background-color: #fff;#f5f5f5;
+  z-index: 9999;*/
+   position: absolute;
   top: 0px;
   left: 0px;
   width: 100%;
-}
 
-.jam {
-  background-color: #fff;/*#f5f5f5;*/
-  z-index: 9999;
 }
 
 .jam input[type=text]{

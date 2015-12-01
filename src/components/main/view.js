@@ -241,7 +241,7 @@ function renderUiElements(uiElements){
 
 function renderEditorMode(state, uiElements){
   let {settings, fsToggler, bom, gl, entityInfos, comments, progressBar, help} = uiElements
-  return <div className="wrapper">
+  return <div className="jam" >
       {progressBar}
       
       {settings}
@@ -261,7 +261,7 @@ function renderEditorMode(state, uiElements){
 
 function renderViewerMode(state, uiElements){
   let {settings, fsToggler, gl, progressBar, help} = uiElements
-  return <div className="wrapper">
+  return <div className="jam">
       {progressBar}
       {settings}
       {help}
