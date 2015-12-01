@@ -59,7 +59,7 @@
     "usco-desktop-store": "git://github.com/usco/usco-desktop-store",
     "usco-kernel2": "git://github.com/usco/usco-kernel2",
     "usco-ply-parser": "git://github.com/usco/usco-ply-parser",
-    "usco-stl-parser": "git://github.com/kaosat-dev/usco-stl-parser#refactor",
+    "usco-stl-parser": "git://github.com/kaosat-dev/usco-stl-parser",
     "usco-xhr-store": "git://github.com/usco/usco-xhr-store",
     "viewport-size": "0.0.1"
   }
