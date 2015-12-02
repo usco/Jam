@@ -1,12 +1,13 @@
 import Rx from 'rx'
-import combineTemplate from 'rx.observable.combinetemplate'
+const of = Rx.Observable.of
+import {combineLatestObj} from '../../utils/obsUtils'
 
 import Detector from '../../components/webgl/deps/Detector.js'
 
 //source driver 
 export default function browserCapsDriver(){
 
-  return combineTemplate({
-    webglEnabled: Rx.Observable.just(Detector.webgl)
+  return combineLatestObj({
+    webglEnabled: of(Detector.webgl)
   })
 }

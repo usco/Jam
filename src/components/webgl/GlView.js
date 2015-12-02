@@ -9,12 +9,9 @@ import {hJSX} from '@cycle/dom'
 
 import {equals} from 'ramda'
 
-
 let fromEvent = Rx.Observable.fromEvent
 let merge = Rx.Observable.merge
 let combineLatest = Rx.Observable.combineLatest
-import combineTemplate from 'rx.observable.combinetemplate'
-Rx.config.longStackSupport = true
 
 
 import {pointerInteractions,interactionsFromCEvents,preventScroll} from '../../interactions/pointers'
@@ -30,14 +27,15 @@ import OrbitControls from './deps/OrbitControls'
 import CombinedCamera from './deps/CombinedCamera'
 import TransformControls from './transforms/TransformControls'
 
-import helpers from 'glView-helpers'
+import {planes,grids,annotations,objectEffects,CamViewControls} from 'glView-helpers'
 
-let LabeledGrid = helpers.grids.LabeledGrid
-let ShadowPlane = helpers.planes.ShadowPlane
-let CamViewControls= helpers.CamViewControls
-let annotations = helpers.annotations
+import LabeledGrid from 'glView-helpers/lib/grids/LabeledGrid'
 
-let ZoomInOnObject= helpers.objectEffects.ZoomInOnObject
+//console.log("helpers.grids",helpers,helpers.grids)
+//let LabeledGrid = helpers.grids.LabeledGrid
+let ShadowPlane    = planes.ShadowPlane
+//let annotations    = annotations
+let ZoomInOnObject = objectEffects.ZoomInOnObject
 
 import {makeCamera, makeControls, makeLight, renderMeta
 } from './utils2'

@@ -1,5 +1,6 @@
-import helpers from 'glView-helpers'
-const annotations = helpers.annotations
+import {annotations} from 'glView-helpers'
+//const annotations = helpers.annotations
+
 import THREE from 'three'
 import {mergeData} from '../../utils/modelUtils'
 

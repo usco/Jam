@@ -6,7 +6,7 @@ import {getEntryExitThickness,
 } from '../../components/webgl/utils'
 
 import {first,toggleCursor} from '../../utils/otherUtils'
-import {generateUUID} from 'usco-kernel2/src/utils'
+import {generateUUID} from '../../utils/utils'
 import {exists} from '../../utils/obsUtils'
 
 //import {clearActiveTool$} from 

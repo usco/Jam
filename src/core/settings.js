@@ -1,8 +1,6 @@
 import Rx from 'rx'
-let fromEvent = Rx.Observable.fromEvent
-let Observable = Rx.Observable
-let merge = Rx.Observable.merge
-import combineTemplate from 'rx.observable.combinetemplate'
+const Observable = Rx.Observable
+const {merge,fromEvent} = Rx.Observable
 import {makeModel, mergeData} from '../utils/modelUtils'
 
 
