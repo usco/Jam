@@ -1,17 +1,11 @@
-import AssetManager from 'usco-asset-manager'
-import DesktopStore from 'usco-desktop-store'
-import XhrStore     from 'usco-xhr-store'
-//import StlParser    from 'usco-stl-parser'
-import CtmParser    from 'usco-ctm-parser'
-import PlyParser    from 'usco-ply-parser'
 
 /////////
 import postProcessMesh from '../utils/meshUtils'
-import helpers         from 'glView-helpers'
-let centerMesh         = helpers.mesthTools.centerMesh
+//import helpers         from 'glView-helpers'
+//let centerMesh         = helpers.mesthTools.centerMesh
 
 export function makeInternals(){
-  let assetManager = new AssetManager()
+  //let assetManager = new AssetManager()
   /*assetManager.addParser("stl", new StlParser())
   assetManager.addParser("ctm", new CtmParser())
   assetManager.addParser("ply", new PlyParser())
@@ -19,7 +13,7 @@ export function makeInternals(){
   assetManager.addStore( "desktop", new DesktopStore() )
   assetManager.addStore( "xhr"    , new XhrStore() )*/
 
-  return assetManager
+  return {}
 }
 
 

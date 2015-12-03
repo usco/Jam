@@ -6,8 +6,8 @@ const scase = Rx.Observable.case
 import {exists,getExtension,getNameAndExtension,isValidFile, isEmpty} from './utils'
 
 import {postProcessMesh,geometryFromBuffers} from './meshUtils'
-import helpers         from 'glView-helpers'
-const centerMesh         = helpers.mesthTools.centerMesh
+import {meshTools} from 'glView-helpers'
+const centerMesh         = meshTools.centerMesh
 
 import {equals, cond, T, always} from 'ramda'
 import {combineLatestObj} from './obsUtils'
@@ -186,7 +186,8 @@ function parse(fetched$){
     .flatMap(function({uri, data, ext, name}){
       const parseOptions={useWorker:true}
 
-      const parsedObs$ = parsers[ext](data, parseOptions)
+      const parse    = parsers[ext]
+      const parsedObs$ = parse(data, parseOptions)
         //.do(e=>console.log("parsing data",e))
         .doOnError(e=>console.log("error in parse",e))
 

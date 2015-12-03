@@ -11,7 +11,6 @@ var CompressionPlugin = require("compression-webpack-plugin");
 var host    = "localhost";
 var port    = 3000;
 var srcPath = "src"
-var xtraModulesWLoaders = ["js-csp/src","glView-helpers"]//add any module names that you want loaders to apply to
 
 var production = process.env.NODE_ENV == 'production';
 var dev        = process.env.NODE_ENV == 'dev';
@@ -40,21 +39,15 @@ var getSymlinkedModules = function(){
 }
 
 //add any extra folders we want to apply loaders to 
-var extraModulePaths = xtraModulesWLoaders.map(function(entry){ return path.join(__dirname, "node_modules",entry); });
-var pathsToInclude = getSymlinkedModules().concat( path.join(__dirname, srcPath) ).concat( extraModulePaths );
+var pathsToInclude = path.join(__dirname, srcPath)//getSymlinkedModules().concat( path.join(__dirname, srcPath) )
 
 //FIXME !! temporary hack: add any paths where loaders should be apllied
-pathsToInclude.push( path.join(__dirname, "node_modules", "glView-helpers") )
-pathsToInclude.push( path.join(__dirname, "node_modules", "usco-kernel2") )
-pathsToInclude.push( path.join(__dirname, "node_modules", "usco-asset-manager") )
-pathsToInclude.push( path.join(__dirname, "node_modules", "usco-xhr-store") )
-pathsToInclude.push( path.join(__dirname, "node_modules", "usco-desktop-store") )
-
+//pathsToInclude.push( path.join(__dirname, "node_modules", "glView-helpers") )
 
 //ugh, also needed because of workers (ie worker loader)
 //pathsToInclude.push( path.join(__dirname, "node_modules", "usco-stl-parser")   )
-pathsToInclude.push( path.join(__dirname, "node_modules", "usco-ctm-parser")   )
-pathsToInclude.push( path.join(__dirname, "node_modules", "usco-ply-parser")   )
+//pathsToInclude.push( path.join(__dirname, "node_modules", "usco-ctm-parser")   )
+//pathsToInclude.push( path.join(__dirname, "node_modules", "usco-ply-parser")   )
 
 //console.log("will user loaders on",pathsToInclude)
 
@@ -76,9 +69,9 @@ var config= {
   ],
   module: {
     loaders: [
-      { test: /\.json$/,   loader: "json-loader" },
+      { test: /\.json$/,   loader: "json-loader" },//?optional[]=runtime&optional=es6.blockScoping
       //{ test: /-worker*\.js$/, loader: "worker-loader",include : pathsToInclude},//if any module does "require(XXX-worker)" it converts to a web worker
-      { test: /\.js?$/, loaders: ['react-hot', 'babel?optional[]=runtime&optional=es6.blockScoping'],include : pathsToInclude},
+      { test: /\.js?$/, loaders: ['react-hot', 'babel'],include : pathsToInclude,exclude: /(node_modules|bower_components)/},
       { test: /\.css$/, loader: "style-loader!css-loader" }
     ],
     noParse: /\.min\.js/

@@ -3,13 +3,15 @@ let fromEvent = Rx.Observable.fromEvent
 let Observable = Rx.Observable
 let merge = Rx.Observable.merge
 
+import THREE from 'three'
+
 import logger from 'log-minim'
 let log = logger("app")
 log.setLevel("debug")
 
 import {generateUUID} from '../../utils/utils'
 import {nameCleanup} from '../../utils/formatters'
-import {computeBoundingBox,computeBoundingSphere} from 'glView-helpers/src/meshTools/computeBounds'
+import {computeBoundingBox,computeBoundingSphere} from 'glView-helpers/lib/meshTools/computeBounds'
 import {makeModel, mergeData} from '../../utils/modelUtils'
 
 
