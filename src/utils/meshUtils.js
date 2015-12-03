@@ -45,12 +45,18 @@ export function postProcessMesh( shape ){
 }
 
 
-export function geometryFromBuffers({vertices,normals,indices,colors}){
+export function geometryFromBuffers({positions,normals,indices,colors}){
   let geometry = new THREE.BufferGeometry()
-  geometry.addAttribute( 'position', new THREE.BufferAttribute( vertices, 3 ) )
+
+  geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) )
   geometry.addAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) )
-  //geometry.addAttribute( 'index', new THREE.BufferAttribute( indices, 1 ) )
-  //geometry.addAttribute( 'color', new THREE.BufferAttribute( colors, 1 ) )
+  
+  if(indices){
+    geometry.addAttribute( 'index', new THREE.BufferAttribute( indices, 1 ) )
+  }
+  if(colors){
+    geometry.addAttribute( 'color', new THREE.BufferAttribute( colors, 1 ) )
+  }
 
   return geometry
 }

@@ -17,6 +17,8 @@ import assign from 'fast.js/object/assign'//faster object.assign
 
 //import parse as stlParser,  {outputs} from 'stlParser'
 import * as stlParser from 'usco-stl-parser'
+import * as objParser from 'usco-obj-parser'
+
 console.log("stlParser",stlParser)
 
 function dataSource(data){
@@ -128,6 +130,7 @@ function makeParsers(){
   //other
   let parsers = {}
   parsers["stl"] = stlParser.default//new StlParser()
+  parsers["obj"] = objParser.default//new StlParser()
   console.log(".inputDataType",parsers["stl"].inputDataType)
   return parsers
 }
