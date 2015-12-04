@@ -74,6 +74,7 @@ export function extractMeshSources( rawSources, extensions ){
     ,postMessages$.filter(hasModelUrl).pluck("modelUrl") //url sent by postMessage
     ,addressbarMeshUris$
   )
+  .filter(exists)
   .map(toArray)
   .filter(data => {
     data = data.filter(exists).filter(data=>!isEmpty(data))
@@ -116,6 +117,8 @@ export function extractSourceSources( rawSources, extensions){
     ,postMessages$.filter(hasModelUrl).pluck("sourceUrl") //url sent by postMessage
     ,addressbarSourceUris$
   )
+  .filter(exists)
+  .map(toArray)
   .filter(data => {
     data = data.filter(exists).filter(data=>!isEmpty(data))
     return  data.length > 0
