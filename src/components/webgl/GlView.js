@@ -209,7 +209,6 @@ function GLView({drivers, props$}){
   let maskScene = null
 
   let zoomInOnObject = null
-  let sphere =null
 
   let scene = new THREE.Scene()
   let dynamicInjector = new THREE.Object3D()//all dynamic mapped objects reside here
