@@ -3,7 +3,7 @@ var fs    = require('fs')
 export default function bufferToPng(buffer, width, height, depth, fileName){
 
   function genOutput(inBuf, width, height){
-    let PNG = require('pngjs2').PNG
+    let PNG = require('pngjs').PNG
     let png = new PNG( {width, height} )
 
     for (let i = 0; i < inBuf.length; ++i) {

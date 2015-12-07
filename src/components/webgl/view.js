@@ -1,5 +1,4 @@
 import THREE from 'three'
-import Detector from './deps/Detector.js'
 
 import {presets} from './presets' //default configuration for lighting, cameras etc
 import {planes,grids,annotations,objectEffects,CamViewControls} from 'glView-helpers'
@@ -7,8 +6,9 @@ import {planes,grids,annotations,objectEffects,CamViewControls} from 'glView-hel
 import LabeledGrid from 'glView-helpers/lib/grids/LabeledGrid'
 
 import bufferToPng from './bufferToPng'
-let gl = require('gl')()//(width, height, { preserveDrawingBuffer: true })
 
+const glLib = require('gl').createContext
+let gl = glLib()//(width, height, { preserveDrawingBuffer: true })
 
 //console.log("helpers.grids",helpers,helpers.grids)
 //let LabeledGrid = helpers.grids.LabeledGrid
@@ -27,11 +27,10 @@ function contextToBuffer(gl, width, height, depth=4){
 }
 
 function writeBufferToFile(buffer, width, height, path){
-  let outputToFile = require('./outputToFile')
-  outputToFile(buffer, width, height, path)
+  bufferToPng(buffer, width, height, path)
 }
 
-function writeContextToFile(gl, width, height, depth, path){
+function writeContextToFile(gl, width, height, depth, path="./test.png"){
   writeBufferToFile( contextToBuffer(gl, width, height, depth), width, height, path )
 }
 
@@ -152,7 +151,7 @@ function setupPostProcess2(renderer, camera, scene){
   return composers
 }
 
-function render(scene, camera, renderer, composers){
+function render(renderer, composers, camera, scene ){
   composers.forEach(c=>c.render())
   //composer.passes[composer.passes.length-1].uniforms[ 'tDiffuse2' ].value = composers[0].renderTarget2
   //composer.passes[composer.passes.length-1].uniforms[ 'tDiffuse3' ].value = composers[1].renderTarget2
@@ -184,6 +183,8 @@ function setupRenderer(renderer, canvas, context, config){
     //TODO add hasOwnProp check
     renderer[key] = config.renderer[key]
   }) 
+
+  console.log("renderer setup DONE")
   
 }
 
@@ -214,17 +215,21 @@ function view(){
   let transformControls = new TransformControls( camera )
 
   const sceneExtras = [camera, shadowPlane, controls, transformControls]
-
+  console.log("A")
   let canvas = makeOfflineCanvas()
   setupRenderer(renderer, canvas, gl, config)
+  console.log("B")
   
   setupScene(scene, sceneExtras, config)
   composers = setupPostProcess2(renderer, camera, scene)
 
   ///
-  render()
+  render(renderer, composers)
 
   //now we output to file
   let _gl = renderer.getContext()
   writeContextToFile(_gl, width, height, depth, path)
 }
+
+
+view()
