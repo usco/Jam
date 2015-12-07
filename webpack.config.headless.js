@@ -16,7 +16,18 @@ var dev        = process.env.NODE_ENV == 'dev';
 var pathsToInclude = path.join(__dirname, srcPath)
 
 
+var nodeModules = {};
+fs.readdirSync('node_modules')
+  .filter(function(x) {
+    return ['.bin'].indexOf(x) === -1;
+  })
+  .forEach(function(mod) {
+    nodeModules[mod] = 'commonjs ' + mod;
+  });
+
+
 var config= {
+   devtool: 'sourcemap',
   target: 'node',
   entry: [
     './'+srcPath+'/components/webgl/view.js'
@@ -27,7 +38,9 @@ var config= {
     publicPath: '/dist/' //'/'+'dist'+'/'
   },
   plugins: [
+    new webpack.IgnorePlugin(/\.(css|less)$/)
   ],
+  externals: nodeModules,
   module: {
     loaders: [
       { test: /\.js?$/, loaders: ['babel'],include : pathsToInclude,exclude: /(node_modules|bower_components)/},
@@ -59,18 +72,12 @@ if (production) {
   //config.output.chunkFilename = '[id].js'
   config.plugins = config.plugins.concat([
     new webpack.DefinePlugin({'process.env': {NODE_ENV: JSON.stringify('production') } })
-    , new webpack.optimize.DedupePlugin()
+    //, new webpack.optimize.DedupePlugin()
     , new webpack.NoErrorsPlugin()
   ])
 }
 else{
-  config.entry = config.entry.concat([
-    'webpack-dev-server/client?',//http://'+host+":"+port,
-    'webpack/hot/only-dev-server',
-  ])
-  config.plugins = config.plugins.concat([
-    new webpack.HotModuleReplacementPlugin(),
-  ])
+
 }
 
 

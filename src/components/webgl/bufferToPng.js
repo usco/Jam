@@ -1,6 +1,6 @@
 var fs    = require('fs')
 
-export default function bufferToPng(buffer, width, height, depth, fileName){
+export default function bufferToPng(buffer, width, height, fileName){
 
   function genOutput(inBuf, width, height){
     let PNG = require('pngjs').PNG
