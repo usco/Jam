@@ -4,14 +4,27 @@ import fs from 'fs'
 
 //BIG hack, because parsers are browserified modules ...
 global.Rx = Rx
-//require("imports?$=jquery!./file.js")
 const stlParser = require("imports?Rx=rx!usco-stl-parser")
+const objParser = require("imports?Rx=rx!usco-obj-parser")
+
 //import * as stlParser from 'usco-stl-parser'
 //import * as objParser from 'usco-obj-parser'
 
 
 
 import {exists,getExtension,getNameAndExtension,isValidFile, isEmpty} from '../../utils/utils'
+import {postProcessMesh,geometryFromBuffers} from '../../utils/meshUtils'
+import {meshTools} from 'glView-helpers'
+const centerMesh         = meshTools.centerMesh
+
+//TODO: refactor ,same as assetManager
+function postProcessParsedData(data){
+  let mesh = data 
+  mesh = geometryFromBuffers(mesh)
+  mesh = postProcessMesh(mesh)
+  mesh = centerMesh(mesh)
+  return mesh
+}
 
 /*import makeHttpDriver     from '../../core/drivers/simpleHttpDriver'
 import {requests,resources} from '../../utils/assetManager'
@@ -20,12 +33,12 @@ let httpDriver   = makeHttpDriver()*/
 
 //see http://stackoverflow.com/questions/8609289/convert-a-binary-nodejs-buffer-to-javascript-arraybuffer
 function toArrayBuffer(buffer) {
-    var ab = new ArrayBuffer(buffer.length);
-    var view = new Uint8Array(ab);
-    for (var i = 0; i < buffer.length; ++i) {
-        view[i] = buffer[i];
-    }
-    return ab;
+  var ab = new ArrayBuffer(buffer.length)
+  var view = new Uint8Array(ab)
+  for (var i = 0; i < buffer.length; ++i) {
+      view[i] = buffer[i]
+  }
+  return ab
 }
 
 
@@ -39,10 +52,9 @@ if(args.length>0){
   const uri = args[0]
   const {name,ext} = getNameAndExtension(uri)
 
-  
   let parsers = {}
   parsers["stl"] = stlParser.default
-  //parsers["obj"] = objParser.default
+  parsers["obj"] = objParser.default
 
   const data         = toArrayBuffer( fs.readFileSync(uri) )
   const parse        = parsers[ext]
@@ -51,11 +63,11 @@ if(args.length>0){
 
   const data$  = parsedObs$
     .filter(e=>e.progress === undefined)//seperate out progress data
-    .forEach(e=>console.log("foo",e))
-    //.map(postProcessParsedData) 
-
+    .map(postProcessParsedData)
+    .forEach(mesh => {
+      view({mesh,uri:`${uri}.png`})
+    })
     
-
   /*let uris = args
   const requests$ = Rx.Observable.from(uris)
    .map(function(uri){
@@ -70,9 +82,5 @@ if(args.length>0){
     responses$
       .forEach(e=>console.log("responses",e))
   //resources()*/
-
-
-  view()
-
 }
 

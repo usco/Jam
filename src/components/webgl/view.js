@@ -316,7 +316,9 @@ function getMainParams(){
 
 //////////////////////////////////////////////////
 
-export default function view(){
+export default function view(data){
+  let {mesh,uri} = data
+
   let config = presets
   const params = {
     width:640
@@ -358,9 +360,11 @@ export default function view(){
   //material = new THREE.MeshBasicMaterial( { color: 0xffaa00, wireframe: true } )//THIS WORKS
   //material = new THREE.MeshDepthMaterial() //NOT WORKING => all white
   let cube     = new THREE.Mesh(geometry, material)
-  scene.add(cube)
+  //scene.add(cube)
+  //hack
+  mesh.material = material
+  scene.add(mesh)
 
- 
 
   //controls are only needed for live aka browser mode
   //let controls = makeControls(config.controls[0])
@@ -383,6 +387,6 @@ export default function view(){
 
   //now we output to file
   let _gl = renderer.getContext()
-  writeContextToFile(_gl, params.width, params.height)//,4, path)
+  writeContextToFile(_gl, params.width, params.height,4,uri)//,4, path)
 }
 
