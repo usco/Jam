@@ -30,7 +30,7 @@ var config= {
    devtool: 'sourcemap',
   target: 'node',
   entry: [
-    './'+srcPath+'/components/webgl/view.js'
+    './'+srcPath+'/components/webgl/rendererCLI.js'
   ],
   output: {
     path: path.join(__dirname, 'dist'),
@@ -38,7 +38,13 @@ var config= {
     publicPath: '/dist/' //'/'+'dist'+'/'
   },
   plugins: [
-    new webpack.IgnorePlugin(/\.(css|less)$/)
+    new webpack.IgnorePlugin(/\.(css|less)$/),
+    new webpack.ProvidePlugin({
+        rx: "rx",
+        Rx: "rx",
+        rx: 'Rx',
+        "window.Rx": "rx"
+    })
   ],
   externals: nodeModules,
   module: {

@@ -15,8 +15,8 @@
     "release-minor": "git checkout master && release minor",
     "release-major": "git checkout master && release major",
     "make-offline_simple": "babel src/components/webgl/view.js --out-file dist/jam-headless.js",
-    "make-offline-rollup":"rollup src/components/webgl/view.js > dist/jam-headless.js",
-    "make-offline-webpack":"NODE_ENV=production webpack -p --config webpack.config.headless.js",
+    "make-offline-rollup": "rollup src/components/webgl/view.js > dist/jam-headless.js",
+    "make-offline-webpack": "NODE_ENV=production webpack -p --config webpack.config.headless.js",
     "make-offline": "browserify src/components/webgl/view.js -t babelify --outfile dist/jam-headless.js"
   },
   "author": "Mark 'kaosat-dev' Moissette",
@@ -32,6 +32,7 @@
     "browserify": "^12.0.1",
     "compression-webpack-plugin": "^0.1.2",
     "css-loader": "^0.23.0",
+    "imports-loader": "^0.6.5",
     "json-loader": "^0.5.1",
     "mocha": "^2.2.5",
     "react-hot-loader": "^1.2.2",

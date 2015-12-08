@@ -54,8 +54,7 @@ function writeContextToFile(context, width, height, depth, path="./test.png"){
 
 function setupPostProcess(renderer, camera, scene, params){
 
-  const {width, height, devicePixelRatio} = params
-  //console.log("setupPostProcess")
+  const {width, height, devicePixelRatio, renderToScreen} = params
     ////////post processing
     let renderTargetParameters = {
         minFilter: THREE.LinearFilter,
@@ -102,10 +101,12 @@ function setupPostProcess(renderer, camera, scene, params){
     composer.addPass(copyPass)
 
     let lastPass = composer.passes[composer.passes.length-1]
-    lastPass.renderToScreen = true
+    lastPass.renderToScreen = renderToScreen
     
     return {composers:[composer], fxaaPass, outScene, maskScene}
     
+
+
     //return {composer:finalComposer, fxaaPass, outScene, maskScene, composers:[normalComposer,depthComposer,finalComposer]}
   }
 
@@ -139,6 +140,13 @@ function makeOfflineCanvas(){
 function makeLiveCanvas(){
   let canvas = document.createElement('canvas')
   return canvas
+}
+
+function makeCanvas(){
+  if(typeof window !== 'undefined'){
+    return makeLiveCanvas()
+  }
+  return makeOfflineCanvas()
 }
 
 function handleResize (sizeInfos){
@@ -251,9 +259,10 @@ function monkeyPatchGl(gl){
 
 
 function render(renderer, composers, camera, scene ){
-  //composers.forEach(c=>c.render())
+  composers.forEach(c=>c.render())
   //renderer.render(scene, camera)
-  let width = 640
+  
+  /*let width = 640
   let height = 480
   let rtTexture = new THREE.WebGLRenderTarget(width, height, {
     minFilter: THREE.LinearFilter,
@@ -261,7 +270,7 @@ function render(renderer, composers, camera, scene ){
     format: THREE.RGBAFormat
   })
 
-  renderer.render(scene, camera, rtTexture, true)
+  renderer.render(scene, camera, rtTexture, true)*/
 
   //composer.passes[composer.passes.length-1].uniforms[ 'tDiffuse2' ].value = composers[0].renderTarget2
   //composer.passes[composer.passes.length-1].uniforms[ 'tDiffuse3' ].value = composers[1].renderTarget2
@@ -272,6 +281,8 @@ function setupScene(scene, extras, config){
     //TODO , update to be more generic
     .map(light=>makeLight( light ))
     .forEach(light=>scene.add(light))
+
+  return scene
 }
 
 function setupRenderer(canvas, context, config){
@@ -305,12 +316,13 @@ function getMainParams(){
 
 //////////////////////////////////////////////////
 
-function view(){
+export default function view(){
   let config = presets
   const params = {
-    width:640,
-    height:480,
-    devicePixelRatio:1
+    width:640
+    ,height:480
+    ,devicePixelRatio:1
+    ,renderToScreen:(typeof window !== 'undefined')//FALSE if you want server side renders
   }
 
   gl = monkeyPatchGl(gl)
@@ -327,8 +339,9 @@ function view(){
   scene.dynamicInjector = dynamicInjector
   scene.add( dynamicInjector )
 
-
   let camera   = makeCamera(config.cameras[0], params)
+   //let grid        = new LabeledGrid(200, 200, 10, config.cameras[0].up) //needs CANVAS....
+  let shadowPlane = new ShadowPlane(2000, 2000, null, config.cameras[0].up) 
 
   let geometry = new THREE.BoxGeometry(100,100,100)
 
@@ -336,11 +349,18 @@ function view(){
   material.vertexShader = 'void main() {\n  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n}';
   material.fragmentShader = 'void main() {\n    gl_FragColor = vec4( 1.0, 0.0, 0.0, 1.0 );\n}';
   material.uniforms = {}
+
+  //material = new THREE.MeshBasicMaterial( { color: 0xf0ff00 } )
+  //material = new THREE.MeshPhongMaterial( { color: 0x17a9f5, specular: 0xffffff, shininess: 5, shading: THREE.FlatShading} )//NOT WORKING => black shape
+  //material = new THREE.MeshBasicMaterial( { color: 0xffaa00, transparent: true, blending: THREE.AdditiveBlending } ) //NOT WORKING => all white
+  //material = new THREE.MeshLambertMaterial( { color: 0xdddddd, shading: THREE.SmoothShading } )  //NOT WORKING => black shape
+  material = new THREE.MeshNormalMaterial( { shading: THREE.SmoothShading } ) //THIS WORKS
+  //material = new THREE.MeshBasicMaterial( { color: 0xffaa00, wireframe: true } )//THIS WORKS
+  //material = new THREE.MeshDepthMaterial() //NOT WORKING => all white
   let cube     = new THREE.Mesh(geometry, material)
   scene.add(cube)
 
-  //let grid        = new LabeledGrid(200, 200, 10, config.cameras[0].up) //needs CANVAS....
-  let shadowPlane = new ShadowPlane(2000, 2000, null, config.cameras[0].up) 
+ 
 
   //controls are only needed for live aka browser mode
   //let controls = makeControls(config.controls[0])
@@ -348,11 +368,12 @@ function view(){
   //controls, transformControls
 
   const sceneExtras = [camera, shadowPlane]
-  let canvas = makeOfflineCanvas()
+  let canvas = makeCanvas()
   renderer   = setupRenderer(canvas, gl, config)
     
-  setupScene(scene, sceneExtras, config)
-  composers = setupPostProcess2(renderer, camera, scene, params)
+  scene      = setupScene(scene, sceneExtras, config)
+
+  composers  = setupPostProcess2(renderer, camera, scene, params)
 
   //do context specific config
   setupNodeSpecificStuff(renderer, camera, scene)
@@ -365,5 +386,3 @@ function view(){
   writeContextToFile(_gl, params.width, params.height)//,4, path)
 }
 
-
-view()
