@@ -177,11 +177,92 @@ function setupWindowSpecificStuff(container, renderer){
   //let pixelRatio = window.devicePixelRatio || 1
 }
 
+function setupNodeSpecificStuff(renderer, camera, scene){
+  camera.lookAt(scene.position)
+
+  
+}
+
+function monkeyPatchGl(gl){
+  console.log("shaderSource")//,gl.shaderSource)
+
+
+
+  function checkObject(object) {
+    return typeof object === 'object' ||
+         (object       === void 0)
+  }
+
+  //Don't allow: ", $, `, @, \, ', \0
+  function isValidString(str) {
+      return !(/[\"\$\`\@\\\'\0]/.test(str))
+  }
+
+  function checkWrapper(context, object, wrapper) {
+    if(!checkValid(object, wrapper)) {
+      setError(context, gl.INVALID_VALUE)
+      return false
+    } else if(!checkOwns(context, object)) {
+      setError(context, gl.INVALID_OPERATION)
+      return false
+    }
+    return true
+  }
+
+
+  function shaderSource(shader, source) {
+    if(!checkObject(shader)) {
+      throw new TypeError('shaderSource(WebGLShader, String)')
+    }
+    if(!shader || (!source && typeof source !== 'string')) {
+      setError(this, gl.INVALID_VALUE)
+      return
+    }
+    source += ''
+    if(!isValidString(source)) {
+      setError(this, gl.INVALID_VALUE)
+      return
+    } else if(checkWrapper(this, shader, WebGLShader)) {
+
+      //patch 
+      if(source.indexOf( 'precision' ) >= 0){
+
+        //'#ifdef GL_ES',
+        var sourceChunks = source.split('\n')
+        
+        sourceChunks.map(function(chunk){
+          console.log("chunk",chunk)
+        })
+
+        //sourceChunks = sourceChunks.concat(['#endif'])
+        source = sourceChunks.concat('\n')
+      }
+
+      _shaderSource.call(this, shader._|0, wrapShader(shader._type, source))
+      shader._source = source
+    }
+  }
+  //gl.shaderSource = shaderSource.bind(gl)
+  return gl
+
+  //gl.shaderSource()
+  //
+}
 
 
 function render(renderer, composers, camera, scene ){
-  composers.forEach(c=>c.render())
+  //composers.forEach(c=>c.render())
   //renderer.render(scene, camera)
+  let width = 640
+  let height = 480
+  let rtTexture = new THREE.WebGLRenderTarget(width, height, {
+    minFilter: THREE.LinearFilter,
+    magFilter: THREE.NearestFilter,
+    format: THREE.RGBAFormat
+  })
+
+  renderer.render(scene, camera, rtTexture, true)
+
   //composer.passes[composer.passes.length-1].uniforms[ 'tDiffuse2' ].value = composers[0].renderTarget2
   //composer.passes[composer.passes.length-1].uniforms[ 'tDiffuse3' ].value = composers[1].renderTarget2
 }
@@ -200,13 +281,13 @@ function setupRenderer(canvas, context, config){
     {
       antialias:false,  
       preserveDrawingBuffer: true,
-      width: 0,
-      height: 0,
+      //width: 0,
+      //height: 0,
       canvas,
       context
     })
   renderer.setClearColor( "#fff" )
-  //renderer.setPixelRatio( pixelRatio )
+  renderer.setPixelRatio( pixelRatio )
   Object.keys(config.renderer).map(function(key){
     //TODO add hasOwnProp check
     renderer[key] = config.renderer[key]
@@ -226,9 +307,15 @@ function getMainParams(){
 
 function view(){
   let config = presets
+  const params = {
+    width:640,
+    height:480,
+    devicePixelRatio:1
+  }
+
+  gl = monkeyPatchGl(gl)
 
   let renderer = null
-
   let composer = null
   let composers = []
   let outScene = null
@@ -240,13 +327,17 @@ function view(){
   scene.dynamicInjector = dynamicInjector
   scene.add( dynamicInjector )
 
-  const params = {
-    width:320,
-    height:240,
-    devicePixelRatio:1
-  }
 
   let camera   = makeCamera(config.cameras[0], params)
+
+  let geometry = new THREE.BoxGeometry(100,100,100)
+
+  let material = new THREE.ShaderMaterial();
+  material.vertexShader = 'void main() {\n  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n}';
+  material.fragmentShader = 'void main() {\n    gl_FragColor = vec4( 1.0, 0.0, 0.0, 1.0 );\n}';
+  material.uniforms = {}
+  let cube     = new THREE.Mesh(geometry, material)
+  scene.add(cube)
 
   //let grid        = new LabeledGrid(200, 200, 10, config.cameras[0].up) //needs CANVAS....
   let shadowPlane = new ShadowPlane(2000, 2000, null, config.cameras[0].up) 
@@ -262,6 +353,9 @@ function view(){
     
   setupScene(scene, sceneExtras, config)
   composers = setupPostProcess2(renderer, camera, scene, params)
+
+  //do context specific config
+  setupNodeSpecificStuff(renderer, camera, scene)
 
   ///do the actual rendering
   render(renderer, composers, camera, scene)
