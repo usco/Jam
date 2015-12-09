@@ -17,7 +17,7 @@
     "make-offline_simple": "babel src/components/webgl/view.js --out-file dist/jam-headless.js",
     "make-offline-rollup": "rollup src/components/webgl/view.js > dist/jam-headless.js",
     "make-offline-webpack": "webpack -p --config webpack.config.headless.js",
-    "make-offline": "browserify src/components/webgl/view.js -t babelify --outfile dist/jam-headless.js",
+    "make-offline": "browserify src/components/webgl/view.js -t babelify --outfile dist/jam-headless.js"
   },
   "author": "Mark 'kaosat-dev' Moissette",
   "license": "AGPL-3.0",
