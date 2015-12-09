@@ -65,22 +65,23 @@ var config= {
 };
 
 //console.log("production",production,"dev",dev)
+config.bail = true
+config.debug = false
+config.profile = false
+config.output.pathInfo = false
+config.output.publicPath = './dist/'//withouth this, issues with webworker paths
+
+//config.devtool = "#source-map";
+//config.output.filename = "[name].min.js"//"[name].[hash].min.js"
+//config.output.chunkFilename = '[id].js'
+config.plugins = config.plugins.concat([
+  new webpack.DefinePlugin({'process.env': {NODE_ENV: JSON.stringify('production') } })
+  //, new webpack.optimize.DedupePlugin()
+  , new webpack.NoErrorsPlugin()
+])
 
 if (production) {
-  config.bail = true
-  config.debug = false
-  config.profile = false
-  config.output.pathInfo = false
-  config.output.publicPath = './dist/'//withouth this, issues with webworker paths
-
-  //config.devtool = "#source-map";
-  //config.output.filename = "[name].min.js"//"[name].[hash].min.js"
-  //config.output.chunkFilename = '[id].js'
-  config.plugins = config.plugins.concat([
-    new webpack.DefinePlugin({'process.env': {NODE_ENV: JSON.stringify('production') } })
-    //, new webpack.optimize.DedupePlugin()
-    , new webpack.NoErrorsPlugin()
-  ])
+  
 }
 else{
 
