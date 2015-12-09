@@ -6,10 +6,8 @@ import fs from 'fs'
 global.Rx = Rx
 const stlParser = require("imports?Rx=rx!usco-stl-parser")
 const objParser = require("imports?Rx=rx!usco-obj-parser")
-
 //import * as stlParser from 'usco-stl-parser'
 //import * as objParser from 'usco-obj-parser'
-
 
 
 import {exists,getExtension,getNameAndExtension,isValidFile, isEmpty} from '../../utils/utils'
@@ -44,13 +42,27 @@ function toArrayBuffer(buffer) {
 
 /////////deal with command line args etc
 let args = process.argv.slice(2)
-console.log("arguments", args)
 
 
 if(args.length>0){
 
+  
+  //more advanced params handling , for later
+  /*
+    console.log("params",args)
+    let params = args.reduce(function(cur,combo){
+    let [name,val]= cur.split("=")
+    combo[name] = val
+  },{})*/
+
   const uri = args[0]
+  const [width,height] = args[1].split("x").map(e=>parseInt(e))
+
   const {name,ext} = getNameAndExtension(uri)
+  const resolution = {width,height}
+  const outputPath = `${uri}.png`
+
+  console.log("Running renderer with params", uri,resolution,outputPath)
 
   let parsers = {}
   parsers["stl"] = stlParser.default
@@ -65,7 +77,7 @@ if(args.length>0){
     .filter(e=>e.progress === undefined)//seperate out progress data
     .map(postProcessParsedData)
     .forEach(mesh => {
-      view({mesh,uri:`${uri}.png`})
+      view({mesh,uri:outputPath,resolution})
     })
     
   /*let uris = args

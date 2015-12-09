@@ -134,6 +134,10 @@ function setupPostProcess(renderer, camera, scene, params){
 function makeOfflineCanvas(){
   // mock object, not used in our test case, might be problematic for some workflow
   let canvas = new Object()
+  canvas.addEventListener = function(e,b){
+    //only for contextLost
+    //console.log("canvas addEventListener",e,b)
+  }
   return canvas
 }
 
@@ -170,9 +174,14 @@ function handleResize (sizeInfos){
   }
 }
 
-function setupWindowSpecificStuff(container, renderer){
+function setupWindowSpecific(container, renderer, camera){
   console.log("initializing into container",container)
   container.appendChild( renderer.domElement )
+
+  //controls are only needed for live aka browser mode
+  let controls = makeControls(config.controls[0])
+  let transformControls = new TransformControls( camera )
+  //controls, transformControls
 
   //prevents zooming the 3d view from scrolling the window
   preventScroll(container)
@@ -183,18 +192,16 @@ function setupWindowSpecificStuff(container, renderer){
   controls.addObject( camera )
 
   //let pixelRatio = window.devicePixelRatio || 1
+  return {
+    updateables : [controls,transformControls]
+  }
 }
 
-function setupNodeSpecificStuff(renderer, camera, scene){
+function setupNodeSpecific(renderer, camera, scene){
   camera.lookAt(scene.position)
-
-  
 }
 
 function monkeyPatchGl(gl){
-  console.log("shaderSource")//,gl.shaderSource)
-
-
 
   function checkObject(object) {
     return typeof object === 'object' ||
@@ -309,20 +316,33 @@ function setupRenderer(canvas, context, config){
   return renderer
 }
 
-function getMainParams(){
-  //window.innerWidth, window.innerHeight
-  //window.devicePixelRatio
+function getDefaultsWindowSpecific(){
+  const params = {
+    width : window.innerWidth
+    ,height: window.innerHeight
+    ,pixelRatio:window.devicePixelRatio || 1
+  }
+  return params
+}
+
+function makeDefaults(data){
+  const params = {
+    width:resolution.width
+    ,height:resolution.height
+    ,devicePixelRatio:1
+    ,renderToScreen:(typeof window !== 'undefined')//FALSE if you want server side renders
+  }
 }
 
 //////////////////////////////////////////////////
 
 export default function view(data){
-  let {mesh,uri} = data
+  let {mesh,uri,resolution} = data
 
   let config = presets
   const params = {
-    width:640
-    ,height:480
+    width:resolution.width
+    ,height:resolution.height
     ,devicePixelRatio:1
     ,renderToScreen:(typeof window !== 'undefined')//FALSE if you want server side renders
   }
@@ -336,8 +356,8 @@ export default function view(data){
   let maskScene = null
 
 
-  let scene = new THREE.Scene()
-  let dynamicInjector = new THREE.Object3D()//all dynamic mapped objects reside here
+  let scene             = new THREE.Scene()
+  let dynamicInjector   = new THREE.Object3D()//all dynamic mapped objects reside here
   scene.dynamicInjector = dynamicInjector
   scene.add( dynamicInjector )
 
@@ -345,12 +365,7 @@ export default function view(data){
    //let grid        = new LabeledGrid(200, 200, 10, config.cameras[0].up) //needs CANVAS....
   let shadowPlane = new ShadowPlane(2000, 2000, null, config.cameras[0].up) 
 
-  let geometry = new THREE.BoxGeometry(100,100,100)
-
-  let material = new THREE.ShaderMaterial();
-  material.vertexShader = 'void main() {\n  gl_Position = projectionMatrix * modelViewMatrix * vec4( position, 1.0 );\n}';
-  material.fragmentShader = 'void main() {\n    gl_FragColor = vec4( 1.0, 0.0, 0.0, 1.0 );\n}';
-  material.uniforms = {}
+  let material = new THREE.ShaderMaterial()
 
   //material = new THREE.MeshBasicMaterial( { color: 0xf0ff00 } )
   //material = new THREE.MeshPhongMaterial( { color: 0x17a9f5, specular: 0xffffff, shininess: 5, shading: THREE.FlatShading} )//NOT WORKING => black shape
@@ -359,28 +374,20 @@ export default function view(data){
   material = new THREE.MeshNormalMaterial( { shading: THREE.SmoothShading } ) //THIS WORKS
   //material = new THREE.MeshBasicMaterial( { color: 0xffaa00, wireframe: true } )//THIS WORKS
   //material = new THREE.MeshDepthMaterial() //NOT WORKING => all white
-  let cube     = new THREE.Mesh(geometry, material)
-  //scene.add(cube)
+  
   //hack
   mesh.material = material
   scene.add(mesh)
 
-
-  //controls are only needed for live aka browser mode
-  //let controls = makeControls(config.controls[0])
-  //let transformControls = new TransformControls( camera )
-  //controls, transformControls
-
   const sceneExtras = [camera, shadowPlane]
+
   let canvas = makeCanvas()
   renderer   = setupRenderer(canvas, gl, config)
-    
   scene      = setupScene(scene, sceneExtras, config)
-
   composers  = setupPostProcess2(renderer, camera, scene, params)
 
   //do context specific config
-  setupNodeSpecificStuff(renderer, camera, scene)
+  setupNodeSpecific(renderer, camera, scene)
 
   ///do the actual rendering
   render(renderer, composers, camera, scene)
