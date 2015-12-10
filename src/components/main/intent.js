@@ -189,7 +189,7 @@ export default function intent (drivers) {
     ,annotationsActions
     ,bomActions
 
-    ,utilityActions:apiActions
+    ,apiActions
 
     ,progress
 
