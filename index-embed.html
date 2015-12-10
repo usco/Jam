@@ -24,7 +24,12 @@
     <script>
       function receiveMessage(event)
       {
-        console.log("main window recieved message",event)
+        const data = [event.data]
+        data
+          .filter(data=>data.source === "jam")
+          .map(function(data){
+            console.log("main window recieved message from Jam", data ,data.request)
+          })
       }
 
       window.addEventListener("message", receiveMessage, false)
@@ -49,15 +54,21 @@
       }, 10000)
 
 
-      setTimeout(function() {
-        embeded.postMessage({captureScreen:[[240, 160],[320,200],[640,480]]},"*")
-      }, 7000)
+     
 
       setTimeout(function() {
         //to get transform data
         embeded.postMessage({"getTransforms":null},"*")
       }, 7000)
 
+      setTimeout(function() {
+        //to get transform data
+        embeded.postMessage({"getStatus":null},"*")
+      }, 8000)
+
+      setTimeout(function() {
+        embeded.postMessage({captureScreen:null},"*")
+      }, 9000)
 
 
     </script>
