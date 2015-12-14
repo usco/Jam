@@ -153,17 +153,16 @@ function fetch(drivers, sourceNames=["http","desktop"]){
 
   const fetched$ = merge(...chosenDrivers)
     .filter(res$ => res$.request.type === 'resource')
-    .do(e=>console.log("progress",e))
-    .retry(3)
-    .catch(function(e){
-      console.log("ouch , problem fetching data ",e)
-      return Rx.Observable.empty()
-    })
-    .flatMap(function(e){
-      const request  = of( e.request )
-      const response = e.pluck("response")
-      const progress = e.pluck("progress")
-      return combineLatestObj({response,request,progress})
+    .flatMap(data => {
+      const responseWrapper$ = data.catch(e=>{
+        console.log("caught error in fetching data",e)
+        return Rx.Observable.empty()
+      })
+      const request$  = of(data.request)
+      const response$ = responseWrapper$.pluck("response")
+      const progress$ = responseWrapper$.pluck("progress")
+
+      return combineLatestObj({response$, request$, progress$})//.materialize()//FIXME: still do not get this one
     })
     .share()
 
