@@ -71,7 +71,8 @@ var config= {
     loaders: [
       { test: /\.json$/,   loader: "json-loader" },//?optional[]=runtime&optional=es6.blockScoping
       //{ test: /-worker*\.js$/, loader: "worker-loader",include : pathsToInclude},//if any module does "require(XXX-worker)" it converts to a web worker
-      { test: /\.js?$/, loaders: ['react-hot', 'babel'],include : pathsToInclude,exclude: /(node_modules|bower_components)/},
+      //'react-hot', 
+      { test: /\.js?$/, loaders: ['babel'],include : pathsToInclude,exclude: /(node_modules|bower_components)/},
       { test: /\.css$/, loader: "style-loader!css-loader" }
     ],
     noParse: /\.min\.js/
@@ -138,8 +139,8 @@ if (production) {
 }
 else{
   config.entry = config.entry.concat([
-    'webpack-dev-server/client?',//http://'+host+":"+port,
-    'webpack/hot/only-dev-server',
+    //'webpack-dev-server/client?',//http://'+host+":"+port,
+    //'webpack/hot/only-dev-server',
   ])
   config.plugins = config.plugins.concat([
     new webpack.HotModuleReplacementPlugin(),
