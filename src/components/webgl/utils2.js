@@ -45,17 +45,17 @@ export function meshFrom(event){
 //yup, like factories ! yikes !
 
 /*create a camera instance from the provided data*/
-export function makeCamera( cameraData ){
+export function makeCamera( cameraData, params ){
   //let cameraData = cameraData//TODO: merge with defaults using object.assign
   const DEFAULTS ={
-    width:window.innerWidth,
-    height:window.innerHeight,
+    width:320,
+    height:240,
     lens:{
           fov:45,
           near:0.1,
           far:20000,
     },
-    aspect: window.innerWidth/window.innerHeight,
+    aspect: 320/240,
     up:[0,0,1],
     pos:[0,0,0]
   }
