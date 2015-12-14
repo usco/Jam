@@ -23,6 +23,25 @@ export default function postMessageDriver(outgoing$){
     .share()
     //.do(e=>console.log("postMessage",e))//why does this fire multiple time ?
 
+  incoming$
+    .pluck("data")
+    .do(e=>console.log("incoming from postMessage",e))
+    .filter(p=>p.hasOwnProperty("dataTest"))
+    .forEach(e=>{
+      
+
+      //read the data :
+      let input = e.dataTest
+      let reader = new FileReader()
+      reader.addEventListener("loadend", function(data) {
+        console.log("original data was",reader.result)
+         // reader.result contains the contents of blob as a typed array
+      })
+      reader.readAsText(input)
+    })
+
+   
+
   return incoming$//.filter( isOriginValid.bind(null,validOrigins) )
 
 } 

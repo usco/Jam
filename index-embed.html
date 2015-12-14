@@ -31,7 +31,7 @@
 
 
       var embeded = document.getElementById("embeded").contentWindow
-      setTimeout(function() {
+      /*setTimeout(function() {
         embeded.postMessage("hey yo","*")
         embeded.postMessage({modelUrl:"http://localhost:3000/demo-data/UM2CableChain_BedEnd.STL"},"*")
         //embeded.postMessage({designUrl:"http://localhost:3000/xxx"},"*")
@@ -56,7 +56,19 @@
       setTimeout(function() {
         //to get transform data
         embeded.postMessage({"getTransforms":null},"*")
-      }, 7000)
+      }, 7000)*/
+
+      //test
+      setTimeout(function() {
+        //send html5 FILE object 
+        console.log("send html5 FILE data")
+
+        var fileParts = ['<a id="a"><b id="b">hey!</b></a>']
+        var data = new Blob(fileParts, {type : 'text/html'})
+
+        //var dataTest = new window.File()
+        embeded.postMessage({dataTest:data},"*")
+      }, 1000)
 
 
 
