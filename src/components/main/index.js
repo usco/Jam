@@ -1,6 +1,7 @@
 require("../../app.css")
 import Rx from 'rx'
-const just = Rx.Observable.just
+const merge = Rx.Observable.merge
+const of = Rx.Observable.of
 
 //views & wrappers
 import Settings from '../../components/widgets/Settings'
@@ -9,11 +10,12 @@ import Help from '../../components/widgets/Help'
 
 import {EntityInfosWrapper,BOMWrapper,GLWrapper,CommentsWrapper,progressBarWrapper} from '../../components/main/wrappers'
 
-
 import intent from './intent'
 import model  from './model'
 import view   from './view'
 
+
+import api from '../../api'
 
 export default function main(drivers) {
   const {DOM} = drivers
@@ -35,27 +37,20 @@ export default function main(drivers) {
   //outputs 
   const vtree$  = view(state$, settingsC.DOM, fsToggler.DOM, bom.DOM,gl.DOM
     , entityInfos.DOM, comments.DOM, progressBar.DOM, help.DOM)
-  const events$ = just( {gl:gl.events, entityInfos:entityInfos.events
+  const events$ = of( {gl:gl.events, entityInfos:entityInfos.events
     , bom:bom.events, comments:comments.events} )
 
   const http$ = actions.requests$
-  const postMsg$  = actions.utilityActions
-    .getTransforms$
-    .withLatestFrom(state$.pluck("transforms"),function(request,transforms){
-      //console.log("getTransforms",request,transforms)
-      const transformsList = Object.keys(transforms).reduce(function(acc,key){
-        //console.log("acc,cur",acc,key)
-        let trs = Object.assign({},transforms[key],{id:key})
-        let out = acc.concat([trs])
-        return out
-      },[])
-      return {request,response:transformsList}
-    })
-    .map(data=>{
-      const {request,response} = data
-      return {target: request.source, message: response, targetOrigin:request.origin} 
-    })
-    //.do(e=>console.log("transforms",e))
+
+
+  function postMsg(api$){
+     return api$.map(data=>{
+        const {request, response, requestName} = data
+        return {target: request.source, message: response, targetOrigin:request.origin, requestName } 
+      })
+  }
+
+  const postMsg$ = postMsg( api( actions,state$ ) )
 
   //output to localStorage
   //in this case, settings

@@ -55,10 +55,6 @@ import vignetteShader from './deps/post-process/vignetteShader'
 import EdgeShader3 from './deps/post-process/EdgeShader3'
 import AdditiveBlendShader from './deps/post-process/AdditiveBlendShader'
 
-
-import {domElementToImage,aspectResize} from '../../utils/imgUtils'
-
-
 function setupPostProcess(camera, renderer, scene){
   //console.log("setupPostProcess")
     ////////post processing
@@ -455,16 +451,7 @@ function GLView({drivers, props$}){
   )
 
   //screencapture test
-  /*setTimeout(function() {
-    console.log("screencapture test")
-    function callBack(img){
-      console.log("img",img)
-    }
-    domElementToImage(callBack,renderer.domElement)
-
-  }, 5000)*/
-
-  postMessage
+  /*postMessage
     .filter(e=>e.hasOwnProperty("captureScreen"))
     .flatMap(e=>{
       let img = domElementToImage(renderer.domElement)
@@ -483,15 +470,12 @@ function GLView({drivers, props$}){
         })
       
       let results$ = Rx.Observable.forkJoin(images$)
-        //.forEach()
-
 
       return results$
     })
     .forEach(e=>{
       e.map(img=>console.log(img))
-
-    })
+    })*/
 
 
   return {

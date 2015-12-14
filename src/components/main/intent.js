@@ -48,39 +48,41 @@ export default function intent (drivers) {
 
 
   function apiIntents(drivers){
-    /*drivers
-      .postMessage
-      .filter(e=>e.)*/
+    const postMessage = drivers.postMessage
+      .filter(exists)
 
-    const takeScreenShot$ = Rx.Observable.just({res:[200,300]}).delay(6000)
-      takeScreenShot$
-        .forEach(e=>console.log("takeScreenShot",e))
+    const captureScreen$ = postMessage 
+      .filter(p=>p.hasOwnProperty("data"))
+      .filter(p=>p.data.hasOwnProperty("captureScreen"))
+      .withLatestFrom(drivers.DOM.select(".glView .container canvas").observable,function(request,element){
+        element = element[0]
+        return {request,element}
+      })
 
-    return combineLatestObj({takeScreenShot$})
+    //this one might need refactoring
+    const getTransforms$ = postMessage
+      .filter(p=>p.hasOwnProperty("data"))
+      .filter(p=>p.data.hasOwnProperty("getTransforms"))
+
+    const getStatus$ = postMessage
+      .filter(p=>p.hasOwnProperty("data"))
+      .filter(p=>p.data.hasOwnProperty("getStatus"))
+
+    return {
+      captureScreen$
+      ,getTransforms$
+      ,getStatus$
+    }
   }
   
   //const selectionActions = selectionsIntents({DOM,events}, typesInstancesRegistry$)
 
   const apiActions  = apiIntents(drivers)
 
-
   //experimental test to work around asset manager
   meshSources$
     .forEach(e=>console.log("meshSources",e))
 
-  /*postMessages$
-    .forEach(e=>console.log("input postMessages",e))*/
-
-  //this one is VERY specific , not sure it should be kept here
-  const getTransforms$ = 
-    postMessage
-      .filter(exists)
-      .filter(p=>p.hasOwnProperty("data"))
-      .filter(p=>p.data.hasOwnProperty("getTransforms"))
-
-  const utilityActions = {
-    getTransforms$
-  }
 
   //OUTbound
   let _requests = requests({meshSources$,srcSources$})
@@ -187,7 +189,7 @@ export default function intent (drivers) {
     ,annotationsActions
     ,bomActions
 
-    ,utilityActions
+    ,apiActions
 
     ,progress
 
