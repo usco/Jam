@@ -319,7 +319,7 @@ export default function model(props$, actions, drivers){
 
   //////other data
   const appData$ = just({
-    version:'0.2.3'
+    version:'0.3.0'
   })
 
 
