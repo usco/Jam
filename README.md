@@ -1,6 +1,6 @@
 ## Jam!
 
-[![GitHub version](https://badge.fury.io/gh/usco%2Fjam.svg)](https://badge.fury.io/gh/usco%2Fjam)
+[![GitHub version](https://badge.fury.io/gh/usco%2FJam.svg)](https://badge.fury.io/gh/usco%2Fjam)
 
 <img src="https://raw.githubusercontent.com/usco/Jam/master/screenshot.png" /> 
 
