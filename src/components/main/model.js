@@ -318,9 +318,9 @@ export default function model(props$, actions, drivers){
  
 
   //////other data
-  const appData$ = just({
+  const appData$ = drivers.appMeta/*just({
     version:'0.3.0'
-  })
+  })*/
 
 
   //combine all the above 

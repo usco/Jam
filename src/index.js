@@ -11,6 +11,7 @@ import browserCapsDriver  from './core/drivers/browserCapabilities'
 import eventDriver        from './core/drivers/eventDriver'
 import makeHttpDriver     from './core/drivers/simpleHttpDriver'
 import makeDesktopDriver  from './core/drivers/desktopStoreDriver'
+import appMetaDataDriver  from './core/drivers/appMetaDataDriver'
 
 
 //////////setup drivers
@@ -30,7 +31,9 @@ let drivers = {
    ,addressbar
    ,browserCaps
    ,events:eventDriver
+   ,appMeta:appMetaDataDriver
 
+   //storage etc
    ,http:httpDriver
    ,desktop:desktopStoreDriver
 }
