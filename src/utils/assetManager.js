@@ -19,7 +19,6 @@ import assign from 'fast.js/object/assign'//faster object.assign
 import * as stlParser from 'usco-stl-parser'
 import * as objParser from 'usco-obj-parser'
 
-console.log("stlParser",stlParser)
 
 function dataSource(data){
   if(isValidFile(data)){
@@ -177,7 +176,6 @@ function parse(fetched$){
     .shareReplay(1)
 
   const parsed$ = parseBase$
-    //.do(e=>console.log("parsedA",e))
     .map(function(data){
       const uri = data.request.uri
       const {name,ext} = getNameAndExtension(uri)
@@ -186,7 +184,7 @@ function parse(fetched$){
     //actual parsing part
     .filter(data=>parsers[data.ext]!==undefined)//does parser exist?
     .flatMap(function({uri, data, ext, name}){
-      const parseOptions={useWorker:true}
+      const parseOptions = {useWorker:true}
 
       const parse    = parsers[ext]
       const parsedObs$ = parse(data, parseOptions)
@@ -202,9 +200,6 @@ function parse(fetched$){
         .pluck("progress")
         .distinctUntilChanged()
         .startWith(0)
-
-      progress$
-        .forEach(e=>console.log("parse progress",e))
 
       const meta$    = of({uri, ext, name})
 
@@ -264,9 +259,6 @@ export function resources(drivers){
   const fetched$ = fetch(drivers)
   const parsed$  = parse(fetched$)
   const combinedProgress$ = computeCombinedProgress( fetched$, parsed$ )
-
-  parsed$
-    .forEach(e=>console.log("parsed",e))
 
   return {
     combinedProgress$
