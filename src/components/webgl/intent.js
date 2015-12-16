@@ -71,6 +71,11 @@ export default function intent(drivers, data){
   DOM.select('canvas').events('contextmenu').subscribe( e => preventDefault(e) )
 
 
+  const zoomToFit$ = DOM.select('#zoomToFit').events("click")
+  
+  zoomToFit$.forEach(e=>console.log("zoomToFit"))
+
+
   let containerResizes$ = windowResizes$
     .map(function(){
       let input = document.querySelector('.container')//canvas
@@ -150,5 +155,7 @@ export default function intent(drivers, data){
     ,filteredInteractions$
 
     ,selectionsTransforms$
+
+    ,zoomToFit$
   }
 }

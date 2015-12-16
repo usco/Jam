@@ -27,7 +27,7 @@ import OrbitControls from './deps/OrbitControls'
 import CombinedCamera from './deps/CombinedCamera'
 import TransformControls from './transforms/TransformControls'
 
-import {planes,grids,annotations,objectEffects,CamViewControls} from 'glView-helpers'
+import {planes,grids,annotations,objectEffects,CamViewControls,} from 'glView-helpers'
 
 import LabeledGrid from 'glView-helpers/lib/grids/LabeledGrid'
 
@@ -36,6 +36,7 @@ import LabeledGrid from 'glView-helpers/lib/grids/LabeledGrid'
 let ShadowPlane    = planes.ShadowPlane
 //let annotations    = annotations
 let ZoomInOnObject = objectEffects.ZoomInOnObject
+let zoomToFit      = objectEffects.zoomToFit
 
 import {makeCamera, makeControls, makeLight, renderMeta
 } from './utils2'
@@ -226,6 +227,13 @@ function GLView({drivers, props$}){
 
   //react to actions
   actions.zoomInOnPoint$.forEach( (oAndP) => zoomInOnObject.execute( oAndP.object, {position:oAndP.point} ) )
+
+  actions.zoomToFit$.forEach(function(){
+    console.log("zoomToFit")
+    const targetNode = dynamicInjector
+    zoomToFit(targetNode, camera, new THREE.Vector3() )
+  })
+
   let windowResizes$ = windowResizes(1) //get from intents/interactions ?
 
 

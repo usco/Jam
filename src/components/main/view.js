@@ -256,6 +256,10 @@ function renderEditorMode(state, uiElements){
       {entityInfos}
 
       {makeTopToolBar(state)}
+
+      <div id="test">
+        <button id="zoomToFit">zoomToFit</button>
+      </div>
     </div>
 }
 
