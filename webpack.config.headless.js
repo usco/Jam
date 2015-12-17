@@ -5,12 +5,9 @@ https://github.com/shanewilson/react-webpack-example/blob/master/webpack.config.
 var fs      = require('fs');
 var path    = require('path');
 var webpack = require('webpack');
-var CompressionPlugin = require("compression-webpack-plugin");
 
 var srcPath = "src"
 
-var production = process.env.NODE_ENV == 'production';
-var dev        = process.env.NODE_ENV == 'dev';
 
 //add any extra folders we want to apply loaders to 
 var pathsToInclude = path.join(__dirname, srcPath)
@@ -27,7 +24,7 @@ fs.readdirSync('node_modules')
 
 
 var config= {
-   devtool: 'sourcemap',
+  //devtool: 'sourcemap',
   target: 'node',
   entry: [
     './'+srcPath+'/components/webgl/rendererCLI.js'
@@ -75,19 +72,9 @@ config.output.publicPath = './dist/'//withouth this, issues with webworker paths
 //config.output.filename = "[name].min.js"//"[name].[hash].min.js"
 //config.output.chunkFilename = '[id].js'
 config.plugins = config.plugins.concat([
-  new webpack.DefinePlugin({'process.env': {NODE_ENV: JSON.stringify('production') } })
-  //, new webpack.optimize.DedupePlugin()
-  , new webpack.NoErrorsPlugin()
+  //new webpack.DefinePlugin({'process.env': {NODE_ENV: JSON.stringify('production') } })
+  //, new webpack.NoErrorsPlugin()
 ])
-
-if (production) {
-  
-}
-else{
-
-}
-
-
 
 
 
