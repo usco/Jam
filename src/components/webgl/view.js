@@ -19,6 +19,7 @@ import AdditiveBlendShader from './deps/post-process/AdditiveBlendShader'
 
 import {planes,grids,annotations,objectEffects,CamViewControls} from 'glView-helpers'
 import LabeledGrid from 'glView-helpers/lib/grids/LabeledGrid'
+let zoomToFit      = objectEffects.zoomToFit
 
 import bufferToPng from './bufferToPng'
 
@@ -377,7 +378,7 @@ export default function view(data){
   
   //hack
   mesh.material = material
-  scene.add(mesh)
+  dynamicInjector.add(mesh)
 
   const sceneExtras = [camera, shadowPlane]
 
@@ -386,8 +387,12 @@ export default function view(data){
   scene      = setupScene(scene, sceneExtras, config)
   composers  = setupPostProcess2(renderer, camera, scene, params)
 
+
   //do context specific config
   setupNodeSpecific(renderer, camera, scene)
+  //this is too hard coded
+  const targetNode = dynamicInjector
+  zoomToFit(targetNode, camera, new THREE.Vector3() )
 
   ///do the actual rendering
   render(renderer, composers, camera, scene)
