@@ -3765,7 +3765,8 @@
 	        var b = inBuf[4 * k + 2];
 	        var a = inBuf[4 * k + 3];
 
-	        var m = (height - j + 1) * width + i;
+	        //let m = (height - j + 1) * width + i
+	        var m = (height - j) * width + i;
 	        png.data[4 * m] = r;
 	        png.data[4 * m + 1] = g;
 	        png.data[4 * m + 2] = b;
