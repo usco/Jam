@@ -1,5 +1,5 @@
 import THREE from 'three'
-
+import assign from 'fast.js/object/assign'//faster object.assign
 /**
  * @author kaosat-dev
  * @author qiao / https://github.com/qiao
@@ -61,10 +61,10 @@ var OrbitControls = function ( object, domElement, upVector ) {
     var origScale = scale
 
     //to add control of multiple cameras
-    this.addObject = function( object, options){
+    this.addObject = function( object, options={}){
       if(this.objects.indexOf(object) != -1) return
       const DEFAULTS = {userZoom:true, userPan:true, userRotate:true} 
-      options = Object.assign({}, DEFAULTS, options)
+      options = assign({}, DEFAULTS, options)
       
       this.objects.push( object )
       this.objectOptions.push(options)

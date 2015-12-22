@@ -257,9 +257,6 @@ function renderEditorMode(state, uiElements){
 
       {makeTopToolBar(state)}
 
-      <div id="test">
-        <button id="zoomToFit">zoomToFit</button>
-      </div>
     </div>
 }
 
@@ -283,6 +280,4 @@ export default function view(state$, settings$, fsToggler$, bom$
     .map(uiElements => {
       return renderUiElements(uiElements)
     })
-
-    
 }

@@ -4,7 +4,7 @@ import CombinedCamera from './deps/CombinedCamera'
 
 import {take} from 'ramda'
 import {pick, getCoordsFromPosSizeRect, findSelectionRoot} from './deps/Selector'
-
+import assign from 'fast.js/object/assign'//faster object.assign
 
 export function positionFromCoords(coords){return{position:{x:coords.x,y:coords.y},event:coords}}
 export function targetObject(event){ return event.target.object}
@@ -59,7 +59,7 @@ export function makeCamera( cameraData, params ){
     up:[0,0,1],
     pos:[0,0,0]
   }
-  cameraData = Object.assign({}, DEFAULTS, cameraData)
+  cameraData = assign({}, DEFAULTS, cameraData)
 
 
   let camera = new CombinedCamera(
@@ -103,7 +103,7 @@ export function makeLight( lightData ){
     intensity:1,
     pos: [0,0,0]
   }
-  lightData = Object.assign({}, DEFAULTS, lightData)
+  lightData = assign({}, DEFAULTS, lightData)
 
   switch(lightData.type){
     case "light":
@@ -139,7 +139,7 @@ export function makeLight( lightData ){
         shadowDarkness:0.3,
         shadowCameraVisible:false
       }
-      lightData = Object.assign({}, dirLightDefaults, lightData)
+      lightData = assign({}, dirLightDefaults, lightData)
       light = new THREE.DirectionalLight( lightData.color, lightData.intensity )
       for(var key in lightData) {
         if(light.hasOwnProperty(key)) {

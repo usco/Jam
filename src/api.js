@@ -1,7 +1,7 @@
 import Rx from 'rx'
 const merge = Rx.Observable.merge
 const of = Rx.Observable.of
-
+import assign from 'fast.js/object/assign'//faster object.assign
 import {domElementToImage} from './utils/imgUtils'
 
 
@@ -12,7 +12,7 @@ export default function api(actions, state$)
     .withLatestFrom(state$.pluck("transforms"),function(request,transforms){
       //console.log("getTransforms",request,transforms)
       const transformsList = Object.keys(transforms).reduce(function(acc,key){
-        let trs = Object.assign({},transforms[key],{id:key})
+        let trs = assign({},transforms[key],{id:key})
         let out = acc.concat([trs])
         return out
       },[])

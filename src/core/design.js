@@ -1,3 +1,4 @@
+import assign from 'fast.js/object/assign'//faster object.assign
 import logger from 'log-minim'
 let log = logger("design")
 log.setLevel("error")
@@ -29,7 +30,7 @@ function makeModification$(intent){
   let newDesign$ = intent.newDesign$ 
     .map((data) => (designData) => {
 
-      let design = Object.assign({}, designData, data, defaults)
+      let design = assign({}, defaults, designData, data)
       return design
     })
 
@@ -38,7 +39,7 @@ function makeModification$(intent){
     .map((data) => (designData) => {
       log.info("setting design data", data)
 
-      let design = Object.assign({}, designData, data)
+      let design = assign({}, designData, data)
 
       return design
     })
@@ -54,7 +55,7 @@ function makeModification$(intent){
         output = flag
       }
 
-      let design = Object.assign({}, designData)
+      let design = assign({}, designData)
       design._persistent = output
 
       return design

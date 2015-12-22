@@ -7,6 +7,7 @@ const merge = Rx.Observable.merge
 const combineLatest = Rx.Observable.combineLatest
 const just  = Rx.Observable.just
 
+
 import {combineLatestObj, preventDefault,isTextNotEmpty,formatData,exists} from '../../../utils/obsUtils'
 import {mergeData} from '../../../utils/modelUtils'
 
@@ -58,7 +59,7 @@ function refineActions(props$, actions){
 
   const changeTransforms$ = actions.changeTransforms$
     .withLatestFrom(transforms$,function(changed,transforms){
-      //let bla = Object.assign({},transforms) // this does not create a new instance huh WHY???? 
+      //let bla = assign({},transforms) // this does not create a new instance huh WHY???? 
       //let output = mergeData(transforms) //not working either ????
       let output = JSON.parse(JSON.stringify(transforms))
       

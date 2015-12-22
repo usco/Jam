@@ -1,4 +1,5 @@
 import Rx from 'rx'
+import assign from 'fast.js/object/assign'
 //let XMLHttpRequest = require("xhr2").XMLHttpRequest
 
 //TODO : merge this with existing XHR-store
@@ -11,7 +12,7 @@ export function createResponse$(options){
     ,responseType:undefined
     ,timeout:undefined
   }
-  options = Object.assign(options,defaults)
+  options = assign({},defaults, options)
   
   let obs = new Rx.Subject()
 

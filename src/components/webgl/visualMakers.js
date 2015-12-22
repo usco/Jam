@@ -1,8 +1,10 @@
 import {annotations} from 'glView-helpers'
 //const annotations = helpers.annotations
-
 import THREE from 'three'
+import assign from 'fast.js/object/assign'//faster object.assign
+
 import {mergeData} from '../../utils/modelUtils'
+
 
 import {find,propEq} from 'ramda'
 
@@ -134,7 +136,7 @@ export function makeDiameterVisual(core, meshes){
          diameter,
          orientation:normal
       }
-    params = Object.assign(params,annotStyle)
+    params = assign(params,annotStyle)
 
     return new annotations.DiameterVisual(params)
   }
@@ -169,7 +171,7 @@ export function makeAngleVisual(core, meshes){
 
          ,angle
       }
-    params = Object.assign(params,annotStyle)
+    params = assign(params,annotStyle)
 
     return new annotations.AngleVisual(params)
   }
