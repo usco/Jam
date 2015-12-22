@@ -15,7 +15,7 @@ export default function view (state$) {
       , fieldNames, sortFieldName, sortablesDirection, editableFields, toggled}){
 
       //entries = entries.asMutable()//FIXME: not sure
-      console.log( "selectedEntries in BOM",selectedEntries)
+      //console.log( "selectedEntries in BOM",selectedEntries)
 
       let direction = sortablesDirection
       //generate headers

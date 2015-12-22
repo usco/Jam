@@ -278,7 +278,6 @@ function GLView({drivers, props$}){
 
   function configure(container){
     //log.debug("initializing into container", container)
-    console.log("initializing into container",container)
 
     if(!Detector.webgl){
       //TODO: handle lacking webgl
@@ -326,7 +325,6 @@ function GLView({drivers, props$}){
   //side effect ?
   function handleResize (sizeInfos){
     //log.debug("setting glView size",sizeInfos)
-    console.log("setting glView size",sizeInfos)
     let {width,height,aspect} = sizeInfos
   
     if(width >0 && height >0 && camera && renderer){
@@ -500,7 +498,7 @@ function GLView({drivers, props$}){
 }
 
 function GLWidgeHelper(configureFn, configCallback) {
-  console.log("creating GLWidgeHelper")
+  //console.log("creating GLWidgeHelper")
   this.type = 'Widget'
   this.configureFn = configureFn
   this.configCallback = configCallback
@@ -511,7 +509,7 @@ GLWidgeHelper.prototype.setup = function(){
 }
 
 GLWidgeHelper.prototype.init = function () {
-  console.log("init GLWidgeHelper",this.elem)
+  //console.log("init GLWidgeHelper",this.elem)
   //if(!this.elem)//in weird cases, this gets called for SOME ?? reason
   //{
     let elem = document.createElement('div')
@@ -524,7 +522,7 @@ GLWidgeHelper.prototype.init = function () {
 }
 
 GLWidgeHelper.prototype.update = function (prev, elem) {
-  console.log("update GLWidgeHelper" )
+  //console.log("update GLWidgeHelper" )
   this.elem = this.elem || prev.elem
 }
 

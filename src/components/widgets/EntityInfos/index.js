@@ -79,9 +79,9 @@ function EntityInfos({DOM, props$}, name = '') {
   const {changeCore$, changeTransforms$} = refineActions( props$, intent(DOM) )
 
 
-  const colorPicker = colorPickerWrapper(state$, DOM)
+  //const colorPicker = colorPickerWrapper(state$, DOM)
 
-  const vtree$ = view(state$, colorPicker.DOM)
+  const vtree$ = view(state$)//, colorPicker.DOM)
   
   return {
     DOM: vtree$,

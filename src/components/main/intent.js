@@ -79,11 +79,7 @@ export default function intent (drivers) {
 
   const apiActions  = apiIntents(drivers)
 
-  //experimental test to work around asset manager
-  meshSources$
-    .forEach(e=>console.log("meshSources",e))
-
-
+  //experimental , new asset manager
   //OUTbound
   let _requests = requests({meshSources$,srcSources$})
   let requests$ = _requests.requests.http$
@@ -174,6 +170,9 @@ export default function intent (drivers) {
   reset2$.withLatestFrom(foo$,function(e,f){
     console.log("reset")
   }).forEach(e=>e)*/
+
+
+ 
 
   return {
     dnd$

@@ -7,7 +7,6 @@ function addExtraData(actions,props$){
 
   //helper function, tor return uids (type/instance)
   function getIds(entity){
-    console.log("getIds")
     if(entity){
       return {typeUid:entity.typeUid, id:entity.id}
     }
