@@ -12,8 +12,7 @@ export function createResponse$(options){
     ,timeout:undefined
   }
   options = Object.assign(options,defaults)
-  console.log("createResponse")
-
+  
   let obs = new Rx.Subject()
 
   let request = new XMLHttpRequest()
