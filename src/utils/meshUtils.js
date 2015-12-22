@@ -60,3 +60,13 @@ export function geometryFromBuffers({positions,normals,indices,colors}){
 
   return geometry
 }
+
+
+//import Hashes from 'jshashes'
+export function meshTohash(mesh){
+  //let SHA512 = new Hashes.SHA512
+  //geometry.vertices
+  //for each mesh , compute /update hash based on vertices
+  const modelHash = hash.hex()
+  return modelHash
+}
