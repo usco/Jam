@@ -1,6 +1,6 @@
 {
   "name": "jam",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "description": "jam! experimental version",
   "main": "index.js",
   "scripts": {
