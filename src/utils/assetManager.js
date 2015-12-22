@@ -128,9 +128,9 @@ export function requests(inputs, drivers){
 function makeParsers(){
   //other
   let parsers = {}
-  parsers["stl"] = stlParser.default//new StlParser()
-  parsers["obj"] = objParser.default//new StlParser()
-  console.log(".inputDataType",parsers["stl"].inputDataType)
+  parsers["stl"] = stlParser.default
+  parsers["obj"] = objParser.default
+  //console.log(".inputDataType",parsers["stl"].inputDataType)
   return parsers
 }
 const parsers = makeParsers()
