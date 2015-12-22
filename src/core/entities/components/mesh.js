@@ -9,7 +9,7 @@ export function makeMeshSystem(actions){
   }
 
   function createComponentsMesh(defaults, state, inputs){
-    console.log("createComponents for mesh", inputs)
+    //console.log("createComponents for mesh", inputs)
 
     return inputs.reduce(function(state,input){
       let inputValue =  {}
@@ -25,7 +25,7 @@ export function makeMeshSystem(actions){
       state[id] = mesh
       //FIXME big hack, use mutability
 
-      console.log("done createComponents (mesh)", state)
+      //console.log("done createComponents (mesh)", state)
       return state 
     },state)
 

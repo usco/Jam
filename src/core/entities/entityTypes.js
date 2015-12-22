@@ -20,7 +20,7 @@ function typeUidFromMeshName(meshNameToPartTypeUId, meshName){
 }
 
 function typeFromMeshData(data, typeUidFromMeshName){
-  console.log("typeFromMeshData",data)
+  //console.log("typeFromMeshData",data)
   let meshName = data.meta.name || ""
   let name     = nameCleanup(meshName)
 
@@ -79,7 +79,7 @@ function updateTypesData(newTypeData, currentData){
 
 function registerTypeFromMesh(state,input){
   //log.info("I would register something", state, input)
-  console.log("I would register something", state, input)
+  //console.log("I would register something", state, input)
 
   //prepare lookup function for finding already registered meshes
   let typeUidLookup = typeUidFromMeshName.bind(null,state.meshNameToPartTypeUId)

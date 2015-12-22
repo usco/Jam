@@ -25,7 +25,7 @@ const defaults = {
 }
 
 function addBomEntries(state,input){
-  console.log("ADDING BOM entries")
+  //console.log("ADDING BOM entries")
   //FIXME , make immutable
   let newData = toArray(input) || []
   let entries = state.entries.concat(newData)
@@ -81,7 +81,7 @@ function removeBomEntries(state,input){
 }
 
 function clearBomEntries(state, input){
-  console.log("clearing BOM", input, state)
+  //console.log("clearing BOM", input, state)
   return mergeData({},defaults)
 }
 
@@ -106,7 +106,7 @@ function updateBomEntries(state, inputs){
 }
 
 function updateBomEntriesCount(state, inputs){
-  console.log("updateBomEntriesCount",inputs)
+  //console.log("updateBomEntriesCount",inputs)
 
   return inputs.reduce(function(state,{id,offset}){    
     const entries = adjust(

@@ -10,7 +10,7 @@ import {isEmpty} from 'ramda'
 /////////
 //used for all
 export function createComponents(defaults, state, inputs){
-  console.log("createComponents",inputs)
+  //console.log("createComponents",inputs)
 
   return inputs.reduce(function(state,input){
 
@@ -27,7 +27,7 @@ export function createComponents(defaults, state, inputs){
     state[id] = newAttrs
     //FIXME big hack, use mutability
 
-    console.log("done createComponents",state)
+    //console.log("done createComponents",state)
     return state 
 
   },state)
@@ -36,7 +36,7 @@ export function createComponents(defaults, state, inputs){
 }
 
 export function removeComponents(state, inputs){
-  console.log("removeComponents",inputs)
+  //console.log("removeComponents",inputs)
 
   return inputs.reduce(function(state,selection){   
     state = mergeData({},state)
@@ -49,7 +49,7 @@ export function removeComponents(state, inputs){
 }
 
 export function duplicateComponents(state, inputs){
-  console.log("duplicatING Components",inputs)
+  //console.log("duplicatING Components",inputs)
 
   return inputs.reduce(function(state,input){
     let {id,newId} = input
@@ -74,7 +74,7 @@ export function duplicateComponents(state, inputs){
     //FIXME big hack, use mutability
     state[newId] = clone
 
-    console.log("done duplicateComponents",state)
+    //console.log("done duplicateComponents",state)
     return state 
   },state)
   
