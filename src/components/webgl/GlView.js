@@ -27,16 +27,15 @@ import OrbitControls from './deps/OrbitControls'
 import CombinedCamera from './deps/CombinedCamera'
 import TransformControls from './transforms/TransformControls'
 
-import {planes,grids,annotations,objectEffects,CamViewControls,} from 'glView-helpers'
+import {planes, grids, annotations, cameraEffects, CamViewControls,} from 'glView-helpers'
 
 import LabeledGrid from 'glView-helpers/lib/grids/LabeledGrid'
 
-//console.log("helpers.grids",helpers,helpers.grids)
+//console.log("helpers.planes",planes,objectEffects)
 //let LabeledGrid = helpers.grids.LabeledGrid
-let ShadowPlane    = planes.ShadowPlane
+let ShadowPlane    = planes.ShadowPlane.default//ugh FIXME: bloody babel6
 //let annotations    = annotations
-let ZoomInOnObject = objectEffects.ZoomInOnObject
-let zoomToFit      = objectEffects.zoomToFit
+let {zoomInOn,zoomToFit} = cameraEffects
 
 import {makeCamera, makeControls, makeLight, renderMeta
 } from './utils2'
@@ -205,7 +204,6 @@ function GLView({drivers, props$}){
   let outScene = null
   let maskScene = null
 
-  let zoomInOnObject = null
 
   let scene = new THREE.Scene()
   let dynamicInjector = new THREE.Object3D()//all dynamic mapped objects reside here
@@ -219,14 +217,12 @@ function GLView({drivers, props$}){
   let grid        = new LabeledGrid(200, 200, 10, config.cameras[0].up)
   let shadowPlane = new ShadowPlane(2000, 2000, null, config.cameras[0].up) 
 
-  //interactions
-  zoomInOnObject = new ZoomInOnObject()
 
   const actions = intent({DOM},{camera,scene,transformControls})
   const state$  = model(props$, actions)
 
   //react to actions
-  actions.zoomInOnPoint$.forEach( (oAndP) => zoomInOnObject.execute( oAndP.object, {position:oAndP.point} ) )
+  actions.zoomInOnPoint$.forEach( (oAndP) => zoomInOn( oAndP.object, camera, {position:oAndP.point} ) )
 
   actions.zoomToFit$.forEach(function(){
     console.log("zoomToFit")
@@ -303,9 +299,6 @@ function GLView({drivers, props$}){
     //more init
     controls.setObservables( actions.filteredInteractions$ )
     controls.addObject( camera )
-
-    //not a fan
-    zoomInOnObject.camera = camera
 
     scene.add(camera)  
     scene.add(shadowPlane)
