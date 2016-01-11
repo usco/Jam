@@ -2,7 +2,7 @@
 function makeOutlineFx(mesh){
   //log.debug("makeOutlineFx")
   let geometry = mesh.geometry
-  let matFlat = new THREE.MeshBasicMaterial({color: 0xffffff})
+  let matFlat  = new THREE.MeshBasicMaterial({color: 0xffffff})
   let maskMesh = new THREE.Mesh( geometry, matFlat )
 
   //maskMesh.quaternion = mesh.quaternion

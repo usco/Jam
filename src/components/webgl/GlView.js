@@ -70,14 +70,39 @@ function setupPostProcess(camera, renderer, scene){
 
     let renderTarget = new THREE.WebGLRenderTarget(window.innerWidth, window.innerHeight, renderTargetParameters)
 
+    let uniforms = {
+      offset: {
+        type: "f",
+        value: 0.4
+      },
+      color:{ 
+        type: "c", 
+        value: new THREE.Color("#000000")//#ff2500")//[1.0,0.0,0.0] 
+      }
+    }
+
+    let shader = require("./deps/post-process/OutlineShader").default
+    let outShader = shader['outline']
+
+    let outlineMaterial =  new THREE.ShaderMaterial({
+      uniforms: uniforms,
+      vertexShader: outShader.vertex_shader,
+      fragmentShader: outShader.fragment_shader
+    })
+    outlineMaterial.depthTest = false
+    //new THREE.MeshBasicMaterial({color:0xFF0000,transparent:true,opacity:0.5})
+
+    let maskMaterial = new THREE.MeshBasicMaterial({color: 0xffffff})
+
+
     //setup composer
     let composer    = new EffectComposer(renderer)
     composer.renderTarget1.stencilBuffer = true
     composer.renderTarget2.stencilBuffer = true
 
     let normal      = new RenderPass(scene, camera)
-    let outline     = new RenderPass(outScene, camera)
-    let maskPass        = new THREE.MaskPass(maskScene, camera)
+    let outline     = new RenderPass(outScene, camera, outlineMaterial)
+    let maskPass        = new THREE.MaskPass(maskScene, camera, maskMaterial)
     maskPass.inverse = true
     let clearMask   = new THREE.ClearMaskPass()
     let copyPass     = new THREE.ShaderPass(THREE.CopyShader)
@@ -180,9 +205,7 @@ function setupPostProcess(camera, renderer, scene){
 import intent from './intent'
 import model from './model'
 
-/*TODO:
-- remove any "this", adapt code accordingly  
-*/
+
 ////////////
 function GLView({drivers, props$}){
   const {DOM,postMessage} = drivers
@@ -209,6 +232,8 @@ function GLView({drivers, props$}){
   let dynamicInjector = new THREE.Object3D()//all dynamic mapped objects reside here
   scene.dynamicInjector = dynamicInjector
   scene.add( dynamicInjector )
+
+  let selectionsContainer = new THREE.Scene() //unfortunate way to handle things in three.js
 
   let camera   = makeCamera(config.cameras[0])
   let controls = makeControls(config.controls[0])
@@ -353,6 +378,15 @@ function GLView({drivers, props$}){
     return changes
     })  
 
+  //experimenting with selections effects
+  state$.pluck("selectedMeshes").distinctUntilChanged()
+    .forEach(function(selectedMeshes){
+      if(outScene){
+        outScene.children  = selectedMeshes
+        maskScene.children = selectedMeshes
+      }
+    })
+
   //transformControls handling
   //we modify the transformControls mode based on the active tool
   //every time either activeTool or selection changes, reset/update transform controls
@@ -389,7 +423,6 @@ function GLView({drivers, props$}){
         transformControls.detach(mesh)
       }
     })
-
   })
 
   //hande all the cases where events require re-rendering
