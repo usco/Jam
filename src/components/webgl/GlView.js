@@ -113,67 +113,6 @@ function setupPostProcess(camera, renderer, scene){
     vignettePass.uniforms[ "offset" ].value = 0.95
     vignettePass.uniforms[ "darkness" ].value = 0.9
 
-
-    /*for generic outlines etc*/
-    /*let edgeDetectPass = new THREE.ShaderPass(EdgeShader3)
-
-    //depth data generation
-    let width = window.innerWidth
-    let height = window.innerHeight
-    let depthTarget = new THREE.WebGLRenderTarget(width, height, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat } )
-    let depthMaterial = new THREE.MeshDepthMaterial()
-    let depthPass = new THREE.RenderPass(scene, camera, depthMaterial)
-
-    let depthComposer = new THREE.EffectComposer( renderer, depthTarget )
-    depthComposer.setSize( width, height )
-    depthComposer.addPass( depthPass )
-    depthComposer.addPass( edgeDetectPass )
-    depthComposer.addPass( copyPass )
-
-
-    //normal data generation
-    let normalTarget = new THREE.WebGLRenderTarget(width, height, { minFilter: THREE.NearestFilter, magFilter: THREE.NearestFilter, format: THREE.RGBFormat } )
-    let normalMaterial = new THREE.MeshNormalMaterial()
-    let normalPass = new THREE.RenderPass(scene, camera, normalMaterial)
-        
-    let normalComposer = new THREE.EffectComposer( renderer, normalTarget )
-    normalComposer.setSize(width, height)
-    normalComposer.addPass( normalPass )
-    normalComposer.addPass( edgeDetectPass )
-    normalComposer.addPass( copyPass )
-
-    //final compositing
-    //  steps:
-    //  render default to @colorTarget
-    //  render depth
-    //  render normal
-    
-    let renderPass = new THREE.RenderPass(scene, camera)
-
-    renderTargetParameters = { minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter, format: THREE.RGBFormat, stencilBuffer: false };
-    renderTarget = new THREE.WebGLRenderTarget( width , height, renderTargetParameters )
-        
-    let finalComposer = new THREE.EffectComposer( renderer , renderTarget )
-    finalComposer.setSize(width, height)
-    //prepare the final render passes
-    finalComposer.addPass( renderPass )
-    //finalComposer.addPass( normalPass)
-
-    //finalComposer.addPass(fxaaPass)
-    //blend in the edge detection results
-    let effectBlend = new THREE.ShaderPass( AdditiveBlendShader, "tDiffuse1" )
-    effectBlend.uniforms[ 'tDiffuse2' ].value = normalComposer.renderTarget2
-    effectBlend.uniforms[ 'tDiffuse3' ].value = depthComposer.renderTarget2
-    effectBlend.uniforms[ 'normalThreshold' ].value = 0.05
-    effectBlend.uniforms[ 'depthThreshold' ].value = 0.05
-    effectBlend.uniforms[ 'strengh' ].value = 0.4
-
-    finalComposer.addPass( effectBlend )
-    
-    //finalComposer.addPass( vignettePass )
-    finalComposer.passes[finalComposer.passes.length-1].renderToScreen = true*/
-
-
     ///////////////////////////////////
 
     renderer.autoClear = false
@@ -250,7 +189,6 @@ function GLView({drivers, props$}){
   actions.zoomInOnPoint$.forEach( (oAndP) => zoomInOn( oAndP.object, camera, {position:oAndP.point} ) )
 
   actions.zoomToFit$.forEach(function(){
-    console.log("zoomToFit")
     const targetNode = dynamicInjector
     zoomToFit(targetNode, camera, new THREE.Vector3() )
   })
