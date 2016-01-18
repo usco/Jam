@@ -49,8 +49,10 @@ export function geometryFromBuffers({positions,normals,indices,colors}){
   let geometry = new THREE.BufferGeometry()
 
   geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) )
-  geometry.addAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) )
-  
+
+  if(normals){
+    geometry.addAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) )
+  }
   if(indices){
     geometry.addAttribute( 'index', new THREE.BufferAttribute( indices, 1 ) )
   }
