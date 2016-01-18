@@ -47,7 +47,7 @@ extract mesh source streams
 */
 export function extractMeshSources( rawSources, extensions ){
   extensions = extensions || {
-    meshes : ["stl","amf","obj","ctm","ply"]
+    meshes : ["stl","3mf","amf","obj","ctm","ply"]//FIXME: not great, this makes us need an import + fill here to work
   }
   const {dnd$, postMessages$, addressbar} = rawSources
 

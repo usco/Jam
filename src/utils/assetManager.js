@@ -18,6 +18,7 @@ import assign from 'fast.js/object/assign'//faster object.assign
 //import parse as stlParser,  {outputs} from 'stlParser'
 import * as stlParser from 'usco-stl-parser'
 import * as objParser from 'usco-obj-parser'
+import * as threemfParser from 'usco-3mf-parser'
 
 
 function dataSource(data){
@@ -130,6 +131,7 @@ function makeParsers(){
   let parsers = {}
   parsers["stl"] = stlParser.default
   parsers["obj"] = objParser.default
+  parsers["3mf"] = threemfParser.default
   //console.log(".inputDataType",parsers["stl"].inputDataType)
   return parsers
 }
@@ -137,10 +139,24 @@ const parsers = makeParsers()
 
 
 function postProcessParsedData(data){
-  let mesh = data 
-  mesh = geometryFromBuffers(mesh)
-  mesh = postProcessMesh(mesh)
-  mesh = centerMesh(mesh)
+  //TODO: unify parsers' returned data/api
+  console.log("postProcessMesh",data)
+  let mesh = undefined
+  if("objects" in data){
+    //for 3mf , etc
+    console.log("data",data)
+    mesh = data.objects['1']
+    mesh = geometryFromBuffers(mesh)
+    mesh = postProcessMesh(mesh)
+    mesh = centerMesh(mesh)
+
+  }else{
+    mesh = data 
+    mesh = geometryFromBuffers(mesh)
+    mesh = postProcessMesh(mesh)
+    mesh = centerMesh(mesh)
+  }
+  
   return mesh
 }
 
@@ -165,6 +181,7 @@ function fetch(drivers, sourceNames=["http","desktop"]){
     })
     .share()
 
+
   return fetched$
 }
 
@@ -184,7 +201,7 @@ function parse(fetched$){
     //actual parsing part
     .filter(data=>parsers[data.ext]!==undefined)//does parser exist?
     .flatMap(function({uri, data, ext, name}){
-      const parseOptions = {useWorker:true}
+      const parseOptions = {useWorker:false}
 
       const parse    = parsers[ext]
       const parsedObs$ = parse(data, parseOptions)
