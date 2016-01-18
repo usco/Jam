@@ -185,13 +185,20 @@ function GLView({drivers, props$}){
   const actions = intent({DOM},{camera,scene,transformControls})
   const state$  = model(props$, actions)
 
-  //react to actions
-  actions.zoomInOnPoint$.forEach( (oAndP) => zoomInOn( oAndP.object, camera, {position:oAndP.point} ) )
+  const zoomToFit$ = settings$
+    .filter(s=> s.mode === "viewer")
+    .combineLatest(state$.pluck("items"), function(settings,items){
+      return items
+    })
+    .filter(i=>i.length>0)
 
-  actions.zoomToFit$.forEach(function(){
-    const targetNode = dynamicInjector
-    zoomToFit(targetNode, camera, new THREE.Vector3() )
-  })
+  //react to actions
+  actions.zoomInOnPoint$
+    .forEach( (oAndP) => zoomInOn( oAndP.object, camera, {position:oAndP.point} ) )
+  zoomToFit$
+    .tap(meshes=>console.log("zoomToFit",meshes))
+    .forEach( (meshes) => zoomToFit(meshes[meshes.length-1], camera, new THREE.Vector3() ) )
+   
 
   let windowResizes$ = windowResizes(1) //get from intents/interactions ?
 
@@ -302,6 +309,12 @@ function GLView({drivers, props$}){
   //combine All needed components to apply any "transforms" to their visuals
   let items$ = state$.pluck("items")//.distinctUntilChanged()
   //TODO : we DO  want distinctUntilChanged() to prevent spamming here at any state change
+  
+  //TODO we want to zoomToFit only when mode is viewer && we just recieved the FIRST model ??
+  /*settings$
+    .filter(s=> s.mode === "viewer")
+    .forEach(e=>console.log("settings",e))*/
+
 
   //do diffing to find what was added/changed
   let itemChanges$ = items$.scan(function(acc, x){
