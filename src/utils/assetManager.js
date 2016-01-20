@@ -201,7 +201,7 @@ function parse(fetched$){
     //actual parsing part
     .filter(data=>parsers[data.ext]!==undefined)//does parser exist?
     .flatMap(function({uri, data, ext, name}){
-      const parseOptions = {useWorker:false}
+      const parseOptions = {useWorker:true}
 
       const parse    = parsers[ext]
       const parsedObs$ = parse(data, parseOptions)
