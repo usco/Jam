@@ -6,7 +6,6 @@ import {exists,toArray} from '../../utils/utils'
 
 import {observableDragAndDrop} from '../../interactions/dragAndDrop'
 
-import {entityTypeIntents, entityInstanceIntents} from '../../core/entities/intentHelpers'
 import {extractDesignSources,extractMeshSources,extractSourceSources} from '../../core/dataSourceExtractors'
 
 import {settingsIntent} from    './intents/settings'
