@@ -34,7 +34,7 @@ const parsers = makeParsers()
 
 function postProcessParsedData(data){
   //TODO: unify parsers' returned data/api
-  console.log("postProcessMesh",data)
+  console.log("postProcessMesh/data",data)
   let mesh = undefined
   if("objects" in data){
     //for 3mf , etc
@@ -44,11 +44,47 @@ function postProcessParsedData(data){
     mesh = postProcessMesh(mesh)
     mesh = centerMesh(mesh)
 
+    let typesMetaHash = {}
+    let typesMeshes   = []
+    let typesMeta = []
+    for(let objectId in data.objects){
+      //console.log("objectId",objectId, data.objects[objectId])
+      let item  = data.objects[objectId]
+      
+
+      let meta = {id:item.id, name:item.name}
+      typesMeta.push(meta)
+      typesMetaHash[item.id] = meta
+
+      mesh = geometryFromBuffers(item)
+      mesh = postProcessMesh(mesh)
+      mesh = centerMesh(mesh)
+      typesMeshes.push({id:item.id, mesh})
+    }
+
+    //now for the instances data
+    let instMeta = []
+    let instTransforms = []
+    data.build.map(function(item,index){
+
+      instMeta.push( { instUid:index, typeUid: typesMetaHash[item.objectid].id} )//TODO : auto generate name
+      if('transforms' in item ){
+        instTransforms.push({instUid:index, transforms:item.transforms})
+      }
+    })
+    console.log("typesMeta",typesMeta,"instMeta",instMeta,"instTransforms",instTransforms)
+
+    return {typesMeshes, typesMeta, instMeta ,instTransforms}
+
   }else{
     mesh = data 
     mesh = geometryFromBuffers(mesh)
     mesh = postProcessMesh(mesh)
     mesh = centerMesh(mesh)
+
+    let typesMeshes   = [{id:undefined, mesh}]
+
+    return {typesMeshes}
   }
   
   return mesh
