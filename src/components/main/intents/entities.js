@@ -3,9 +3,6 @@ import {hasEntity,hasNoEntity,getEntity} from '../../utils/entityUtils'
 import {first,toggleCursor} from '../../utils/otherUtils'
 import {getXY} from '../../utils/uiUtils'
 
-
-
-
 function dataFromMesh(objTransform$){
   function toArray (vec){
     return vec.toArray().slice(0,3)
@@ -31,8 +28,56 @@ function hasClear(data){
 }
 
 
+
+
 export function entityIntents(drivers){
-  let glviewInit$ = interactions.get(".glview","initialized$")
+  const DOM    = drivers.DOM
+  const events = drivers.events
+
+  ///
+  const deleteInstances$          = DOM.select('.delete').events("click")
+  const duplicateInstances$       = DOM.select('.duplicate').events("click")
+
+  const removeEntityType$         = undefined //same as delete type/ remove bom entry
+
+  //this resets/clears everything: types and instances etc
+  const reset$                    = DOM.select('.reset').events("click")
+
+
+  const updateCoreComponent$ = events
+    .select("entityInfos")
+    .events("changeCore$")
+    .map(c=>( {target:"core",data:c}))
+
+  const updateTransformComponent$ = events
+    .select("entityInfos")
+    .events("changeTransforms$")
+    .merge(
+      events
+        .select("gl")
+        .events("selectionsTransforms$")
+        .debounce(20)
+    )
+    .map(c=>( {target:"transforms",data:c}))
+
+  const updateComponent$ = merge(
+    updateCoreComponent$
+    ,updateTransformComponent$
+    )
+
+  const entityActions = {
+    addInstanceCandidates$
+    ,updateComponent$
+    ,duplicateInstances$
+    ,deleteInstances$
+    ,reset$
+  }
+
+  return entityActions
+
+
+
+  /*let glviewInit$ = interactions.get(".glview","initialized$")
   let shortSingleTaps$ = interactions.get(".glview","shortSingleTaps$")
   let shortDoubleTaps$ = interactions.get(".glview","shortDoubleTaps$")
   let contextTaps$ = interactions.get(".glview","longTaps$").pluck("detail")
@@ -47,13 +92,6 @@ export function entityIntents(drivers){
     dataFromMesh( interactions.get(".glview","selectionsTransforms$").pluck("detail") )
     ,interactions.get(".entityInfos","selectionTransforms$").pluck("detail")
   )
-  
-  /*let absSize$ = interactions.get(".entityInfos","selectionTransforms$")
-    .pluck("detail")
-    .pluck("absSize")
-    .subscribe(e=>console.log("selectionTransforms",e))*/
-  //http://stack.gl/packages/#thibauts/rescale-vertices
-
 
   let contextMenuActions$ = interactions.get(".contextMenu", "actionSelected$").pluck("detail")
   let deleteInstances$     = contextMenuActions$.filter(e=>e.action === "delete").pluck("selections")
@@ -89,11 +127,11 @@ export function entityIntents(drivers){
 
     ,replaceAll$
     
-    /*addNote$,
+    addNote$,
     measureDistance$,
     measureThickness$,
-    measureAngle$*/
-  }
+    measureAngle$
+  }*/
 }
 
 

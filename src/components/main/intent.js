@@ -24,12 +24,14 @@ import {resources} from '../../utils/assetManager'
 import {requests} from '../../utils/assetRequests'
 
 
-function apiIntents(drivers){
-  const postMessage = drivers.postMessage
+function intentsFromPostMessage(drivers){
+  const postMessage$ = drivers.postMessage
     .filter(exists)
 
-  const captureScreen$ = postMessage 
+  const postMessageWithData$ = postMessage$
     .filter(p=>p.hasOwnProperty("data"))
+
+  const captureScreen$ = postMessageWithData$ 
     .filter(p=>p.data.hasOwnProperty("captureScreen"))
     .withLatestFrom(drivers.DOM.select(".glView .container canvas").observable,function(request,element){
       element = element[0]
@@ -37,18 +39,65 @@ function apiIntents(drivers){
     })
 
   //this one might need refactoring
-  const getTransforms$ = postMessage
-    .filter(p=>p.hasOwnProperty("data"))
+  const getTransforms$ = postMessageWithData$ 
     .filter(p=>p.data.hasOwnProperty("getTransforms"))
 
-  const getStatus$ = postMessage
-    .filter(p=>p.hasOwnProperty("data"))
+  const getStatus$ = postMessageWithData$ 
     .filter(p=>p.data.hasOwnProperty("getStatus"))
+
+  const clear$ = postMessageWithData$ 
+    .filter(p=>p.data.hasOwnProperty("clear"))
 
   return {
     captureScreen$
     ,getTransforms$
     ,getStatus$
+    ,clear$
+  }
+}
+
+function intentsFromEvents(drivers){
+  const events = drivers.events
+
+  //entities/components
+  const updateCoreComponent$ = events
+    .select("entityInfos")
+    .events("changeCore$")
+    .map(c=>( {target:"core",data:c}))
+
+  const updateTransformComponent$ = events
+    .select("entityInfos")
+    .events("changeTransforms$")
+    .merge(
+      events
+        .select("gl")
+        .events("selectionsTransforms$")
+        .debounce(20)
+    )
+    .map(c=>( {target:"transforms",data:c}))
+
+  const updateComponent$ = merge(
+    updateCoreComponent$
+    ,updateTransformComponent$
+  )
+  //bom
+  const updateBomEntries$ = events
+    .select("bom").events("editEntry$").map(toArray)
+
+  //measurements & annotations
+  const shortSingleTaps$ = events
+    .select("gl").events("shortSingleTaps$")
+
+  const createAnnotationStep$ = shortSingleTaps$
+    .map( (event)=>event.detail.pickingInfos)
+    .filter( (pickingInfos)=>pickingInfos.length>0)
+    .map(first)
+    .share()  
+
+  return {
+    updateComponent$
+    ,createAnnotationStep$
+    ,updateBomEntries$
   }
 }
 
@@ -77,30 +126,21 @@ export default function intent (drivers) {
   const commentActions   = commentsIntents(drivers)
 
   //const selectionActions = selectionsIntents({DOM,events}, typesInstancesRegistry$)
-  const apiActions  = apiIntents(drivers)
+  const postMessageActions  = intentsFromPostMessage(drivers)
+  const eventsActions       = intentsFromEvents(drivers)
 
-  //experimental , new asset manager
-  //OUTbound
-  let _requests = requests({meshSources$,srcSources$})
-  let requests$ = _requests.requests.http$
-  let desktop$  = _requests.requests.desktop$
+  let _resources = resources(drivers)
+  let progress = _resources
 
-  
-  let progress = resources(drivers)
-
-  const entityTypeIntents = {
-    registerTypeFromMesh$:progress.parsed$
-  }
-
+ 
   ///entity actions
-  const entityTypeActions         = entityTypeIntents//entityTypeIntents({meshSources$,srcSources$})
+  const addInstanceCandidates$    = _resources.parsed$//these MIGHT become instances, or something else, we just are not 100% sure
   const reset$                    = DOM.select('.reset').events("click")
   const removeEntityType$         = undefined //same as delete type/ remove bom entry
-  const deleteEntityInstances$    = DOM.select('.delete').events("click")
-  const duplicateEntityInstances$ = DOM.select('.duplicate').events("click")
+  const deleteInstances$          = DOM.select('.delete').events("click")
+  const duplicateInstances$       = DOM.select('.duplicate').events("click")
+  const entityTypeActions         = {registerTypeFromMesh$:addInstanceCandidates$ }
 
-
-  const addEntityInstanceCandidates$ =  progress.parsed$//these MIGHT become instances, we just are not 100% sure
   /*possible sources of instances
     directly:
     - addressBar
@@ -108,58 +148,29 @@ export default function intent (drivers) {
     - drag & drop
     Indirectly:
       - duplicates of other instances
-      - design
   */
-
-  const updateCoreComponent$ = events
-    .select("entityInfos")
-    .events("changeCore$")
-    .map(c=>( {target:"core",data:c}))
-
-  const updateTransformComponent$ = events
-    .select("entityInfos")
-    .events("changeTransforms$")
-    .merge(
-      events
-        .select("gl")
-        .events("selectionsTransforms$")
-        .debounce(20)
-    )
-    .map(c=>( {target:"transforms",data:c}))
-
-  const updateComponent$ = merge(
-    updateCoreComponent$
-    ,updateTransformComponent$
-    )
-
   const entityActions = {
-    addEntityInstanceCandidates$
-    ,updateComponent$
-    ,duplicateEntityInstances$
-    ,deleteEntityInstances$
+    addInstanceCandidates$
+    ,updateComponent$:eventsActions.updateComponent$
+    ,duplicateInstances$
+    ,deleteInstances$
     ,reset$
   }
 
-
-  //measurements & annotations
-  const shortSingleTaps$ = events.select("gl").events("shortSingleTaps$")
-
-  const createAnnotationStep$ = shortSingleTaps$
-    .map( (event)=>event.detail.pickingInfos)
-    .filter( (pickingInfos)=>pickingInfos.length>0)
-    .map(first)
-    .share()  
-
-  createAnnotationStep$.forEach(e=>console.log("createAnnotationStep",e))
-
   const annotationsActions =  {
-    creationStep$: createAnnotationStep$
+    creationStep$: eventsActions.createAnnotationStep$
   }
 
   //const bomActions = bomIntent(drivers)
   const bomActions = {
-    updateBomEntries$:events.select("bom").events("editEntry$").map(toArray)
+    updateBomEntries$:eventsActions.updateBomEntries$
   }  
+
+  //experimental , new asset manager
+  //OUTbound
+  let _requests = requests({meshSources$,srcSources$})
+  let requests$ = _requests.requests.http$
+  let desktop$  = _requests.requests.desktop$
 
   return {
     dnd$
@@ -175,7 +186,7 @@ export default function intent (drivers) {
     ,annotationsActions
     ,bomActions
 
-    ,apiActions
+    ,apiActions:postMessageActions
 
     ,progress
 

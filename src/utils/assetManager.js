@@ -14,13 +14,10 @@ import {combineLatestObj} from './obsUtils'
 import {mergeData} from './modelUtils'
 import assign from 'fast.js/object/assign'//faster object.assign
 
-
 //import parse as stlParser,  {outputs} from 'stlParser'
 import * as stlParser from 'usco-stl-parser'
 import * as objParser from 'usco-obj-parser'
 import * as threemfParser from 'usco-3mf-parser'
-
-
 
 
 function makeParsers(){
@@ -106,11 +103,11 @@ function parse(fetched$){
         .doOnError(e=>console.log("error in parse",e))
 
       const data$  = parsedObs$
-        .filter(e=>e.progress === undefined)//seperate out progress data
+        .filter(e=> e.progress === undefined)//seperate out progress data
         .map(postProcessParsedData) 
 
       const progress$ = parsedObs$
-        .filter(e=>e.progress !== undefined)//keep ONLY progress data
+        .filter(e=> e.progress !== undefined)//keep ONLY progress data
         .pluck("progress")
         .distinctUntilChanged()
         .startWith(0)
@@ -120,7 +117,6 @@ function parse(fetched$){
       return combineLatestObj({meta$, data$, progress$})
     })
     .shareReplay(1)
-    //.do(e=>console.log("parsed data ready",e))
 
   return parsed$
 }
@@ -180,7 +176,6 @@ export function resources(drivers){
   }
 }
 
-
   /*const fn = cond([
     [equals(0),   always('water freezes at 0°C')],
     [equals(100), always('water boils at 100°C')],
@@ -190,140 +185,4 @@ export function resources(drivers){
   console.log( fn(0) ) //=> 'water freezes at 0°C'
   console.log( fn(50) ) //=> 'nothing special happens at 50°C'
   console.log( fn(100) ) //=> 'water boils at 100°C'*/
-
-/*
-function makeAssetManager(drivers){
-
-}
-
-
-function load(fileUri, options){
-  const defaults = {
-    parentUri   :undefined
-    ,transient  :false
-    ,keepRawData:false
-    ,parse      :true
-
-    ,fetchOptions:{}
-    ,parseOptions:{}
-  }
-  options = mergeData(options,defaults)
-
-
-  input
-    .filter(exists)
-
-  if (fileUri == null) {
-    error = "Invalid file name : " + fileUri
-  }
-
-  input
-    .filter(isValidFile)
-    .map(function(){
-      //we have been given a file , or file like structure, default store to desktop ?
-      [storeName,filename] = ["desktop", fileUri.name]
-      file = fileUri
-      _file = fileUri
-      fileUri = fileUri.name
-    })
-
-  input
-    .filter(!isValidFile)
-    .map(function(){
-      fileUri = pathUtils.toAbsoluteUri(fileUri, parentUri)
-      [storeName,filename] = pathUtils.parseFileUri(fileUri, parentUri)
-    })
-    
-
-  log.info("Attempting to load :", filename, "from store:", storeName)
-
-  let resource = {
-    ext:"foo"
-    ,file:_file//FIXME a bit of a hack: for future uploads we keep the original file?
-  }
-
-  //the resource was already loaded, return it 
-  if (filename in this.assetCache){
-    log.info("resource already in cache, returning cached version")
-    resource = this.assetCache[filename]
-    return resource
-  }
-
-  //not cached 
-  store = this.stores[storeName]
-  if (!store) {
-    error = new Error("No store named " + storeName)
-    error.name = "storeNotFoundError"
-  }
-  
-  //get parser instance , if it exists
-  parser = this.parsers[extension]
-  if (!parser) {
-    error = new Error("No parser found for '" + extension + "' file format")
-    error.name = "parserNotFoundError"
-  }
-
-
-  //if extension not in @codeExtensions
-  //get prefered input data type for parser/extension
-  //FIXME: do this more elegantly 
-
-  fileOrFileName = storeName === "desktop" ? file : filename//if desktop, then file, else fileName
-  
-  function getRawData(){
-    //get raw data (not parsed)
-    //returns observable
-    return store.read(fileOrFileName, {
-      dataType: parser.inputDataType
-    })
-  }   
-
-  function parseRawData(rawData){
-    //returns observable
-    return parser.parse(rawData, parseOptions)
-  }
-
-  function onSuccess(loadedResource) 
-    resource.fetched = true
-
-    obs.onNext({
-      parsing:0
-    })
-   
-    resource.rawData = keepRawData ? loadedResource : null
-    resource.data = loadedResource
-    resource.loaded = true
-    if (!transient) {
-      assetCache[fileUri] = resource
-    }
-  }
-                      
-  function onProgress = function(progress) {
-    log.debug("got some progress", JSON.stringify(progress))
-    if ("fetching" in progress) {
-      resource.fetchProgress = progress.fetching
-    }
-    if ("parsing" in progress) {
-      resource.parseProgress = progress.parsing
-    }
-    deferred.notify(progress)
-    resource.size = progress.total
-  }
-
-  function onError( error ){
-    log.error("failure in data reading step", error)
-    error = new Error(error.message)
-    fetchError.name = "fetchError"
-  }
-
-  //load raw data from uri/file, get an observable
-  rawDataDeferred.promise.then( onSuccess, onError, onProgress)
-  
-  return obs
-
-}
-*/
-
-
-
 

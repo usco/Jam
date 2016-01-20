@@ -86,7 +86,7 @@ export default function model(props$, actions, drivers){
   //TODO: go back to basics : some candidate have access to already exisiting types, some others not (first time)
 
   const addInstanceFromTypes$   = entityInstanceIntents(entityTypes$).addInstances$
-  const addInstancesCandidates$ = entityActions.addEntityInstanceCandidates$
+  const addInstancesCandidates$ = entityActions.addInstanceCandidates$
     .withLatestFrom(entityTypes$,function(candidateData,entityTypes){
       let typeUid = entityTypes.meshNameToPartTypeUId[candidateData.meta.name]
       if(typeUid){
@@ -115,7 +115,7 @@ export default function model(props$, actions, drivers){
 
   //TODO : modify entityInstanceIntents
   const entityInstancesBase$  = /*entityActions
-    .addEntityInstanceCandidates$
+    .addInstanceCandidates$
     .withLatestFrom(entityTypes$,function(candidateData,entityTypes){
       //let cleanedName = nameCleanup( candidateData.resource.name )
       //here what we do is find types by mesh name, if any
@@ -187,31 +187,12 @@ export default function model(props$, actions, drivers){
   //annotations
   let addAnnotations$ = addAnnotation(actions.annotationsActions, settings$)
     .map(toArray)
-  addAnnotations$.forEach(e=>console.log("addAnnotation",e))
-  /* //annotations
-  let aIntent = {
-    creationStep$:aIntents.creationStep$,
-    settings$:settings$
-  }
-  let addAnnotation$ = addAnnotationMod(aIntent)
-
-  addAnnotation$
-    .withLatestFrom(settings$,function(annotation,settings){
-      if(!settings.repeatTool){
-        clearActiveTool$()
-      }
-      //console.log("ok I am done with annotation",annotation,settings)
-    })
-    .forEach(e=>e)
-
-  let addInstance$ = newInstFromTypes$.merge(addAnnotation$)*/
-
   
   const proxySelections$ = new Rx.ReplaySubject(1)
 
-  entityActions        = remapEntityActions(entityActions,proxySelections$)
+  entityActions        = remapEntityActions(entityActions, proxySelections$)
 
-  let coreActions      = remapCoreActions(entityActions, componentBase$, proxySelections$,addAnnotations$)
+  let coreActions      = remapCoreActions(entityActions, componentBase$, proxySelections$, addAnnotations$)
   let meshActions      = remapMeshActions(entityActions, componentBase$, proxySelections$)
   let transformActions = remapTransformActions(entityActions, componentBase$, proxySelections$)
   let boundActions     = remapBoundsActions(entityActions, componentBase$, proxySelections$)
@@ -236,17 +217,8 @@ export default function model(props$, actions, drivers){
     .distinctUntilChanged()
     .shareReplay(1)
 
-  /*currentSelections$
-    .forEach(e=>console.log("currentSelections",e))
-  currentSelections$
-    .map(s => s.map(s=>s.id))
-    .forEach(e=>console.log("currentSelections, ids",e))
-  typesInstancesRegistry$
-    .forEach(e=>console.log("registry updated",e))*/
-
   //close some cycles
   replicateStream(currentSelections$,proxySelections$)
-
 
 
   //BOM
@@ -294,41 +266,24 @@ export default function model(props$, actions, drivers){
   )
 
   let clearBomEntries$ = merge(
-    entityActions.reset$//this works
-    //drivers.DOM.select('.clearAll').events('click')//this does not
-    //,drivers.DOM.select('.reset').events('click')//DEBUG ONLY
-    //, drivers.postMessage
-    //  .filter(hasClear)
+    entityActions.reset$
   )
-  clearBomEntries$.forEach(e=>console.log("gnagna",e))
 
   const updateBomEntries$ = actions.bomActions.updateBomEntries$
 
   let bomActions = mergeData( {addBomEntries$, updateBomEntriesCount$, clearBomEntries$, updateBomEntries$} )
   const bom$ = bom(bomActions)
 
-  //loading flag , mostly for viewer mode
-  /*const loading$ = Rx.Observable.merge(
-      meshSources$
-        .map(true)
-      ,addInstance$
-        .map(false)
-    ).startWith(false)*/
-
   //not entirely sure, we need a way to observe any fetch/updload etc operation
   const operationsInProgress$ = actions.progress.combinedProgress$.startWith(undefined)
  
-
   //////other data
-  const appData$ = drivers.appMeta/*just({
-    version:'0.3.0'
-  })*/
+  const appData$ = drivers.appMeta
 
-
-  //combine all the above 
+  //combine all the above to get our dynamic state
   const state$ = combineLatestObj({
-    settings$ 
-    ,selections$
+    
+    selections$
     ,bom$
     ,comments$
 
@@ -340,6 +295,8 @@ export default function model(props$, actions, drivers){
     ,meshes$
 
     ,appData$
+    ,settings$ 
+
   }).shareReplay(1)
 
 
