@@ -9,14 +9,15 @@ import {combineLatestObj,replicateStream} from '../../utils/obsUtils'
 import {generateUUID,exists,toArray} from '../../utils/utils'
 import {mergeData} from '../../utils/modelUtils'
 
+//entity components
 import {makeCoreSystem} from '../../core/entities/components/core' 
 import {makeTransformsSystem} from '../../core/entities/components/transforms' 
 import {makeMeshSystem} from '../../core/entities/components/mesh' 
 import {makeBoundingSystem} from '../../core/entities/components/bounds' 
 
-import {entityTypeIntents, entityInstanceIntents} from '../../core/entities/intentHelpers'
-
 import {addAnnotation} from '../../core/entities/annotations'
+
+import {entityInstanceIntents} from '../../core/entities/entityIntents'
 
 import {selectionsIntents} from './intents/selections'
 

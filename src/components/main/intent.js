@@ -20,8 +20,37 @@ import {getExtension,getNameAndExtension,isValidFile} from '../../utils/utils'
 import {combineLatestObj} from '../../utils/obsUtils'
 import {mergeData} from '../../utils/modelUtils'
 
+import {resources} from '../../utils/assetManager'
+import {requests} from '../../utils/assetRequests'
 
-import {requests,resources} from '../../utils/assetManager'
+
+function apiIntents(drivers){
+  const postMessage = drivers.postMessage
+    .filter(exists)
+
+  const captureScreen$ = postMessage 
+    .filter(p=>p.hasOwnProperty("data"))
+    .filter(p=>p.data.hasOwnProperty("captureScreen"))
+    .withLatestFrom(drivers.DOM.select(".glView .container canvas").observable,function(request,element){
+      element = element[0]
+      return {request,element}
+    })
+
+  //this one might need refactoring
+  const getTransforms$ = postMessage
+    .filter(p=>p.hasOwnProperty("data"))
+    .filter(p=>p.data.hasOwnProperty("getTransforms"))
+
+  const getStatus$ = postMessage
+    .filter(p=>p.hasOwnProperty("data"))
+    .filter(p=>p.data.hasOwnProperty("getStatus"))
+
+  return {
+    captureScreen$
+    ,getTransforms$
+    ,getStatus$
+  }
+}
 
 export default function intent (drivers) {
   const DOM      = drivers.DOM
@@ -35,47 +64,19 @@ export default function intent (drivers) {
   const dnd$        = observableDragAndDrop(dragOvers$, drops$) 
 
   //data sources for our main model
-  let postMessages$  = postMessage.pluck("data")
+  const postMessages$  = postMessage.pluck("data")
+
   const meshSources$ = extractMeshSources({dnd$, postMessages$, addressbar})
   const srcSources$  = extractSourceSources({dnd$, postMessages$, addressbar})
 
   //settings
   const settingsSources$ = localStorage.get("jam!-settings")
   const settingActions   = settingsIntent(drivers)
+
   //comments
   const commentActions   = commentsIntents(drivers)
 
-
-  function apiIntents(drivers){
-    const postMessage = drivers.postMessage
-      .filter(exists)
-
-    const captureScreen$ = postMessage 
-      .filter(p=>p.hasOwnProperty("data"))
-      .filter(p=>p.data.hasOwnProperty("captureScreen"))
-      .withLatestFrom(drivers.DOM.select(".glView .container canvas").observable,function(request,element){
-        element = element[0]
-        return {request,element}
-      })
-
-    //this one might need refactoring
-    const getTransforms$ = postMessage
-      .filter(p=>p.hasOwnProperty("data"))
-      .filter(p=>p.data.hasOwnProperty("getTransforms"))
-
-    const getStatus$ = postMessage
-      .filter(p=>p.hasOwnProperty("data"))
-      .filter(p=>p.data.hasOwnProperty("getStatus"))
-
-    return {
-      captureScreen$
-      ,getTransforms$
-      ,getStatus$
-    }
-  }
-  
   //const selectionActions = selectionsIntents({DOM,events}, typesInstancesRegistry$)
-
   const apiActions  = apiIntents(drivers)
 
   //experimental , new asset manager
@@ -87,12 +88,12 @@ export default function intent (drivers) {
   
   let progress = resources(drivers)
 
-  const entityTypeIntents2 = {
+  const entityTypeIntents = {
     registerTypeFromMesh$:progress.parsed$
   }
 
   ///entity actions
-  const entityTypeActions         = entityTypeIntents2//entityTypeIntents({meshSources$,srcSources$})
+  const entityTypeActions         = entityTypeIntents//entityTypeIntents({meshSources$,srcSources$})
   const reset$                    = DOM.select('.reset').events("click")
   const removeEntityType$         = undefined //same as delete type/ remove bom entry
   const deleteEntityInstances$    = DOM.select('.delete').events("click")
@@ -108,7 +109,6 @@ export default function intent (drivers) {
     Indirectly:
       - duplicates of other instances
       - design
-
   */
 
   const updateCoreComponent$ = events
@@ -141,7 +141,7 @@ export default function intent (drivers) {
   }
 
 
-  //measurements
+  //measurements & annotations
   const shortSingleTaps$ = events.select("gl").events("shortSingleTaps$")
 
   const createAnnotationStep$ = shortSingleTaps$
@@ -156,22 +156,10 @@ export default function intent (drivers) {
     creationStep$: createAnnotationStep$
   }
 
-
   //const bomActions = bomIntent(drivers)
   const bomActions = {
     updateBomEntries$:events.select("bom").events("editEntry$").map(toArray)
   }  
-  /*let foo$ = Rx.Observable.just("bar")
-  let reset2$ = DOM.select('.reset').events("click")
-  DOM.select('.reset').events("click").forEach(e=>console.log("reseting bom1"))
-  DOM.select('.reset').events("click").forEach(e=>console.log("reseting bom2"))
-
-  reset2$.withLatestFrom(foo$,function(e,f){
-    console.log("reset")
-  }).forEach(e=>e)*/
-
-
- 
 
   return {
     dnd$
