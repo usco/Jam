@@ -1,5 +1,7 @@
 import Rx from 'rx'
 const merge = Rx.Observable.merge
+const fromArray = Rx.Observable.fromArray
+
 
 import {first,toggleCursor} from '../../utils/otherUtils'
 import {exists,toArray} from '../../utils/utils'
@@ -15,7 +17,7 @@ import {bomIntent} from         './intents/bom'
 
 
 const of = Rx.Observable.of
-import {equals, cond, T, always} from 'ramda'
+import {equals, cond, T, always, head} from 'ramda'
 import {getExtension,getNameAndExtension,isValidFile} from '../../utils/utils'
 import {combineLatestObj} from '../../utils/obsUtils'
 import {mergeData} from '../../utils/modelUtils'
@@ -132,9 +134,68 @@ export default function intent (drivers) {
   let _resources = resources(drivers)
   let progress = _resources
 
+    
+  function intentsFromResources(rawParsedData$){
+
+    const data$ = rawParsedData$
+      .share()
+
+    const candidates$ = data$//for these we need to infer type , metadata etc
+      .filter(d=>d.data.meshOnly === true)
+      .map(({meta,data})=>({data:head(data.typesMeshes).mesh, meta}))
+      .tap(e=>console.log("candidates data",e))
+
+
+    const certains$ = data$//for these we also have type, metadata etc
+      .filter(d=>d.data.meshOnly === false)
+
+    ///
+    const createCoreComponents$      = certains$.map(data=>data.data.instMeta)
+      //NOTE :we are doing these to make them compatible with remapCoreActions helpers, not sure this is the best
+      .map(function(datas){
+        return datas.map(function({instUid, typeUid, name}){
+          return { id:instUid,  value:{ id:instUid, typeUid, name:"foo" } }
+        })
+      })
+    const createTransformComponents$ = certains$.map(data=>data.data.instTransforms)
+      .map(function(datas){
+        return datas.map(function({instUid, transforms}){
+          return { id:instUid, value:{pos:[transforms[11],transforms[10],transforms[9]]} }
+        })
+      })
+    const createMeshComponents$      = certains$.map(function(data){
+      return data.data.instMeta.map(function(instMeta){
+          let meshData = head( data.data.typesMeshes.filter(mesh=>mesh.typeUid === instMeta.typeUid) )
+          return {
+            id:instMeta.instUid
+            ,value:{mesh:meshData.mesh.clone()}
+          }
+        })
+    })
+    
+    //createCoreComponents$.forEach(e=>console.log("createCoreComponents",e))
+    //createTransformComponents$.forEach(e=>console.log("createTransformComponents",e))
+    //createMeshComponents$.forEach(e=>console.log("createMeshComponents",e))
+
+    //candidates$.forEach(e=>e)
+    //certains$.forEach(e=>console.log("certains data",e))
+    return {
+      candidates$
+      , createCoreComponents$
+      , createTransformComponents$
+      , createMeshComponents$
+    }
+
+  }
+  const {
+      candidates$
+      , createCoreComponents$
+      , createTransformComponents$
+      , createMeshComponents$
+    } =  intentsFromResources(_resources.parsed$)
  
   ///entity actions
-  const addInstanceCandidates$    = _resources.parsed$//these MIGHT become instances, or something else, we just are not 100% sure
+  const addInstanceCandidates$    = candidates$ //_resources.parsed$//these MIGHT become instances, or something else, we just are not 100% sure
   const reset$                    = DOM.select('.reset').events("click")
   const removeEntityType$         = undefined //same as delete type/ remove bom entry
   const deleteInstances$          = DOM.select('.delete').events("click")
@@ -155,6 +216,10 @@ export default function intent (drivers) {
     ,duplicateInstances$
     ,deleteInstances$
     ,reset$
+
+    , createCoreComponents$
+    , createTransformComponents$
+    , createMeshComponents$
   }
 
   const annotationsActions =  {

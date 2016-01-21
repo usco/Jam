@@ -28,7 +28,7 @@ import entityTypes from '../../core/entities/entityTypes'
 import bom         from '../../core/bom'
 
 import {remapEntityActions,remapCoreActions,
-  remapMeshActions,remapTransformActions,remapBoundsActions} from './helpers'
+  remapMeshActions,remapTransformActions,remapBoundsActions} from './entityComponentHelpers'
 
  
  
