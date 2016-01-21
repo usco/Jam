@@ -65,6 +65,8 @@ function postProcessParsedData(data){
       instMeta.push( { instUid:index, typeUid: typesMetaHash[item.objectid].id} )//TODO : auto generate name
       if('transforms' in item ){
         instTransforms.push({instUid:index, transforms:item.transforms})
+      }else{
+        instTransforms.push({instUid:index, transforms:[0,0,0,0,0,0,0,0,0,0,0,0]})
       }
     })
     //console.log("typesMeta",typesMeta,"instMeta",instMeta,"instTransforms",instTransforms)
