@@ -111,10 +111,8 @@ export default function model(props$, actions, drivers){
     //.repeat()
     //.forEach(e=>console.log("entityInstanceIntents",e))
     
-
-
   //TODO : modify entityInstanceIntents
-  const entityInstancesBase$  = /*entityActions
+  /*entityActions
     .addInstanceCandidates$
     .withLatestFrom(entityTypes$,function(candidateData,entityTypes){
       //let cleanedName = nameCleanup( candidateData.resource.name )
@@ -131,6 +129,7 @@ export default function model(props$, actions, drivers){
       return undefined
     })
     .filter(exists)*/
+  const entityInstancesBase$  = 
     addInstance$
     .map(function(newTypes){
       return newTypes.map(function(typeData){

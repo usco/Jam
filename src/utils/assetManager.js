@@ -39,11 +39,6 @@ function postProcessParsedData(data){
   if("objects" in data){
     //for 3mf , etc
     console.log("data",data)
-    mesh = data.objects['1']
-    mesh = geometryFromBuffers(mesh)
-    mesh = postProcessMesh(mesh)
-    mesh = centerMesh(mesh)
-
     let typesMetaHash = {}
     let typesMeshes   = []
     let typesMeta = []
@@ -59,7 +54,7 @@ function postProcessParsedData(data){
       mesh = geometryFromBuffers(item)
       mesh = postProcessMesh(mesh)
       mesh = centerMesh(mesh)
-      typesMeshes.push({id:item.id, mesh})
+      typesMeshes.push({typeUid:item.id, mesh})
     }
 
     //now for the instances data
@@ -72,9 +67,9 @@ function postProcessParsedData(data){
         instTransforms.push({instUid:index, transforms:item.transforms})
       }
     })
-    console.log("typesMeta",typesMeta,"instMeta",instMeta,"instTransforms",instTransforms)
+    //console.log("typesMeta",typesMeta,"instMeta",instMeta,"instTransforms",instTransforms)
 
-    return {typesMeshes, typesMeta, instMeta ,instTransforms}
+    return {meshOnly:false, typesMeshes, typesMeta, instMeta ,instTransforms}
 
   }else{
     mesh = data 
@@ -82,9 +77,9 @@ function postProcessParsedData(data){
     mesh = postProcessMesh(mesh)
     mesh = centerMesh(mesh)
 
-    let typesMeshes   = [{id:undefined, mesh}]
+    let typesMeshes   = [{typeUid:undefined, mesh}]
 
-    return {typesMeshes}
+    return {meshOnly:true, typesMeshes}
   }
   
   return mesh
