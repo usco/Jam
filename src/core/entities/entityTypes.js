@@ -3,8 +3,6 @@ let fromEvent = Rx.Observable.fromEvent
 let Observable = Rx.Observable
 let merge = Rx.Observable.merge
 
-import THREE from 'three'
-
 import logger from 'log-minim'
 let log = logger("app")
 log.setLevel("debug")
@@ -76,8 +74,8 @@ function updateTypesData(newTypeData, currentData){
 
 /////////////////
 //actual api functions 
-
-function registerTypeFromMesh(state,input){
+//create/infer a new type based on mesh + metadata
+function registerTypeFromMesh(state, input){
   //log.info("I would register something", state, input)
   //console.log("I would register something", state, input)
 
@@ -87,6 +85,15 @@ function registerTypeFromMesh(state,input){
   let newData = typeFromMeshData(input, typeUidLookup)
   //update data
   return updateTypesData(newData,state)
+}
+
+function createEntityTypes(state, input){
+
+  input.forEach(function(typeData){
+    state.typeData[typeData.id] = typeData
+  })  
+
+  return state
 }
 
 function clearTypes(state, input){
@@ -104,7 +111,7 @@ function entityTypes(actions, source){
     typeUidToTemplateMesh:{}
   }
 
-  let updateFns  = {registerTypeFromMesh, clearTypes}
+  let updateFns  = {registerTypeFromMesh, createEntityTypes, clearTypes}
   return makeModel(defaults, updateFns, actions, undefined, {doApplyTransform:false})//since we store meshes, we cannot use immutable data
 }
 

@@ -84,8 +84,6 @@ export default function model(props$, actions, drivers){
   */
 
   //TODO: go back to basics : some candidate have access to already exisiting types, some others not (first time)
-
-  const addInstanceFromTypes$   = entityInstanceIntents(entityTypes$).addInstances$
   const addInstancesCandidates$ = entityActions.addInstanceCandidates$
     .withLatestFrom(entityTypes$,function(candidateData,entityTypes){
       let typeUid = entityTypes.meshNameToPartTypeUId[candidateData.meta.name]
@@ -100,35 +98,11 @@ export default function model(props$, actions, drivers){
     .filter(exists)
 
   const addInstance$ = Rx.Observable.merge(
-      //addInstanceFromTypes$
       addInstancesCandidates$
     )
     .filter(exists)
     .filter(d=>d.length>0)
     
-    //.do(e=>console.log("addInstance",e))
-    //.take(1)
-    //.repeat()
-    //.forEach(e=>console.log("entityInstanceIntents",e))
-    
-  //TODO : modify entityInstanceIntents
-  /*entityActions
-    .addInstanceCandidates$
-    .withLatestFrom(entityTypes$,function(candidateData,entityTypes){
-      //let cleanedName = nameCleanup( candidateData.resource.name )
-      //here what we do is find types by mesh name, if any
-      let typeUid = entityTypes.meshNameToPartTypeUId[candidateData.meta.name]
-      if(typeUid){
-        let tData = entityTypes
-          .typeData[typeUid]
-
-
-        let addedInstanceTypeData = tData
-        return [tData]
-      }
-      return undefined
-    })
-    .filter(exists)*/
   const entityInstancesBase$  = 
     addInstance$
     .map(function(newTypes){
