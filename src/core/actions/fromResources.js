@@ -27,7 +27,6 @@ export function intentsFromResources(rawParsedData$){
         })
       })
 
-    ///
     const createCoreComponents$      = certains$.map(data=>data.data.instMeta)
       //NOTE :we are doing these to make them compatible with remapCoreActions helpers, not sure this is the best
       .map(function(datas){

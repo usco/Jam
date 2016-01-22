@@ -20,6 +20,9 @@ import * as objParser from 'usco-obj-parser'
 import * as threemfParser from 'usco-3mf-parser'
 
 
+import {generateUUID} from './utils'
+
+
 function makeParsers(){
   //other
   let parsers = {}
@@ -42,34 +45,43 @@ function postProcessParsedData(data){
     let typesMetaHash = {}
     let typesMeshes   = []
     let typesMeta = []
+
+    //we need to make ids unique
+    let idLookup = {}
+
     for(let objectId in data.objects){
       //console.log("objectId",objectId, data.objects[objectId])
       let item  = data.objects[objectId]
       
+      const typeUid = generateUUID()
+      idLookup[item.id] = typeUid
 
-      let meta = {id:item.id, name:item.name}
+      let meta = {id:typeUid, name:item.name}
       typesMeta.push(meta)
-      typesMetaHash[item.id] = meta
+      typesMetaHash[typeUid] = meta
 
       mesh = geometryFromBuffers(item)
       mesh = postProcessMesh(mesh)
       mesh = centerMesh(mesh)
-      typesMeshes.push({typeUid:item.id, mesh})
+      typesMeshes.push({typeUid, mesh})
     }
 
     //now for the instances data
     let instMeta = []
     let instTransforms = []
-    data.build.map(function(item,index){
+    data.build.map(function(item){
 
-      instMeta.push( { instUid:index, typeUid: typesMetaHash[item.objectid].id} )//TODO : auto generate name
+      const instUid = generateUUID()
+      let id =idLookup[item.objectid]
+
+      instMeta.push( { instUid, typeUid: id} )//TODO : auto generate name
       if('transforms' in item ){
-        instTransforms.push({instUid:index, transforms:item.transforms})
+        instTransforms.push({instUid, transforms:item.transforms})
       }else{
-        instTransforms.push({instUid:index, transforms:[0,0,0,0,0,0,0,0,0,0,0,0]})
+        instTransforms.push({instUid, transforms:[0,0,0,0,0,0,0,0,0,0,0,0]})
       }
     })
-    //console.log("typesMeta",typesMeta,"instMeta",instMeta,"instTransforms",instTransforms)
+    console.log("typesMeta",typesMeta,"typesMeshes",typesMeshes,"instMeta",instMeta,"instTransforms",instTransforms)
 
     return {meshOnly:false, typesMeshes, typesMeta, instMeta ,instTransforms}
 
