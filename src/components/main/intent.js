@@ -53,28 +53,17 @@ export default function intent (drivers) {
   //comments
   const commentActions   = commentsIntents(drivers)
 
-  //const selectionActions = selectionsIntents({DOM,events}, typesInstancesRegistry$)
-  const postMessageActions  = intentsFromPostMessage(drivers)
-  const eventsActions       = intentsFromEvents(drivers)
 
   let _resources = resources(drivers)
   let progress = _resources
 
-    
-  
-
-  const {
-        candidates$
-      , certains$
-      , createEntityTypes$
-      , createCoreComponents$
-      , createTransformComponents$
-      , createMeshComponents$
-    } =  intentsFromResources(_resources.parsed$)
- 
+  //const selectionActions = selectionsIntents({DOM,events}, typesInstancesRegistry$)
+  const actionsFromPostMessage = intentsFromPostMessage(drivers)
+  const actionsFromEvents      = intentsFromEvents(drivers)
+  const actionsFromResources   = intentsFromResources(_resources.parsed$)
 
   ///entity actions
-  const addInstanceCandidates$    = candidates$ //_resources.parsed$//these MIGHT become instances, or something else, we just are not 100% sure
+  const addInstanceCandidates$    = actionsFromResources.candidates$ //_resources.parsed$//these MIGHT become instances, or something else, we just are not 100% sure
   const reset$                    = DOM.select('.reset').events("click")
   const removeEntityType$         = undefined //same as delete type/ remove bom entry
   const deleteInstances$          = DOM.select('.delete').events("click")
@@ -82,7 +71,7 @@ export default function intent (drivers) {
 
 
   const entityTypeActions         = {
-      createEntityTypes$
+      createEntityTypes$:actionsFromResources.createEntityTypes$
     , registerTypeFromMesh$:addInstanceCandidates$ 
   }
 
@@ -96,23 +85,23 @@ export default function intent (drivers) {
   */
   const entityActions = {
       addInstanceCandidates$
-    , updateComponent$:eventsActions.updateComponent$
+    , updateComponent$:actionsFromEvents.updateComponent$
     , duplicateInstances$
     , deleteInstances$
     , reset$
 
-    , createCoreComponents$
-    , createTransformComponents$
-    , createMeshComponents$
+    , createCoreComponents$     :  actionsFromResources.createCoreComponents$
+    , createTransformComponents$: actionsFromResources.createTransformComponents$
+    , createMeshComponents$     : actionsFromResources.createMeshComponents$
   }
 
   const annotationsActions =  {
-    creationStep$: eventsActions.createAnnotationStep$
+    creationStep$: actionsFromEvents.createAnnotationStep$
   }
 
   //const bomActions = bomIntent(drivers)
   const bomActions = {
-    updateBomEntries$:eventsActions.updateBomEntries$
+    updateBomEntries$:actionsFromEvents.updateBomEntries$
   }  
 
   //OUTbound requests to various drivers
@@ -134,7 +123,7 @@ export default function intent (drivers) {
     ,annotationsActions
     ,bomActions
 
-    ,apiActions:postMessageActions
+    ,apiActions:actionsFromPostMessage
 
     ,progress
 
