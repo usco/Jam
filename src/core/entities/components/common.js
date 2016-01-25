@@ -13,7 +13,7 @@ export function createComponents(defaults, state, inputs){
   //console.log("createComponents",inputs)
 
   return inputs.reduce(function(state,input){
-
+    //console.log("createComponents")
     let inputValue =  {}
     if(input && input.value) inputValue = input.value
     const newAttrs = mergeData(defaults,inputValue)
@@ -21,7 +21,9 @@ export function createComponents(defaults, state, inputs){
     //auto increment ?
     //auto generate ?
     let id = generateUUID()
-    if(input && input.id) id = input.id
+    if(input && input.id !== undefined){
+      id = input.id
+    }
 
     state = mergeData({},state)
     state[id] = newAttrs

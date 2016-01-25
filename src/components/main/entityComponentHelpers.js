@@ -52,7 +52,7 @@ export function remapCoreActions(entityActions, componentBase$, currentSelection
     ,createComponentsFromAnnots$
     ,entityActions.createCoreComponents$//not infered
     ).share()
-    .tap(e=>console.log("creating core component",e))
+    //.tap(e=>console.log("creating core component",e))
 
   const removeComponents$ = entityActions.deleteInstances$
   
@@ -86,7 +86,7 @@ export function remapMeshActions(entityActions, componentBase$, currentSelection
       })
     })
     .merge(entityActions.createMeshComponents$)//not infered
-    .tap(e=>console.log("creating mesh component",e))
+    //.tap(e=>console.log("creating mesh component",e))
 
 
   const removeComponents$    = entityActions.deleteInstances$
@@ -110,7 +110,7 @@ export function remapTransformActions(entityActions, componentBase$, currentSele
       })
     })
     .merge(entityActions.createTransformComponents$)
-    .tap(e=>console.log("creating transforms component",e))
+    //.tap(e=>console.log("creating transforms component",e))
 
 
   const removeComponents$ = entityActions.deleteInstances$

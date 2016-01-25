@@ -36,12 +36,12 @@ const parsers = makeParsers()
 
 
 function postProcessParsedData(data){
-  //TODO: unify parsers' returned data/api
-  console.log("postProcessMesh/data",data)
+  //TODO: unify parsers' returned data/api ?
+  //console.log("postProcessMesh/data",data)
   let mesh = undefined
   if("objects" in data){
     //for 3mf , etc
-    console.log("data",data)
+    //console.log("data",data)
     let typesMetaHash = {}
     let typesMeshes   = []
     let typesMeta = []
@@ -81,7 +81,7 @@ function postProcessParsedData(data){
         instTransforms.push({instUid, transforms:[0,0,0,0,0,0,0,0,0,0,0,0]})
       }
     })
-    console.log("typesMeta",typesMeta,"typesMeshes",typesMeshes,"instMeta",instMeta,"instTransforms",instTransforms)
+    //console.log("typesMeta",typesMeta,"typesMeshes",typesMeshes,"instMeta",instMeta,"instTransforms",instTransforms)
 
     return {meshOnly:false, typesMeshes, typesMeta, instMeta ,instTransforms}
 
