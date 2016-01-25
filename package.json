@@ -62,6 +62,7 @@
     "three": "^0.70.0",
     "tween.js": "^0.14.0",
     "usco-3mf-parser": "usco/usco-3mf-parser",
+    "usco-ctm-parser": "usco/usco-ctm-parser",
     "usco-obj-parser": "usco/usco-obj-parser",
     "usco-stl-parser": "usco/usco-stl-parser",
     "viewport-size": "0.0.1"

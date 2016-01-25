@@ -15,9 +15,10 @@ import {mergeData} from './modelUtils'
 import assign from 'fast.js/object/assign'//faster object.assign
 
 //import parse as stlParser,  {outputs} from 'stlParser'
-import * as stlParser from 'usco-stl-parser'
-import * as objParser from 'usco-obj-parser'
+import * as stlParser     from 'usco-stl-parser'
+import * as objParser     from 'usco-obj-parser'
 import * as threemfParser from 'usco-3mf-parser'
+import * as ctmParser     from 'usco-ctm-parser'
 
 
 import {generateUUID} from './utils'
@@ -29,6 +30,7 @@ function makeParsers(){
   parsers["stl"] = stlParser.default
   parsers["obj"] = objParser.default
   parsers["3mf"] = threemfParser.default
+  parsers["ctm"] = ctmParser.default
   //console.log(".inputDataType",parsers["stl"].inputDataType)
   return parsers
 }
