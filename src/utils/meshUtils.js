@@ -7,6 +7,11 @@ export function postProcessMesh( shape ){
   if( !(shape instanceof THREE.Object3D) )
   {
     let material = new THREE.MeshPhongMaterial( { color: 0x17a9f5, specular: 0xffffff, shininess: 5, shading: THREE.FlatShading} )
+    if( 'color' in shape.attributes){
+      material.vertexColors = THREE.VertexColors
+      material.color.set(0xffffff)
+      material.specular.set(0xffffff)
+    }
     shape = new THREE.Mesh(shape, material)
   }
 
@@ -15,8 +20,8 @@ export function postProcessMesh( shape ){
   let geometry = shape.geometry
   if(geometry)
   {
+    geometry.computeFaceNormals()    
     geometry.computeVertexNormals()//needed at least for .ply files
-    geometry.computeFaceNormals()
   }
 
   /* OLD STUFF, needs to be sorted out 
@@ -50,14 +55,14 @@ export function geometryFromBuffers({positions,normals,indices,colors}){
 
   geometry.addAttribute( 'position', new THREE.BufferAttribute( positions, 3 ) )
 
-  if(normals){
+  if(normals && normals.length>0){
     geometry.addAttribute( 'normal', new THREE.BufferAttribute( normals, 3 ) )
   }
-  if(indices){
-    geometry.addAttribute( 'index', new THREE.BufferAttribute( indices, 1 ) )
+  if(indices && indices.length>0){
+    geometry.addAttribute( 'index', new THREE.BufferAttribute( indices, 3 ) )
   }
-  if(colors){
-    geometry.addAttribute( 'color', new THREE.BufferAttribute( colors, 1 ) )
+  if(colors && colors.length>0){
+    geometry.addAttribute( 'color', new THREE.BufferAttribute( colors, 4 ) )
   }
 
   return geometry
