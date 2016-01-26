@@ -185,18 +185,29 @@ function GLView({drivers, props$}){
   const actions = intent({DOM},{camera,scene,transformControls})
   const state$  = model(props$, actions)
 
+  //FIXME: proxies for now, not sure how to deal with them
+  const meshAddedToScene$     = new Rx.ReplaySubject(1) 
+  const meshRemovedFromScene$ = new Rx.ReplaySubject(1)
+
   const zoomToFit$ = settings$
-    .filter(s=> s.mode === "viewer")
+    .filter(s=> s.appMode === "viewer")
     .combineLatest(state$.pluck("items"), function(settings,items){
       return items
     })
     .filter(i=>i.length>0)
+    .distinctUntilChanged()
+
+  /*const zoomToFit$ = meshAddedToScene$ //alternative implementation
+    .combineLatest(settings$.filter(s=> s.appMode === "viewer"), function(mesh, settings){
+      return [dynamicInjector]
+    })
+    .distinctUntilChanged()*/
 
   //react to actions
   actions.zoomInOnPoint$
     .forEach( (oAndP) => zoomInOn( oAndP.object, camera, {position:oAndP.point} ) )
   zoomToFit$
-    .tap(meshes=>console.log("zoomToFit",meshes))
+    //.tap(meshes=>console.log("zoomToFit",meshes))
     .forEach( (meshes) => zoomToFit(meshes[meshes.length-1], camera, new THREE.Vector3() ) )
    
 
@@ -415,8 +426,16 @@ function GLView({drivers, props$}){
   //react based on diffs
   itemChanges$
     .do(function(changes){
-      changes.added.map( m=>addToScene(m) )
-      changes.removed.map( m=> removeFromScene(m)  )
+      changes.added.map( function(mesh){
+        addToScene(mesh)
+        meshAddedToScene$.onNext(mesh) 
+      })
+      changes.removed.map( function(mesh){
+        removeFromScene(mesh)
+        meshRemovedFromScene$.onNext(mesh) 
+      })
+
+
     })
     .do(e=>render())
     .forEach(e=>e)
