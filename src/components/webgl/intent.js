@@ -70,12 +70,6 @@ export default function intent(drivers, data){
 
   DOM.select('canvas').events('contextmenu').subscribe( e => preventDefault(e) )
 
-
-  const zoomToFit$ = DOM.select('#zoomToFit').events("click")
-  
-  zoomToFit$.forEach(e=>console.log("zoomToFit"))
-
-
   let containerResizes$ = windowResizes$
     .map(function(){
       let input = document.querySelector('.container')//canvas
@@ -105,6 +99,9 @@ export default function intent(drivers, data){
     .map(e => e.detail.pickingInfos.shift())
     .filter(exists)
     .map( objectAndPosition )
+
+  const zoomToFit$ = Rx.Observable.just(true) //DOM.select('#zoomToFit').events("click")
+  
         
   //Stream of selected meshes
   const selectMeshes$ = merge( 
@@ -146,6 +143,7 @@ export default function intent(drivers, data){
   return {
     userAction$
     , zoomInOnPoint$
+    , zoomToFit$
     , selectMeshes$
 
     ,shortSingleTapsWPicking$
@@ -156,6 +154,6 @@ export default function intent(drivers, data){
 
     ,selectionsTransforms$
 
-    ,zoomToFit$
+    
   }
 }
