@@ -19,7 +19,7 @@ function dataSource(data){
   }
 }
 
-export function requests(inputs, drivers){
+export default function assetRequests(inputs, drivers){
   const {meshSources$,srcSources$} = inputs
 
   //FIXME: caching should be done at a higher level , to prevent useless requests

@@ -18,6 +18,9 @@ import {makeBoundingSystem} from '../../core/entities/components/bounds'
 import {addAnnotation} from '../../core/entities/annotations'
 
 import {entityInstanceIntents} from '../../core/entities/entityIntents'
+import {remapEntityActions,remapCoreActions,
+  remapMeshActions,remapTransformActions,remapBoundsActions} from '../../core/entities/componentHelpers'
+
 
 import {selectionsIntents} from './intents/selections'
 
@@ -26,9 +29,6 @@ import comments from    '../../core/comments'
 import selections from  '../../core/selections'
 import entityTypes from '../../core/entities/entityTypes'
 import bom         from '../../core/bom'
-
-import {remapEntityActions,remapCoreActions,
-  remapMeshActions,remapTransformActions,remapBoundsActions} from './entityComponentHelpers'
 
  
  
@@ -85,7 +85,7 @@ export default function model(props$, actions, drivers){
 
   //TODO: go back to basics : some candidate have access to already exisiting types, some others not (first time)
   const addInstancesCandidates$ = entityActions.addInstanceCandidates$
-    .withLatestFrom(entityTypes$,function(candidateData,entityTypes){
+    .withLatestFrom(entityTypes$,function(candidateData, entityTypes){
       let typeUid = entityTypes.meshNameToPartTypeUId[candidateData.meta.name]
       if(typeUid){
         let tData = entityTypes

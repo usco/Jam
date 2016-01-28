@@ -1,10 +1,16 @@
 import Rx from 'rx'
 const merge = Rx.Observable.merge
 const fromArray = Rx.Observable.fromArray
+const of = Rx.Observable.of
+import {equals, cond, T, always, head} from 'ramda'
 
 import {first,toggleCursor} from '../../utils/otherUtils'
 import {exists,toArray} from '../../utils/utils'
+import {getExtension,getNameAndExtension,isValidFile} from '../../utils/utils'
+import {combineLatestObj} from '../../utils/obsUtils'
+import {mergeData} from '../../utils/modelUtils'
 
+//
 import {observableDragAndDrop} from '../../interactions/dragAndDrop'
 
 import {extractDesignSources,extractMeshSources,extractSourceSources} from '../../core/dataSourceExtractors'
@@ -15,14 +21,8 @@ import {selectionsIntents} from './intents/selections'
 import {bomIntent} from         './intents/bom'
 
 
-const of = Rx.Observable.of
-import {equals, cond, T, always, head} from 'ramda'
-import {getExtension,getNameAndExtension,isValidFile} from '../../utils/utils'
-import {combineLatestObj} from '../../utils/obsUtils'
-import {mergeData} from '../../utils/modelUtils'
-
 import {resources} from '../../utils/assetManager'
-import {requests} from '../../utils/assetRequests'
+import assetRequests from '../../utils/assetRequests'
 
 import {intentsFromEvents} from '../../core/actions/fromEvents'
 import {intentsFromPostMessage} from '../../core/actions/fromPostMessage'
@@ -53,11 +53,9 @@ export default function intent (drivers) {
   //comments
   const commentActions   = commentsIntents(drivers)
 
-
   let _resources = resources(drivers)
-  let progress = _resources
 
-  //const selectionActions = selectionsIntents({DOM,events}, typesInstancesRegistry$)
+  //actions from various sources
   const actionsFromPostMessage = intentsFromPostMessage(drivers)
   const actionsFromEvents      = intentsFromEvents(drivers)
   const actionsFromResources   = intentsFromResources(_resources.parsed$)
@@ -105,9 +103,9 @@ export default function intent (drivers) {
   }  
 
   //OUTbound requests to various drivers
-  let _requests = requests({meshSources$,srcSources$})
-  let requests$ = _requests.requests.http$
-  let desktop$  = _requests.requests.desktop$
+  let requests = assetRequests({meshSources$,srcSources$})
+  let requests$ = requests.requests.http$
+  let desktop$  = requests.requests.desktop$
 
   return {
     dnd$
@@ -125,7 +123,7 @@ export default function intent (drivers) {
 
     ,apiActions:actionsFromPostMessage
 
-    ,progress
+    ,progress:_resources
 
     ,requests$
     ,desktop$
