@@ -67,6 +67,15 @@ function makeRegistry(instances$, types$){
     })
 }
 
+  /*possible sources of instances
+    directly:
+    - addressBar
+    - postMessage
+    - drag & drop
+    Indirectly:
+      - duplicates of other instances
+  */
+  
 
 export default function model(props$, actions, drivers){
   const DOM      = drivers.DOM
@@ -75,7 +84,7 @@ export default function model(props$, actions, drivers){
   let entityActions = actions.entityActions
 
   const settings$      = settings( actions.settingActions, actions.settingsSources$ ) 
-  const entityTypes$   = entityTypes( actions.entityTypeActions)
+  const entityTypes$   = entityTypes( actions.entityActions)
   const comments$      = comments( actions.commentActions)
 
   /*
@@ -86,7 +95,7 @@ export default function model(props$, actions, drivers){
   //we FILTER all candidates/certains by their "presence" in the types list
 
   //TODO: go back to basics : some candidate have access to already exisiting types, some others not (first time)
-  const addInstancesCandidates$ = entityActions.addInstanceCandidates$
+  const addInstancesCandidates$ = entityActions.entityCandidates$
     .withLatestFrom(entityTypes$, function(candidateData, entityTypes){
       const meshName = candidateData.meta.name
       let typeUid = entityTypes.meshNameToPartTypeUId[candidateData.meta.name]
