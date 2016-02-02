@@ -28,6 +28,7 @@ export function intentsFromEvents(drivers){
     updateCoreComponent$
     ,updateTransformComponent$
   )
+  
   //bom
   const updateBomEntries$ = events
     .select("bom").events("editEntry$").map(toArray)

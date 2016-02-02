@@ -20,19 +20,21 @@ import {commentsIntents} from   './intents/comments'
 import {selectionsIntents} from './intents/selections'
 import {bomIntent} from         './intents/bom'
 
-
 import {resources} from '../../utils/assetManager'
 import assetRequests from '../../utils/assetRequests'
 
 import {intentsFromEvents} from '../../core/actions/fromEvents'
 import {intentsFromPostMessage} from '../../core/actions/fromPostMessage'
-import {intentsFromResources,entityActionsFromResources} from '../../core/actions/fromResources'
+import {intentsFromResources,makeEntityActionsFromResources} from '../../core/actions/fromResources'
+import {makeEntityActionsFromDom} from '../../core/actions/fromDom'
 
 
-function mergeActionsByName(actionSources){
+function mergeActionsByName(actionSources, validActions){
 
   return actionSources.reduce(function(result, actions){
+    //console.log("acions",Object.keys(actions),validActions)
     Object.keys(actions)
+      .filter(key=>validActions.indexOf(key.replace('$',''))>-1)
       .map(function(key){
         const action = actions[key]
         if(key in result){
@@ -47,19 +49,7 @@ function mergeActionsByName(actionSources){
  
 }
 
-function makeEntityActionsFromDom(DOM){
-  const reset$                    = DOM.select('.reset').events("click")
-  const removeEntityType$         = undefined //same as delete type/ remove bom entry
-  const deleteInstances$          = DOM.select('.delete').events("click")
-  const duplicateInstances$       = DOM.select('.duplicate').events("click")
-  
-  return {
-    reset$
-    , removeEntityType$
-    , deleteInstances$
-    , duplicateInstances$
-  } 
-}
+
 
 export default function intent (drivers) {
   const DOM      = drivers.DOM
@@ -90,50 +80,31 @@ export default function intent (drivers) {
   //actions from various sources
   const actionsFromPostMessage = intentsFromPostMessage(drivers)
   const actionsFromEvents      = intentsFromEvents(drivers)
-  const {candidates$,certains$}= intentsFromResources(_resources.parsed$)
-  const actionsFromResources   = entityActionsFromResources(certains$)
+  const {entityCandidates$, entityCertains$}= intentsFromResources(_resources.parsed$)//these MIGHT become instances, or something else, we just are not 100% sure
+  
+  const entityActionsFromResources   = makeEntityActionsFromResources(entityCertains$)
+  const entityActionsFromDom         = makeEntityActionsFromDom(DOM)
+  const extras = {entityCandidates$}
 
-  //
-  const entityActionsFromDom   = makeEntityActionsFromDom(DOM)
+   const entityActionNames = [
+    'reset'
 
-  const fooBar = {
-    removeEntityType$:of("bar")
-  }
-  const allEntityActions = mergeActionsByName([entityActionsFromDom,actionsFromPostMessage,actionsFromResources])
-  console.log("allEntityActions",allEntityActions)
+    ,'addEntityType'
+    ,'removeEntityType'
+    ,'entityCandidates'
 
-  ///entity actions
-  const addInstanceCandidates$    = candidates$ //_resources.parsed$//these MIGHT become instances, or something else, we just are not 100% sure
-  const reset$                    = DOM.select('.reset').events("click")
-  const removeEntityType$         = undefined //same as delete type/ remove bom entry
-  const deleteInstances$          = DOM.select('.delete').events("click")
-  const duplicateInstances$       = DOM.select('.duplicate').events("click")
+    ,'deleteInstances'
+    ,'duplicateInstances'
 
+    ,'updateComponent'
+    ,'createCoreComponents'
+    ,'createTransformComponents'
+    ,'createMeshComponents'
+  ]
 
-  const entityTypeActions         = {
-      createEntityTypes$:actionsFromResources.createEntityTypes$
-    , registerTypeFromMesh$:addInstanceCandidates$ 
-  }
-
-  /*possible sources of instances
-    directly:
-    - addressBar
-    - postMessage
-    - drag & drop
-    Indirectly:
-      - duplicates of other instances
-  */
-  const entityActions = {
-      addInstanceCandidates$
-    , updateComponent$:actionsFromEvents.updateComponent$
-    , duplicateInstances$
-    , deleteInstances$
-    , reset$
-
-    , createCoreComponents$     :  actionsFromResources.createCoreComponents$
-    , createTransformComponents$: actionsFromResources.createTransformComponents$
-    , createMeshComponents$     : actionsFromResources.createMeshComponents$
-  }
+  const actionsSources = [entityActionsFromDom, actionsFromPostMessage, entityActionsFromResources, actionsFromEvents, extras]
+  const entityActions = mergeActionsByName(actionsSources, entityActionNames)
+  //console.log("entityActions",entityActions)
 
   const annotationsActions =  {
     creationStep$: actionsFromEvents.createAnnotationStep$
@@ -159,7 +130,6 @@ export default function intent (drivers) {
 
     //,selectionActions
     ,entityActions
-    ,entityTypeActions
     ,annotationsActions
     ,bomActions
 

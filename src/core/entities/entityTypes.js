@@ -75,7 +75,7 @@ function updateTypesData(newTypeData, currentData){
 /////////////////
 //actual api functions 
 //create/infer a new type based on mesh + metadata
-function registerTypeFromMesh(state, input){
+function entityCandidates(state, input){
   //log.info("I would register something", state, input)
   //console.log("I would register something", state, input)
 
@@ -87,7 +87,7 @@ function registerTypeFromMesh(state, input){
   return updateTypesData(newData,state)
 }
 
-function createEntityTypes(state, input){
+function addEntityTypes(state, input){
 
   input.forEach(function(typeData){
     state.typeData[typeData.id] = typeData
@@ -111,7 +111,7 @@ function entityTypes(actions, source){
     typeUidToTemplateMesh:{}
   }
 
-  let updateFns  = {registerTypeFromMesh, createEntityTypes, clearTypes}
+  let updateFns  = {entityCandidates, addEntityTypes, clearTypes}
   return makeModel(defaults, updateFns, actions, undefined, {doApplyTransform:false})//since we store meshes, we cannot use immutable data
 }
 

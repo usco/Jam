@@ -7,20 +7,20 @@ export function intentsFromResources(rawParsedData$){
     const data$ = rawParsedData$
       .share()
 
-    const candidates$ = data$//for these we need to infer type , metadata etc
+    const entityCandidates$ = data$//for these we need to infer type , metadata etc
       .filter(d=>d.data.meshOnly === true)
       .map(({meta,data})=>({data:head(data.typesMeshes).mesh, meta}))
 
-    const certains$ = data$//for these we also have type, metadata etc, so we are CERTAIN of their data
+    const entityCertains$ = data$//for these we also have type, metadata etc, so we are CERTAIN of their data
       .filter(d=>d.data.meshOnly === false)
 
     return {
-        candidates$
-      , certains$
+        entityCandidates$
+      , entityCertains$
     }
   }
 
-  export function entityActionsFromResources(certains$){
+  export function makeEntityActionsFromResources(certains$){
     const createCoreComponents$      = certains$.map(data=>data.data.instMeta)
       //NOTE :we are doing these to make them compatible with remapCoreActions helpers, not sure this is the best
       .map(function(datas){
@@ -45,7 +45,7 @@ export function intentsFromResources(rawParsedData$){
     })
 
      //TODO : this would need to be filtered based on pre-existing type data
-    const createEntityTypes$ = certains$
+    const addEntityTypes$ = certains$
       .map(function(data){
         return data.data.typesMeta.map(function(typeMeta,index){
           if(typeMeta.name === undefined){//we want type names in any case, so we infer this base on "file" name
@@ -59,7 +59,7 @@ export function intentsFromResources(rawParsedData$){
       })
 
     return {
-      createEntityTypes$
+      addEntityTypes$
       , createCoreComponents$
       , createTransformComponents$
       , createMeshComponents$
