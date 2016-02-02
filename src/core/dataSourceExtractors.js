@@ -49,7 +49,8 @@ export function extractMeshSources( rawSources, extensions ){
   extensions = extensions || {
     meshes : ["stl","3mf","amf","obj","ctm","ply"]//FIXME: not great, this makes us need an import + fill here to work
   }
-  const {dnd$, postMessages$, addressbar} = rawSources
+  const {dnd$, postMessage, addressbar} = rawSources
+  const postMessages$ = postMessage.pluck("data")
 
   //only load meshes for resources that are ...mesh files
   const validateMeshExtension = validateExtension.bind(null,extensions.meshes)
@@ -94,8 +95,8 @@ export function extractSourceSources( rawSources, extensions){
   extensions = extensions || {
     meshes : ["scad","jscad","coffee"]
   }
-  const {dnd$, postMessages$, addressbar} = rawSources
-
+  const {dnd$, postMessage, addressbar} = rawSources
+  const postMessages$ = postMessage.pluck("data")
 
   //only load meshes for resources that are ...mesh files
   const validateSourceExtension = validateExtension.bind(null,extensions.meshes)

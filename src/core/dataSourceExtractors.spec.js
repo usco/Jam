@@ -10,14 +10,14 @@ describe("mesh source extractors", function() {
   it("can extract mesh sources from input raw addressbar sources", function(done) {
     
     const dnd$          = never()
-    const postMessages$ = never()
+    const postMessage   = never()
     const addressbar    = { 
       get:function(){
         return of(["fakeModel.stl"])
       }
     }
         
-    let meshSource$ = extractMeshSources({dnd$,postMessages$,addressbar})
+    let meshSource$ = extractMeshSources({dnd$, postMessage, addressbar})
 
     meshSource$.forEach(function(meshSource){
       assert.strictEqual(meshSource[0],"fakeModel.stl")
@@ -29,10 +29,10 @@ describe("mesh source extractors", function() {
   it("can extract mesh sources from input raw postMessage sources", function(done) {
     
     const dnd$          = never()
-    const postMessages$ = of({modelUrl:"fakeModel.stl"})
+    const postMessage   = of({data:{modelUrl:"fakeModel.stl"}})
     const addressbar    = {get:()=>never()}
   
-    let meshSource$ = extractMeshSources({dnd$,postMessages$,addressbar})
+    let meshSource$ = extractMeshSources({dnd$, postMessage, addressbar})
 
     meshSource$.forEach(function(meshSource){
       assert.strictEqual(meshSource[0],"fakeModel.stl")
@@ -43,10 +43,10 @@ describe("mesh source extractors", function() {
   it("can extract mesh sources from input raw dragAnddrop sources", function(done) {
     
     const dnd$          = of({type:"url", data:["fakeModel.stl"]})
-    const postMessages$ = never()
+    const postMessage   = never()
     const addressbar    = {get:()=>never()}
   
-    let meshSource$ = extractMeshSources({dnd$,postMessages$,addressbar})
+    let meshSource$ = extractMeshSources({dnd$, postMessage, addressbar})
 
     meshSource$.forEach(function(meshSource){
       assert.strictEqual(meshSource[0],"fakeModel.stl")
@@ -73,10 +73,10 @@ describe("mesh source extractors", function() {
     this.timeout(3000)
 
     const dnd$          = of({type:"url", data:[undefined, ""]})
-    const postMessages$ = of({modelUrl:""})
+    const postMessage   = of({data:{modelUrl:""}})
     const addressbar    = {get:()=>of([undefined])}
   
-    let meshSource$ = extractMeshSources({dnd$,postMessages$,addressbar})
+    let meshSource$ = extractMeshSources({dnd$, postMessage, addressbar})
 
     setTimeout(done, 1500)
 
