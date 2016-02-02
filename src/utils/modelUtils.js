@@ -127,6 +127,28 @@ export function makeModifications(actions, updateFns, options){
 }
 
 
+//from futurice/power-ui
+/**
+   * smartStateFold is supposed to be given as the argument a
+   * `scan` operation over a stream of state|updateFn. State is
+   * expected to be an object, and updateFn is a function that
+   * takes old state and produces new state.
+   * Example:
+   * --s0---fn1----fn2----s10------>
+   *      scan(smartStateFold)
+   * --s0---s1-----s2-----s10------>
+   *
+   * where s1 = fn1(s0)
+   * where s2 = fn2(s1)
+   */
+export function smartStateFold(prev, curr) {
+    if (typeof curr === 'function') {
+      return curr(prev)
+    } else {
+      return prev(curr)
+    }
+  }
+
 
 export function makeModel(defaults, updateFns, actions, source, options={doApplyTransform:false} ){
   let mods$ =  makeModifications(actions, updateFns, options)
@@ -141,7 +163,8 @@ export function makeModel(defaults, updateFns, actions, source, options={doApply
 
   return mods$
     .merge(source$)
-    .scan((currentData, modFn) => modFn(currentData))//combine existing data with new one
+    .scan(smartStateFold)//combine existing data with new one
+    //.scan((currentData, modFn) => modFn(currentData))//combine existing data with new one
     //.distinctUntilChanged()
     .shareReplay(1)
 }
