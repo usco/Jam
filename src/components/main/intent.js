@@ -26,8 +26,40 @@ import assetRequests from '../../utils/assetRequests'
 
 import {intentsFromEvents} from '../../core/actions/fromEvents'
 import {intentsFromPostMessage} from '../../core/actions/fromPostMessage'
-import {intentsFromResources} from '../../core/actions/fromResources'
+import {intentsFromResources,entityActionsFromResources} from '../../core/actions/fromResources'
 
+
+function mergeActionsByName(actionSources){
+
+  return actionSources.reduce(function(result, actions){
+    Object.keys(actions)
+      .map(function(key){
+        const action = actions[key]
+        if(key in result){
+          result[key] = merge(result[key], action)
+        }else{
+          result[key] = action
+        }       
+      })
+
+    return result
+  },{})
+ 
+}
+
+function makeEntityActionsFromDom(DOM){
+  const reset$                    = DOM.select('.reset').events("click")
+  const removeEntityType$         = undefined //same as delete type/ remove bom entry
+  const deleteInstances$          = DOM.select('.delete').events("click")
+  const duplicateInstances$       = DOM.select('.duplicate').events("click")
+  
+  return {
+    reset$
+    , removeEntityType$
+    , deleteInstances$
+    , duplicateInstances$
+  } 
+}
 
 export default function intent (drivers) {
   const DOM      = drivers.DOM
@@ -58,10 +90,20 @@ export default function intent (drivers) {
   //actions from various sources
   const actionsFromPostMessage = intentsFromPostMessage(drivers)
   const actionsFromEvents      = intentsFromEvents(drivers)
-  const actionsFromResources   = intentsFromResources(_resources.parsed$)
+  const {candidates$,certains$}= intentsFromResources(_resources.parsed$)
+  const actionsFromResources   = entityActionsFromResources(certains$)
+
+  //
+  const entityActionsFromDom   = makeEntityActionsFromDom(DOM)
+
+  const fooBar = {
+    removeEntityType$:of("bar")
+  }
+  const allEntityActions = mergeActionsByName([entityActionsFromDom,actionsFromPostMessage,actionsFromResources])
+  console.log("allEntityActions",allEntityActions)
 
   ///entity actions
-  const addInstanceCandidates$    = actionsFromResources.candidates$ //_resources.parsed$//these MIGHT become instances, or something else, we just are not 100% sure
+  const addInstanceCandidates$    = candidates$ //_resources.parsed$//these MIGHT become instances, or something else, we just are not 100% sure
   const reset$                    = DOM.select('.reset').events("click")
   const removeEntityType$         = undefined //same as delete type/ remove bom entry
   const deleteInstances$          = DOM.select('.delete').events("click")
