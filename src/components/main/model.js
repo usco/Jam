@@ -30,7 +30,7 @@ import selections from  '../../core/selections'
 import entityTypes from '../../core/entities/entityTypes'
 import bom         from '../../core/bom'
 
- 
+import bomIntens from './intents/bom2'
  
 function makeRegistry(instances$, types$){
   //register type=> instance & vice versa
@@ -83,14 +83,15 @@ export default function model(props$, actions, drivers){
   //addType               => --T----------------------
   */
 
+  //we FILTER all candidates/certains by their "presence" in the types list
+
   //TODO: go back to basics : some candidate have access to already exisiting types, some others not (first time)
   const addInstancesCandidates$ = entityActions.addInstanceCandidates$
-    .withLatestFrom(entityTypes$,function(candidateData, entityTypes){
+    .withLatestFrom(entityTypes$, function(candidateData, entityTypes){
+      const meshName = candidateData.meta.name
       let typeUid = entityTypes.meshNameToPartTypeUId[candidateData.meta.name]
       if(typeUid){
-        let tData = entityTypes
-          .typeData[typeUid]
-        let addedInstanceTypeData = tData
+        let tData = entityTypes.typeData[typeUid]
         return [tData]
       }
       return undefined
@@ -123,8 +124,7 @@ export default function model(props$, actions, drivers){
 
   //create various components' baseis
   let componentBase$ = entityInstancesBase$
-    .withLatestFrom(entityTypes$,function(instances,types){
-      //console.log("instances",instances, "types",types)
+    .withLatestFrom(entityTypes$, function(instances,types){
 
       let data =  instances.map(function(instance){
         let instUid = instance.id
@@ -165,10 +165,10 @@ export default function model(props$, actions, drivers){
 
   entityActions        = remapEntityActions(entityActions, proxySelections$)
 
-  let coreActions      = remapCoreActions(entityActions, componentBase$, proxySelections$, addAnnotations$)
-  let meshActions      = remapMeshActions(entityActions, componentBase$, proxySelections$)
+  let coreActions      = remapCoreActions(entityActions     , componentBase$, proxySelections$, addAnnotations$)
+  let meshActions      = remapMeshActions(entityActions     , componentBase$, proxySelections$)
   let transformActions = remapTransformActions(entityActions, componentBase$, proxySelections$)
-  let boundActions     = remapBoundsActions(entityActions, componentBase$, proxySelections$)
+  let boundActions     = remapBoundsActions(entityActions   , componentBase$, proxySelections$)
 
   let {core$}          = makeCoreSystem(coreActions)
   let {meshes$}        = makeMeshSystem(meshActions)
@@ -176,9 +176,10 @@ export default function model(props$, actions, drivers){
   let {bounds$}        = makeBoundingSystem(boundActions)
 
 
+  //selections => only for real time view
   const typesInstancesRegistry$ =  makeRegistry(core$, entityTypes$)  
   const selections$  = selections( selectionsIntents({DOM,events}, typesInstancesRegistry$) )
-    .merge(coreActions.removeComponents$.map(a=> ({instIds:[],bomIds:[]}) )) //after an instance is remove, unselect
+    .merge(coreActions.removeComponents$.map(a=> ({instIds:[],bomIds:[]}) )) //after an instance is removed, unselect
 
   const currentSelections$ = selections$//selections$.pluck("instIds")
     .withLatestFrom(typesInstancesRegistry$,function(selections,registry){
@@ -191,60 +192,12 @@ export default function model(props$, actions, drivers){
     .shareReplay(1)
 
   //close some cycles
-  replicateStream(currentSelections$,proxySelections$)
+  replicateStream(currentSelections$, proxySelections$)
 
 
-  //BOM
-  const addBomEntries$ = entityInstanceIntents(entityTypes$)
-    .addInstances$//in truth this just mean "a new type was added"
-    .map(function(typeDatas){
-      return typeDatas.map(function({id,name}){
-        return {id,name,qty:0,version:"0.0.1",unit:"QA",printable:true}
-      })
-    })
 
-  const increaseBomEntries$ = coreActions
-    .createComponents$
-    .map(function(data){
-      return data
-        .map(v=>v.value.typeUid)
-        .map(function(id){
-          return {offset:1,id}
-        })
-    })
-    .merge(
-      coreActions.duplicateComponents$
-      .map(function(data){
-        return data.map(function(dat){
-          return {offset:1,id:dat.typeUid}
-        })
-      })
-    )
 
-  const decreaseBomEntries$ = coreActions
-    .removeComponents$
-    .do(d=>console.log("removing",d))
-    .map(function(data){
-      return data
-        .filter(d=>d.id !== undefined)
-        .map(d=>d.typeUid)
-        .map(function(id){
-          return {offset:-1,id}
-        })
-    })
-
-  const updateBomEntriesCount$ = merge(
-    increaseBomEntries$
-    , decreaseBomEntries$
-  )
-
-  let clearBomEntries$ = merge(
-    entityActions.reset$
-  )
-
-  const updateBomEntries$ = actions.bomActions.updateBomEntries$
-
-  let bomActions = mergeData( {addBomEntries$, updateBomEntriesCount$, clearBomEntries$, updateBomEntries$} )
+  const bomActions = bomIntens(drivers, entityTypes$, coreActions, entityActions, actions)
   const bom$ = bom(bomActions)
 
   //not entirely sure, we need a way to observe any fetch/updload etc operation
