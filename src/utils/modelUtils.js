@@ -90,30 +90,32 @@ export function makeModifications(actions, updateFns, options){
 
     //here is where the "magic happens"
     //for each "operation/action" we map it to an observable with history & state
-    let mod$   = op
-      .map((input) => (state) => {
-
-        if(options.history)
-        { 
-          let history = logHistory(state, state.history)
-        }
-        state   = modFn(state, input)//call the adapted function
-
-        if(options.history){
-          state = {state ,history}
-        }
-
-
-        if(options.doApplyTransform)//if we need to coerce data  to immutable etc
-        {
-          state = transform(state)
-        }
-
-        return state
-      })
-
+    
     //console.log("op",op,"opName",opName,"modFn",modFn)
-    if(modFn){
+    if(modFn && op){
+
+      let mod$   = op
+        .map((input) => (state) => {
+
+          if(options.history)
+          { 
+            let history = logHistory(state, state.history)
+          }
+          state   = modFn(state, input)//call the adapted function
+
+          if(options.history){
+            state = {state ,history}
+          }
+
+
+          if(options.doApplyTransform)//if we need to coerce data  to immutable etc
+          {
+            state = transform(state)
+          }
+
+          return state
+        })
+
       return mod$ 
     }
   })
