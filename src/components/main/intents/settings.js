@@ -4,7 +4,7 @@ import {keycodes, isValidElementEvent} from '../../../interactions/keyboard'
 import {combineLatestObj} from '../../../utils/obsUtils'
 let merge = Rx.Observable.merge
 
-export function settingsIntent(drivers, selections$){
+export function settingsIntent(drivers){
   const {DOM,addressbar} = drivers
 
   //hack for firefox only as it does not correct get the "checked" value : note : this is not an issue in cycle.js
@@ -61,8 +61,12 @@ export function settingsIntent(drivers, selections$){
       return acc
     })
 
+  const setAllValues$ =  drivers.localStorage.get("jam!-settings")
+
   return {
-    setActiveTool$
+    setAllValues$
+
+    ,setActiveTool$
     ,setAppMode$
 
     ,toggleAutoRotate$

@@ -83,9 +83,9 @@ export default function model(props$, actions, drivers){
 
   let entityActions = actions.entityActions
 
-  const settings$      = settings( actions.settingActions, actions.settingsSources$ ) 
-  const entityTypes$   = entityTypes( actions.entityActions)
-  const comments$      = comments( actions.commentActions)
+  const settings$      = settings( actions.settingActions ) 
+  const entityTypes$   = entityTypes( actions.entityActions )
+  const comments$      = comments( actions.commentActions )
 
   /*
   //addInstanceCandidates => -------------------------
@@ -183,7 +183,6 @@ export default function model(props$, actions, drivers){
   let {meshes$}        = makeMeshSystem(meshActions)
   let {transforms$}    = makeTransformsSystem(transformActions)
   let {bounds$}        = makeBoundingSystem(boundActions)
-
 
   //selections => only for real time view
   const typesInstancesRegistry$ =  makeRegistry(core$, entityTypes$)  

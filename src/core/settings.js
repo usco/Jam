@@ -1,8 +1,16 @@
 import Rx from 'rx'
 const Observable = Rx.Observable
-const {merge,fromEvent} = Rx.Observable
+const {merge, fromEvent, of} = Rx.Observable
 import {makeModel, mergeData} from '../utils/modelUtils'
 
+
+function setAllValues(state, input){
+  //console.log("setting settings")
+  //TODO : coerce appMode:"editor" whatever the input might be
+  //TODO : do validation ? 
+  let output = mergeData( state, input )
+  return output
+}
 
 function toggleShowGrid(state, input){
   console.log("toggleShowGrid",input)
@@ -35,11 +43,13 @@ function setAppMode(state, input){
 }
 
 function settings(actions, source){
-  source = source.map(src => mergeData( src, {appMode:"editor"}) )//default appMode to editor, disregard saved settings
+  //source = source || Rx.Observable.never()
+  //source = source.map(src => mergeData( src, {appMode:"editor"}) )//default appMode to editor, disregard saved settings
+  
   ///defaults, what else ?
   const defaults = {
     webglEnabled:true,
-    mode:"editor",
+    appMode:"editor",
     autoSelectNewEntities:true,
     activeTool:undefined,
     repeatTool:false,
@@ -59,7 +69,7 @@ function settings(actions, source){
     }
   }
 
-  let updateFns  = {toggleShowGrid, toggleAutoRotate, setActiveTool, setAppMode}
+  let updateFns  = {setAllValues, toggleShowGrid, toggleAutoRotate, setActiveTool, setAppMode}
   return makeModel(defaults, updateFns, actions, source)
 }
 

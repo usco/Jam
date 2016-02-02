@@ -45,7 +45,6 @@ export default function intent (drivers) {
   const srcSources$  = extractSourceSources({dnd$, postMessage, addressbar})
 
   //settings
-  const settingsSources$ = localStorage.get("jam!-settings")
   const settingActions   = settingsIntent(drivers)
 
   //comments
@@ -96,11 +95,8 @@ export default function intent (drivers) {
   let requests$ = requests.requests.http$
   let desktop$  = requests.requests.desktop$
 
-  return {
-    dnd$
-     
-    ,settingsSources$
-    ,settingActions
+  return {     
+    settingActions
 
     ,commentActions
 
