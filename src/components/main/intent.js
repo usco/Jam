@@ -7,7 +7,7 @@ import {equals, cond, T, always, head} from 'ramda'
 import {first,toggleCursor} from '../../utils/otherUtils'
 import {exists,toArray} from '../../utils/utils'
 import {getExtension,getNameAndExtension,isValidFile} from '../../utils/utils'
-import {combineLatestObj} from '../../utils/obsUtils'
+import {combineLatestObj, mergeActionsByName} from '../../utils/obsUtils'
 import {mergeData} from '../../utils/modelUtils'
 
 //
@@ -29,28 +29,6 @@ import {intentsFromResources,makeEntityActionsFromResources} from '../../core/ac
 import {makeEntityActionsFromDom} from '../../core/actions/fromDom'
 
 
-function mergeActionsByName(actionSources, validActions){
-
-  return actionSources.reduce(function(result, actions){
-    //console.log("acions",Object.keys(actions),validActions)
-    Object.keys(actions)
-      .filter(key=>validActions.indexOf(key.replace('$',''))>-1)
-      .map(function(key){
-        const action = actions[key]
-        if(key in result){
-          result[key] = merge(result[key], action)
-        }else{
-          result[key] = action
-        }       
-      })
-
-    return result
-  },{})
- 
-}
-
-
-
 export default function intent (drivers) {
   const DOM      = drivers.DOM
   const localStorage = drivers.localStorage
@@ -63,10 +41,8 @@ export default function intent (drivers) {
   const dnd$        = observableDragAndDrop(dragOvers$, drops$) 
 
   //data sources for our main model
-  const postMessages$  = postMessage.pluck("data")
-
-  const meshSources$ = extractMeshSources({dnd$, postMessages$, addressbar})
-  const srcSources$  = extractSourceSources({dnd$, postMessages$, addressbar})
+  const meshSources$ = extractMeshSources({dnd$, postMessage, addressbar})
+  const srcSources$  = extractSourceSources({dnd$, postMessage, addressbar})
 
   //settings
   const settingsSources$ = localStorage.get("jam!-settings")

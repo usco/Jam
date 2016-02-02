@@ -1,6 +1,7 @@
 import Rx from 'rx'
-let Observable= Rx.Observable
-let Subject   = Rx.Subject
+const Observable= Rx.Observable
+const Subject   = Rx.Subject
+const merge   = Rx.Observable.merge
 
 /* create an action that is both an observable AND
 a function/callable*/
@@ -48,6 +49,29 @@ export function combineLatestObj(obj) {
 //From https://github.com/futurice/power-ui/blob/85d09645ecadc85bc753ba42fdd841d22d8bdd10/src/utils.js
 export function replicateStream(origin$, proxy$) {
   origin$.subscribe(proxy$.asObserver())
+}
+
+/*merges an array of action objects into a single object :ie
+ [{doBar$, doFoo$}, {doBaz$, doBar$}] => {doBar$, doFoo$, doBaz$} 
+*/
+export function mergeActionsByName(actionSources, validActions){
+
+  return actionSources.reduce(function(result, actions){
+    //console.log("acions",Object.keys(actions),validActions)
+    Object.keys(actions)
+      .filter(key=>validActions.indexOf(key.replace('$',''))>-1)
+      .map(function(key){
+        const action = actions[key]
+        if(key in result){
+          result[key] = merge(result[key], action)
+        }else{
+          result[key] = action
+        }       
+      })
+
+    return result
+  },{})
+ 
 }
 
 
