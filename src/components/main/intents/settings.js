@@ -5,7 +5,7 @@ import {combineLatestObj} from '../../../utils/obsUtils'
 let merge = Rx.Observable.merge
 
 export function settingsIntent(drivers){
-  const {DOM,addressbar} = drivers
+  const {DOM, addressbar, browserCaps} = drivers
 
   //hack for firefox only as it does not correct get the "checked" value : note : this is not an issue in cycle.js
   let is_firefox_or_chrome  = (navigator.userAgent.toLowerCase().indexOf('firefox') > -1 || 
@@ -19,13 +19,13 @@ export function settingsIntent(drivers){
   const toggleShowGrid$   = DOM.select(".settingsView .showGrid").events("change").map(checked)
   const toggleShowAnnot$  = DOM.select(".settingsView .showAnnot").events("change").map(checked)
   const toggleAutoRotate$ = DOM.select(".settingsView .autoRotate").events("change").map(checked)
+  const toggleFullScreen$ = DOM.select(".fullScreenToggler").events("click")
+  const toggleWebgl$      = browserCaps.webglEnabled
 
   //app state/settings
-  const setAppMode$      = addressbar.get("appMode").map(d=>d.pop())//what mode is the app in ? ("editor" or "viewer" only for now)
+  const setAppMode$       = addressbar.get("appMode").map(d=>d.pop())//what mode is the app in ? ("editor" or "viewer" only for now)
   
-  const toggleWebgl$        = drivers.browserCaps.webglEnabled
-  const toggleFullScreen$   = DOM.select(".fullScreenToggler").events("click")
-
+ 
   //selection
   const toggleAutoSelectNewEntities$ = Rx.Observable.just(true) //TODO: make settable
 
@@ -61,6 +61,7 @@ export function settingsIntent(drivers){
       return acc
     })
 
+  //
   const setAllValues$ =  drivers.localStorage.get("jam!-settings")
 
   return {

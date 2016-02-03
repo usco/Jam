@@ -6,9 +6,9 @@ import {makeModel, mergeData} from '../utils/modelUtils'
 
 function setAllValues(state, input){
   //console.log("setting settings")
-  //TODO : coerce appMode:"editor" whatever the input might be
   //TODO : do validation ? 
-  let output = mergeData( state, input )
+  //we coerce appMode to "editor" when setting all values like this
+  let output = mergeData( state, mergeData( input, {appMode:"editor"})  )
   return output
 }
 
