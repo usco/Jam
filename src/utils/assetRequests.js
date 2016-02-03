@@ -98,7 +98,6 @@ export default function assetRequests(inputs, drivers){
     ,desktop$:desktopRequests$
   }
 
-  return {
-    requests 
-  }
+  return requests 
+  
 }

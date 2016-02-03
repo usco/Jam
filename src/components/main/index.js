@@ -40,8 +40,6 @@ export default function main(drivers) {
   const events$ = of( {gl:gl.events, entityInfos:entityInfos.events
     , bom:bom.events, comments:comments.events} )
 
-  const http$ = actions.requests$
-
 
   function postMsg(api$){
      return api$.map(data=>{
@@ -64,8 +62,8 @@ export default function main(drivers) {
       ,events: events$
       ,localStorage:localStorage$
 
-      ,http: http$
-      ,desktop:actions.desktop$
+      ,http: actions.requests.http$
+      ,desktop:actions.requests.desktop$
 
       ,postMessage:postMsg$
   }
