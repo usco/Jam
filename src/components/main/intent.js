@@ -85,15 +85,12 @@ export default function intent (drivers) {
     creationStep$: actionsFromEvents.createAnnotationStep$
   }
 
-  //const bomActions = bomIntent(drivers)
   const bomActions = {
     updateBomEntries$:actionsFromEvents.updateBomEntries$
   }  
 
   //OUTbound requests to various drivers
   let requests = assetRequests({meshSources$,srcSources$})
-  let requests$ = requests.requests.http$
-  let desktop$  = requests.requests.desktop$
 
   return {     
     settingActions
@@ -109,8 +106,6 @@ export default function intent (drivers) {
 
     ,progress:_resources
 
-    ,requests$
-    ,desktop$
-
+    ,requests
   }
 }
