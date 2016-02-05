@@ -21,7 +21,6 @@ import {entityInstanceIntents} from '../../core/entities/entityIntents'
 import {remapEntityActions,remapCoreActions,
   remapMeshActions,remapTransformActions,remapBoundsActions} from '../../core/entities/componentHelpers'
 
-
 import {selectionsIntents} from './intents/selections'
 
 import settings from    '../../core/settings'
@@ -186,7 +185,7 @@ export default function model(props$, actions, drivers){
 
   //selections => only for real time view
   const typesInstancesRegistry$ =  makeRegistry(core$, entityTypes$)  
-  const selections$  = selections( selectionsIntents({DOM,events}, typesInstancesRegistry$) )
+  const selections$             = selections( selectionsIntents({DOM,events}, typesInstancesRegistry$) )
     .merge(coreActions.removeComponents$.map(a=> ({instIds:[],bomIds:[]}) )) //after an instance is removed, unselect
 
   const currentSelections$ = selections$//selections$.pluck("instIds")
@@ -201,8 +200,6 @@ export default function model(props$, actions, drivers){
 
   //close some cycles
   replicateStream(currentSelections$, proxySelections$)
-
-
 
 
   const bomActions = bomIntens(drivers, entityTypes$, coreActions, entityActions, actions)
@@ -228,6 +225,7 @@ export default function model(props$, actions, drivers){
     ,transforms$
     ,meshes$
 
+    //app level data, meta data , settings etc
     ,appData$
     ,settings$ 
 

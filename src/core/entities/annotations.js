@@ -1,3 +1,7 @@
+import Rx from 'rx'
+const Observable = Rx.Observable
+const {fromEvent, merge} = Observable
+
 import {getEntryExitThickness,
   getObjectPointNormal,
   computeCenterDiaNormalFromThreePoints,
@@ -10,15 +14,9 @@ import {generateUUID} from '../../utils/utils'
 import {exists} from '../../utils/obsUtils'
 
 //import {clearActiveTool$} from 
-
 import logger from '../../utils/log'
 let log = logger("annotations")
 log.setLevel("error")
-
-import Rx from 'rx'
-let fromEvent = Rx.Observable.fromEvent
-let Observable = Rx.Observable
-let merge = Rx.Observable.merge
 
 
 //utilities
@@ -207,7 +205,6 @@ function hasEntity(data){
 }
 
 ///////////////
-//FIXME: is this more of an actions ??
 export function addAnnotation(actions, settings$){
   function dataOnly(entry){ return entry.data }
 
