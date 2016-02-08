@@ -1,8 +1,7 @@
 import Rx from 'rx'
-const merge = Rx.Observable.merge
-const fromArray = Rx.Observable.fromArray
-const of = Rx.Observable.of
-import {equals, cond, T, always, head} from 'ramda'
+const {merge,fromArray,of} = Rx.Observable
+
+import {equals, cond, T, always, head, flatten} from 'ramda'
 
 import {first,toggleCursor} from '../../utils/otherUtils'
 import {exists,toArray} from '../../utils/utils'
@@ -42,24 +41,37 @@ export default function intent (drivers) {
   const dnd         = observableDragAndDrop(dragOvers$, drops$) 
 
   //data sources for our main model
-  //TODO: ideally we should be using our drivers hash here (+ dnd) so we 
-  const dataSources = {'Addressbar':addressbar,'Dnd':dnd,'PostMessage':postMessage}
+  const dataSources = mergeData( {}, drivers, {dnd})
 
   function extractDataFromRawSources(sources){
 
     const data = Object.keys(sources).map(function(sourceName){
-      const extractorImport = require('../../core/sources/from'+sourceName)
-      const source = sources[sourceName]
-      const dataFromSource = extractorImport.partMesh(source)
-      return dataFromSource
-      //return merge( extractorImport.partMesh, extractorImport.partSource )
-      //console.log("extractorImport",extractorImport)
-    })
+      try{
+        const extractorImport = require('../../core/sources/'+sourceName)
+        
+        const source    = sources[sourceName]//the raw source of data (ususually a driver)
+        const dataNames = Object.keys(extractorImport)
 
-    return merge(data)
+        //TODO : deal with all the different data "field" functions that are provided by the imports
+        /*const extractorFns =  dataNames.reduce(function(result, name){
+          const fn = extractorImport[name]
+          
+          if(fn){
+            result = result.concat([fn])
+          }
+          return result
+        },[])*/
+
+        const dataFromSource = extractorImport.partMesh(source)
+        return dataFromSource
+      }catch(error){}
+    })
+    .filter(data=>data!==undefined)
+
+    return merge( data )
   }
 
-  const partMeshSourceData$ = filterExtension( extractDataFromRawSources(dataSources )  )
+  const partMeshSourceData$ = filterExtension( extractDataFromRawSources( dataSources )  )
 
 
   //settings
