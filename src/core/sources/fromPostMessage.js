@@ -1,3 +1,5 @@
+import {hasModelUrl} from './utils'
+
 export function partMesh(postMessage$){
   return postMessage$.pluck("data").filter(hasModelUrl).pluck("modelUrl")
 }
