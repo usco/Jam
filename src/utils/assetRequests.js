@@ -20,19 +20,16 @@ function dataSource(data){
 }
 
 export default function assetRequests(inputs, drivers){
-  const {meshSources$,srcSources$} = inputs
+  //const {meshSources$,srcSources$} = inputs
 
   //FIXME: caching should be done at a higher level , to prevent useless requests
   const resourceCache$ = undefined
   const cache = {}
-  function getCached({meshSources$,srcSources$}){
+  function getCached(inputs){
     //this one needs to be store independant too
   }
 
-  const baseRequest$ = merge(
-      meshSources$
-      ,srcSources$
-    )
+  const baseRequest$ = inputs
     .flatMap(Rx.Observable.fromArray)
     .filter(exists)
     .filter(data=>!isEmpty(data))
