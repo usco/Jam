@@ -13,8 +13,6 @@ import {mergeData} from '../../utils/modelUtils'
 //
 import {observableDragAndDrop} from '../../interactions/dragAndDrop'
 
-import {extractDesignSources,extractMeshSources,extractSourceSources} from '../../core/dataSourceExtractors'
-
 import {settingsIntent} from    './intents/settings'
 import {commentsIntents} from   './intents/comments'
 import {selectionsIntents} from './intents/selections'
@@ -29,6 +27,9 @@ import {intentsFromResources,makeEntityActionsFromResources} from '../../core/ac
 import {makeEntityActionsFromDom} from '../../core/actions/fromDom'
 
 
+//const sourceDataExtracUtils = require('../../core/sources/utils')
+import {filterExtension} from '../../core/sources/utils'
+
 export default function intent (drivers) {
   const DOM      = drivers.DOM
   const localStorage = drivers.localStorage
@@ -38,11 +39,28 @@ export default function intent (drivers) {
 
   const dragOvers$  = DOM.select(':root').events("dragover")
   const drops$      = DOM.select(':root').events("drop")  
-  const dnd$        = observableDragAndDrop(dragOvers$, drops$) 
+  const dnd         = observableDragAndDrop(dragOvers$, drops$) 
 
   //data sources for our main model
-  const meshSources$ = extractMeshSources({dnd$, postMessage, addressbar})
-  const srcSources$  = extractSourceSources({dnd$, postMessage, addressbar})
+  //TODO: ideally we should be using our drivers hash here (+ dnd) so we 
+  const dataSources = {'Addressbar':addressbar,'Dnd':dnd,'PostMessage':postMessage}
+
+  function extractDataFromRawSources(sources){
+
+    const data = Object.keys(sources).map(function(sourceName){
+      const extractorImport = require('../../core/sources/from'+sourceName)
+      const source = sources[sourceName]
+      const dataFromSource = extractorImport.partMesh(source)
+      return dataFromSource
+      //return merge( extractorImport.partMesh, extractorImport.partSource )
+      //console.log("extractorImport",extractorImport)
+    })
+
+    return merge(data)
+  }
+
+  const partMeshSourceData$ = filterExtension( extractDataFromRawSources(dataSources )  )
+
 
   //settings
   const settingActions   = settingsIntent(drivers)
@@ -90,7 +108,7 @@ export default function intent (drivers) {
   }  
 
   //OUTbound requests to various drivers
-  let requests = assetRequests({meshSources$,srcSources$})
+  let requests = assetRequests( partMeshSourceData$ )
 
   return {     
     settingActions
