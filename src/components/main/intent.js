@@ -27,7 +27,7 @@ import {makeEntityActionsFromDom} from '../../core/actions/fromDom'
 
 
 //const sourceDataExtracUtils = require('../../core/sources/utils')
-import {filterExtension} from '../../core/sources/utils'
+import {filterExtension, normalizeData} from '../../core/sources/utils'
 
 export default function intent (drivers) {
   const DOM      = drivers.DOM
@@ -43,34 +43,52 @@ export default function intent (drivers) {
   //data sources for our main model
   const dataSources = mergeData( {}, drivers, {dnd})
 
+  //utility function to dynamically load and use the "data extractors" (ie functions that
+  // extract useful data from raw data)
   function extractDataFromRawSources(sources){
 
     const data = Object.keys(sources).map(function(sourceName){
       try{
         const extractorImport = require('../../core/sources/'+sourceName)
         
-        const source    = sources[sourceName]//the raw source of data (ususually a driver)
-        const dataNames = Object.keys(extractorImport)
+        const sourceData     = sources[sourceName]//the raw source of data (ususually a driver)
+        const extractorNames = Object.keys(extractorImport)
 
-        //TODO : deal with all the different data "field" functions that are provided by the imports
-        /*const extractorFns =  dataNames.reduce(function(result, name){
-          const fn = extractorImport[name]
-          
-          if(fn){
-            result = result.concat([fn])
+        //TODO , find a better way to do this
+        const paramsHelper = {
+          get:function get(category, params){
+            const data = {
+              'extensions':{
+                 meshes : ["stl","3mf","amf","obj","ctm","ply"]
+                ,sources: ["scad","jscad"]
+              }
+            }
+            return data[category][params]
           }
-          return result
-        },[])*/
-        const dataFromSource = extractorImport.partMesh(source)
-        return dataFromSource
+        }
+        
+        //deal with all the different data "field" functions that are provided by the imports
+        const refinedData =  extractorNames.map(function(name){
+          const fn = extractorImport[name]
+          if(fn){
+            const refinedData = fn(sourceData, paramsHelper)
+              .flatMap(fromArray)
+              .filter(exists)
+              return refinedData
+          }
+        })
+
+        return refinedData
+       
       }catch(error){}
     })
     .filter(data=>data!==undefined)
 
-    return merge( data )
+    return merge( flatten( data ) ).tap(e=>console.log("data",e))
   }
 
-  const partMeshSourceData$ = filterExtension( extractDataFromRawSources( dataSources )  )
+  const partMeshSourceData$ = normalizeData( extractDataFromRawSources( dataSources ) )
+    //filterExtension( extractDataFromRawSources( dataSources )  )
 
 
   //settings

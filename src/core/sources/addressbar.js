@@ -1,7 +1,9 @@
-export function partMesh(addressbar){
-  return addressbar.get("modelUrl")
+import {filterByExtensions} from './utils'
+
+export function partMesh(addressbar, params){
+  return filterByExtensions( addressbar.get("modelUrl"), params.get('extensions','meshes') )
 }
 
-export function partSource(addressbar){
-  return addressbar.get("sourceUrl")
+export function partSource(addressbar, params){
+  return filterByExtensions( addressbar.get("sourceUrl"), params.get('extensions','sources') )
 }
