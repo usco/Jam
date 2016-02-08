@@ -1,7 +1,7 @@
-function meshUrisAndFilesFromPostMessage(postMessage$){
+export function partMesh(postMessage$){
   return postMessage$.pluck("data").filter(hasModelUrl).pluck("modelUrl")
 }
 
-function partSourceFromPostMessage(postMessage$){
+export function partSource(postMessage$){
   return postMessage$.pluck("data").filter(hasModelUrl).pluck("sourceUrl")
 }
