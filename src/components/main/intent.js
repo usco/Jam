@@ -61,7 +61,6 @@ export default function intent (drivers) {
           }
           return result
         },[])*/
-
         const dataFromSource = extractorImport.partMesh(source)
         return dataFromSource
       }catch(error){}

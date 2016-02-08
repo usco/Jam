@@ -36,7 +36,8 @@
 
 
       var embeded = document.getElementById("embeded").contentWindow
-      /*setTimeout(function() {
+      setTimeout(function() {
+        console.log("load model from postMessage")
         embeded.postMessage("hey yo","*")
         embeded.postMessage({modelUrl:"http://localhost:3000/demo-data/UM2CableChain_BedEnd.STL"},"*")
         //embeded.postMessage({designUrl:"http://localhost:3000/xxx"},"*")
@@ -50,6 +51,7 @@
 
        setTimeout(function() {
         //to load a model
+        console.log("load model from postMessage")
         embeded.postMessage({modelUrl:"http://localhost:3000/demo-data/UM2CableChain_BedEnd.STL"},"*")
       }, 10000)
 
@@ -59,7 +61,7 @@
       setTimeout(function() {
         //to get transform data
         embeded.postMessage({"getTransforms":null},"*")
-      }, 7000)*/
+      }, 7000)
 
       //test
       setTimeout(function() {
