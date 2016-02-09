@@ -25,19 +25,14 @@ import {intentsFromPostMessage} from '../../core/actions/fromPostMessage'
 import {intentsFromResources,makeEntityActionsFromResources} from '../../core/actions/fromResources'
 import {makeEntityActionsFromDom} from '../../core/actions/fromDom'
 
-
-//const sourceDataExtracUtils = require('../../core/sources/utils')
 import {filterExtension, normalizeData} from '../../core/sources/utils'
+
 
 export default function intent (drivers) {
   const DOM      = drivers.DOM
-  const localStorage = drivers.localStorage
-  const addressbar   = drivers.addressbar
-  const postMessage  = drivers.postMessage
-  const events       = drivers.events
 
-  const dragOvers$  = DOM.select(':root').events("dragover")
-  const drops$      = DOM.select(':root').events("drop")  
+  const dragOvers$  = drivers.DOM.select(':root').events("dragover")
+  const drops$      = drivers.DOM.select(':root').events("drop")  
   const dnd         = observableDragAndDrop(dragOvers$, drops$) 
 
   //data sources for our main model
@@ -84,11 +79,10 @@ export default function intent (drivers) {
     })
     .filter(data=>data!==undefined)
 
-    return merge( flatten( data ) ).tap(e=>console.log("data",e))
+    return merge( flatten( data ) )
   }
 
   const partMeshSourceData$ = normalizeData( extractDataFromRawSources( dataSources ) )
-    //filterExtension( extractDataFromRawSources( dataSources )  )
 
 
   //settings
