@@ -37,10 +37,12 @@ export default function intent (drivers) {
 
     const data = Object.keys(sources).map(function(sourceName){
       try{
-        const extractorImport = require('../../core/sources/'+sourceName.toLowerCase())
+        const extractorImport = require('../../core/sources/'+sourceName)
         
         const sourceData     = sources[sourceName]//the raw source of data (ususually a driver)
         const extractorNames = Object.keys(extractorImport)
+
+
 
         //TODO , find a better way to do this
         const paramsHelper = {
