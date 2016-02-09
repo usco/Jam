@@ -100,7 +100,7 @@ export default function intent (drivers) {
    const entityActionNames = [
     'reset'
 
-    ,'addEntityType'
+    ,'addEntityTypes'
     ,'removeEntityType'
     ,'entityCandidates'
 
@@ -114,7 +114,7 @@ export default function intent (drivers) {
   ]
 
   const actionsSources = [entityActionsFromDom, actionsFromPostMessage, entityActionsFromResources, actionsFromEvents, extras]
-  const entityActions = mergeActionsByName(actionsSources, entityActionNames)
+  const entityActions  = mergeActionsByName(actionsSources, entityActionNames)
   //console.log("entityActions",entityActions)
 
   const annotationsActions =  {
