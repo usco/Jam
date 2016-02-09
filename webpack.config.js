@@ -67,7 +67,6 @@ var config= {
     //new webpack.NoErrorsPlugin(),
     //new webpack.optimize.DedupePlugin()
     //new webpack.optimize.CommonsChunkPlugin("init.js")
-    new webpack.optimize.LimitChunkCountPlugin({maxChunks:1})
   ],
   module: {
     loaders: [
@@ -110,6 +109,7 @@ if (production) {
   //config.output.chunkFilename = '[id].js'
   config.plugins = config.plugins.concat([
     new webpack.DefinePlugin({'process.env': {NODE_ENV: JSON.stringify('production') } })
+    , new webpack.optimize.LimitChunkCountPlugin({maxChunks:1})
     , new webpack.optimize.DedupePlugin()
     , new webpack.NoErrorsPlugin()
     , new webpack.optimize.UglifyJsPlugin({minimize: true})
@@ -140,10 +140,10 @@ if (production) {
   ])
 }
 else{
-  config.entry = config.entry.concat([
+  /*config.entry = config.entry.concat([
     //'webpack-dev-server/client?',//http://'+host+":"+port,
     //'webpack/hot/only-dev-server',
-  ])
+  ])*/
   config.plugins = config.plugins.concat([
     new webpack.HotModuleReplacementPlugin(),
   ])
