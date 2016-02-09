@@ -55,17 +55,19 @@ var config= {
   host:host,
   port:port,
   devtool: 'eval',
-  entry: [
-    './'+srcPath+'/index'
-  ],
+  entry: {
+    jam:'./'+srcPath+'/index'
+  },
   output: {
     path: path.join(__dirname, 'dist'),
-    filename: 'bundle.js',
+    filename: '[name].js',
     publicPath: '/dist/' //'/'+'dist'+'/'
   },
   plugins: [
     //new webpack.NoErrorsPlugin(),
     //new webpack.optimize.DedupePlugin()
+    //new webpack.optimize.CommonsChunkPlugin("init.js")
+    new webpack.optimize.LimitChunkCountPlugin({maxChunks:1})
   ],
   module: {
     loaders: [

@@ -73,6 +73,7 @@ function lazyLoad(moduleNamePath){
     //System.import('usco-ctm-parser').then(module=>console.log("module",module))
 
     //FIXME: awfull, horrible horrrible horrible
+    //NOTE : chunk names can be specified like this : &name=stl-parser
     switch(moduleNamePath){
       case 'stl':
         require("bundle?lazy!usco-stl-parser")(module => obs.onNext(module))
