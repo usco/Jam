@@ -9,8 +9,6 @@ import {getExtension,getNameAndExtension,isValidFile} from '../../utils/utils'
 import {combineLatestObj, mergeActionsByName} from '../../utils/obsUtils'
 import {mergeData} from '../../utils/modelUtils'
 
-//
-import {observableDragAndDrop} from '../../interactions/dragAndDrop'
 
 import {settingsIntent} from    './intents/settings'
 import {commentsIntents} from   './intents/comments'
@@ -29,22 +27,17 @@ import {filterExtension, normalizeData} from '../../core/sources/utils'
 
 
 export default function intent (drivers) {
-  const DOM      = drivers.DOM
-
-  const dragOvers$  = drivers.DOM.select(':root').events("dragover")
-  const drops$      = drivers.DOM.select(':root').events("drop")  
-  const dnd         = observableDragAndDrop(dragOvers$, drops$) 
-
   //data sources for our main model
-  const dataSources = mergeData( {}, drivers, {dnd})
+  const dataSources = drivers
 
-  //utility function to dynamically load and use the "data extractors" (ie functions that
-  // extract useful data from raw data)
+  /*utility function to dynamically load and use the "data extractors" (ie functions that
+   extract useful data from raw data)
+  */
   function extractDataFromRawSources(sources){
 
     const data = Object.keys(sources).map(function(sourceName){
       try{
-        const extractorImport = require('../../core/sources/'+sourceName)
+        const extractorImport = require('../../core/sources/'+sourceName.toLowerCase())
         
         const sourceData     = sources[sourceName]//the raw source of data (ususually a driver)
         const extractorNames = Object.keys(extractorImport)
@@ -82,7 +75,7 @@ export default function intent (drivers) {
     return merge( flatten( data ) )
   }
 
-  const partMeshSourceData$ = normalizeData( extractDataFromRawSources( dataSources ) )
+  const refinedSourceData$ = normalizeData( extractDataFromRawSources( dataSources ) )
 
 
   //settings
@@ -99,7 +92,7 @@ export default function intent (drivers) {
   const {entityCandidates$, entityCertains$}= intentsFromResources(_resources.parsed$)//these MIGHT become instances, or something else, we just are not 100% sure
   
   const entityActionsFromResources   = makeEntityActionsFromResources(entityCertains$)
-  const entityActionsFromDom         = makeEntityActionsFromDom(DOM)
+  const entityActionsFromDom         = makeEntityActionsFromDom(drivers.DOM)
   const extras = {entityCandidates$}
 
    const entityActionNames = [
@@ -131,7 +124,7 @@ export default function intent (drivers) {
   }  
 
   //OUTbound requests to various drivers
-  let requests = assetRequests( partMeshSourceData$ )
+  let requests = assetRequests( refinedSourceData$ )
 
   return {     
     settingActions
