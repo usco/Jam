@@ -15,10 +15,10 @@ import {mergeData} from './modelUtils'
 import assign from 'fast.js/object/assign'//faster object.assign
 
 //import parse as stlParser,  {outputs} from 'stlParser'
-import * as stlParser     from 'usco-stl-parser'
-import * as objParser     from 'usco-obj-parser'
-import * as threemfParser from 'usco-3mf-parser'
-import * as ctmParser     from 'usco-ctm-parser'
+//import * as stlParser     from 'usco-stl-parser'
+//import * as objParser     from 'usco-obj-parser'
+//import * as threemfParser from 'usco-3mf-parser'
+//import * as ctmParser     from 'usco-ctm-parser'
 
 
 import {generateUUID} from './utils'
@@ -27,14 +27,72 @@ import {generateUUID} from './utils'
 function makeParsers(){
   //other
   let parsers = {}
-  parsers["stl"] = stlParser.default
-  parsers["obj"] = objParser.default
-  parsers["3mf"] = threemfParser.default
-  parsers["ctm"] = ctmParser.default
+  //parsers["stl"] = stlParser.default
+  //parsers["obj"] = objParser.default
+  //parsers["3mf"] = threemfParser.default
+  //parsers["ctm"] = ctmParser.default
   //console.log(".inputDataType",parsers["stl"].inputDataType)
   return parsers
+
+
+  //return combineLatestObj()
 }
 const parsers = makeParsers()
+
+
+function getParser(extension){
+  return lazyLoad(extension)
+}
+
+function lazyLoad(moduleNamePath){
+
+
+  let obs = new Rx.ReplaySubject(1)
+
+  //let waitForChunk = require('dynamic?' + moduleNamePath)
+
+    //require("bundle?lazy!usco-ctm-parser")(function(module) {  
+    //const requireStr = `bundle?lazy!./node_modules/${moduleNamePath}`
+    //const requireStr = `bundle?lazy!./`
+    //let req = require.context("./node-modules", true, /^\.\/.*\.jade$/)
+    //const requireStr = `bundle?lazy!./node_modules/${moduleNamePath}/lib/ctm-parser.js`
+
+    //var req = require.context('../../node_modules', true, /^\.\/.*\.js$/)
+
+    /*require.ensure(['usco-ctm-parser'], function(require) {
+      //require('usco-ctm-parser')
+      let module = require(moduleNamePath)
+      console.log("dynamic load of module",module)
+      //obs.onNext(module) 
+    })*/
+    /*require(requireStr)(function(module) { 
+      // now you can use the b-module
+      console.log("dynamic load of module",module)
+      obs.onNext(module)
+    })*/
+    //System.import('usco-ctm-parser').then(module=>console.log("module",module))
+
+    //FIXME: awfull, horrible horrrible horrible
+    switch(moduleNamePath){
+      case 'stl':
+        require("bundle?lazy!usco-stl-parser")(module => obs.onNext(module))
+      break
+      case 'ctm':
+        require("bundle?lazy!usco-ctm-parser")(module => obs.onNext(module))
+      break
+      case 'obj':
+        require("bundle?lazy!usco-obj-parser")(module => obs.onNext(module))
+      break
+      case '3mf':
+        require("bundle?lazy!usco-3mf-parser")(module => obs.onNext(module))
+      break
+    }
+    
+
+
+   
+  return obs
+}
 
 
 function postProcessParsedData(data){
@@ -140,11 +198,23 @@ function parse(fetched$){
       return {uri, data:data.response, ext, name}
     })
     //actual parsing part
-    .filter(data=>parsers[data.ext]!==undefined)//does parser exist?
-    .flatMap(function({uri, data, ext, name}){
+    //.filter(data=>parsers[data.ext]!==undefined)//does parser exist?
+    .flatMap(function( rawData ){
+      return  combineLatestObj({rawData:of(rawData), parser:getParser(rawData.ext)})
+    })
+    .flatMap(function(fullData ){
+      const {uri, data, ext, name} = fullData.rawData
+
+      console.log("DATA",fullData.parser)
       const parseOptions = {useWorker:true}
 
-      const parse    = parsers[ext]
+      console.log("here in parse")
+      /*System.import('usco-ctm-parser').then(function(parser){
+        console.log("dynamic load of ctmParser",parser)
+      })*/
+
+
+      const parse    = fullData.parser.default //parsers[ext]
       const parsedObs$ = parse(data, parseOptions)
         //.do(e=>console.log("parsing data",e))
         .doOnError(e=>console.log("error in parse",e))
