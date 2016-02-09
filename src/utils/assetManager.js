@@ -14,31 +14,7 @@ import {combineLatestObj} from './obsUtils'
 import {mergeData} from './modelUtils'
 import assign from 'fast.js/object/assign'//faster object.assign
 
-//import parse as stlParser,  {outputs} from 'stlParser'
-//import * as stlParser     from 'usco-stl-parser'
-//import * as objParser     from 'usco-obj-parser'
-//import * as threemfParser from 'usco-3mf-parser'
-//import * as ctmParser     from 'usco-ctm-parser'
-
-
 import {generateUUID} from './utils'
-
-
-function makeParsers(){
-  //other
-  let parsers = {}
-  //parsers["stl"] = stlParser.default
-  //parsers["obj"] = objParser.default
-  //parsers["3mf"] = threemfParser.default
-  //parsers["ctm"] = ctmParser.default
-  //console.log(".inputDataType",parsers["stl"].inputDataType)
-  return parsers
-
-
-  //return combineLatestObj()
-}
-const parsers = makeParsers()
-
 
 function getParser(extension){
   return lazyLoad(extension)
@@ -46,9 +22,7 @@ function getParser(extension){
 
 function lazyLoad(moduleNamePath){
 
-
   let obs = new Rx.ReplaySubject(1)
-
   //let waitForChunk = require('dynamic?' + moduleNamePath)
 
     //require("bundle?lazy!usco-ctm-parser")(function(module) {  
@@ -88,10 +62,6 @@ function lazyLoad(moduleNamePath){
         require("bundle?lazy!usco-3mf-parser")(module => obs.onNext(module))
       break
     }
-    
-
-
-   
   return obs
 }
 
@@ -203,7 +173,7 @@ function parse(fetched$){
     .flatMap(function( rawData ){
       return  combineLatestObj({rawData:of(rawData), parser:getParser(rawData.ext)})
     })
-    .flatMap(function(fullData ){
+    .flatMap(function( fullData ){
       const {uri, data, ext, name} = fullData.rawData
 
       console.log("DATA",fullData.parser)
