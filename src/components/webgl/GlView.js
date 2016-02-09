@@ -189,6 +189,12 @@ function GLView({drivers, props$}){
   const meshAddedToScene$     = new Rx.ReplaySubject(1) 
   const meshRemovedFromScene$ = new Rx.ReplaySubject(1)
 
+  const outlineSelections$ = settings$
+    .filter(s=> s.appMode !== "viewer")
+    .combineLatest(state$,function(settings, state){
+      return state
+    })
+
   const zoomToFit$ = settings$
     .filter(s=> s.appMode === "viewer")
     .combineLatest(state$.pluck("items"), function(settings,items){
@@ -207,7 +213,6 @@ function GLView({drivers, props$}){
   actions.zoomInOnPoint$
     .forEach( (oAndP) => zoomInOn( oAndP.object, camera, {position:oAndP.point} ) )
   zoomToFit$
-    //.tap(meshes=>console.log("zoomToFit",meshes))
     .forEach( (meshes) => zoomToFit(meshes[meshes.length-1], camera, new THREE.Vector3() ) )
    
 
@@ -340,8 +345,9 @@ function GLView({drivers, props$}){
     return changes
     })  
 
-  //experimenting with selections effects
-  state$.pluck("selectedMeshes").distinctUntilChanged()
+  //experimenting with selections effects 
+  outlineSelections$
+    .pluck("selectedMeshes").distinctUntilChanged()
     .forEach(function(selectedMeshes){
       if(outScene){
         outScene.children  = selectedMeshes
