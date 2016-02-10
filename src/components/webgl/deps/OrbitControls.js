@@ -40,7 +40,7 @@ var OrbitControls = function ( object, domElement, upVector ) {
     this.maxPolarAngle = Math.PI // radians
 
     this.minDistance = 0.2
-    this.maxDistance = 600
+    this.maxDistance = 1400
 
     this.active = false
     this.mainPointerPressed = false
