@@ -48,6 +48,7 @@
     "@cycle/dom": "^7.1.1",
     "addressbar": "^0.4.3",
     "classnames": "^2.2.1",
+    "cycle-simple-http-driver": "kaosat-dev/cycle-simple-http-driver",
     "fast.js": "^0.1.1",
     "gl": "^2.1.5",
     "glView-helpers": "usco/glView-helpers",

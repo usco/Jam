@@ -7,16 +7,19 @@ import {safeJSONParse, toArray} from '../../utils/utils'
 
 //storage driver for YouMagine designs & data etc
 export function youMagineStorageDriver(outgoing$){
+  function formatOutput(){
+  }
+
   function getItem(item){
-    return just( localStorage.getItem(item) ).map(safeJSONParse)
+    return just( {} ).map(safeJSONParse)
   }
 
   function setItem(key, value){
-    return localStorage.setItem(key,value)
+    //return localStorage.setItem(key,value)
   }
 
   function remove(item){
-    localStorage.removeItem(item)
+    //removeItem(item)
   }
 
  
@@ -34,20 +37,23 @@ export function youMagineStorageDriver(outgoing$){
 }
 
 
-export function makeYoumagineStorageDriver(params){
-  this.apiUri    = "http://localhost:3080/api/"
-  this.designsUri = this.apiUri+"designs/"
+export default function makeYMDriver(httpDriver, params){
+  const apiUri    = "http://localhost:3080/api/"
+  const designsUri = apiUri+"designs/"
   
-  this.designsUri = "https://jamapi.youmagine.com/api/v1/designs/"
+  //designsUri = "https://jamapi.youmagine.com/api/v1/designs/"
   //let designUri = "http://jamapi.youmagine.com/api/v1/designs/test"
-  this.rootUri    = undefined
-  this.designName = undefined
+  const rootUri    = undefined
+  const designName = undefined
 
-  this.assembliesFileName = "assemblies.json"//"assemblies_old.json"//"assemblies-simple.json"//
-  this.bomFileName        = "bom.json"//"bom_old.json"//"bom.json"
+  const assembliesFileName = "assemblies.json"//"assemblies_old.json"//"assemblies-simple.json"//
+  const bomFileName        = "bom.json"//"bom_old.json"//"bom.json"
+
   //TODO: use our pre-exising "stores"
-  this._designDocs = []
+  const _designDocs = []
 
   //this.assetManager = undefined
-  this.store = undefined
+  const store = undefined
+
+  return youMagineStorageDriver
 }

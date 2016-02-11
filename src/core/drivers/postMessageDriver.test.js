@@ -24,9 +24,9 @@ describe('postMessageDriver', () => {
 
     it('should return incoming requests as stream', (done) => {
       const outgoing$  = Rx.Observable.just(undefined)
-      const httpDriver = postMessageDriver(outgoing$)
+      const driver = postMessageDriver(outgoing$)
 
-      const input$ = httpDriver
+      const input$ = driver
         .forEach(message => {
           console.log("input message",message)
         })

@@ -5,13 +5,15 @@ import {makeDOMDriver, hJSX} from '@cycle/dom'
 import main from './components/main/index'
 
 import postMessageDriver  from './core/drivers/postMessageDriver'
-import localStorageDriver from './core/drivers/localStorageDriver'
 import addressbarDriver   from './core/drivers/addressbarDriver'
 import browserCapsDriver  from './core/drivers/browserCapabilities'
-import eventDriver        from './core/drivers/eventDriver'
-import makeHttpDriver     from './core/drivers/simpleHttpDriver'
-import makeDesktopDriver  from './core/drivers/desktopStoreDriver'
 import appMetaDataDriver  from './core/drivers/appMetaDataDriver'
+import eventDriver        from './core/drivers/eventDriver'
+
+import makeHttpDriver     from 'cycle-simple-http-driver'
+import localStorageDriver from './core/drivers/localStorageDriver'
+import makeDesktopDriver  from './core/drivers/desktopStoreDriver'
+import makeYMDriver       from './core/drivers/youMagineDriver'
 
 
 //////////setup drivers
@@ -23,10 +25,10 @@ let addressbar   = addressbarDriver
 let browserCaps  = browserCapsDriver
 let httpDriver   = makeHttpDriver()
 let desktopStoreDriver = makeDesktopDriver()
+let ymDriver     = makeYMDriver()
 
 let drivers = {
    DOM: domDriver
-   ,localStorage
    ,postMessage
    ,addressbar
    ,browserCaps
@@ -34,8 +36,10 @@ let drivers = {
    ,appMeta:appMetaDataDriver
 
    //storage etc
+   ,localStorage
    ,http:httpDriver
    ,desktop:desktopStoreDriver
+   ,ym:ymDriver
 }
 
 console.log("---READY TO START JAM!---")
