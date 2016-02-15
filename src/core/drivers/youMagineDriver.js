@@ -2,6 +2,7 @@ import Rx from 'rx'
 const Observable= Rx.Observable
 const {fromEvent, just, merge, concat} = Observable
 
+import {combineLatestObj} from '../../utils/obsUtils'
 import {safeJSONParse, toArray} from '../../utils/utils'
 import assign from 'fast.js/object/assign'//faster object.assign
 import {pick, equals} from 'ramda'
@@ -43,22 +44,14 @@ function remapJson(mapping, input){
   return result
 }
 
-      /*
-      "qty": null,
-  "phys_qty": null,
-  "unit": null,
-  "part_id": null,
-  "part_parameters": null,
-  "part_version": null,
-  "design_id": 9962,*/
 
-        /*id: "DE993D53-2B7D-4D72-B495-53DBC8529F60"
-        name: "UM2CableChain_BedEnd"
-        printable: true
-        qty: 1
-        unit: "QA"
-        version: "0.0.1"*/
+  function equals2(prev, cur){
+      console.log("prev",prev,cur)
 
+      const isEqual = equals(prev,cur)
+      console.log("equals",isEqual)
+      return isEqual
+    }
 
 
 //storage driver for YouMagine designs & data etc
@@ -109,20 +102,11 @@ export default function makeYMDriver(httpDriver, params={}){
 
   function youMagineStorageDriver(outgoing$){
 
-
     function getItem(item){
       return just( {} ).map(safeJSONParse)
     }
 
-    function setItem(key, value){
-      //return localStorage.setItem(key,value)
-    }
-
-    function remove(item){
-      //removeItem(item)
-    }
-
-    function toBom(bomEntries){
+    function toBom(entries){
       const fieldNames = ['qty','phys_qty', 'unit', 'part_id' , 'part_parameters','part_version']
       const mapping = {
         'version':'part_version'
@@ -131,7 +115,7 @@ export default function makeYMDriver(httpDriver, params={}){
         ,'version':'part_version'
       }
 
-      const requests = bomEntries.map(function(entry){
+      const requests = entries.map(function(entry){
 
         const refined = pick( fieldNames, remapJson(mapping, entry) )
         const send    = jsonToFormData(refined)
@@ -147,7 +131,7 @@ export default function makeYMDriver(httpDriver, params={}){
       return requests 
     }
 
-    function toParts(partEntries){
+    function toParts(entries){
       const fieldNames = ['id','name','description','uuid']
       const mapping = {
         'id':'uuid'
@@ -158,11 +142,10 @@ export default function makeYMDriver(httpDriver, params={}){
       "source_document_id": null,
       "source_document_url": "",]*/
 
-      const requests = partEntries.map(function(entry){
+      const requests = entries.map(function(entry){
 
         const refined = pick( fieldNames, remapJson(mapping, entry) )
         const send    = jsonToFormData(refined)
-        console.log("entry", entry, refined)
 
         return {
               url    :partUri
@@ -171,9 +154,41 @@ export default function makeYMDriver(httpDriver, params={}){
             , type   :'ymSave'
           }
       })
-      console.log("request save parts",requests)
       return requests 
     }
+
+    function dataFromItems(items){
+      return Object.keys(items.transforms).reduce(function(list, key){
+        const transforms = items['transforms'][key]
+        const metadata   = items['metadata'][key]
+
+        if(transforms && metadata){
+          const entry = assign( {}, transforms, metadata)
+          list.push(entry)
+        }
+        return list
+      },[])
+    }
+
+    function toAssemblies(entries){
+      const fieldNames = []
+      const mapping = {}
+      const requests = entries.map(function(entry){
+
+      const refined = pick( fieldNames, remapJson(mapping, entry) )
+      const send    = jsonToFormData(refined)
+
+        return {
+              url    :assembliesUri
+            , method :'post'
+            , send   
+            , type   :'ymSave'
+          }
+      })
+      return requests 
+    }
+
+    //////////////////////////
 
     outgoing$ = outgoing$.share()
 
@@ -184,9 +199,6 @@ export default function makeYMDriver(httpDriver, params={}){
       .map(toBom)
       .flatMap(Rx.Observable.fromArray)
 
-
-
-
     const parts$ = outgoing$//.pluck("parts")
       .pluck("bom")
       .pluck("entries")
@@ -194,12 +206,19 @@ export default function makeYMDriver(httpDriver, params={}){
       .filter(d=>d.length>0)
       .map(toParts)
       .flatMap(Rx.Observable.fromArray)
-      
+
+    const assemblies$ = combineLatestObj({
+          metadata:outgoing$.pluck('eCores')
+        , transforms:outgoing$.pluck('eTrans')
+        , meshes: outgoing$.pluck('eMeshs')})
+      .debounce(1)
+      .map(dataFromItems)
+      .forEach(e=>console.log("item",e))
 
 
-    const outToHttp$ = merge( concat(parts$,bom$) )
-      //.forEach(e=>console.log("outToHttp",e))
-    httpDriver(outToHttp$)
+    const outToHttp$ = merge( parts$ )//concat(parts$,bom$) )
+      .forEach(e=>console.log("outToHttp",e))
+    //httpDriver(outToHttp$)
   }
 
   return youMagineStorageDriver
