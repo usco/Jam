@@ -1,12 +1,10 @@
 import Rx from 'rx'
-let Observable= Rx.Observable
-let fromEvent = Observable.fromEvent
-let just      = Observable.just
-let merge     = Observable.merge
+const Observable= Rx.Observable
+const {fromEvent, just, merge, concat} = Observable
 
 import {safeJSONParse, toArray} from '../../utils/utils'
 import assign from 'fast.js/object/assign'//faster object.assign
-import {pick} from 'ramda'
+import {pick, equals} from 'ramda'
 
 function jsonToFormData(jsonData){
   jsonData = JSON.parse( JSON.stringify( jsonData ) )
@@ -28,13 +26,8 @@ function jsonToFormData(jsonData){
   return formData
 }
 
-function remapJson(input){
-  const mapping = {
-    'version':'part_version'
-    ,'id':'part_id'
-    ,'params':'part_parameters'
-    ,'version':'part_version'
-  }
+function remapJson(mapping, input){
+  
 
   const result =  Object.keys(input)
     .reduce(function(obj, key){
@@ -130,17 +123,23 @@ export default function makeYMDriver(httpDriver, params={}){
     }
 
     function toBom(bomEntries){
+      const fieldNames = ['qty','phys_qty', 'unit', 'part_id' , 'part_parameters','part_version']
+      const mapping = {
+        'version':'part_version'
+        ,'id':'part_id'
+        ,'params':'part_parameters'
+        ,'version':'part_version'
+      }
+
       const requests = bomEntries.map(function(entry){
 
-        const bomFields = ['qty','phys_qty', 'unit', 'part_id' , 'part_parameters','part_version']
-
-        const refined = pick( bomFields, remapJson(entry) )
-        const data    = jsonToFormData(refined)
+        const refined = pick( fieldNames, remapJson(mapping, entry) )
+        const send    = jsonToFormData(refined)
 
         return {
               url    :bomUri
             , method :'post'
-            , send   : data
+            , send   
             , type   :'ymSave'
           }
       })
@@ -149,19 +148,26 @@ export default function makeYMDriver(httpDriver, params={}){
     }
 
     function toParts(partEntries){
-      const fieldNames = ["id","name","description","uuid"]
-    /*"binary_document_id": null,
-    "binary_document_url": "",
-    "source_document_id": null,
-    "source_document_url": "",]*/
+      const fieldNames = ['id','name','description','uuid']
+      const mapping = {
+        'id':'uuid'
+        ,'params':'part_parameters'
+      }
+      /*"binary_document_id": null,
+      "binary_document_url": "",
+      "source_document_id": null,
+      "source_document_url": "",]*/
 
-      const requests = bomEntries.map(function(entry){
+      const requests = partEntries.map(function(entry){
 
-        const data = jsonToFormData(entry)
+        const refined = pick( fieldNames, remapJson(mapping, entry) )
+        const send    = jsonToFormData(refined)
+        console.log("entry", entry, refined)
+
         return {
               url    :partUri
             , method :'post'
-            , data
+            , send   
             , type   :'ymSave'
           }
       })
@@ -173,21 +179,26 @@ export default function makeYMDriver(httpDriver, params={}){
 
     const bom$ = outgoing$.pluck("bom")
       .pluck("entries")
-      .distinctUntilChanged()
       .filter(d=>d.length>0)
+      .distinctUntilChanged(null, equals )
       .map(toBom)
       .flatMap(Rx.Observable.fromArray)
+
+
+
 
     const parts$ = outgoing$//.pluck("parts")
       .pluck("bom")
       .pluck("entries")
-      .distinctUntilChanged()
+      .distinctUntilChanged(null, equals )
       .filter(d=>d.length>0)
       .map(toParts)
       .flatMap(Rx.Observable.fromArray)
+      
 
-    const outToHttp$ = merge( bom$ )
-    
+
+    const outToHttp$ = merge( concat(parts$,bom$) )
+      //.forEach(e=>console.log("outToHttp",e))
     httpDriver(outToHttp$)
   }
 
