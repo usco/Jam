@@ -2,10 +2,11 @@ import Rx from 'rx'
 let Observable= Rx.Observable
 let fromEvent = Observable.fromEvent
 let just      = Observable.just
+let merge     = Observable.merge
 
 import {safeJSONParse, toArray} from '../../utils/utils'
 import assign from 'fast.js/object/assign'//faster object.assign
-
+import {pick} from 'ramda'
 
 function jsonToFormData(jsonData){
   jsonData = JSON.parse( JSON.stringify( jsonData ) )
@@ -21,7 +22,7 @@ function jsonToFormData(jsonData){
     if(Object.prototype.toString.call(value) === "[object Array]"){
       value = JSON.stringify(value)
     }
-    console.log("append",fieldName, value)
+    //console.log("append",fieldName, value)
     formData.append(fieldName, value)
   }
   return formData
@@ -35,6 +36,18 @@ function remapJson(input){
     ,'version':'part_version'
   }
 
+  const result =  Object.keys(input)
+    .reduce(function(obj, key){
+      if(key in mapping){
+        obj[mapping[key]] = input[key]
+      }
+      else{
+        obj[key] = input[key]
+      }
+      return obj
+    },{})
+  console.log("remapJson",result)
+  return result
 }
 
       /*
@@ -88,8 +101,9 @@ export default function makeYMDriver(httpDriver, params={}){
   const designUri = `${urlBase}://${authData}${apiBaseUri}/designs/${designId}`
 
   //const documentsUri = `${urlBase}://${authData}${apiBaseUri}/designs/${designId}/documents/${params.documentId}${authTokenStr}`
-
-  const bomUri        = `${designUri}/boms/${bomId}${authTokenStr}`
+  //${bomId}
+  const bomUri        = `${designUri}/boms${authTokenStr}`
+  const partUri       = `${designUri}/parts${authTokenStr}`
   const assembliesUri = `${designUri}/assemblies/${assemblyId}${authTokenStr}`
   
 
@@ -101,8 +115,7 @@ export default function makeYMDriver(httpDriver, params={}){
 
 
   function youMagineStorageDriver(outgoing$){
-    function formatOutput(){
-    }
+
 
     function getItem(item){
       return just( {} ).map(safeJSONParse)
@@ -119,61 +132,64 @@ export default function makeYMDriver(httpDriver, params={}){
     function toBom(bomEntries){
       const requests = bomEntries.map(function(entry){
 
-        const data = jsonToFormData(entry)
-        return assign(
-          {
-              part_id: entry.id
-            , url:bomUri
-            , method:'post'
-            , data
-            , type:'ymSave'
+        const bomFields = ['qty','phys_qty', 'unit', 'part_id' , 'part_parameters','part_version']
 
-          }, entry)
+        const refined = pick( bomFields, remapJson(entry) )
+        const data    = jsonToFormData(refined)
+
+        return {
+              url    :bomUri
+            , method :'post'
+            , send   : data
+            , type   :'ymSave'
+          }
       })
+      console.log("request save bom",requests)
+      return requests 
+    }
 
+    function toParts(partEntries){
+      const fieldNames = ["id","name","description","uuid"]
+    /*"binary_document_id": null,
+    "binary_document_url": "",
+    "source_document_id": null,
+    "source_document_url": "",]*/
 
-      /*
-      "qty": null,
-  "phys_qty": null,
-  "unit": null,
-  "part_id": null,
-  "part_parameters": null,
-  "part_version": null,
-  "design_id": 9962,*/
+      const requests = bomEntries.map(function(entry){
 
-        /*id: "DE993D53-2B7D-4D72-B495-53DBC8529F60"
-        name: "UM2CableChain_BedEnd"
-        printable: true
-        qty: 1
-        unit: "QA"
-        version: "0.0.1"*/
-
-      
-      console.log("toBom",requests)
+        const data = jsonToFormData(entry)
+        return {
+              url    :partUri
+            , method :'post'
+            , data
+            , type   :'ymSave'
+          }
+      })
+      console.log("request save parts",requests)
+      return requests 
     }
 
     outgoing$ = outgoing$.share()
+
     const bom$ = outgoing$.pluck("bom")
       .pluck("entries")
       .distinctUntilChanged()
+      .filter(d=>d.length>0)
+      .map(toBom)
+      .flatMap(Rx.Observable.fromArray)
 
-
-    bom$
-      .forEach(toBom)
-   
-    outgoing$
-      //.tap(e=>console.log("output to youMagineStorageDriver",e))
+    const parts$ = outgoing$//.pluck("parts")
+      .pluck("bom")
+      .pluck("entries")
       .distinctUntilChanged()
-      .subscribe(formatOutput)
+      .filter(d=>d.length>0)
+      .map(toParts)
+      .flatMap(Rx.Observable.fromArray)
+
+    const outToHttp$ = merge( bom$ )
     
-
-    return {
-      get: getItem
-      ,set: setItem
-      ,remove: remove
-    }
+    httpDriver(outToHttp$)
   }
-
 
   return youMagineStorageDriver
 }

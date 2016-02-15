@@ -224,6 +224,7 @@ export default function model(props$, actions, drivers){
     ,core$
     ,transforms$
     ,meshes$
+    ,types$:entityTypes$
 
     //app level data, meta data , settings etc
     ,appData$

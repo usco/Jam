@@ -64,9 +64,11 @@ export default function main(drivers) {
   const entityCoreToYm = state$.pluck("core")
   const entityTransformsToYm = state$.pluck("transforms")
   const entitymeshesToYm = state$.pluck("meshes")
+  const parts   = state$.pluck("types")
 
   const ymStorage$ = combineLatestObj({
       bom: bomToYm
+    , parts
     , eCores: entityCoreToYm
     , eTrans: entityTransformsToYm
     , eMeshs: entitymeshesToYm

@@ -25,7 +25,7 @@ let addressbar   = addressbarDriver
 let browserCaps  = browserCapsDriver
 let httpDriver   = makeHttpDriver()
 let desktopStoreDriver = makeDesktopDriver()
-let ymDriver     = makeYMDriver()
+let ymDriver     = makeYMDriver(httpDriver)
 
 let drivers = {
    DOM: domDriver
