@@ -8,6 +8,9 @@ import Settings from '../../components/widgets/Settings'
 import FullScreenToggler from '../../components/widgets/FullScreenToggler/index'
 import Help from '../../components/widgets/Help'
 
+import {combineLatestObj} from '../../utils/obsUtils'
+
+
 import {EntityInfosWrapper,BOMWrapper,GLWrapper,CommentsWrapper,progressBarWrapper} from '../../components/main/wrappers'
 
 import intent from './intent'
@@ -56,6 +59,19 @@ export default function main(drivers) {
     .pluck("settings")
     .map( s=>({"jam!-settings":JSON.stringify(s)}) )
 
+  //output to ym
+  const bomToYm = state$.pluck("bom")
+  const entityCoreToYm = state$.pluck("core")
+  const entityTransformsToYm = state$.pluck("transforms")
+  const entitymeshesToYm = state$.pluck("meshes")
+
+  const ymStorage$ = combineLatestObj({
+      bom: bomToYm
+    , eCores: entityCoreToYm
+    , eTrans: entityTransformsToYm
+    , eMeshs: entitymeshesToYm
+  })
+
   //return anything you want to output to drivers
   return {
       DOM: vtree$
@@ -66,6 +82,8 @@ export default function main(drivers) {
       ,desktop:actions.requests.desktop$
 
       ,postMessage:postMsg$
+
+      ,ym:ymStorage$
   }
 }
 
