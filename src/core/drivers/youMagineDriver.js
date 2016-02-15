@@ -6,19 +6,65 @@ let just      = Observable.just
 import {safeJSONParse, toArray} from '../../utils/utils'
 import assign from 'fast.js/object/assign'//faster object.assign
 
+
+function jsonToFormData(jsonData){
+  jsonData = JSON.parse( JSON.stringify( jsonData ) )
+  let formData = new FormData()
+  for(let fieldName in jsonData){
+    let value = jsonData[fieldName]
+    //value = encodeURIComponent(JSON.stringify(value))
+    //value = JSON.stringify(value)
+    //value = value.replace(/\"/g, '')
+    if(Object.prototype.toString.call(value) === "[object Object]"){
+      value = JSON.stringify(value)
+    }
+    if(Object.prototype.toString.call(value) === "[object Array]"){
+      value = JSON.stringify(value)
+    }
+    console.log("append",fieldName, value)
+    formData.append(fieldName, value)
+  }
+  return formData
+}
+
+function remapJson(input){
+  const mapping = {
+    'version':'part_version'
+    ,'id':'part_id'
+    ,'params':'part_parameters'
+    ,'version':'part_version'
+  }
+
+}
+
+      /*
+      "qty": null,
+  "phys_qty": null,
+  "unit": null,
+  "part_id": null,
+  "part_parameters": null,
+  "part_version": null,
+  "design_id": 9962,*/
+
+        /*id: "DE993D53-2B7D-4D72-B495-53DBC8529F60"
+        name: "UM2CableChain_BedEnd"
+        printable: true
+        qty: 1
+        unit: "QA"
+        version: "0.0.1"*/
+
+
+
 //storage driver for YouMagine designs & data etc
-
-
-export default function makeYMDriver(httpDriver, params){
+export default function makeYMDriver(httpDriver, params={}){
   const defaults = {
-    ,apiBaseProdUri:'api.youmagine.com/v1'
+    apiBaseProdUri:'api.youmagine.com/v1'
     ,apiBaseTestUri:''
     ,urlBase:'https'
 
-    
     ,designId:undefined
 
-    ,testMode:undefined
+    ,testMode:true
     ,login:undefined
     ,password:undefined
   }
@@ -29,7 +75,6 @@ export default function makeYMDriver(httpDriver, params){
 
   let apiBaseUri = testMode !== undefined ? apiBaseTestUri : apiBaseProdUri
   let authData   = (login !== undefined && password!==undefined) ? (`${login}:${password}@`) : ''
-  let apiBaseUri = testMode !== undefined ? apiBaseTestUri : apiBaseProdUri
 
 
   const authToken  = ""
@@ -71,18 +116,56 @@ export default function makeYMDriver(httpDriver, params){
       //removeItem(item)
     }
 
-    function toBom(){
+    function toBom(bomEntries){
+      const requests = bomEntries.map(function(entry){
+
+        const data = jsonToFormData(entry)
+        return assign(
+          {
+              part_id: entry.id
+            , url:bomUri
+            , method:'post'
+            , data
+            , type:'ymSave'
+
+          }, entry)
+      })
+
+
+      /*
+      "qty": null,
+  "phys_qty": null,
+  "unit": null,
+  "part_id": null,
+  "part_parameters": null,
+  "part_version": null,
+  "design_id": 9962,*/
+
+        /*id: "DE993D53-2B7D-4D72-B495-53DBC8529F60"
+        name: "UM2CableChain_BedEnd"
+        printable: true
+        qty: 1
+        unit: "QA"
+        version: "0.0.1"*/
+
       
+      console.log("toBom",requests)
     }
 
-   
-    if(outgoing$){
-      outgoing$
-        .tap(e=>console.log("output to youMagineStorageDriver",e))
+    outgoing$ = outgoing$.share()
+    const bom$ = outgoing$.pluck("bom")
+      .pluck("entries")
+      .distinctUntilChanged()
 
-        .distinctUntilChanged()
-        .subscribe(formatOutput)
-    } 
+
+    bom$
+      .forEach(toBom)
+   
+    outgoing$
+      //.tap(e=>console.log("output to youMagineStorageDriver",e))
+      .distinctUntilChanged()
+      .subscribe(formatOutput)
+    
 
     return {
       get: getItem
