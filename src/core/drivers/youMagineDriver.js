@@ -2,7 +2,7 @@ import Rx from 'rx'
 const Observable= Rx.Observable
 const {fromEvent, just, merge, concat} = Observable
 
-import {combineLatestObj} from '../../utils/obsUtils'
+import {combineLatestObj, replicateStream} from '../../utils/obsUtils'
 import {safeJSONParse, toArray} from '../../utils/utils'
 import assign from 'fast.js/object/assign'//faster object.assign
 import {pick, equals} from 'ramda'
@@ -29,7 +29,6 @@ function jsonToFormData(jsonData){
 
 function remapJson(mapping, input){
   
-
   const result =  Object.keys(input)
     .reduce(function(obj, key){
       if(key in mapping){
@@ -45,13 +44,35 @@ function remapJson(mapping, input){
 }
 
 
-  function equals2(prev, cur){
-      console.log("prev",prev,cur)
+function equals2(prev, cur){
+  console.log("prev",prev,cur)
 
-      const isEqual = equals(prev,cur)
-      console.log("equals",isEqual)
-      return isEqual
+  const isEqual = equals(prev,cur)
+  console.log("equals",isEqual)
+  return isEqual
+}
+
+function upsert(http, params){
+  //GET a resource
+  //if 404 => POST
+    //if error : retry until abort
+  //else   => UPDATE
+    //if error : retry until abort
+  const {url} = params
+
+  const outProxy$ = new Rx.ReplaySubject(1)
+
+  const incoming$ = httpDriver(outToHttp$)
+
+  replicateStream(currentSelections$, outProxy$)
+
+  return {
+        url    :`bomUri/${refined.part_id}${authTokenStr}`
+      , method :'post'
+      , send   
+      , type   :'ymSave'
     }
+}
 
 
 //storage driver for YouMagine designs & data etc
@@ -88,7 +109,7 @@ export default function makeYMDriver(httpDriver, params={}){
 
   //const documentsUri = `${urlBase}://${authData}${apiBaseUri}/designs/${designId}/documents/${params.documentId}${authTokenStr}`
   //${bomId}
-  const bomUri        = `${designUri}/boms${authTokenStr}`
+  const bomUri        = `${designUri}/boms`
   const partUri       = `${designUri}/parts${authTokenStr}`
   const assembliesUri = `${designUri}/assemblies/${assemblyId}${authTokenStr}`
   
@@ -121,7 +142,7 @@ export default function makeYMDriver(httpDriver, params={}){
         const send    = jsonToFormData(refined)
 
         return {
-              url    :bomUri
+              url    :`bomUri/${refined.part_id}${authTokenStr}`
             , method :'post'
             , send   
             , type   :'ymSave'
@@ -148,7 +169,7 @@ export default function makeYMDriver(httpDriver, params={}){
         const send    = jsonToFormData(refined)
 
         return {
-              url    :partUri
+              url    : `partUri/${refined.uuid}${authTokenStr}`
             , method :'post'
             , send   
             , type   :'ymSave'
@@ -171,7 +192,9 @@ export default function makeYMDriver(httpDriver, params={}){
     }
 
     function toAssemblies(entries){
-      const fieldNames = []
+      console.log("entries",entries)
+
+      const fieldNames = ['id','name','color','pos','rot','sca','typeUid']
       const mapping = {}
       const requests = entries.map(function(entry){
 
@@ -186,6 +209,13 @@ export default function makeYMDriver(httpDriver, params={}){
           }
       })
       return requests 
+    }
+
+    //to load data up again
+    function fromAssemblies(entries){
+      //for mesh components we require "parts" info
+      //for meta components we require "assemblies" info
+      //for tran components we require "assemblies" info
     }
 
     //////////////////////////
@@ -213,12 +243,19 @@ export default function makeYMDriver(httpDriver, params={}){
         , meshes: outgoing$.pluck('eMeshs')})
       .debounce(1)
       .map(dataFromItems)
+      .filter(d=>d.length>0)
+      .map(toAssemblies)
+      .flatMap(Rx.Observable.fromArray)
       .forEach(e=>console.log("item",e))
 
 
     const outToHttp$ = merge( parts$ )//concat(parts$,bom$) )
       .forEach(e=>console.log("outToHttp",e))
-    //httpDriver(outToHttp$)
+
+
+    const inputs$ = httpDriver(outToHttp$)
+
+
   }
 
   return youMagineStorageDriver
