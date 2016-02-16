@@ -179,7 +179,6 @@ function parse(fetched$){
       console.log("DATA",fullData.parser)
       const parseOptions = {useWorker:true}
 
-      console.log("here in parse")
       /*System.import('usco-ctm-parser').then(function(parser){
         console.log("dynamic load of ctmParser",parser)
       })*/
