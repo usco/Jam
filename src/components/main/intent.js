@@ -2,6 +2,7 @@ import Rx from 'rx'
 const {merge,fromArray,of} = Rx.Observable
 
 import {equals, cond, T, always, head, flatten} from 'ramda'
+import path from 'path'
 
 import {first,toggleCursor} from '../../utils/otherUtils'
 import {exists,toArray} from '../../utils/utils'
@@ -23,78 +24,32 @@ import {intentsFromPostMessage} from '../../core/actions/fromPostMessage'
 import {intentsFromResources,makeEntityActionsFromResources} from '../../core/actions/fromResources'
 import {makeEntityActionsFromDom} from '../../core/actions/fromDom'
 
-import {filterExtension, normalizeData} from '../../core/sources/utils'
+import {filterExtension, normalizeData, extractDataFromRawSources} from '../../core/sources/utils'
 
 
-export default function intent (drivers) {
+export default function intent (sources) {
   //data sources for our main model
-  const dataSources = drivers
+  const dataSources = sources
 
-  /*utility function to dynamically load and use the "data extractors" (ie functions that
-   extract useful data from raw data)
-  */
-  function extractDataFromRawSources(sources){
-
-    const data = Object.keys(sources).map(function(sourceName){
-      try{
-        const extractorImport = require('../../core/sources/'+sourceName)
-        
-        const sourceData     = sources[sourceName]//the raw source of data (ususually a driver)
-        const extractorNames = Object.keys(extractorImport)
-
-
-
-        //TODO , find a better way to do this
-        const paramsHelper = {
-          get:function get(category, params){
-            const data = {
-              'extensions':{
-                 meshes : ["stl","3mf","amf","obj","ctm","ply"]
-                ,sources: ["scad","jscad"]
-              }
-            }
-            return data[category][params]
-          }
-        }
-        
-        //deal with all the different data "field" functions that are provided by the imports
-        const refinedData =  extractorNames.map(function(name){
-          const fn = extractorImport[name]
-          if(fn){
-            const refinedData = fn(sourceData, paramsHelper)
-              .flatMap(fromArray)
-              .filter(exists)
-              return refinedData
-          }
-        })
-
-        return refinedData
-       
-      }catch(error){}
-    })
-    .filter(data=>data!==undefined)
-
-    return merge( flatten( data ) )
-  }
-
-  const refinedSourceData$ = normalizeData( extractDataFromRawSources( dataSources ) )
-
+  //FIXME: damned  relative paths ! actual path (relative to THIS module) is '../../core/sources/' , relative to the loader it is '.'
+  const refinedSourceData$ = normalizeData( extractDataFromRawSources( dataSources, '.' ) )
+  //const actions = actionsFromSources(sources, path.resolve(__dirname,'./actions')+'/' )
 
   //settings
-  const settingActions   = settingsIntent(drivers)
+  const settingActions   = settingsIntent(sources)
 
   //comments
-  const commentActions   = commentsIntents(drivers)
+  const commentActions   = commentsIntents(sources)
 
-  let _resources = resources(drivers)
+  let _resources = resources(sources)
 
   //actions from various sources
-  const actionsFromPostMessage = intentsFromPostMessage(drivers)
-  const actionsFromEvents      = intentsFromEvents(drivers)
+  const actionsFromPostMessage = intentsFromPostMessage(sources)
+  const actionsFromEvents      = intentsFromEvents(sources)
   const {entityCandidates$, entityCertains$}= intentsFromResources(_resources.parsed$)//these MIGHT become instances, or something else, we just are not 100% sure
   
   const entityActionsFromResources   = makeEntityActionsFromResources(entityCertains$)
-  const entityActionsFromDom         = makeEntityActionsFromDom(drivers.DOM)
+  const entityActionsFromDom         = makeEntityActionsFromDom(sources.DOM)
   const extras = {entityCandidates$}
 
    const entityActionNames = [
@@ -125,7 +80,7 @@ export default function intent (drivers) {
     updateBomEntries$:actionsFromEvents.updateBomEntries$
   }  
 
-  //OUTbound requests to various drivers
+  //OUTbound requests to various sources
   let requests = assetRequests( refinedSourceData$ )
 
   return {     
