@@ -1,7 +1,15 @@
 import Rx from 'rx'
 const merge = Rx.Observable.merge
-import {exists,getExtension,getNameAndExtension, isValidFile, isEmpty} from './utils'
+import {exists,getExtension,getNameAndExtension, isValidFile, isValidUrl, isEmpty} from './utils'
 import assign from 'fast.js/object/assign'//faster object.assign
+
+
+function isValidDataSource(data){
+
+  const foo =  isValidFile(data) || isValidUrl(data)
+  console.log("foo",data, foo, isValidFile(data), isValidUrl(data))
+  return foo
+}
 
 
 function dataSource(data){
@@ -11,7 +19,7 @@ function dataSource(data){
       ,uri: data.name
     }
   }
-  else{
+  else if(isValidUrl(data)){
     return {
       src:'http'
       ,uri:data
@@ -19,7 +27,7 @@ function dataSource(data){
   }
 }
 
-export default function assetRequests(inputs, drivers){
+export default function assetRequests(inputs, sources){
   //const {meshSources$,srcSources$} = inputs
 
   //FIXME: caching should be done at a higher level , to prevent useless requests
@@ -33,6 +41,7 @@ export default function assetRequests(inputs, drivers){
     .flatMap(Rx.Observable.fromArray)
     .filter(exists)
     .filter(data=>!isEmpty(data))
+    .filter(isValidDataSource)
     .map(function(data){
       const source     = dataSource(data)
       const uri        = source.uri
@@ -50,7 +59,7 @@ export default function assetRequests(inputs, drivers){
     })
 
   /*const results$ = merge(
-      fetch(drivers)
+      fetch(sources)
       //TODO: merge with cached results
     )*/
   /*const request  = of( e.request )
