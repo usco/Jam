@@ -26,14 +26,19 @@ import {makeEntityActionsFromDom} from '../../core/actions/fromDom'
 
 import {filterExtension, normalizeData, extractDataFromRawSources} from '../../core/sources/utils'
 
+import {designSource} from '../../core/sources/addressbar.js'
 
 export default function intent (sources) {
   //data sources for our main model
   const dataSources = sources
 
   //FIXME: damned  relative paths ! actual path (relative to THIS module) is '../../core/sources/' , relative to the loader it is '.'
-  const refinedSourceData$ = normalizeData( extractDataFromRawSources( dataSources, '.' ) )
+  const refinedSourceData$ = normalizeData( extractDataFromRawSources( dataSources, '.' ) )//q.tap(e=>console.log("foo",e))
   //const actions = actionsFromSources(sources, path.resolve(__dirname,'./actions')+'/' )
+
+  //this one is specific to design sources/ids
+  const dSource = designSource(sources.addressbar)
+    .forEach(e=>console.log("designSource",e))
 
   //settings
   const settingActions   = settingsIntent(sources)
