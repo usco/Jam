@@ -5,12 +5,9 @@ import assign from 'fast.js/object/assign'//faster object.assign
 
 
 function isValidDataSource(data){
-
-  const foo =  isValidFile(data) || isValidUrl(data)
-  console.log("foo",data, foo, isValidFile(data), isValidUrl(data))
-  return foo
+  const valid =  isValidFile(data) || isValidUrl(data)
+  return valid
 }
-
 
 function dataSource(data){
   if(isValidFile(data)){
