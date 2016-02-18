@@ -1,7 +1,36 @@
-import {entityInstanceIntents} from '../../../core/entities/entityIntents'
 import Rx from 'rx'
 const merge = Rx.Observable.merge
 import {mergeData} from '../../../utils/modelUtils'
+
+import {extractChanges} from '../../../utils/diffPatchUtils'
+
+export function entityInstanceIntents(entityTypes$){
+  
+  const addInstances$ = entityTypes$
+    //.distinctUntilChanged()//no worky ?
+    .pluck("typeData")
+    .scan(function(acc, x){
+      let cur  = x
+      let prev = acc.cur
+
+      cur = Object.keys(cur).map(function(key){
+        return cur[key]
+      })      
+      return {cur,prev} 
+    },{prev:undefined,cur:undefined})
+    .map(function(typeData){
+      let {cur,prev} = typeData
+
+      let changes = extractChanges(prev,cur)
+    return changes
+  })
+  .pluck("added")
+  .shareReplay(1)
+  
+  return {
+    addInstances$
+  }
+}
 
 
 export default function bomIntent(drivers, entityTypes$, coreActions, entityActions, actions){
