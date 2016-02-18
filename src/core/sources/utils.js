@@ -72,7 +72,8 @@ export function extractDataFromRawSources(sources, basePath){
       const extractorImport = require(modulePath)
       
       const sourceData     = sources[sourceName]//the raw source of data (ususually a driver)
-      const extractorNames = Object.keys(extractorImport)
+      const extractorNames = Object.keys(extractorImport) // all the exports from the module
+      //console.log("extractorNames",extractorNames)
 
       //TODO , find a better way to do this
       const paramsHelper = {
@@ -100,7 +101,7 @@ export function extractDataFromRawSources(sources, basePath){
 
       return refinedData
      
-    }catch(error){console.log('error',error)}
+    }catch(error){}
   })
   .filter(data=>data!==undefined)
 
