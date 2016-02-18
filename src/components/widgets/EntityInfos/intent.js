@@ -42,13 +42,13 @@ export default function intent(DOM){
     .shareReplay(1)
   
 
-  const changeCore$ = merge(
+  const changeMeta$ = merge(
     changeName$.map(function(value){return {name:value} })
     ,changeColor$.map(function(value){return {color:value}})
     )
 
   return {
-    changeCore$
+    changeMeta$
     ,changeTransforms$
   }
 }

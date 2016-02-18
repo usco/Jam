@@ -15,6 +15,7 @@ export function partMesh(DOM, params){
   const dndMeshUris$    = dnd$.filter(e=> (e.type === "url") ).pluck("data")
 
   return filterByExtensions( merge(dndMeshFiles$, dndMeshUris$), params.get('extensions','meshes') )
+    //.map(data =>( {src:'desktop', uri:data.name} ) )
 }
 
 export function partSource(DOM, params){
@@ -28,4 +29,5 @@ export function partSource(DOM, params){
   let dndSourceUris$    = dnd$.filter(e=> (e.type === "url") ).pluck("data")
 
   return filterByExtensions( merge(dndSourceFiles$, dndSourceUris$), params.get('extensions','sources') )
+    //.map(data => ( {src:'desktop', uri:data.name} ) )
 }

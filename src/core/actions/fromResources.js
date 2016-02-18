@@ -22,8 +22,8 @@ export function intentsFromResources(rawParsedData$){
 
   export function makeEntityActionsFromResources(certains$){
     certains$ = certains$
-    const createCoreComponents$      = certains$.map(data=>data.data.instMeta)
-      //NOTE :we are doing these to make them compatible with remapCoreActions helpers, not sure this is the best
+    const createMetaComponents$      = certains$.map(data=>data.data.instMeta)
+      //NOTE :we are doing these to make them compatible with remapMetaActions helpers, not sure this is the best
       .map(function(datas){
         return datas.map(function({instUid, typeUid, name}){
           return { id:instUid,  value:{ id:instUid, typeUid, name } }
@@ -61,7 +61,7 @@ export function intentsFromResources(rawParsedData$){
 
     return {
         addEntityTypes$
-      , createCoreComponents$
+      , createMetaComponents$
       , createTransformComponents$
       , createMeshComponents$
     }

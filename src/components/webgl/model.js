@@ -23,8 +23,8 @@ function setFlags(mesh){
 }
 
 
-function makeRemoteMeshVisual(core,transform,mesh){
-  if(core && transform && mesh){
+function makeRemoteMeshVisual(meta,transform,mesh){
+  if(meta && transform && mesh){
 
     //only apply changes to mesh IF the current transform is different ?
     //console.log("transforms",transform)
@@ -40,42 +40,42 @@ function makeRemoteMeshVisual(core,transform,mesh){
     {
       mesh.scale.fromArray( transform.sca )
     }
-    //color is stored in core component
-    mesh.material.color.set( core.color )
+    //color is stored in meta component
+    mesh.material.color.set( meta.color )
     return setFlags(mesh)
   }
 
 }
 
 function getVisual(components){
-  const {core} = components//{components}
-  let keys = Object.keys(core)
-  let cores = core
+  const {meta} = components//{components}
+  let keys = Object.keys(meta)
+  let metas = meta
 
   return keys.map(function(key){
-    let core = cores[key]
+    let meta = metas[key]
     let transform = components.transforms[key]
     let mesh = components.meshes[key]
 
     //TODO: refactor this horror
-    if(core.typeUid === "A1")//typeUid:"A1"=> notes
+    if(meta.typeUid === "A1")//typeUid:"A1"=> notes
     {   
-      return makeNoteVisual(core, components.meshes)
+      return makeNoteVisual(meta, components.meshes)
     }
-    else if(core.typeUid === "A2"){
-      return makeThicknessVisual(core, components.meshes)
+    else if(meta.typeUid === "A2"){
+      return makeThicknessVisual(meta, components.meshes)
     }
-    else if(core.typeUid === "A3"){
-      return makeDiameterVisual(core, components.meshes)
+    else if(meta.typeUid === "A3"){
+      return makeDiameterVisual(meta, components.meshes)
     }
-    else if(core.typeUid === "A4"){
-      return makeDistanceVisual(core, components.meshes)
+    else if(meta.typeUid === "A4"){
+      return makeDistanceVisual(meta, components.meshes)
     }
-    else if(core.typeUid === "A5"){
-      return makeAngleVisual(core, components.meshes)
+    else if(meta.typeUid === "A5"){
+      return makeAngleVisual(meta, components.meshes)
     }
     else{
-      return makeRemoteMeshVisual(core,transform,mesh)
+      return makeRemoteMeshVisual(meta,transform,mesh)
     }
 
   })
@@ -90,14 +90,14 @@ export default function model(props$, actions){
   //every time either activeTool or selection changes, reset/update transform controls
 
   //composite data
-  const core$       = props$.pluck('core').distinctUntilChanged()
+  const meta$       = props$.pluck('meta').distinctUntilChanged()
   const transforms$ = props$.pluck('transforms')//.distinctUntilChanged()
   const meshes$     = props$.pluck('meshes').filter(exists).distinctUntilChanged(function(m){
     return Object.keys(m)
   } )
 
    //combine All needed components to apply any "transforms" to their visuals
-  const items$ = combineLatestObj({core$,transforms$,meshes$})
+  const items$ = combineLatestObj({meta$,transforms$,meshes$})
     .debounce(1)//ignore if we have too fast changes in any of the 3 components
     //.distinctUntilChanged()
     .map(getVisual)

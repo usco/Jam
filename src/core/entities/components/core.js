@@ -2,8 +2,8 @@ import Rx from 'rx'
 import {createComponents,removeComponents,duplicateComponents,makeActionsFromApiFns} from './common'
 import {makeModel, mergeData} from '../../../utils/modelUtils'
 
-////Entity Core//////
-export function makeCoreSystem(actions){
+////Entity Meta//////
+export function makeMetaSystem(actions){
   const defaults = {}
 
   //defaults for each component in this system
@@ -15,7 +15,7 @@ export function makeCoreSystem(actions){
   }
 
   function updateComponents(state, inputs){
-    console.log("update core attributes",inputs)//, coreChanges, instIds)
+    console.log("update meta attributes",inputs)//, metaChanges, instIds)
 
     return inputs.reduce(function(state,input){
       let id  = input.id
@@ -48,7 +48,7 @@ export function makeCoreSystem(actions){
   }
 
   function clear(state, input){
-    console.log("clearing core")
+    console.log("clearing meta")
     return {}
   }
 
@@ -65,7 +65,7 @@ export function makeCoreSystem(actions){
     actions   = makeActionsFromApiFns(updateFns)
   }
 
-  let core$ = makeModel(defaults, updateFns, actions)
+  let meta$ = makeModel(defaults, updateFns, actions)
 
-  return {core$,coreActions:actions}
+  return {meta$,metaActions:actions}
 }

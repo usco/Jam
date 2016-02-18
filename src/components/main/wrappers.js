@@ -37,10 +37,10 @@ export function EntityInfosWrapper(state$, DOM) {
           return state.transforms[id]
         })
         
-        let core = ids.map(function(id){
-          return state.core[id]
+        let meta = ids.map(function(id){
+          return state.meta[id]
         })
-        return {transforms,core}
+        return {transforms,meta}
       })
       .shareReplay(1)
   }
@@ -85,10 +85,10 @@ export function GLWrapper(state$, drivers){
   const selections$ = selectedInstIds$
     .withLatestFrom(state$,function(ids,state){
       //console.log("gnagna gna")
-      let core = ids.map(function(id){
-        return state.core[id]
+      let meta = ids.map(function(id){
+        return state.meta[id]
       })
-      return core
+      return meta
     })
     .shareReplay(1)
 
@@ -97,7 +97,7 @@ export function GLWrapper(state$, drivers){
     settings:state$.pluck("settings")
     ,selections$
 
-    ,core:state$.pluck("core")
+    ,meta:state$.pluck("meta")
     ,meshes:state$.pluck("meshes")
     ,transforms:state$.pluck("transforms")
   })
@@ -118,10 +118,10 @@ export function CommentsWrapper(state$, DOM){
   const selections$ = selectedInstIds$
     .combineLatest(state$,function(ids,state){
       //console.log("gnagna gna")
-      let core = ids.map(function(id){
-        return state.core[id]
+      let meta = ids.map(function(id){
+        return state.meta[id]
       })
-      return core
+      return meta
     })
     .map(getFirstsData)
     .shareReplay(1)

@@ -26,25 +26,25 @@ function resolveMeshes(deps, meshes){
     .filter(x=>x!==undefined)
 }
 
-function addCoreData(core,visual){
-  visual.userData.entity = {id : core.id}
+function addMetaData(meta,visual){
+  visual.userData.entity = {id : meta.id}
   //special attributes
   visual.pickable = true
   return visual
 }
 
-function combineData(core, deps, meshes, makeVisual){
+function combineData(meta, deps, meshes, makeVisual){
   const depMeshes = resolveMeshes(deps, meshes) 
   const visual    = makeVisual(depMeshes)
-  return addCoreData(core, visual)
+  return addMetaData(meta, visual)
 }
 
 //actual visual makers
 
-export function makeNoteVisual(core, meshes){
-  console.log("makeNoteVisual",core, meshes)
-  let point = core.target.point
-  let deps  = [core.target.id]
+export function makeNoteVisual(meta, meshes){
+  console.log("makeNoteVisual",meta, meshes)
+  let point = meta.target.point
+  let deps  = [meta.target.id]
 
   function makeVisual([object]){
     //mesh.updateMatrix()
@@ -60,14 +60,14 @@ export function makeNoteVisual(core, meshes){
     return new annotations.NoteVisual(params)
   }
 
-  return combineData(core, deps, meshes, makeVisual)
+  return combineData(meta, deps, meshes, makeVisual)
 }
 
 
 
-export function makeDistanceVisual(core, meshes){
-  let start = core.target.start
-  let end = core.target.end
+export function makeDistanceVisual(meta, meshes){
+  let start = meta.target.start
+  let end = meta.target.end
 
   let deps = [start.id, end.id]
 
@@ -90,13 +90,13 @@ export function makeDistanceVisual(core, meshes){
     return new annotations.DistanceVisual(params)
   }
 
-  return combineData(core, deps, meshes, makeVisual)
+  return combineData(meta, deps, meshes, makeVisual)
 }
 
-export function makeThicknessVisual(core, meshes){
-  let deps = [core.target.id]
-  let entryPoint = core.target.entryPoint
-  let exitPoint  = core.target.exitPoint
+export function makeThicknessVisual(meta, meshes){
+  let deps = [meta.target.id]
+  let entryPoint = meta.target.entryPoint
+  let exitPoint  = meta.target.exitPoint
                     
   function makeVisual([object]){
 
@@ -114,15 +114,15 @@ export function makeThicknessVisual(core, meshes){
     return new annotations.ThicknessVisual(params)
   }
 
-  return combineData(core, deps, meshes, makeVisual)
+  return combineData(meta, deps, meshes, makeVisual)
 }
 
 
-export function makeDiameterVisual(core, meshes){
-  let point = core.target.point
-  let normal = core.target.normal
-  let diameter = core.value
-  let deps = [core.target.id]
+export function makeDiameterVisual(meta, meshes){
+  let point = meta.target.point
+  let normal = meta.target.normal
+  let diameter = meta.value
+  let deps = [meta.target.id]
   
   function makeVisual([mesh]){
     point    = new THREE.Vector3().fromArray(point)
@@ -141,18 +141,18 @@ export function makeDiameterVisual(core, meshes){
     return new annotations.DiameterVisual(params)
   }
      
-  return combineData(core, deps, meshes, makeVisual)
+  return combineData(meta, deps, meshes, makeVisual)
 }
 
 
-export function makeAngleVisual(core, meshes){
-  let start = core.target.start
-  let mid   = core.target.mid
-  let end   = core.target.end
-  let angle = core.value
+export function makeAngleVisual(meta, meshes){
+  let start = meta.target.start
+  let mid   = meta.target.mid
+  let end   = meta.target.end
+  let angle = meta.value
 
   let deps = [start, mid, end].map(d=>d.id)
-  console.log("makeAngleVisual",core, params)
+  console.log("makeAngleVisual",meta, params)
   
   function makeVisual([startObject, midObject, endObject]){
     let startPt = new THREE.Vector3().fromArray(start.point)
@@ -176,5 +176,5 @@ export function makeAngleVisual(core, meshes){
     return new annotations.AngleVisual(params)
   }
      
-  return combineData(core, deps, meshes, makeVisual)
+  return combineData(meta, deps, meshes, makeVisual)
 }

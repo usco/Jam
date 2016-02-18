@@ -44,10 +44,10 @@ export function entityIntents(drivers){
   const reset$                    = DOM.select('.reset').events("click")
 
 
-  const updateCoreComponent$ = events
+  const updateMetaComponent$ = events
     .select("entityInfos")
-    .events("changeCore$")
-    .map(c=>( {target:"core",data:c}))
+    .events("changeMeta$")
+    .map(c=>( {target:"meta",data:c}))
 
   const updateTransformComponent$ = events
     .select("entityInfos")
@@ -61,7 +61,7 @@ export function entityIntents(drivers){
     .map(c=>( {target:"transforms",data:c}))
 
   const updateComponent$ = merge(
-    updateCoreComponent$
+    updateMetaComponent$
     ,updateTransformComponent$
     )
 

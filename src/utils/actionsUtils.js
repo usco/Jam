@@ -21,7 +21,7 @@ export function mergeActionsByName(actionSources, validActions=[]){
 /*utility function to dynamically load and use the "data extractors" (ie functions that
  extract useful data from raw data)
 */
-export function actionsFromSources(sources, basePath){
+export function actionsFromSources(validActions=[], sources, basePath){
 
   const data = Object.keys(sources).map(function(sourceName){
     try{
@@ -33,5 +33,5 @@ export function actionsFromSources(sources, basePath){
   })
   .filter(data=>data!==undefined)
 
-  return mergeActionsByName( data )
+  return mergeActionsByName( data, validActions )
 }

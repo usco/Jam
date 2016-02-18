@@ -211,22 +211,17 @@ export default function makeYMDriver(httpDriver, params={}){
       return requests 
     }
 
-    //to load data up again
-    function fromAssemblies(entries){
-      //for mesh components we require "parts" info
-      //for meta components we require "assemblies" info
-      //for tran components we require "assemblies" info
-    }
-
     //////////////////////////
 
     const save$ = outgoing$
+      .debounce(50)//only save if last events were less than 50 ms appart
       .tap(e=>console.log("here",e))
       .filter(data=>data.method === 'save')
       .pluck('data')
       .share()
   
     const load$ = outgoing$
+      .debounce(50)//only load if last events were less than 50 ms appart
       .tap(e=>console.log("here2",e))
       .filter(data=>data.method === 'load')
       .pluck('data')
@@ -236,20 +231,20 @@ export default function makeYMDriver(httpDriver, params={}){
     const bom$ = save$.pluck("bom")
       .pluck("entries")
       .filter(d=>d.length>0)
-      .distinctUntilChanged(null, equals )
+      .distinctUntilChanged( null, equals )
       .map(toBom)
       .flatMap(Rx.Observable.fromArray)
 
     const parts$ = save$//.pluck("parts")
       .pluck("bom")
       .pluck("entries")
-      .distinctUntilChanged(null, equals )
+      .distinctUntilChanged( null, equals )
       .filter(d=>d.length>0)
       .map(toParts)
       .flatMap(Rx.Observable.fromArray)
 
     const assemblies$ = combineLatestObj({
-          metadata:save$.pluck('eCores')
+          metadata:save$.pluck('eMetas')
         , transforms:save$.pluck('eTrans')
         , meshes: save$.pluck('eMeshs')})
       .debounce(1)
@@ -261,11 +256,18 @@ export default function makeYMDriver(httpDriver, params={}){
 
 
     const outToHttp$ = merge( parts$ )//concat(parts$,bom$) )
-      .forEach(e=>console.log("outToHttp",e))
+      .tap(e=>console.log("outToHttp",e))
 
 
-    //const inputs$ = httpDriver(outToHttp$)
+    const inputs$ = httpDriver(outToHttp$)
+    return inputs$    
 
+    //to load data up again
+    function fromAssemblies(entries){
+      //for mesh components we require "parts" info
+      //for meta components we require "assemblies" info
+      //for tran components we require "assemblies" info
+    }
 
   }
 

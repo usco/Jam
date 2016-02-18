@@ -8,10 +8,10 @@ export function intentsFromEvents(drivers){
   const events = drivers.events
 
   //entities/components
-  const updateCoreComponent$ = events
+  const updateMetaComponent$ = events
     .select("entityInfos")
-    .events("changeCore$")
-    .map(c=>( {target:"core",data:c}))
+    .events("changeMeta$")
+    .map(c=>( {target:"meta",data:c}))
 
   const updateTransformComponent$ = events
     .select("entityInfos")
@@ -25,7 +25,7 @@ export function intentsFromEvents(drivers){
     .map(c=>( {target:"transforms",data:c}))
 
   const updateComponent$ = merge(
-    updateCoreComponent$
+    updateMetaComponent$
     ,updateTransformComponent$
   )
   

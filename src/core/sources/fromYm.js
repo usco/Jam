@@ -6,14 +6,15 @@ import {head} from 'ramda'
 export function makeEntityActions(certains$){
 
 
-  const createCoreComponents$      = certains$.map(data=>data.data.instMeta)
-    //NOTE :we are doing these to make them compatible with remapCoreActions helpers, not sure this is the best
+
+  const createMetaComponents$      = certains$.map(data=>data.data.instMeta)
+    //NOTE :we are doing these to make them compatible with remapMetaActions helpers, not sure this is the best
     .map(function(datas){
       return datas.map(function({instUid, typeUid, name}){
         return { id:instUid,  value:{ id:instUid, typeUid, name } }
       })
     })
-  const createTransformComponents$ = certains$.map(data=>data.data.instTransforms)
+  const createTransformComponents$ = certains$.pluck('mesh')
     .map(function(datas){
       return datas.map(function({instUid, transforms}){
         return { id:instUid, value:{pos:[transforms[11],transforms[10],transforms[9]]} }
@@ -45,7 +46,7 @@ export function makeEntityActions(certains$){
 
   return {
       addEntityTypes$
-    , createCoreComponents$
+    , createMetaComponents$
     , createTransformComponents$
     , createMeshComponents$
   }

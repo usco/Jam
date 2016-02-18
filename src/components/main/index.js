@@ -62,7 +62,7 @@ export default function main(drivers) {
 
   //output to ym
   const bomToYm = state$.pluck("bom")
-  const entityCoreToYm = state$.pluck("core")
+  const entityMetaToYm = state$.pluck("meta")
   const entityTransformsToYm = state$.pluck("transforms")
   const entitymeshesToYm = state$.pluck("meshes")
   const parts   = state$.pluck("types")
@@ -70,7 +70,7 @@ export default function main(drivers) {
   const saveDesigntoYm$ = combineLatestObj({
         bom: bomToYm
       , parts
-      , eCores: entityCoreToYm
+      , eMetas: entityMetaToYm
       , eTrans: entityTransformsToYm
       , eMeshs: entitymeshesToYm
     }).map(function(data){

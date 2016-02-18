@@ -34,7 +34,8 @@ export default function intent (sources) {
 
   //FIXME: damned  relative paths ! actual path (relative to THIS module) is '../../core/sources/' , relative to the loader it is '.'
   const refinedSourceData$ = normalizeData( extractDataFromRawSources( dataSources, '.' ) )//q.tap(e=>console.log("foo",e))
-  //const actions = actionsFromSources(sources, path.resolve(__dirname,'./actions')+'/' )
+
+  //const actions            = actionsFromSources(sources, path.resolve(__dirname,'./actions')+'/' )
 
   //this one is specific to design sources/ids
   const loadDesign = designSource(sources.addressbar)
@@ -68,7 +69,7 @@ export default function intent (sources) {
     ,'duplicateInstances'
 
     ,'updateComponent'
-    ,'createCoreComponents'
+    ,'createMetaComponents'
     ,'createTransformComponents'
     ,'createMeshComponents'
   ]

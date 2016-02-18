@@ -29,8 +29,8 @@ export function remapEntityActions(entityActions, currentSelections$){
     })
 }
 
-//function to add extra data to core component actions
-export function remapCoreActions(entityActions, componentBase$, currentSelections$, annotationCreations$){
+//function to add extra data to meta component actions
+export function remapMetaActions(entityActions, componentBase$, currentSelections$, annotationCreations$){
   const createComponentsFromBase$ = componentBase$
     .filter(c=>c.length>0)
     .map(function(datas){
@@ -50,18 +50,18 @@ export function remapCoreActions(entityActions, componentBase$, currentSelection
   const createComponents$ = merge(
     createComponentsFromBase$
     ,createComponentsFromAnnots$
-    ,entityActions.createCoreComponents$//not infered
+    ,entityActions.createMetaComponents$//not infered
     ).share()
-    //.tap(e=>console.log("creating core component",e))
+    //.tap(e=>console.log("creating meta component",e))
 
   const removeComponents$ = entityActions.deleteInstances$
   
   const updateComponents$ = entityActions.updateComponent$
-     .filter(u=>u.target === "core")
+     .filter(u=>u.target === "meta")
      .pluck("data")
-     .withLatestFrom(currentSelections$.map(s => s.map(s=>s.id)),function(coreChanges, instIds){
+     .withLatestFrom(currentSelections$.map(s => s.map(s=>s.id)),function(metaChanges, instIds){
         return instIds.map(function(instId){
-          return {id:instId, value:coreChanges}
+          return {id:instId, value:metaChanges}
         })
       })
 

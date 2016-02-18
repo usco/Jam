@@ -96,9 +96,9 @@ function absSizeInput(entity , controlsStep, numberPrecision, changeHandler){
 }
 
 
-function nameInput(core){
-  if(core && "name" in core){
-    let name = core.name
+function nameInput(meta){
+  if(meta && "name" in meta){
+    let name = meta.name
     if(isEmpty(name)){
       name = undefined
     }
@@ -110,11 +110,11 @@ function nameInput(core){
   } 
 }
 
-function colorInput(core){
-  if(core && "color" in core){
+function colorInput(meta){
+  if(meta && "color" in meta){
     return (
       <span>
-        <input type="color" value={core.color} className="colorInput" /> 
+        <input type="color" value={meta.color} className="colorInput" /> 
       </span>
     )
   } 
@@ -184,20 +184,20 @@ export default function view(state$, colorPicker){
 
   //{colorPicker}
   return state$.map(function(state){
-      let {core,transforms} = state
+      let {meta,transforms} = state
 
-      if(!core || !transforms){
+      if(!meta || !transforms){
         return undefined
       }
       if(transforms.length>0) transforms = transforms[0]
-      if(core.length>0) core = core[0]
+      if(meta.length>0) meta = meta[0]
       
-      //console.log("core,transforms",core,transforms)
+      //console.log("meta,transforms",meta,transforms)
 
       return <div className="toolBarBottom entityInfos">
         
-        {colorInput(core)}
-        {nameInput(core)}
+        {colorInput(meta)}
+        {nameInput(meta)}
         {transformInputs(transforms, "pos", undefined, controlsStep, numberPrecision)}
         {transformInputs(transforms, "rot", undefined, controlsStep, numberPrecision)}
         {transformInputs(transforms, "sca", undefined, controlsStep, numberPrecision)}

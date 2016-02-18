@@ -10,7 +10,7 @@ import {generateUUID,exists,toArray} from '../../utils/utils'
 import {mergeData} from '../../utils/modelUtils'
 
 //entity components
-import {makeCoreSystem} from '../../core/entities/components/core' 
+import {makeMetaSystem} from '../../core/entities/components/core' 
 import {makeTransformsSystem} from '../../core/entities/components/transforms' 
 import {makeMeshSystem} from '../../core/entities/components/mesh' 
 import {makeBoundingSystem} from '../../core/entities/components/bounds' 
@@ -18,7 +18,7 @@ import {makeBoundingSystem} from '../../core/entities/components/bounds'
 import {addAnnotation} from '../../core/entities/annotations'
 
 import {entityInstanceIntents} from '../../core/entities/entityIntents'
-import {remapEntityActions,remapCoreActions,
+import {remapEntityActions,remapMetaActions,
   remapMeshActions,remapTransformActions,remapBoundsActions} from '../../core/entities/componentHelpers'
 
 import {selectionsIntents} from './intents/selections'
@@ -173,18 +173,18 @@ export default function model(props$, actions, drivers){
 
   entityActions        = remapEntityActions(entityActions, proxySelections$)
 
-  let coreActions      = remapCoreActions(entityActions     , componentBase$, proxySelections$, addAnnotations$)
+  let coreActions      = remapMetaActions(entityActions     , componentBase$, proxySelections$, addAnnotations$)
   let meshActions      = remapMeshActions(entityActions     , componentBase$, proxySelections$)
   let transformActions = remapTransformActions(entityActions, componentBase$, proxySelections$)
   let boundActions     = remapBoundsActions(entityActions   , componentBase$, proxySelections$)
 
-  let {core$}          = makeCoreSystem(coreActions)
+  let {meta$}          = makeMetaSystem(coreActions)
   let {meshes$}        = makeMeshSystem(meshActions)
   let {transforms$}    = makeTransformsSystem(transformActions)
   let {bounds$}        = makeBoundingSystem(boundActions)
 
   //selections => only for real time view
-  const typesInstancesRegistry$ =  makeRegistry(core$, entityTypes$)  
+  const typesInstancesRegistry$ =  makeRegistry(meta$, entityTypes$)  
   const selections$             = selections( selectionsIntents({DOM,events}, typesInstancesRegistry$) )
     .merge(coreActions.removeComponents$.map(a=> ({instIds:[],bomIds:[]}) )) //after an instance is removed, unselect
 
@@ -221,7 +221,7 @@ export default function model(props$, actions, drivers){
     ,operationsInProgress$
 
     //entity components
-    ,core$
+    ,meta$
     ,transforms$
     ,meshes$
     ,types$:entityTypes$

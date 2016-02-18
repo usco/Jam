@@ -24,15 +24,15 @@ export function colorPickerWrapper(state$, DOM){
   console.log("making colorPicker")
   const props$ = //just({color:"#FF00FF"})
     state$.map(function(state){
-      let {core,transforms} = state
+      let {meta,transforms} = state
 
-      if(!core || !transforms){
+      if(!meta || !transforms){
         return undefined
       }
       if(transforms.length>0) transforms = transforms[0]
-      if(core.length>0) core = core[0]
+      if(meta.length>0) meta = meta[0]
 
-      return {color:core.color}
+      return {color:meta.color}
     })
  
 
@@ -43,10 +43,10 @@ export function colorPickerWrapper(state$, DOM){
 
 function model(props$, actions){
   let comments$   = props$.pluck('comments').filter(exists).startWith(undefined)
-  let core$       = props$.pluck('core').filter(exists).startWith(undefined)
+  let meta$       = props$.pluck('meta').filter(exists).startWith(undefined)
   let transforms$ = props$.pluck('transforms').filter(exists).startWith(undefined)
 
-  return combineLatestObj({core$, transforms$, comments$})
+  return combineLatestObj({meta$, transforms$, comments$})
     .distinctUntilChanged()
     .shareReplay(1)
 }
@@ -67,7 +67,7 @@ function refineActions(props$, actions){
       return output
   })
   return {
-    changeCore$:actions.changeCore$
+    changeMeta$:actions.changeMeta$
     , changeTransforms$
   }
 }
@@ -77,7 +77,7 @@ function refineActions(props$, actions){
 function EntityInfos({DOM, props$}, name = '') {
   const state$ = model(props$)
 
-  const {changeCore$, changeTransforms$} = refineActions( props$, intent(DOM) )
+  const {changeMeta$, changeTransforms$} = refineActions( props$, intent(DOM) )
 
 
   //const colorPicker = colorPickerWrapper(state$, DOM)
@@ -87,7 +87,7 @@ function EntityInfos({DOM, props$}, name = '') {
   return {
     DOM: vtree$,
     events:{
-      changeCore$
+      changeMeta$
       ,changeTransforms$
       //addComment$
     }
