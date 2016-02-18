@@ -208,6 +208,14 @@ export default function model(props$, actions, drivers){
   //not entirely sure, we need a way to observe any fetch/updload etc operation
   const operationsInProgress$ = actions.progress.combinedProgress$.startWith(undefined)
  
+
+
+  const design$ = actions.loadDesign
+    .map(data=>({synched:true, id:data, ns:'ym'}))
+    .startWith({synched:false, id:undefined, ns:'ym'})
+    .tap(e=>console.log("design",e))
+
+
   //////other data
   const appData$ = drivers.appMeta
 
@@ -229,6 +237,9 @@ export default function model(props$, actions, drivers){
     //app level data, meta data , settings etc
     ,appData$
     ,settings$ 
+
+    //infos about current design 
+    ,design$
 
   }).shareReplay(1)
 

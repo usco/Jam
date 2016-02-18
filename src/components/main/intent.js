@@ -39,7 +39,7 @@ export default function intent (sources) {
 
   //this one is specific to design sources/ids
   const loadDesign = designSource(sources.addressbar)
-    //.tap(e=>console.log("designSource",e))
+    .flatMap(fromArray)
 
   //settings
   const settingActions   = settingsIntent(sources)

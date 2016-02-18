@@ -67,13 +67,18 @@ export default function main(drivers) {
   const entitymeshesToYm = state$.pluck("meshes")
   const parts   = state$.pluck("types")
 
-  const saveDesigntoYm$ = combineLatestObj({
-        bom: bomToYm
-      , parts
-      , eMetas: entityMetaToYm
-      , eTrans: entityTransformsToYm
-      , eMeshs: entitymeshesToYm
-    }).map(function(data){
+  const saveDesigntoYm$ = state$
+    .filter(state=>state.design.synched)//only try to save anything when the design is in "synch mode" aka has a ur 
+    .flatMap(_=>
+      combineLatestObj({
+          bom: bomToYm
+        , parts
+        , eMetas: entityMetaToYm
+        , eTrans: entityTransformsToYm
+        , eMeshs: entitymeshesToYm
+      })
+    )
+    .map(function(data){
       return {method:'save', data, type:'design'}
     })
     .distinctUntilChanged(null, equals)
