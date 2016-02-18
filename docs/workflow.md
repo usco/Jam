@@ -4,8 +4,10 @@ data sources
 ------------
 
 addressbar  => 
-              => rawData 
+drag & drop =>   => rawDataSources
 postMessage =>
+
+
 
 
 from data source
