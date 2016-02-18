@@ -131,7 +131,7 @@ export default function makeYMDriver(httpDriver, params={}){
       const fieldNames = ['qty','phys_qty', 'unit', 'part_id' , 'part_parameters','part_version']
       const mapping = {
         'version':'part_version'
-        ,'id':'part_id'
+        ,'id':'part_uuid'
         ,'params':'part_parameters'
         ,'version':'part_version'
       }
@@ -143,7 +143,7 @@ export default function makeYMDriver(httpDriver, params={}){
 
         return {
               url    :`bomUri/${refined.part_id}${authTokenStr}`
-            , method :'post'
+            , method :'put'
             , send   
             , type   :'ymSave'
           }
@@ -170,7 +170,7 @@ export default function makeYMDriver(httpDriver, params={}){
 
         return {
               url    : `partUri/${refined.uuid}${authTokenStr}`
-            , method :'post'
+            , method :'put'
             , send   
             , type   :'ymSave'
           }
@@ -203,7 +203,7 @@ export default function makeYMDriver(httpDriver, params={}){
 
         return {
               url    :assembliesUri
-            , method :'post'
+            , method :'put'
             , send   
             , type   :'ymSave'
           }
@@ -220,16 +220,27 @@ export default function makeYMDriver(httpDriver, params={}){
 
     //////////////////////////
 
-    outgoing$ = outgoing$.share()
+    const save$ = outgoing$
+      .tap(e=>console.log("here",e))
+      .filter(data=>data.method === 'save')
+      .pluck('data')
+      .share()
+  
+    const load$ = outgoing$
+      .tap(e=>console.log("here2",e))
+      .filter(data=>data.method === 'load')
+      .pluck('data')
+      .share()
 
-    const bom$ = outgoing$.pluck("bom")
+    ////
+    const bom$ = save$.pluck("bom")
       .pluck("entries")
       .filter(d=>d.length>0)
       .distinctUntilChanged(null, equals )
       .map(toBom)
       .flatMap(Rx.Observable.fromArray)
 
-    const parts$ = outgoing$//.pluck("parts")
+    const parts$ = save$//.pluck("parts")
       .pluck("bom")
       .pluck("entries")
       .distinctUntilChanged(null, equals )
@@ -238,9 +249,9 @@ export default function makeYMDriver(httpDriver, params={}){
       .flatMap(Rx.Observable.fromArray)
 
     const assemblies$ = combineLatestObj({
-          metadata:outgoing$.pluck('eCores')
-        , transforms:outgoing$.pluck('eTrans')
-        , meshes: outgoing$.pluck('eMeshs')})
+          metadata:save$.pluck('eCores')
+        , transforms:save$.pluck('eTrans')
+        , meshes: save$.pluck('eMeshs')})
       .debounce(1)
       .map(dataFromItems)
       .filter(d=>d.length>0)
@@ -253,7 +264,7 @@ export default function makeYMDriver(httpDriver, params={}){
       .forEach(e=>console.log("outToHttp",e))
 
 
-    const inputs$ = httpDriver(outToHttp$)
+    //const inputs$ = httpDriver(outToHttp$)
 
 
   }

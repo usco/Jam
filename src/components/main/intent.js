@@ -37,8 +37,8 @@ export default function intent (sources) {
   //const actions = actionsFromSources(sources, path.resolve(__dirname,'./actions')+'/' )
 
   //this one is specific to design sources/ids
-  const dSource = designSource(sources.addressbar)
-    .forEach(e=>console.log("designSource",e))
+  const loadDesign = designSource(sources.addressbar)
+    //.tap(e=>console.log("designSource",e))
 
   //settings
   const settingActions   = settingsIntent(sources)
@@ -103,5 +103,7 @@ export default function intent (sources) {
     ,progress:_resources
 
     ,requests
+
+    ,loadDesign
   }
 }

@@ -10,6 +10,7 @@ import Help from '../../components/widgets/Help'
 
 import {combineLatestObj} from '../../utils/obsUtils'
 
+import {pick, equals} from 'ramda'
 
 import {EntityInfosWrapper,BOMWrapper,GLWrapper,CommentsWrapper,progressBarWrapper} from '../../components/main/wrappers'
 
@@ -66,13 +67,24 @@ export default function main(drivers) {
   const entitymeshesToYm = state$.pluck("meshes")
   const parts   = state$.pluck("types")
 
-  const ymStorage$ = combineLatestObj({
-      bom: bomToYm
-    , parts
-    , eCores: entityCoreToYm
-    , eTrans: entityTransformsToYm
-    , eMeshs: entitymeshesToYm
-  })
+  const saveDesigntoYm$ = combineLatestObj({
+        bom: bomToYm
+      , parts
+      , eCores: entityCoreToYm
+      , eTrans: entityTransformsToYm
+      , eMeshs: entitymeshesToYm
+    }).map(function(data){
+      return {method:'save', data, type:'design'}
+    })
+    .distinctUntilChanged(null, equals)
+
+  const loadDesignFromYm$ = actions.loadDesign
+    .map(data=>({method:'load', data, type:'design'}))
+    .distinctUntilChanged(null, equals)
+
+  const ymStorage$ = merge(saveDesigntoYm$, loadDesignFromYm$)
+    .distinctUntilChanged(null, equals)
+
 
   //return anything you want to output to drivers
   return {
