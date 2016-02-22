@@ -75,9 +75,9 @@ function setupPostProcess(camera, renderer, scene){
         type: "f",
         value: 0.4
       },
-      color:{ 
-        type: "c", 
-        value: new THREE.Color("#000000")//#ff2500")//[1.0,0.0,0.0] 
+      color:{
+        type: "c",
+        value: new THREE.Color("#000000")//#ff2500")//[1.0,0.0,0.0]
       }
     }
 
@@ -117,14 +117,14 @@ function setupPostProcess(camera, renderer, scene){
 
     renderer.autoClear = false
     //renderer.autoClearStencil = false
-    
-    outline.clear = false  
-    //normal.clear = false    
+
+    outline.clear = false
+    //normal.clear = false
 
     composer.addPass(normal)
     composer.addPass(maskPass)
     composer.addPass(outline)
-    
+
     composer.addPass(clearMask)
     //composer.addPass(vignettePass)
     //composer.addPass(fxaaPass)
@@ -132,9 +132,9 @@ function setupPostProcess(camera, renderer, scene){
 
     let lastPass = composer.passes[composer.passes.length-1]
     lastPass.renderToScreen = true
-    
+
     return {composers:[composer], fxaaPass, outScene, maskScene}
-    
+
     //return {composer:finalComposer, fxaaPass, outScene, maskScene, composers:[normalComposer,depthComposer,finalComposer]}
 
   }
@@ -179,24 +179,24 @@ function GLView({drivers, props$}){
   let transformControls = new TransformControls( camera )
 
   let grid        = new LabeledGrid(200, 200, 10, config.cameras[0].up)
-  let shadowPlane = new ShadowPlane(2000, 2000, null, config.cameras[0].up) 
+  let shadowPlane = new ShadowPlane(2000, 2000, null, config.cameras[0].up)
 
 
   const actions = intent({DOM},{camera,scene,transformControls})
   const state$  = model(props$, actions)
 
   //FIXME: proxies for now, not sure how to deal with them
-  const meshAddedToScene$     = new Rx.ReplaySubject(1) 
+  const meshAddedToScene$     = new Rx.ReplaySubject(1)
   const meshRemovedFromScene$ = new Rx.ReplaySubject(1)
 
   const outlineSelections$ = settings$
-    .filter(s=> s.appMode !== "viewer")
+    .filter(s=> s.toolSets.indexOf('edit') !== -1 )//only in edit mode, not view mode
     .combineLatest(state$,function(settings, state){
       return state
     })
 
   const zoomToFit$ = settings$
-    .filter(s=> s.appMode === "viewer")
+    .filter(s=> s.toolSets.indexOf('edit') === -1 )//only in view mode, not edit mode
     .combineLatest(state$.pluck("items"), function(settings,items){
       return items
     })
@@ -214,7 +214,7 @@ function GLView({drivers, props$}){
     .forEach( (oAndP) => zoomInOn( oAndP.object, camera, {position:oAndP.point} ) )
   zoomToFit$
     .forEach( (meshes) => zoomToFit(meshes[meshes.length-1], camera, new THREE.Vector3() ) )
-   
+
 
   let windowResizes$ = windowResizes(1) //get from intents/interactions ?
 
@@ -237,14 +237,14 @@ function GLView({drivers, props$}){
   function removeFromScene(object){
     scene.dynamicInjector.remove(object)
   }
-  
+
   function setupScene(){
     config.scenes["main"]
       //TODO , update to be more generic
       .map(light=>makeLight( light ))
       .forEach(light=>scene.add(light))
   }
-    
+
   function render(scene, camera){
     composers.forEach(c=>c.render())
     //composer.passes[composer.passes.length-1].uniforms[ 'tDiffuse2' ].value = composers[0].renderTarget2
@@ -286,7 +286,7 @@ function GLView({drivers, props$}){
     controls.setObservables( actions.filteredInteractions$ )
     controls.addObject( camera )
 
-    scene.add(camera)  
+    scene.add(camera)
     scene.add(shadowPlane)
     scene.add(transformControls)
 
@@ -305,16 +305,16 @@ function GLView({drivers, props$}){
   function handleResize (sizeInfos){
     //log.debug("setting glView size",sizeInfos)
     let {width,height,aspect} = sizeInfos
-  
+
     if(width >0 && height >0 && camera && renderer){
       renderer.setSize( width, height )
       camera.aspect = aspect
       camera.setSize(width,height)
-      camera.updateProjectionMatrix()   
-      
+      camera.updateProjectionMatrix()
+
       let pixelRatio = window.devicePixelRatio || 1
       fxaaPass.uniforms[ 'resolution' ].value.set (1 / (width * pixelRatio), 1 / (height * pixelRatio))
-      
+
       composers.forEach( c=> {
         c.reset()
         c.setSize(width * pixelRatio, height * pixelRatio)
@@ -325,7 +325,7 @@ function GLView({drivers, props$}){
   //combine All needed components to apply any "transforms" to their visuals
   let items$ = state$.pluck("items")//.distinctUntilChanged()
   //TODO : we DO  want distinctUntilChanged() to prevent spamming here at any state change
-  
+
   //TODO we want to zoomToFit only when mode is viewer && we just recieved the FIRST model ??
   /*settings$
     .filter(s=> s.mode === "viewer")
@@ -335,17 +335,17 @@ function GLView({drivers, props$}){
   //do diffing to find what was added/changed
   let itemChanges$ = items$.scan(function(acc, x){
       let cur  = x
-      let prev = acc.cur   
-      return {cur,prev} 
+      let prev = acc.cur
+      return {cur,prev}
     },{prev:undefined,cur:undefined})
     .map(function(typeData){
       let {cur,prev} = typeData
       let changes = extractChanges(prev,cur)
       //console.log("changes",changes)
     return changes
-    })  
+    })
 
-  //experimenting with selections effects 
+  //experimenting with selections effects
   outlineSelections$
     .pluck("selectedMeshes").distinctUntilChanged()
     .forEach(function(selectedMeshes){
@@ -361,8 +361,8 @@ function GLView({drivers, props$}){
   let selectedMeshesChanges$ = state$.pluck("selectedMeshes").distinctUntilChanged()
     .scan(function(acc, x){
       let cur  = x
-      let prev = acc.cur   
-      return {cur,prev} 
+      let prev = acc.cur
+      return {cur,prev}
     },{prev:[],cur:[]})
     .map(function(typeData){
       let {cur,prev} = typeData
@@ -380,7 +380,7 @@ function GLView({drivers, props$}){
     //console.log("updating transformControls",selections,tool)
     //remove transformControls from removed meshes
     selections.removed.map(mesh=>transformControls.detach(mesh))
-    
+
     selections.added.map(function(mesh){
       if(tool && mesh && ["translate","rotate","scale"].indexOf(tool)>-1 )
       {
@@ -398,7 +398,7 @@ function GLView({drivers, props$}){
     initialized$
       .filter(i=>i===true)
       .do(i=>handleResize({width:window.innerWidth,height:window.innerHeight,aspect:window.innerWidth/window.innerHeight}))
-      
+
     ,fromEvent(controls,'change')
     ,fromEvent(transformControls,'change')
     ,state$.pluck("selectedMeshes")
@@ -434,11 +434,11 @@ function GLView({drivers, props$}){
     .do(function(changes){
       changes.added.map( function(mesh){
         addToScene(mesh)
-        meshAddedToScene$.onNext(mesh) 
+        meshAddedToScene$.onNext(mesh)
       })
       changes.removed.map( function(mesh){
         removeFromScene(mesh)
-        meshRemovedFromScene$.onNext(mesh) 
+        meshRemovedFromScene$.onNext(mesh)
       })
 
 
@@ -462,7 +462,7 @@ function GLView({drivers, props$}){
     .filter(e=>e.hasOwnProperty("captureScreen"))
     .flatMap(e=>{
       let img = domElementToImage(renderer.domElement)
-      
+
       let resolutions = e.captureScreen
 
       let images$ = resolutions.map(function(resolution){
@@ -470,12 +470,12 @@ function GLView({drivers, props$}){
           console.log("resolution",resolution)
 
           let obs = new Rx.Subject()
-          aspectResize(img, width, height, e=>{ 
+          aspectResize(img, width, height, e=>{
             obs.onNext(e)
             obs.onCompleted()})
           return obs
         })
-      
+
       let results$ = Rx.Observable.forkJoin(images$)
 
       return results$
@@ -517,9 +517,9 @@ GLWidgeHelper.prototype.init = function () {
     let elem = document.createElement('div')
     elem.className = "container"
     this.elem = elem
-    this.setup() 
+    this.setup()
   //}
-  
+
   return this.elem
 }
 

@@ -6,6 +6,7 @@ import Class from "classnames"
 const combineLatest = Rx.Observable.combineLatest
 
 import {combineLatestObj} from '../../utils/obsUtils'
+import {exists} from '../../utils/utils'
 
 import tooltipIconBtn from '../widgets/TooltipIconButton'
 //spinner /loader
@@ -56,7 +57,7 @@ let loaderSpinner = null
 
 let _loading = (loading && settings.mode === "viewer" && settings.webglEnabled)
 if(_loading){
-  loaderSpinner = <span className="spinner" /> 
+  loaderSpinner = <span className="spinner" />
 }
 
 function renderWebglError(){
@@ -75,7 +76,7 @@ function renderWebglError(){
 }*/
 
 
-const translateIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" version="1.1" 
+const translateIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" version="1.1"
   width="16" height="16" data-icon="move" viewBox="0 0 16 16" class="icon">
   <path d="M8 0l-3 3h2v4h-4v-2l-3 3 3 3v-2h4v4h-2l2 2 1 1 1-1 2-2h-2v-4h4v2l3-3-3-3v2h-4v-4h2l-3-3z" />
 </svg>`
@@ -87,7 +88,7 @@ const rotateIconSvg = `<svg version="1.1" id="CCW" xmlns="http://www.w3.org/2000
   c0-3.396-2.745-6.15-6.131-6.15c-3.317,0-6.018,2.643-6.125,5.945V10h2.672l-3.494,3.894L0.685,10z"/>
 </svg>`
 
-const scaleIconSvg = `<svg 
+const scaleIconSvg = `<svg
   width="16px" height="16px" viewBox="0 0 16 16" version="1.1" xmlns="http://www.w3.org/2000/svg" class="icon">
     <!-- Generator: Sketch 3.4 (15575) - http://www.bohemiancoding.com/sketch -->
     <title>Untitled</title>
@@ -98,14 +99,14 @@ const scaleIconSvg = `<svg
     </g>
 </svg>`
 
-const duplicateIconSvg = `<svg version="1.1" id="Copy" xmlns="http://www.w3.org/2000/svg" 
+const duplicateIconSvg = `<svg version="1.1" id="Copy" xmlns="http://www.w3.org/2000/svg"
   width="16" height="16" x="0px" y="0px" data-icon="duplicate" viewBox="0 0 20 20" class="icon">
 <path d="M11,0H3C2.447,0,2,0.447,2,1v12c0,0.552,0.447,1,1,1h5v2h2v-2H8.001v-2H10v-2H8v2H4V2h6v4h2V1C12,0.448,11.553,0,11,0z M8,7
   v1h2V6H9C8.447,6,8,6.447,8,7z M12,20h2v-2h-2V20z M12,8h2V6h-2V8z M8,19c0,0.552,0.447,1,1,1h1v-2H8V19z M17,6h-1v2h2V7
   C18,6.448,17.553,6,17,6z M16,20h1c0.553,0,1-0.448,1-1v-1h-2V20z M16,12h2v-2h-2V12z M16,16h2v-2h-2V16z"/>
 </svg>`
 
-const deleteIconSvg = `<svg version="1.1" id="Trash" xmlns="http://www.w3.org/2000/svg" 
+const deleteIconSvg = `<svg version="1.1" id="Trash" xmlns="http://www.w3.org/2000/svg"
   width="16" height="16" x="0px" y="0px" data-icon="duplicate" viewBox="0 0 20 20" class="icon">
   <path d="M3.389,7.113L4.49,18.021C4.551,18.482,6.777,19.998,10,20c3.225-0.002,5.451-1.518,5.511-1.979l1.102-10.908
   C14.929,8.055,12.412,8.5,10,8.5C7.59,8.5,5.072,8.055,3.389,7.113z M13.168,1.51l-0.859-0.951C11.977,0.086,11.617,0,10.916,0
@@ -115,13 +116,13 @@ const deleteIconSvg = `<svg version="1.1" id="Trash" xmlns="http://www.w3.org/20
   c0.248,0.301,2.111,2.522,2.111,2.522H12.07z"/>
 </svg>`
 
-const addNoteIconSvg = `<svg version="1.1" id="Flag" xmlns="http://www.w3.org/2000/svg" 
+const addNoteIconSvg = `<svg version="1.1" id="Flag" xmlns="http://www.w3.org/2000/svg"
   width="16" height="16" x="0px" y="0px" viewBox="0 0 20 20" enable-background="new 0 0 20 20" class="icon">
 <path d="M18.926,5.584c-9.339,13.568-6.142-0.26-14.037,6.357L6.684,19H4.665L1,4.59l1.85-0.664
   c8.849-6.471,4.228,5.82,15.637,1.254C18.851,5.033,19.142,5.27,18.926,5.584z"/>
 </svg>`
 
-const measureDistanceIconSvg = `<svg version="1.1" id="Ruler" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" 
+const measureDistanceIconSvg = `<svg version="1.1" id="Ruler" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
  width="16" height="16" x="0px" y="0px" viewBox="0 0 20 20" enable-background="new 0 0 20 20" class="icon">
 <path d="M14.249,0.438L0.438,14.251c-0.584,0.584-0.584,1.538,0.002,2.124l3.185,3.187c0.584,0.584,1.541,0.586,2.124,0.002
   L19.562,5.751c0.584-0.585,0.584-1.541,0-2.125l-3.186-3.188C15.789-0.148,14.834-0.145,14.249,0.438z M3.929,15.312L3.17,16.071
@@ -132,7 +133,7 @@ const measureDistanceIconSvg = `<svg version="1.1" id="Ruler" xmlns="http://www.
   l0.759-0.76L16.072,6.206z M16.071,3.171l-0.759,0.759l-1.896-1.898l0.759-0.758L16.071,3.171z"/>
 </svg>`
 
-const measureThicknessIconSvg = `<svg version="1.1" id="Vertical_align_middle" xmlns="http://www.w3.org/2000/svg" 
+const measureThicknessIconSvg = `<svg version="1.1" id="Vertical_align_middle" xmlns="http://www.w3.org/2000/svg"
    width="16" height="16" x="0px" y="0px" viewBox="0 0 20 20" enable-background="new 0 0 20 20" xml:space="preserve" class="icon">
 <path fill="#FFFFFF" d="M10,12l-3,3h2v4h2v-4h2L10,12z M13,5h-2V1H9v4H7l3,3L13,5z M18,10c0-0.553-0.048-1-0.6-1H2.6
   C2.048,9,2,9.447,2,10c0,0.551,0.048,1,0.6,1h14.8C17.952,11,18,10.551,18,10z"/>
@@ -182,93 +183,111 @@ function makeTopToolBar(state){
   const measureThicknessModeToggled   = activeTool === 'scale'
 
   //console.log("FOOO",state)
-  if(state.settings.appMode === "viewer"){
-    return <div/>
+  const viewIcons = []
+
+  const editIcons =   [
+    <section>
+      {tooltipIconBtn(translateModeToggled
+        , translateIconSvg, "toTranslateMode", "move", "bottom")}
+
+      {tooltipIconBtn(rotateModeToggled
+        , rotateIconSvg, "toRotateMode", "rotate", "bottom")}
+
+      {tooltipIconBtn(scaleModeToggled
+        , scaleIconSvg, "toScaleMode", "scale", "bottom")}
+    </section>,
+
+    <section>
+      {tooltipIconBtn(undefined
+        , duplicateIconSvg, "duplicate", "duplicate", "bottom",!toggleControls)}
+
+      {tooltipIconBtn(undefined
+        , deleteIconSvg, "delete", "delete", "bottom",!toggleControls)}
+    </section>
+  ]
+
+  const annotIcons =   [<section>
+      {tooltipIconBtn(activeTool === 'addNote'
+        , addNoteIconSvg, "addNote", "add note", "bottom")}
+
+      {tooltipIconBtn(activeTool === 'measureDistance'
+        , measureDistanceIconSvg, "measureDistance", "measure distance", "bottom")}
+
+      {tooltipIconBtn(activeTool === 'measureThickness'
+        , measureThicknessIconSvg, "measureThickness", "measure thickness", "bottom")}
+
+      {tooltipIconBtn(activeTool === 'measureDiameter'
+        , measureDiameterIconSvg, "measureDiameter", "measure diameter", "bottom")}
+
+      {tooltipIconBtn(activeTool === 'measureAngle'
+        , measureAngleIconSvg, "measureAngle", "measure angle", "bottom")}
+    </section>]
+
+  /*if(state.settings.appMode === "viewer"){
+    return
   }else{
      return <div className="topToolbar titlebar">
-      <section>
-        {tooltipIconBtn(translateModeToggled
-          , translateIconSvg, "toTranslateMode", "move", "bottom")}
-
-        {tooltipIconBtn(rotateModeToggled
-          , rotateIconSvg, "toRotateMode", "rotate", "bottom")}
-
-        {tooltipIconBtn(scaleModeToggled
-          , scaleIconSvg, "toScaleMode", "scale", "bottom")}
-      </section>
-
-      <section>
-        {tooltipIconBtn(activeTool === 'addNote'
-          , addNoteIconSvg, "addNote", "add note", "bottom")}
-
-        {tooltipIconBtn(activeTool === 'measureDistance'
-          , measureDistanceIconSvg, "measureDistance", "measure distance", "bottom")}
-
-        {tooltipIconBtn(activeTool === 'measureThickness'
-          , measureThicknessIconSvg, "measureThickness", "measure thickness", "bottom")}
-
-        {tooltipIconBtn(activeTool === 'measureDiameter'
-          , measureDiameterIconSvg, "measureDiameter", "measure diameter", "bottom")}
-
-        {tooltipIconBtn(activeTool === 'measureAngle'
-          , measureAngleIconSvg, "measureAngle", "measure angle", "bottom")}   
-
-      </section>
-
-      <section>
-        {tooltipIconBtn(undefined
-          , duplicateIconSvg, "duplicate", "duplicate", "bottom",!toggleControls)}   
-
-        {tooltipIconBtn(undefined
-          , deleteIconSvg, "delete", "delete", "bottom",!toggleControls)}   
-
-      </section>
-
     </div>
+  }*/
+  const iconSets = {
+    'view'     :viewIcons
+    ,'edit'    :editIcons
+    ,'annotate':annotIcons
   }
+
+  const icons = state.settings.toolSets
+    .map(toolSet => iconSets[toolSet])
+    .filter(exists)
+
+  return <div className="topToolbar titlebar">
+    {icons}
+  </div>
 }
 
 
 function renderUiElements(uiElements){
-  const {state} = uiElements
-  const renderModes = {
-    "viewer":renderViewerMode
-    ,"editor":renderEditorMode
+  const {state, settings, fsToggler, bom, gl, entityInfos, progressBar, help} = uiElements
+
+  const widgets = {
+    'view':renderViewWidgets
+    ,'edit':renderEditWidgets
+    ,'annotate':renderAnnotWidgets
   }
-  
-  return renderModes[state.settings.appMode](state,uiElements)
-}
 
-function renderEditorMode(state, uiElements){
-  let {settings, fsToggler, bom, gl, entityInfos, comments, progressBar, help} = uiElements
+  const customWidgets = state.settings.toolSets
+    .map(tool => widgets[tool])
+    .filter(exists)
+    .map(widgetMaker=> widgetMaker(state, uiElements) )
+
+
   return <div className="jam" >
-      {progressBar}
-      
-      {settings}
-      {help}
-      {fsToggler}
+    {progressBar}
+    {settings}
+    {help}
+    {fsToggler}
 
-      {bom}
-      
-      {gl}
+    {gl}
 
-      {comments}
-      {entityInfos}
+    {customWidgets}
 
-      {makeTopToolBar(state)}
+    {makeTopToolBar(state)}
 
-    </div>
+  </div>
 }
 
-function renderViewerMode(state, uiElements){
-  let {settings, fsToggler, gl, progressBar, help} = uiElements
-  return <div className="jam">
-      {progressBar}
-      {settings}
-      {help}
-      {fsToggler}
-      {gl}
-    </div>
+function renderAnnotWidgets(state, uiElements){
+  let {comments} = uiElements
+  return [comments]
+}
+
+function renderEditWidgets(state, uiElements){
+  let { entityInfos } = uiElements
+  return [entityInfos]
+}
+
+function renderViewWidgets(state, uiElements){
+  let {} = uiElements
+  return []
 }
 
 

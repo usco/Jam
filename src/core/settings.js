@@ -6,7 +6,7 @@ import {makeModel, mergeData} from '../utils/modelUtils'
 
 function setAllValues(state, input){
   //console.log("setting settings")
-  //TODO : do validation ? 
+  //TODO : do validation ?
   //we coerce appMode to "editor" when setting all values like this
   let output = mergeData( state, mergeData( input, {appMode:"editor"})  )
   return output
@@ -37,15 +37,28 @@ function setActiveTool(state, input){
 }
 
 function setAppMode(state, input){
-  let output = mergeData( state, {appMode:input})
+  let toolSets = undefined
+  if(input === 'viewer'){
+    toolSets = ['view']
+  }else if(input==='editor'){
+    toolSets = ['view','edit']
+  }
+  console.log("toolSets",toolSets)
+  let output = mergeData( state, {toolSets})
   console.log("setting app mode",input)
+  return output
+}
+
+function setToolsets(state, input){
+  let output = mergeData( state, {toolSets:input})
+  //console.log("setting app mode",output)
   return output
 }
 
 function settings(actions, source){
   //source = source || Rx.Observable.never()
   //source = source.map(src => mergeData( src, {appMode:"editor"}) )//default appMode to editor, disregard saved settings
-  
+
   ///defaults, what else ?
   const defaults = {
     webglEnabled:true,
@@ -53,6 +66,8 @@ function settings(actions, source){
     autoSelectNewEntities:true,
     activeTool:undefined,
     repeatTool:false,
+
+    toolSets:["view","edit","annotate"],//what categories of tools do we want on screen
 
     selections: undefined,
 
@@ -69,7 +84,7 @@ function settings(actions, source){
     }
   }
 
-  let updateFns  = {setAllValues, toggleShowGrid, toggleAutoRotate, setActiveTool, setAppMode}
+  let updateFns  = {setAllValues, toggleShowGrid, toggleAutoRotate, setActiveTool, setAppMode, setToolsets}
   return makeModel(defaults, updateFns, actions, source)
 }
 
