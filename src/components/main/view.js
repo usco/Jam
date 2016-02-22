@@ -281,8 +281,8 @@ function renderAnnotWidgets(state, uiElements){
 }
 
 function renderEditWidgets(state, uiElements){
-  let { entityInfos } = uiElements
-  return [entityInfos]
+  let { entityInfos, bom } = uiElements
+  return [entityInfos, bom]
 }
 
 function renderViewWidgets(state, uiElements){
