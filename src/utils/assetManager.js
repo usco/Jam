@@ -88,6 +88,10 @@ function postProcessParsedData(data){
       idLookup[item.id] = typeUid
 
       let meta = {id:typeUid, name:item.name}
+      //if there is vertex color data, set the color to white
+      if(item.colors.length){
+        meta.color = '#FFFFFF'
+      }
       typesMeta.push(meta)
       typesMetaHash[typeUid] = meta
 

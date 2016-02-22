@@ -25,8 +25,8 @@ export function intentsFromResources(rawParsedData$){
     const createMetaComponents$      = certains$.map(data=>data.data.instMeta)
       //NOTE :we are doing these to make them compatible with remapMetaActions helpers, not sure this is the best
       .map(function(datas){
-        return datas.map(function({instUid, typeUid, name}){
-          return { id:instUid,  value:{ id:instUid, typeUid, name } }
+        return datas.map(function({instUid, typeUid, name, color}){
+          return { id:instUid,  value:{ id:instUid, typeUid, name, color } }
         })
       })
     const createTransformComponents$ = certains$.map(data=>data.data.instTransforms)
