@@ -25,7 +25,7 @@ function lazyLoad(moduleNamePath){
   let obs = new Rx.ReplaySubject(1)
   //let waitForChunk = require('dynamic?' + moduleNamePath)
 
-    //require("bundle?lazy!usco-ctm-parser")(function(module) {  
+    //require("bundle?lazy!usco-ctm-parser")(function(module) {
     //const requireStr = `bundle?lazy!./node_modules/${moduleNamePath}`
     //const requireStr = `bundle?lazy!./`
     //let req = require.context("./node-modules", true, /^\.\/.*\.jade$/)
@@ -37,9 +37,9 @@ function lazyLoad(moduleNamePath){
       //require('usco-ctm-parser')
       let module = require(moduleNamePath)
       console.log("dynamic load of module",module)
-      //obs.onNext(module) 
+      //obs.onNext(module)
     })*/
-    /*require(requireStr)(function(module) { 
+    /*require(requireStr)(function(module) {
       // now you can use the b-module
       console.log("dynamic load of module",module)
       obs.onNext(module)
@@ -83,7 +83,7 @@ function postProcessParsedData(data){
     for(let objectId in data.objects){
       //console.log("objectId",objectId, data.objects[objectId])
       let item  = data.objects[objectId]
-      
+
       const typeUid = generateUUID()
       idLookup[item.id] = typeUid
 
@@ -117,7 +117,7 @@ function postProcessParsedData(data){
     return {meshOnly:false, typesMeshes, typesMeta, instMeta ,instTransforms}
 
   }else{
-    mesh = data 
+    mesh = data
     mesh = geometryFromBuffers(mesh)
     mesh = postProcessMesh(mesh)
     mesh = centerMesh(mesh)
@@ -126,7 +126,7 @@ function postProcessParsedData(data){
 
     return {meshOnly:true, typesMeshes}
   }
-  
+
   return mesh
 }
 
@@ -176,7 +176,7 @@ function parse(fetched$){
     .flatMap(function( fullData ){
       const {uri, data, ext, name} = fullData.rawData
 
-      console.log("DATA",fullData.parser)
+      //console.log("DATA",fullData.parser)
       const parseOptions = {useWorker:true}
 
       /*System.import('usco-ctm-parser').then(function(parser){
@@ -191,7 +191,7 @@ function parse(fetched$){
 
       const data$  = parsedObs$
         .filter(e=> e.progress === undefined)//seperate out progress data
-        .map(postProcessParsedData) 
+        .map(postProcessParsedData)
 
       const progress$ = parsedObs$
         .filter(e=> e.progress !== undefined)//keep ONLY progress data
@@ -272,4 +272,3 @@ export function resources(drivers){
   console.log( fn(0) ) //=> 'water freezes at 0°C'
   console.log( fn(50) ) //=> 'nothing special happens at 50°C'
   console.log( fn(100) ) //=> 'water boils at 100°C'*/
-
