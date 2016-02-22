@@ -1,6 +1,6 @@
 import Rx from 'rx'
 const Observable= Rx.Observable
-const {fromEvent, just, merge, concat} = Observable
+const {fromEvent, just, merge, concat, concatAll} = Observable
 
 import {combineLatestObj, replicateStream} from '../../utils/obsUtils'
 import {safeJSONParse, toArray} from '../../utils/utils'
@@ -28,7 +28,7 @@ function jsonToFormData(jsonData){
 }
 
 function remapJson(mapping, input){
-  
+
   const result =  Object.keys(input)
     .reduce(function(obj, key){
       if(key in mapping){
@@ -39,7 +39,7 @@ function remapJson(mapping, input){
       }
       return obj
     },{})
-  console.log("remapJson",result)
+  //console.log("remapJson",result)
   return result
 }
 
@@ -69,7 +69,7 @@ function upsert(http, params){
   return {
         url    :`bomUri/${refined.part_id}${authTokenStr}`
       , method :'post'
-      , send   
+      , send
       , type   :'ymSave'
     }
 }
@@ -98,10 +98,10 @@ export default function makeYMDriver(httpDriver, params={}){
 
 
   const authToken  = ""
-  
-  const designId   = 0
+
+  const designId   = 9962
   const bomId      = 0
-  const assemblyId = 0
+  const assemblyId = 'default'
 
   const authTokenStr = `/?auth_token=${authToken}`
 
@@ -110,9 +110,9 @@ export default function makeYMDriver(httpDriver, params={}){
   //const documentsUri = `${urlBase}://${authData}${apiBaseUri}/designs/${designId}/documents/${params.documentId}${authTokenStr}`
   //${bomId}
   const bomUri        = `${designUri}/boms`
-  const partUri       = `${designUri}/parts${authTokenStr}`
-  const assembliesUri = `${designUri}/assemblies/${assemblyId}${authTokenStr}`
-  
+  const partUri       = `${designUri}/parts`
+  const assembliesUri = `${designUri}/assemblies/${assemblyId}/entries`
+
 
   /*const rootUri    = undefined
   const designName = undefined
@@ -128,7 +128,8 @@ export default function makeYMDriver(httpDriver, params={}){
     }
 
     function toBom(entries){
-      const fieldNames = ['qty','phys_qty', 'unit', 'part_id' , 'part_parameters','part_version']
+
+      const fieldNames = ['qty','phys_qty', 'unit', 'part_uuid' , 'part_parameters','part_version']
       const mapping = {
         'version':'part_version'
         ,'id':'part_uuid'
@@ -137,19 +138,21 @@ export default function makeYMDriver(httpDriver, params={}){
       }
 
       const requests = entries.map(function(entry){
-
         const refined = pick( fieldNames, remapJson(mapping, entry) )
         const send    = jsonToFormData(refined)
 
         return {
-              url    :`bomUri/${refined.part_id}${authTokenStr}`
+              url    :`${bomUri}/${refined.part_uuid}${authTokenStr}`
             , method :'put'
-            , send   
+            , send
             , type   :'ymSave'
+            , typeDetail:'bom'
+            , mimeType: null//'application/json'
+            , responseType: 'json'
           }
       })
-      console.log("request save bom",requests)
-      return requests 
+      //console.log("request save bom",requests)
+      return requests
     }
 
     function toParts(entries){
@@ -169,13 +172,16 @@ export default function makeYMDriver(httpDriver, params={}){
         const send    = jsonToFormData(refined)
 
         return {
-              url    : `partUri/${refined.uuid}${authTokenStr}`
+              url    : `${partUri}/${refined.uuid}${authTokenStr}`
             , method :'put'
-            , send   
+            , send
             , type   :'ymSave'
+            , typeDetail:'parts'
+            , mimeType: null//'application/json'
+            , responseType: 'json'
           }
       })
-      return requests 
+      return requests
     }
 
     function dataFromItems(items){
@@ -194,35 +200,36 @@ export default function makeYMDriver(httpDriver, params={}){
     function toAssemblies(entries){
       console.log("entries",entries)
 
-      const fieldNames = ['id','name','color','pos','rot','sca','typeUid']
-      const mapping = {}
+      const fieldNames = ['uuid','name','color','pos','rot','sca','typeUid']
+      const mapping = {'id':'uuid'}
       const requests = entries.map(function(entry){
 
       const refined = pick( fieldNames, remapJson(mapping, entry) )
       const send    = jsonToFormData(refined)
-
+        console.log("refined",refined)
         return {
-              url    :assembliesUri
+              url    : `${assembliesUri}/${refined.uuid}${authTokenStr}`
             , method :'put'
-            , send   
+            , send
             , type   :'ymSave'
+            , typeDetail :'assemblies'
           }
       })
-      return requests 
+      return requests
     }
 
     //////////////////////////
 
     const save$ = outgoing$
       .debounce(50)//only save if last events were less than 50 ms appart
-      .tap(e=>console.log("here",e))
+      //.tap(e=>console.log("here",e))
       .filter(data=>data.method === 'save')
       .pluck('data')
       .share()
-  
+
     const load$ = outgoing$
       .debounce(50)//only load if last events were less than 50 ms appart
-      .tap(e=>console.log("here2",e))
+      //.tap(e=>console.log("here2",e))
       .filter(data=>data.method === 'load')
       .pluck('data')
       .share()
@@ -234,6 +241,7 @@ export default function makeYMDriver(httpDriver, params={}){
       .distinctUntilChanged( null, equals )
       .map(toBom)
       .flatMap(Rx.Observable.fromArray)
+      //.tap(e=>console.log("bom output",e))
 
     const parts$ = save$//.pluck("parts")
       .pluck("bom")
@@ -242,6 +250,8 @@ export default function makeYMDriver(httpDriver, params={}){
       .filter(d=>d.length>0)
       .map(toParts)
       .flatMap(Rx.Observable.fromArray)
+      //.tap(e=>console.log("parts output",e))
+
 
     const assemblies$ = combineLatestObj({
           metadata:save$.pluck('eMetas')
@@ -252,15 +262,36 @@ export default function makeYMDriver(httpDriver, params={}){
       .filter(d=>d.length>0)
       .map(toAssemblies)
       .flatMap(Rx.Observable.fromArray)
-      .forEach(e=>console.log("item",e))
+      //.forEach(e=>console.log("assemblies item",e))
 
-
-    const outToHttp$ = merge( parts$ )//concat(parts$,bom$) )
+    const outToHttp$ = merge(assemblies$)
+      .startWith({
+        url: `${designUri}/assemblies${authTokenStr}`
+        , method: "post"
+        , send: jsonToFormData({name:'default','uuid':'default'})
+        , type: "ymSave"
+        , typeDetail: "assemblies_default"})
+        // parts$, bom$, assemblies$)
       .tap(e=>console.log("outToHttp",e))
 
-
     const inputs$ = httpDriver(outToHttp$)
-    return inputs$    
+
+    const saveResponses$ = inputs$
+      .filter(res$ => res$.request.type === 'ymSave')
+      .flatMap(data => {
+        const responseWrapper$ = data.catch(e=>{
+          console.log("caught error in saving data",e)
+          return Rx.Observable.empty()
+        })
+        const request$  = just(data.request)
+        const response$ = responseWrapper$.pluck("response")
+
+        return combineLatestObj({response$, request$})//.materialize()//FIXME: still do not get this one
+      })
+      .forEach(e=>console.log("error in saving or not"))
+
+
+    return inputs$
 
     //to load data up again
     function fromAssemblies(entries){
