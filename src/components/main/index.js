@@ -23,10 +23,10 @@ import api from '../../api'
 
 export default function main(drivers) {
   const {DOM} = drivers
-  
+
   const actions = intent(drivers)
   const state$  = model(undefined, actions, drivers)
-  
+
   //create visual elements
   const entityInfos = EntityInfosWrapper(state$,DOM)
   const comments    = CommentsWrapper(state$,DOM)
@@ -38,7 +38,7 @@ export default function main(drivers) {
   const fsToggler   = FullScreenToggler({DOM})
   const help        = Help({DOM, props$:state$})
 
-  //outputs 
+  //outputs
   const vtree$  = view(state$, settingsC.DOM, fsToggler.DOM, bom.DOM,gl.DOM
     , entityInfos.DOM, comments.DOM, progressBar.DOM, help.DOM)
   const events$ = of( {gl:gl.events, entityInfos:entityInfos.events
@@ -48,7 +48,7 @@ export default function main(drivers) {
   function postMsg(api$){
      return api$.map(data=>{
         const {request, response, requestName} = data
-        return {target: request.source, message: response, targetOrigin:request.origin, requestName } 
+        return {target: request.source, message: response, targetOrigin:request.origin, requestName }
       })
   }
 
@@ -66,9 +66,10 @@ export default function main(drivers) {
   const entityTransformsToYm = state$.pluck("transforms")
   const entitymeshesToYm = state$.pluck("meshes")
   const parts   = state$.pluck("types")
+  const design  = state$.pluck('design')
 
   const saveDesigntoYm$ = state$
-    .filter(state=>state.design.synched)//only try to save anything when the design is in "synch mode" aka has a ur 
+    .filter(state=>state.design.synched)//only try to save anything when the design is in "synch mode" aka has a ur
     .flatMap(_=>
       combineLatestObj({
           bom: bomToYm
@@ -76,6 +77,7 @@ export default function main(drivers) {
         , eMetas: entityMetaToYm
         , eTrans: entityTransformsToYm
         , eMeshs: entitymeshesToYm
+        , design
       })
     )
     .map(function(data){
@@ -105,4 +107,3 @@ export default function main(drivers) {
       ,ym:ymStorage$
   }
 }
-
