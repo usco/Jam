@@ -4,6 +4,8 @@ const {fromEvent, just, merge, concat, concatAll} = Observable
 
 import {combineLatestObj, replicateStream} from '../../utils/obsUtils'
 import {safeJSONParse, toArray} from '../../utils/utils'
+import {extractChangesBetweenArrays} from '../../utils/diffPatchUtils'
+
 import assign from 'fast.js/object/assign'//faster object.assign
 import {pick, equals} from 'ramda'
 
@@ -17,13 +19,20 @@ function jsonToFormData(jsonData){
     //value = value.replace(/\"/g, '')
     if(Object.prototype.toString.call(value) === "[object Object]"){
       value = JSON.stringify(value)
+      // console.log("value",value)
     }
     if(Object.prototype.toString.call(value) === "[object Array]"){
-      value = JSON.stringify(value)
+      //value = //JSON.stringify(value)
+      //value = 'arr[]', arr[i]//value.reduce()
+      //console.log("value",value)
+      value = `{ ${value.join(',')} }`
     }
+
     //console.log("append",fieldName, value)
     formData.append(fieldName, value)
+
   }
+  //throw new Error("fpp")
   return formData
 }
 
@@ -90,7 +99,6 @@ export default function makeYMDriver(httpDriver, params={}){
   }
   params = assign({},defaults,params)
 
-
   let { apiBaseProdUri, apiBaseTestUri, urlBase, testMode, login, password} = params
 
   let apiBaseUri = testMode !== undefined ? apiBaseTestUri : apiBaseProdUri
@@ -99,7 +107,7 @@ export default function makeYMDriver(httpDriver, params={}){
 
   const authToken  = ""
 
-  const designId   = 9962
+  const designId   = 0
   const bomId      = 0
   const assemblyId = 'default'
 
@@ -197,19 +205,18 @@ export default function makeYMDriver(httpDriver, params={}){
       },[])
     }
 
-    function toAssemblies(entries){
-      console.log("entries",entries)
+    function toAssemblies(method='put', entries){
 
-      const fieldNames = ['uuid','name','color','pos','rot','sca','typeUid']
-      const mapping = {'id':'uuid'}
+      const fieldNames = ['uuid','name','color','pos','rot','sca','part_uuid']
+      const mapping = {'id':'uuid', 'typeUid':'part_uuid'}
       const requests = entries.map(function(entry){
 
       const refined = pick( fieldNames, remapJson(mapping, entry) )
       const send    = jsonToFormData(refined)
-        console.log("refined",refined)
+
         return {
               url    : `${assembliesUri}/${refined.uuid}${authTokenStr}`
-            , method :'put'
+            , method
             , send
             , type   :'ymSave'
             , typeDetail :'assemblies'
@@ -222,14 +229,12 @@ export default function makeYMDriver(httpDriver, params={}){
 
     const save$ = outgoing$
       .debounce(50)//only save if last events were less than 50 ms appart
-      //.tap(e=>console.log("here",e))
       .filter(data=>data.method === 'save')
       .pluck('data')
       .share()
 
     const load$ = outgoing$
       .debounce(50)//only load if last events were less than 50 ms appart
-      //.tap(e=>console.log("here2",e))
       .filter(data=>data.method === 'load')
       .pluck('data')
       .share()
@@ -259,25 +264,46 @@ export default function makeYMDriver(httpDriver, params={}){
         , meshes: save$.pluck('eMeshs')})
       .debounce(1)
       .map(dataFromItems)
-      .filter(d=>d.length>0)
-      .map(toAssemblies)
-      .flatMap(Rx.Observable.fromArray)
-      //.forEach(e=>console.log("assemblies item",e))
+      .scan(function(acc, cur){
+          return {cur,prev:acc.cur}
+        },{prev:undefined,cur:undefined})
+      .map(function(typeData){
+        let {cur,prev} = typeData
+        let changes = extractChangesBetweenArrays(prev,cur)
+        return changes
+      })
+      .share()
 
-    const outToHttp$ = merge(assemblies$)
-      .startWith({
+
+    const upsertAssemblies$ = assemblies$
+      .map(d=>d.upserted)
+      .map(toAssemblies.bind(null,'put'))
+      .flatMap(Rx.Observable.fromArray)
+      .forEach(e=>console.log("assemblies item upsert",e))
+
+    const deleteFromAssemblies$ = assemblies$
+      .map(d=>d.removed)
+      .map(toAssemblies.bind(null,'delete'))
+      .flatMap(Rx.Observable.fromArray)
+      .forEach(e=>console.log("assemblies item removed",e))
+
+
+    //Finally put it all together
+
+    const outToHttp$ = Rx.Observable.never()// merge(upsertAssemblies$, parts$, bom$)
+      /*.startWith({
         url: `${designUri}/assemblies${authTokenStr}`
         , method: "post"
         , send: jsonToFormData({name:'default','uuid':'default'})
         , type: "ymSave"
         , typeDetail: "assemblies_default"})
-        // parts$, bom$, assemblies$)
+        // parts$, bom$, assemblies$)*/
       .tap(e=>console.log("outToHttp",e))
 
     const inputs$ = httpDriver(outToHttp$)
 
     const saveResponses$ = inputs$
-      .filter(res$ => res$.request.type === 'ymSave')
+      .filter(res$ => res$.request.type === 'ymSave')//handle errors etc
       .flatMap(data => {
         const responseWrapper$ = data.catch(e=>{
           console.log("caught error in saving data",e)
