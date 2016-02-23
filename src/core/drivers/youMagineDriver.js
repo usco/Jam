@@ -311,10 +311,10 @@ export default function makeYMDriver(httpDriver, params={}){
 
     //Finally put it all together
     const allSaveRequests$ = merge(upsertAssemblies$, deleteFromAssemblies$, upsertParts$, deleteParts$, upsertBom$, deleteBom$)
-      .forEach(e=>e)
+      //.forEach(e=>e)
 
 
-    const outToHttp$ = Rx.Observable.never()//allSaveRequests$//
+    const outToHttp$ = allSaveRequests$//Rx.Observable.never()
       /*.startWith({
         url: `${designUri}/assemblies${authTokenStr}`
         , method: "post"
