@@ -83,13 +83,15 @@ export function extractChangesBetweenArrays(prev, cur){
           {
             if(key.length>0 && key.indexOf('_')>-1)
             {
-              //console.log("removed",delta, key)//,key,delta)
-              removed.push(delta[key])
+              let realKey = parseInt(key.replace('_',''))
+              //console.log("removed",delta, realKey)//,key,delta)
+              removed.push(prev[realKey])
             }else
             {
-              //removed or changed
+              //added or changed
               //console.log("added or changed",delta, key)
-              upserted.push(delta[key])
+              let realKey = parseInt(key)
+              upserted.push(cur[realKey])
             }
           }
 
