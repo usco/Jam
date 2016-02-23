@@ -1,6 +1,5 @@
 import Rx from 'rx'
-const merge = Rx.Observable.merge
-const just  = Rx.Observable.just
+const {merge,just,fromArray} = Rx.Observable
 import {flatten} from 'ramda'
 
 import {nameCleanup} from '../../utils/formatters'
@@ -10,10 +9,10 @@ import {generateUUID,exists,toArray} from '../../utils/utils'
 import {mergeData} from '../../utils/modelUtils'
 
 //entity components
-import {makeMetaSystem} from '../../core/entities/components/meta' 
-import {makeTransformsSystem} from '../../core/entities/components/transforms' 
-import {makeMeshSystem} from '../../core/entities/components/mesh' 
-import {makeBoundingSystem} from '../../core/entities/components/bounds' 
+import {makeMetaSystem} from '../../core/entities/components/meta'
+import {makeTransformsSystem} from '../../core/entities/components/transforms'
+import {makeMeshSystem} from '../../core/entities/components/mesh'
+import {makeBoundingSystem} from '../../core/entities/components/bounds'
 
 import {addAnnotation} from '../../core/entities/annotations'
 
@@ -29,7 +28,10 @@ import entityTypes from '../../core/entities/entityTypes'
 import bom         from '../../core/bom'
 
 import bomIntens from './intents/bom2'
- 
+
+import {authToken} from '../../core/sources/addressbar.js'
+
+
 function makeRegistry(instances$, types$){
   //register type=> instance & vice versa
   let base = {typeUidFromInstUid:{},instUidFromTypeUid:{}}
@@ -73,15 +75,15 @@ function makeRegistry(instances$, types$){
     Indirectly:
       - duplicates of other instances
   */
-  
 
-export default function model(props$, actions, drivers){
-  const DOM      = drivers.DOM
-  const events   = drivers.events
+
+export default function model(props$, actions, sources){
+  const DOM      = sources.DOM
+  const events   = sources.events
 
   let entityActions = actions.entityActions
 
-  const settings$      = settings( actions.settingActions ) 
+  const settings$      = settings( actions.settingActions )
   const entityTypes$   = entityTypes( actions.entityActions )
   const comments$      = comments( actions.commentActions )
 
@@ -110,8 +112,8 @@ export default function model(props$, actions, drivers){
     )
     .filter(exists)
     .filter(d=>d.length>0)
-    
-  const entityInstancesBase$  = 
+
+  const entityInstancesBase$  =
     addInstance$
     .map(function(newTypes){
       return newTypes.map(function(typeData){
@@ -147,7 +149,7 @@ export default function model(props$, actions, drivers){
         //injecting data like this is the right way ?
         mesh.material = mesh.material.clone()
         mesh = mesh.clone()
-        
+
         return {
           instUid
           ,typeUid
@@ -162,12 +164,12 @@ export default function model(props$, actions, drivers){
     })
     .shareReplay(1)
 
-  ///main stuff  
+  ///main stuff
 
   //annotations
   let addAnnotations$ = addAnnotation(actions.annotationsActions, settings$)
     .map(toArray)
-  
+
   const proxySelections$ = new Rx.ReplaySubject(1)
 
   entityActions        = remapEntityActions(entityActions, proxySelections$)
@@ -183,7 +185,7 @@ export default function model(props$, actions, drivers){
   let {bounds$}        = makeBoundingSystem(boundActions)
 
   //selections => only for real time view
-  const typesInstancesRegistry$ =  makeRegistry(meta$, entityTypes$)  
+  const typesInstancesRegistry$ =  makeRegistry(meta$, entityTypes$)
   const selections$             = selections( selectionsIntents({DOM,events}, typesInstancesRegistry$) )
     .merge(metaActions.removeComponents$.map(a=> ({instIds:[],bomIds:[]}) )) //after an instance is removed, unselect
 
@@ -201,26 +203,30 @@ export default function model(props$, actions, drivers){
   replicateStream(currentSelections$, proxySelections$)
 
 
-  const bomActions = bomIntens(drivers, entityTypes$, metaActions, entityActions, actions)
+  const bomActions = bomIntens(sources, entityTypes$, metaActions, entityActions, actions)
   const bom$ = bom(bomActions)
 
   //not entirely sure, we need a way to observe any fetch/updload etc operation
   const operationsInProgress$ = actions.progress.combinedProgress$.startWith(undefined)
- 
 
 
+  ////
   const design$ = actions.loadDesign
     .map(data=>({synched:true, id:data, ns:'ym'}))
     .startWith({synched:false, id:undefined, ns:'ym'})
     .tap(e=>console.log("design",e))
 
-
   //////other data
-  const appData$ = drivers.appMeta
+  const appData$ = sources.appMeta
+
+  //authentification data, if any
+  const authData$ = authToken(sources.addressbar)
+    .flatMap(fromArray)
+    .map(token => ({token}))
 
   //combine all the above to get our dynamic state
   const state$ = combineLatestObj({
-    
+
     selections$
     ,bom$
     ,comments$
@@ -235,10 +241,13 @@ export default function model(props$, actions, drivers){
 
     //app level data, meta data , settings etc
     ,appData$
-    ,settings$ 
+    ,settings$
 
-    //infos about current design 
+    //infos about current design
     ,design$
+
+    //authData
+    ,authData$
 
   }).shareReplay(1)
 
