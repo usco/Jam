@@ -67,6 +67,7 @@ export default function main(drivers) {
   const entitymeshesToYm = state$.pluck("meshes")
   const parts   = state$.pluck("types")
   const design  = state$.pluck('design')
+  const authData= state$.pluck('authData')
 
   const saveDesigntoYm$ = state$
     .filter(state=>state.design.synched)//only try to save anything when the design is in "synch mode" aka has a ur
@@ -78,6 +79,7 @@ export default function main(drivers) {
         , eTrans: entityTransformsToYm
         , eMeshs: entitymeshesToYm
         , design
+        , authData
       })
     )
     .map(function(data){
