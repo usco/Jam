@@ -11,8 +11,11 @@ export function partSource(addressbar, params){
 }
 
 export function designSource(addressbar, params){
-  return addressbar.get("designUrl")//.tap(e=>console.log("designUrl",e))
-    //.map(data =>  ({src:'http', uri:data})  )
+  return addressbar.get('designUrl')
+    //.tap(e=>console.log("designUrl",e))
 }
 
-
+export function authToken(addressbar, params){
+  return addressbar.get('authToken')
+    //.tap(e=>console.log("authToken",e))
+}
