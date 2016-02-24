@@ -62,15 +62,32 @@ export default function main(sources) {
 
 
   //ym
+  //this are responses from ym
   const designExists$ = sources.ym
     //.tap(e=>console.log("responses from ym",e))
     .filter(res=>res.request.method==='get' && res.request.type === 'ymLoad' && res.request.typeDetail=== 'designExists')
     .flatMap( data => data.catch(_=>just({error:true})) )//flag errors
     .filter(e=>!e.progress)//filter out progress data
     .map(data=> data.error ? false : true)//if we have an error return false, true otherwise
-    .forEach(e=>console.log("designExists: ",e))
+    //.forEach(e=>console.log("designExists: ",e))
 
-  //if the design exists, load data, otherwise...whataver
+  const inBom = sources.ym
+    .filter(res=>res.request.method==='get' && res.request.type === 'ymLoad' && res.request.typeDetail=== 'bom')
+    .mergeAll()
+    .pluck('response')
+    .forEach(e=>console.log("in bom: ",e))
+
+  const inParts = sources.ym
+    .filter(res=>res.request.method==='get' && res.request.type === 'ymLoad' && res.request.typeDetail=== 'parts')
+    .mergeAll()
+    .pluck('response')
+    .forEach(e=>console.log("in parts: ",e))
+
+  const inAssemblies = sources.ym
+    .filter(res=>res.request.method==='get' && res.request.type === 'ymLoad' && res.request.typeDetail=== 'assemblies')
+    .mergeAll()
+    .pluck('response')
+    .forEach(e=>console.log("in assemblies: ",e))
 
 
   //output to ym
@@ -82,6 +99,11 @@ export default function main(sources) {
   const design  = state$.pluck('design')
   const authData= state$.pluck('authData')
 
+  //simple query to determine if design already exists
+  const queryDesignExists$ = combineLatestObj({design,authData})
+    .map(data=>({data, query:'designExists'}))
+
+  //saving should NOT take place before load is complete IFAND ONLY IF , we are reloading a design
   const saveDesigntoYm$ = state$
     .filter(state=>state.design.synched)//only try to save anything when the design is in "synch mode" aka has a ur
     .flatMap(_=>
@@ -100,17 +122,16 @@ export default function main(sources) {
     })
     .distinctUntilChanged(null, equals)
 
-  const loadDesignFromYm$ = actions.loadDesign
-    .flatMap(_=>combineLatestObj({
-      design
-      ,authData
-    }))
+  //if the design exists, load data, otherwise...whataver
+  const loadDesignFromYm$ = designExists$//actions.loadDesign
+    .filter(e=>e===true)//filter out non existing designs (we cannot load those , duh')
+    .flatMap(_=>combineLatestObj({design, authData}))//we inject design & authData
     .map(data=>({method:'load', data, type:'design'}))
     .tap(e=>console.log("loadDesignFromYm",e))
     .distinctUntilChanged(null, equals)
 
 
-  const ymStorage$ = merge(saveDesigntoYm$, loadDesignFromYm$)
+  const ymStorage$ = merge(queryDesignExists$, saveDesigntoYm$, loadDesignFromYm$)
     .distinctUntilChanged(null, equals)
 
 

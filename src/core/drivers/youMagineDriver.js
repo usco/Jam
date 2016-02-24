@@ -52,12 +52,6 @@ function remapJson(mapping, input){
   return result
 }
 
-//to load data up again
-function fromAssemblies(entries){
-  //for mesh components we require "parts" info
-  //for meta components we require "assemblies" info
-  //for tran components we require "assemblies" info
-}
 
 //storage driver for YouMagine designs & data etc
 export default function makeYMDriver(httpDriver, params={}){
@@ -197,29 +191,16 @@ export default function makeYMDriver(httpDriver, params={}){
     }
 
     //////////////////////////
-
-    const save$ = outgoing$
-      .debounce(50)//only save if last events were less than 50 ms appart
-      .filter(data=>data.method === 'save')
+    //deal with designInfos
+    const designInfos$ = outgoing$
+      .filter(data=>data.query==="designExists")
       .pluck('data')
       .share()
 
-    const design$ = save$
-      .pluck('design')
-    const authData$ = save$
-      .pluck('authData')
-
-
-    const load$ = outgoing$
-      .debounce(50)//only load if last events were less than 50 ms appart
-      .filter(data=>data.method === 'load')
-      .pluck('data')
-      .share()
-    const lDesign$ = load$.pluck('design')
-    const lAuthData$ = load$.pluck('authData')
-
-
-    const designExistsRequest$ = combineLatestObj({design:lDesign$,authData:lAuthData$})
+    const designExistsRequest$ = combineLatestObj({
+        design   :designInfos$.pluck('design')
+        ,authData:designInfos$.pluck('authData')
+      })
       .map(({design,authData})=>({designId:design.id,authToken:authData.token}))
       .map(function(data){
         const {designId, authToken} = data
@@ -232,21 +213,86 @@ export default function makeYMDriver(httpDriver, params={}){
             , typeDetail :'designExists'
           }
       })
-      .tap(e=>console.log("designExistsRequest",e))
+      //.tap(e=>console.log("designExistsRequest",e))
+
+    //////////
+    //deal with saving
+    const save$ = outgoing$
+      .debounce(50)//only save if last events were less than 50 ms appart
+      .filter(data=>data.method === 'save')
+      .pluck('data')
+      .share()
+
+    const design$ = save$
+      .pluck('design')
+    const authData$ = save$
+      .pluck('authData')
+
+    const load$ = outgoing$
+      .debounce(50)//only load if last events were less than 50 ms appart
+      .filter(data=>data.method === 'load')
+      .pluck('data')
+      .share()
+
+    const lDesign$ = load$
+      .pluck('design')
+    const lAuthData$ = load$
+      .pluck('authData')
 
     const getBom$ = load$
       .withLatestFrom(lDesign$,lAuthData$,(_,design,authData)=>({designId:design.id,authToken:authData.token}))
       .map(function(data){
-        console.log("foo",data)
         const {designId, authToken} = data
 
         const authTokenStr = `/?auth_token=${authToken}`
         const designUri     = `${urlBase}://${authData}${apiBaseUri}/designs/${designId}`
-        const bomUri    = `${designUri}/boms`
+        const bomUri    = `${designUri}/boms${authTokenStr}`
 
-        return {}
+        return {
+            url    : bomUri
+          , method : 'get'
+          , type   :'ymLoad'
+          , typeDetail:'bom'
+          , responseType:'json'
+        }
       })
-      .forEach(e=>console.log('getBom',e))
+
+    const getParts$ = load$
+      .withLatestFrom(lDesign$,lAuthData$,(_,design,authData)=>({designId:design.id,authToken:authData.token}))
+      .map(function(data){
+        const {designId, authToken} = data
+
+        const authTokenStr = `/?auth_token=${authToken}`
+        const designUri     = `${urlBase}://${authData}${apiBaseUri}/designs/${designId}`
+        const partUri    = `${designUri}/parts${authTokenStr}`
+
+        return {
+            url    : partUri
+          , method : 'get'
+          , type   :'ymLoad'
+          , typeDetail:'parts'
+          , responseType:'json'
+        }
+      })
+
+    const getAssemblies$ = load$
+      .withLatestFrom(lDesign$,lAuthData$,(_,design,authData)=>({designId:design.id,authToken:authData.token}))
+      .map(function(data){
+        const {designId, authToken} = data
+
+        const authTokenStr  = `/?auth_token=${authToken}`
+        const designUri     = `${urlBase}://${authData}${apiBaseUri}/designs/${designId}`
+        const assembliesUri = `${designUri}/assemblies/default/entries${authTokenStr}`
+
+        return {
+            url    : assembliesUri
+          , method : 'get'
+          , type   :'ymLoad'
+          , typeDetail:'assemblies'
+          , responseType:'json'
+        }
+      })
+
 
 
     //saving stuff
@@ -354,11 +400,11 @@ export default function makeYMDriver(httpDriver, params={}){
 
 
     //Finally put it all together
-    const allSaveRequests$ = merge(upsertAssemblies$, deleteFromAssemblies$, upsertParts$, deleteParts$, upsertBom$, deleteBom$)
-      //.forEach(e=>e)
+    const allSaveRequests$ = merge(upsertParts$, deleteParts$, upsertBom$, deleteBom$, upsertAssemblies$, deleteFromAssemblies$)
+    const allLoadRequests$ = merge(getParts$, getBom$, getAssemblies$)
     //const allRequests$ = merge(allSaveRequests$, blaRequests$)
 
-    const outToHttp$ = merge(allSaveRequests$, designExistsRequest$)
+    const outToHttp$ = merge(designExistsRequest$, allSaveRequests$, allLoadRequests$)
     //Rx.Observable.never()
       /*.startWith({
         url: `${designUri}/assemblies${authTokenStr}`
