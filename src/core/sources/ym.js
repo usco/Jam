@@ -5,8 +5,6 @@ import {head} from 'ramda'
 
 export function makeEntityActions(certains$){
 
-
-
   const createMetaComponents$      = certains$.map(data=>data.data.instMeta)
     //NOTE :we are doing these to make them compatible with remapMetaActions helpers, not sure this is the best
     .map(function(datas){
