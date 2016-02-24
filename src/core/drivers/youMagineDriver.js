@@ -79,7 +79,6 @@ export default function makeYMDriver(httpDriver, params={}){
   let apiBaseUri = testMode !== undefined ? apiBaseTestUri : apiBaseProdUri
   let authData   = (login !== undefined && password!==undefined) ? (`${login}:${password}@`) : ''
 
-  //const authToken  = "UBxcgJeRoUd5DpRi7Nku"
   const assemblyId = 'default'
   //const documentsUri = `${urlBase}://${authData}${apiBaseUri}/designs/${designId}/documents/${params.documentId}${authTokenStr}`
 
@@ -125,7 +124,6 @@ export default function makeYMDriver(httpDriver, params={}){
       return requests
     }
 
-
     function toBom(method='put', data){
       const {designId, authToken} = data
       const entries   = data._entries || []
@@ -158,7 +156,6 @@ export default function makeYMDriver(httpDriver, params={}){
       })
       return requests
     }
-
 
     function dataFromItems(items){
       return Object.keys(items.transforms).reduce(function(list, key){
@@ -212,12 +209,47 @@ export default function makeYMDriver(httpDriver, params={}){
     const authData$ = save$
       .pluck('authData')
 
+
     const load$ = outgoing$
       .debounce(50)//only load if last events were less than 50 ms appart
       .filter(data=>data.method === 'load')
       .pluck('data')
       .share()
+    const lDesign$ = load$.pluck('design')
+    const lAuthData$ = load$.pluck('authData')
 
+
+    const designExistsRequest$ = combineLatestObj({design:lDesign$,authData:lAuthData$})
+      .map(({design,authData})=>({designId:design.id,authToken:authData.token}))
+      .map(function(data){
+        const {designId, authToken} = data
+        const authTokenStr = `/?auth_token=${authToken}`
+        const designUri     = `${urlBase}://${authData}${apiBaseUri}/designs/${designId}${authTokenStr}`
+        return {
+              url    : designUri
+            , method : 'get'
+            , type   :'ymLoad'
+            , typeDetail :'designExists'
+          }
+      })
+      .tap(e=>console.log("designExistsRequest",e))
+
+    const getBom$ = load$
+      .withLatestFrom(lDesign$,lAuthData$,(_,design,authData)=>({designId:design.id,authToken:authData.token}))
+      .map(function(data){
+        console.log("foo",data)
+        const {designId, authToken} = data
+
+        const authTokenStr = `/?auth_token=${authToken}`
+        const designUri     = `${urlBase}://${authData}${apiBaseUri}/designs/${designId}`
+        const bomUri    = `${designUri}/boms`
+
+        return {}
+      })
+      .forEach(e=>console.log('getBom',e))
+
+
+    //saving stuff
     ////
     const bom$ = save$.pluck("bom")
       .pluck("entries")
@@ -261,6 +293,20 @@ export default function makeYMDriver(httpDriver, params={}){
       })
       .share()
 
+    function makePartFns(parts$){
+      const upsert$  = parts$
+        .map(d=>d.upserted)
+        .withLatestFrom(design$,authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
+        .map(toParts.bind(null,'put'))
+        .flatMap(Rx.Observable.fromArray)
+
+      const delete$ = parts$
+        .map(d=>d.removed)
+        .withLatestFrom(design$,authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
+        .map(toParts.bind(null,'delete'))
+        .flatMap(Rx.Observable.fromArray)
+    }
+
     const upsertParts$ = parts$
       .map(d=>d.upserted)
       .withLatestFrom(design$,authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
@@ -292,8 +338,6 @@ export default function makeYMDriver(httpDriver, params={}){
       //.tap(e=>console.log("assemblies",e))
       .share()
 
-
-
     const upsertAssemblies$ = assemblies$
       .map(d=>d.upserted)
       .withLatestFrom(design$,authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
@@ -312,9 +356,10 @@ export default function makeYMDriver(httpDriver, params={}){
     //Finally put it all together
     const allSaveRequests$ = merge(upsertAssemblies$, deleteFromAssemblies$, upsertParts$, deleteParts$, upsertBom$, deleteBom$)
       //.forEach(e=>e)
+    //const allRequests$ = merge(allSaveRequests$, blaRequests$)
 
-
-    const outToHttp$ = allSaveRequests$//Rx.Observable.never()
+    const outToHttp$ = merge(allSaveRequests$, designExistsRequest$)
+    //Rx.Observable.never()
       /*.startWith({
         url: `${designUri}/assemblies${authTokenStr}`
         , method: "post"
@@ -340,9 +385,7 @@ export default function makeYMDriver(httpDriver, params={}){
       })
       .forEach(e=>console.log("saving done (if all went well)"))
 
-
     return inputs$
-
   }
 
   return youMagineStorageDriver
