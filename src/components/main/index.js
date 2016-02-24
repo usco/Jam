@@ -1,6 +1,6 @@
 require("../../app.css")
 import Rx from 'rx'
-const merge = Rx.Observable.merge
+const {merge,just} = Rx.Observable
 const of = Rx.Observable.of
 
 //views & wrappers
@@ -21,16 +21,16 @@ import view   from './view'
 
 import api from '../../api'
 
-export default function main(drivers) {
-  const {DOM} = drivers
+export default function main(sources) {
+  const {DOM} = sources
 
-  const actions = intent(drivers)
-  const state$  = model(undefined, actions, drivers)
+  const actions = intent(sources)
+  const state$  = model(undefined, actions, sources)
 
   //create visual elements
   const entityInfos = EntityInfosWrapper(state$,DOM)
   const comments    = CommentsWrapper(state$,DOM)
-  const gl          = GLWrapper(state$, drivers)
+  const gl          = GLWrapper(state$, sources)
   const bom         = BOMWrapper(state$,DOM)
   const progressBar = progressBarWrapper(state$,DOM)
 
@@ -60,6 +60,19 @@ export default function main(drivers) {
     .pluck("settings")
     .map( s=>({"jam!-settings":JSON.stringify(s)}) )
 
+
+  //ym
+  const designExists$ = sources.ym
+    //.tap(e=>console.log("responses from ym",e))
+    .filter(res=>res.request.method==='get' && res.request.type === 'ymLoad' && res.request.typeDetail=== 'designExists')
+    .flatMap( data => data.catch(_=>just({error:true})) )//flag errors
+    .filter(e=>!e.progress)//filter out progress data
+    .map(data=> data.error ? false : true)//if we have an error return false, true otherwise
+    .forEach(e=>console.log("designExists: ",e))
+
+  //if the design exists, load data, otherwise...whataver
+
+
   //output to ym
   const bomToYm = state$.pluck("bom")
   const entityMetaToYm = state$.pluck("meta")
@@ -88,14 +101,20 @@ export default function main(drivers) {
     .distinctUntilChanged(null, equals)
 
   const loadDesignFromYm$ = actions.loadDesign
+    .flatMap(_=>combineLatestObj({
+      design
+      ,authData
+    }))
     .map(data=>({method:'load', data, type:'design'}))
+    .tap(e=>console.log("loadDesignFromYm",e))
     .distinctUntilChanged(null, equals)
+
 
   const ymStorage$ = merge(saveDesigntoYm$, loadDesignFromYm$)
     .distinctUntilChanged(null, equals)
 
 
-  //return anything you want to output to drivers
+  //return anything you want to output to sources
   return {
       DOM: vtree$
       ,events: events$
