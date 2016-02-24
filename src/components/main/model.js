@@ -223,6 +223,7 @@ export default function model(props$, actions, sources){
   const authData$ = authToken(sources.addressbar)
     .flatMap(fromArray)
     .map(token => ({token}))
+    .startWith({token:undefined})
 
   //combine all the above to get our dynamic state
   const state$ = combineLatestObj({
