@@ -71,7 +71,7 @@ export default function main(sources) {
     .map(data=> data.error ? false : true)//if we have an error return false, true otherwise
     //.forEach(e=>console.log("designExists: ",e))
 
-  const inBom = sources.ym
+  /*const inBom = sources.ym
     .filter(res=>res.request.method==='get' && res.request.type === 'ymLoad' && res.request.typeDetail=== 'bom')
     .mergeAll()
     .pluck('response')
@@ -87,8 +87,11 @@ export default function main(sources) {
     .filter(res=>res.request.method==='get' && res.request.type === 'ymLoad' && res.request.typeDetail=== 'assemblies')
     .mergeAll()
     .pluck('response')
-    .forEach(e=>console.log("in assemblies: ",e))
+    .forEach(e=>console.log("in assemblies: ",e))*/
 
+
+  //const designLoaded$ = combineLatestObj({inParts, inBom, inAssemblies})
+  //  .startWith(true)
 
   //output to ym
   const bomToYm = state$.pluck("bom")
@@ -101,11 +104,13 @@ export default function main(sources) {
 
   //simple query to determine if design already exists
   const queryDesignExists$ = combineLatestObj({design,authData})
+    .filter(data=>data.authData.token !== undefined)
     .map(data=>({data, query:'designExists'}))
 
   //saving should NOT take place before load is complete IFAND ONLY IF , we are reloading a design
   const saveDesigntoYm$ = state$
     .filter(state=>state.design.synched)//only try to save anything when the design is in "synch mode" aka has a ur
+    //skipUntil(designLoaded)
     .flatMap(_=>
       combineLatestObj({
           bom: bomToYm
