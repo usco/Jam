@@ -1,6 +1,6 @@
 import Rx from 'rx'
 const Observable= Rx.Observable
-const {fromEvent, just, merge, concat, concatAll} = Observable
+const {fromEvent, fromArray, just, merge, concat, concatAll} = Observable
 
 import {combineLatestObj, replicateStream} from '../../utils/obsUtils'
 import {safeJSONParse, toArray} from '../../utils/utils'
@@ -48,8 +48,23 @@ function remapJson(mapping, input){
       }
       return obj
     },{})
-  //console.log("remapJson",result)
   return result
+}
+
+function makeApiStream(source$, design$, authData$, outputMapper){
+  const upsert$  = source$
+    .map(d=>d.upserted)
+    .withLatestFrom(design$, authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
+    .map(outputMapper.bind(null,'put'))
+    .flatMap(fromArray)
+
+  const delete$ = source$
+    .map(d=>d.removed)
+    .withLatestFrom(design$, authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
+    .map(outputMapper.bind(null,'delete'))
+    .flatMap(fromArray)
+
+  return merge(upsert$, delete$)
 }
 
 
@@ -319,21 +334,6 @@ export default function makeYMDriver(httpDriver, params={}){
       })
       .share()
 
-    const upsertBom$ = bom$
-      .map(d=>d.upserted)
-      .withLatestFrom(design$,authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
-      .map(toBom.bind(null,'put'))
-      .flatMap(Rx.Observable.fromArray)
-      .tap(e=>console.log("upsert bom",e))
-
-    const deleteBom$ = bom$
-      .map(d=>d.removed)
-      .withLatestFrom(design$,authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
-      .map(toBom.bind(null,'delete'))
-      .flatMap(Rx.Observable.fromArray)
-      .tap(e=>console.log("delete bom entry",e))
-
-
     const parts$ = save$//.pluck("parts")
       .pluck("bom")
       .pluck("entries")
@@ -347,34 +347,6 @@ export default function makeYMDriver(httpDriver, params={}){
         return changes
       })
       .share()
-
-    function makeUpsertFns(source$, outputMapper){
-      const upsert$  = source$
-        .map(d=>d.upserted)
-        .withLatestFrom(design$,authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
-        .map(toParts.bind(null,'put'))
-        .flatMap(Rx.Observable.fromArray)
-
-      const delete$ = source$
-        .map(d=>d.removed)
-        .withLatestFrom(design$,authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
-        .map(toParts.bind(null,'delete'))
-        .flatMap(Rx.Observable.fromArray)
-    }
-
-    const upsertParts$ = parts$
-      .map(d=>d.upserted)
-      .withLatestFrom(design$,authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
-      .map(toParts.bind(null,'put'))
-      .flatMap(Rx.Observable.fromArray)
-      .tap(e=>console.log("upsert parts",e))
-
-    const deleteParts$ = parts$
-      .map(d=>d.removed)
-      .withLatestFrom(design$,authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
-      .map(toParts.bind(null,'delete'))
-      .flatMap(Rx.Observable.fromArray)
-      .tap(e=>console.log("delete part",e))
 
     const assemblies$ = combineLatestObj({
           metadata:save$.pluck('eMetas')
@@ -390,26 +362,15 @@ export default function makeYMDriver(httpDriver, params={}){
         let changes = extractChangesBetweenArrays(prev,cur)
         return changes
       })
-      //.tap(e=>console.log("assemblies",e))
       .share()
 
-    const upsertAssemblies$ = assemblies$
-      .map(d=>d.upserted)
-      .withLatestFrom(design$,authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
-      .map(toAssemblies.bind(null,'put'))
-      .flatMap(Rx.Observable.fromArray)
-      .tap(e=>console.log("upsert assemblies entry",e))
 
-    const deleteFromAssemblies$ = assemblies$
-      .map(d=>d.removed)
-      .withLatestFrom(design$,authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
-      .map(toAssemblies.bind(null,'delete'))
-      .flatMap(Rx.Observable.fromArray)
-      .tap(e=>console.log("remove assemblies entry",e))
-
+    const partsOut$    = makeApiStream(parts$, design$, authData$, toParts)
+    const bomOut$      = makeApiStream(bom$  , design$, authData$, toBom)
+    const assemblyOut$ = makeApiStream(assemblies$ , design$, authData$, toBom)
 
     //Finally put it all together
-    const allSaveRequests$ = merge(upsertParts$, deleteParts$, upsertBom$, deleteBom$, upsertAssemblies$, deleteFromAssemblies$)
+    const allSaveRequests$ = merge(partsOut$, bomOut$, assemblyOut$)
     const allLoadRequests$ = merge(getParts$, getBom$, getAssemblies$)
     //const allRequests$ = merge(allSaveRequests$, blaRequests$)
 
