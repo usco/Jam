@@ -215,6 +215,17 @@ export default function makeYMDriver(httpDriver, params={}){
       })
       //.tap(e=>console.log("designExistsRequest",e))
 
+    /*const getAssembliesList$ = Rx.Observable.just({
+          url: `${designUri}/assemblies${authTokenStr}`
+          , method: "post"
+          , send: jsonToFormData({name:'default','uuid':'default'})
+          , type: "ymSave"
+          , typeDetail: "assemblies_default"})
+          // parts$, bom$, assemblies$)*/
+    /*const makeAssembliesEntry$ =
+      .withLatestFrom(design$,authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
+      .map(toBom.bind(null,'put'))*/
+
     //////////
     //deal with saving
     const save$ = outgoing$
@@ -293,8 +304,6 @@ export default function makeYMDriver(httpDriver, params={}){
         }
       })
 
-
-
     //saving stuff
     ////
     const bom$ = save$.pluck("bom")
@@ -339,14 +348,14 @@ export default function makeYMDriver(httpDriver, params={}){
       })
       .share()
 
-    function makePartFns(parts$){
-      const upsert$  = parts$
+    function makeUpsertFns(source$, outputMapper){
+      const upsert$  = source$
         .map(d=>d.upserted)
         .withLatestFrom(design$,authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
         .map(toParts.bind(null,'put'))
         .flatMap(Rx.Observable.fromArray)
 
-      const delete$ = parts$
+      const delete$ = source$
         .map(d=>d.removed)
         .withLatestFrom(design$,authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
         .map(toParts.bind(null,'delete'))
@@ -405,14 +414,6 @@ export default function makeYMDriver(httpDriver, params={}){
     //const allRequests$ = merge(allSaveRequests$, blaRequests$)
 
     const outToHttp$ = merge(designExistsRequest$, allSaveRequests$, allLoadRequests$)
-    //Rx.Observable.never()
-      /*.startWith({
-        url: `${designUri}/assemblies${authTokenStr}`
-        , method: "post"
-        , send: jsonToFormData({name:'default','uuid':'default'})
-        , type: "ymSave"
-        , typeDetail: "assemblies_default"})
-        // parts$, bom$, assemblies$)*/
       .tap(e=>console.log("outToHttp",e))
 
     const inputs$ = httpDriver(outToHttp$)
