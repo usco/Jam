@@ -222,6 +222,7 @@ export default function model(props$, actions, sources){
   //authentification data, if any
   const authData$ = authToken(sources.addressbar)
     .flatMap(fromArray)
+    .filter(exists)
     .map(token => ({token}))
     .startWith({token:undefined})
 
