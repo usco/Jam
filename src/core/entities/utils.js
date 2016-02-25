@@ -22,7 +22,7 @@ export function remapEntityActions(entityActions, currentSelections$){
     })
     .share()
 
-  return mergeData(entityActions, 
+  return mergeData(entityActions,
     {
       duplicateInstances$
       ,deleteInstances$
@@ -55,7 +55,7 @@ export function remapMetaActions(entityActions, componentBase$, currentSelection
     //.tap(e=>console.log("creating meta component",e))
 
   const removeComponents$ = entityActions.deleteInstances$
-  
+
   const updateComponents$ = entityActions.updateComponent$
      .filter(u=>u.target === "meta")
      .pluck("data")
@@ -119,7 +119,6 @@ export function remapTransformActions(entityActions, componentBase$, currentSele
      .filter(u=>u.target === "transforms")
      .pluck("data")
      .withLatestFrom(currentSelections$.map(s => s.map(s=>s.id)),function(transforms, instIds){
-        console.log("instIds",instIds)
         return instIds.map(function(instId){
           return {id:instId, value:transforms}
         })
@@ -149,7 +148,7 @@ export function remapBoundsActions(entityActions, componentBase$, currentSelecti
   const removeComponents$ = entityActions.deleteInstances$
 
   const duplicateComponents$ = entityActions.duplicateInstances$
-  
+
   return {
     createComponents$
     ,duplicateComponents$
