@@ -67,6 +67,18 @@ function makeApiStream(source$, design$, authData$, outputMapper){
   return merge(upsert$, delete$)
 }
 
+function changesFromObservableArrays(data$){
+  return data$
+    .scan(function(acc, cur){
+        return {cur,prev:acc.cur}
+      },{prev:undefined,cur:undefined})
+    .map(function(typeData){
+      let {cur,prev} = typeData
+      let changes = extractChangesBetweenArrays(prev,cur)
+      return changes
+    })
+    .share()
+}
 
 //storage driver for YouMagine designs & data etc
 export default function makeYMDriver(httpDriver, params={}){
@@ -321,49 +333,25 @@ export default function makeYMDriver(httpDriver, params={}){
 
     //saving stuff
     ////
-    const bom$ = save$.pluck("bom")
-      .pluck("entries")
-      .distinctUntilChanged( null, equals )
-      .scan(function(acc, cur){
-          return {cur,prev:acc.cur}
-        },{prev:undefined,cur:undefined})
-      .map(function(typeData){
-        let {cur,prev} = typeData
-        let changes = extractChangesBetweenArrays(prev,cur)
-        return changes
-      })
-      .share()
+    const bom$ = changesFromObservableArrays(
+      save$.pluck("bom","entries")
+        .distinctUntilChanged( null, equals )
+    )
 
-    const parts$ = save$//.pluck("parts")
-      .pluck("bom")
-      .pluck("entries")
-      .distinctUntilChanged( null, equals )
-      .scan(function(acc, cur){
-          return {cur,prev:acc.cur}
-        },{prev:undefined,cur:undefined})
-      .map(function(typeData){
-        let {cur,prev} = typeData
-        let changes = extractChangesBetweenArrays(prev,cur)
-        return changes
-      })
-      .share()
+    const parts$ = changesFromObservableArrays(
+      save$
+        .pluck("bom","entries")
+        .distinctUntilChanged( null, equals )
+    )
 
-    const assemblies$ = combineLatestObj({
+    const assemblies$ = changesFromObservableArrays(
+      combineLatestObj({
           metadata:save$.pluck('eMetas')
         , transforms:save$.pluck('eTrans')
         , meshes: save$.pluck('eMeshs')})
       .debounce(1)
       .map(dataFromItems)
-      .scan(function(acc, cur){
-          return {cur,prev:acc.cur}
-        },{prev:undefined,cur:undefined})
-      .map(function(typeData){
-        let {cur,prev} = typeData
-        let changes = extractChangesBetweenArrays(prev,cur)
-        return changes
-      })
-      .share()
-
+    )
 
     const partsOut$    = makeApiStream(parts$, design$, authData$, toParts)
     const bomOut$      = makeApiStream(bom$  , design$, authData$, toBom)
