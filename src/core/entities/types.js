@@ -39,14 +39,14 @@ function typeFromMeshData(data, typeUidFromMeshName){
     computeBoundingBox(templateMesh)
   }
 
-  return {id, name, meshName, templateMesh, printable } 
+  return {id, name, meshName, templateMesh, printable }
 }
 
 function updateTypesData(newTypeData, currentData){
   //save new data
   let regData = currentData//.asMutable() //FIXME ...errr
   let {id, name, meshName,templateMesh} = newTypeData
-  
+
   let typeData              = regData.typeData//.asMutable()
   let meshNameToPartTypeUId = regData.meshNameToPartTypeUId//.asMutable()
   let typeUidToMeshName     = regData.typeUidToMeshName//.asMutable()
@@ -65,7 +65,7 @@ function updateTypesData(newTypeData, currentData){
 
   return {
     meshNameToPartTypeUId,
-    typeUidToMeshName, 
+    typeUidToMeshName,
     typeUidToTemplateMesh,
 
     typeData
@@ -73,7 +73,7 @@ function updateTypesData(newTypeData, currentData){
 }
 
 /////////////////
-//actual api functions 
+//actual api functions
 //create/infer a new type based on mesh + metadata
 function entityCandidates(state, input){
   //log.info("I would register something", state, input)
@@ -91,7 +91,7 @@ function addEntityTypes(state, input){
 
   input.forEach(function(typeData){
     state.typeData[typeData.id] = typeData
-  })  
+  })
 
   return state
 }
@@ -101,18 +101,27 @@ function clearTypes(state, input){
   return mergeData(defaults)
 }
 
-function entityTypes(actions, source){
+function addTypeFromTypeAndMeshData(state, input){
+  console.log("addTypeFromTypeAndMeshData")
+  let newEntry = {}
+  newEntry[input.id] = input.mesh
+  const typeUidToTemplateMesh = mergeData(state.typeUidToTemplateMesh,newEntry)
+
+  state = mergeData(state,{typeUidToTemplateMesh})
+  return state
+}
+
+
+export default function entityTypes(actions, source){
   const defaults = {
     meshNameToPartTypeUId:{},
     typeUidToMeshName:{},
     typeData:{},
-    
+
     //not sure
     typeUidToTemplateMesh:{}
   }
 
-  let updateFns  = {entityCandidates, addEntityTypes, clearTypes}
+  const updateFns  = {entityCandidates, addEntityTypes, clearTypes, addTypeFromTypeAndMeshData}
   return makeModel(defaults, updateFns, actions, undefined, {doApplyTransform:false})//since we store meshes, we cannot use immutable data
 }
-
-export default entityTypes
