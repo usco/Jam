@@ -5,16 +5,13 @@ const scase = Rx.Observable.case
 
 import {exists,getExtension,getNameAndExtension,isValidFile, isEmpty} from './utils'
 
-import {postProcessMesh,geometryFromBuffers} from './meshUtils'
-import {meshTools} from 'glView-helpers'
-const centerMesh         = meshTools.centerMesh
-
 import {equals, cond, T, always} from 'ramda'
 import {combineLatestObj} from './obsUtils'
 import {mergeData} from './modelUtils'
 import assign from 'fast.js/object/assign'//faster object.assign
 
-import {generateUUID} from './utils'
+import {postProcessParsedData} from './parseUtils'
+
 
 function getParser(extension){
   return lazyLoad(extension)
@@ -65,79 +62,15 @@ function lazyLoad(moduleNamePath){
   return obs
 }
 
-
-function postProcessParsedData(data){
-  //TODO: unify parsers' returned data/api ?
-  //console.log("postProcessMesh/data",data)
-  let mesh = undefined
-  if("objects" in data){
-    //for 3mf , etc
-    //console.log("data",data)
-    let typesMetaHash = {}
-    let typesMeshes   = []
-    let typesMeta = []
-
-    //we need to make ids unique
-    let idLookup = {}
-
-    for(let objectId in data.objects){
-      //console.log("objectId",objectId, data.objects[objectId])
-      let item  = data.objects[objectId]
-
-      const typeUid = generateUUID()
-      idLookup[item.id] = typeUid
-
-      let meta = {id:typeUid, name:item.name}
-      typesMeta.push(meta)
-      typesMetaHash[typeUid] = meta
-
-      mesh = geometryFromBuffers(item)
-      mesh = postProcessMesh(mesh)
-      mesh = centerMesh(mesh)
-      typesMeshes.push({typeUid, mesh})
-    }
-
-    //now for the instances data
-    let instMeta = []
-    let instTransforms = []
-    data.build.map(function(item){
-
-      const instUid = generateUUID()
-      let id =idLookup[item.objectid]
-
-      instMeta.push( { instUid, typeUid: id} )//TODO : auto generate name
-      if('transforms' in item ){
-        instTransforms.push({instUid, transforms:item.transforms})
-      }else{
-        instTransforms.push({instUid, transforms:[0,0,0,0,0,0,0,0,0,0,0,0]})
-      }
-    })
-    //console.log("typesMeta",typesMeta,"typesMeshes",typesMeshes,"instMeta",instMeta,"instTransforms",instTransforms)
-
-    return {meshOnly:false, typesMeshes, typesMeta, instMeta ,instTransforms}
-
-  }else{
-    mesh = data
-    mesh = geometryFromBuffers(mesh)
-    mesh = postProcessMesh(mesh)
-    mesh = centerMesh(mesh)
-
-    let typesMeshes   = [{typeUid:undefined, mesh}]
-
-    return {meshOnly:true, typesMeshes}
-  }
-
-  return mesh
-}
-
-function fetch(drivers, sourceNames=["http","desktop"]){
-  const chosenDrivers = sourceNames
+//this functions extracts data recieved from sources, adds error handling etc
+function fetch(sources, sourceNames=["http","desktop"]){
+  const chosenSources = sourceNames
     .map(function(name){
-      return drivers[name]
+      return sources[name]
     })
 
-  const fetched$ = merge(...chosenDrivers)
-    .filter(res$ => res$.request.type === 'resource')
+  const fetched$ = merge(...chosenSources)
+    .filter(res$ => res$.request.type === 'resource')//only responses we deal with are resources
     .flatMap(data => {
       const responseWrapper$ = data.catch(e=>{
         console.log("caught error in fetching data",e)
@@ -147,14 +80,13 @@ function fetch(drivers, sourceNames=["http","desktop"]){
       const response$ = responseWrapper$.pluck("response")
       const progress$ = responseWrapper$.pluck("progress")
 
-      return combineLatestObj({response$, request$, progress$})//.materialize()//FIXME: still do not get this one
+      return combineLatestObj({response$, request$, progress$})
     })
     .share()
-
-
   return fetched$
 }
 
+//parse the data extracted from a fetched data observable
 function parse(fetched$){
   const parseBase$ = fetched$
     .filter(data=>(data.response !== undefined && data.progress === undefined))
@@ -163,33 +95,24 @@ function parse(fetched$){
     .shareReplay(1)
 
   const parsed$ = parseBase$
-    .map(function(data){
+    .flatMap(function(data){
       const uri = data.request.uri
-      const {name,ext} = getNameAndExtension(uri)
-      return {uri, data:data.response, ext, name}
+      const {name, ext} = getNameAndExtension(uri)
+
+      //pack up the data, the parser etc nicely
+      const data$   = of({uri, rawData:data.response, ext, name})
+      const parser$ = getParser(ext).pluck('default')// FIXME: for now workaround for es6 modules & babel
+      return combineLatestObj({data$, parser$})
     })
     //actual parsing part
-    //.filter(data=>parsers[data.ext]!==undefined)//does parser exist?
-    .flatMap(function( rawData ){
-      return  combineLatestObj({rawData:of(rawData), parser:getParser(rawData.ext)})
-    })
-    .flatMap(function( fullData ){
-      const {uri, data, ext, name} = fullData.rawData
-
-      //console.log("DATA",fullData.parser)
+    .flatMap(function( {data,parser} ){
+      const {uri, rawData, ext, name} = data
       const parseOptions = {useWorker:true}
 
-      /*System.import('usco-ctm-parser').then(function(parser){
-        console.log("dynamic load of ctmParser",parser)
-      })*/
-
-
-      const parse    = fullData.parser.default //parsers[ext]
-      const parsedObs$ = parse(data, parseOptions)
-        //.do(e=>console.log("parsing data",e))
+      const parsedObs$ = parser(rawData, parseOptions)
         .doOnError(e=>console.log("error in parse",e))
 
-      const data$  = parsedObs$
+      const parsedData$  = parsedObs$
         .filter(e=> e.progress === undefined)//seperate out progress data
         .map(postProcessParsedData)
 
@@ -199,15 +122,17 @@ function parse(fetched$){
         .distinctUntilChanged()
         .startWith(0)
 
-      const meta$    = of({uri, ext, name})
+      const meta$ = of({uri, ext, name})
 
-      return combineLatestObj({meta$, data$, progress$})
+      return combineLatestObj({meta$, data:parsedData$, progress$})
     })
     .shareReplay(1)
 
   return parsed$
 }
 
+
+//helper function to output combine fetch & parse data
 function computeCombinedProgress(fetched$, parsed$){
   const fetchToParseRatio = 0.95
 
@@ -252,8 +177,8 @@ function computeCombinedProgress(fetched$, parsed$){
 }
 
 
-export function resources(drivers){
-  const fetched$ = fetch(drivers)
+export function resources(sources){
+  const fetched$ = fetch(sources)
   const parsed$  = parse(fetched$)
   const combinedProgress$ = computeCombinedProgress( fetched$, parsed$ )
 
