@@ -73,7 +73,7 @@ export function makeEntityActionsFromYm(ym){
         return { id:data.id,  value:data }
       })
     })
-    .forEach(e=>console.log("meta",e))
+    .tap(e=>console.log("meta",e))
 
   const createTransformComponents$ = assemblyData$
     .map(function(datas){
@@ -92,7 +92,7 @@ export function makeEntityActionsFromYm(ym){
         return { id:data.id,  value:data }
       })
     })
-    .forEach(e=>console.log("transforms",e))
+    .tap(e=>console.log("transforms",e))
 
   /*const createMeshComponents$      = assemblyData$
     .map(function(data){
@@ -105,7 +105,7 @@ export function makeEntityActionsFromYm(ym){
       })
   })*/
 
-   //TODO : this would need to be filtered based on pre-existing type data
+   //TODO : this would need to be filtered based on pre-existing type data ?
   const addEntityTypes$ = partsData$
     .map(function(data){
       return data.map(function(entry) {
@@ -119,12 +119,25 @@ export function makeEntityActionsFromYm(ym){
     })
     //.forEach(e=>console.log("addEntityTypes",e))
 
-  //const requests$ = 
+
+  const meshRequests$ = partsData$
+    .map(function(data){
+      return data.map(function(entry) {
+        const mapping = {
+          'uuid':'id'
+        }
+        const fieldNames = ['id','name','description','binary_document_id','binary_document_url','source_document_id','source_document_url']
+        const data = pick( fieldNames, remapJson(mapping, entry) )
+
+        return {src:'http', uri: data.binary_document_url, id:data.id}
+      })
+    })
+    .forEach(e=>console.log("meshRequests",e))
 
   return {
       addEntityTypes$
     , createMetaComponents$
     , createTransformComponents$
-    , createMeshComponents$
+    //, createMeshComponents$
   }
 }
