@@ -96,10 +96,8 @@ export default function model(props$, actions, sources){
 
   //TODO: go back to basics : some candidate have access to already exisiting types, some others not (first time)
   const addInstancesCandidates$ = entityActions.addInstanceCandidates$
-    .tap(e=>console.log("candidates",e))
     //.filter(data=>data.meta.id === undefined)
     .combineLatest(entityTypes$, function(candidateData, types){
-      console.log('candidateData',candidateData, types)
       const meshName = nameCleanup(candidateData.meta.name)
       return find(propEq('name', meshName))(types)
     })

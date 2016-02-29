@@ -28,15 +28,14 @@ function upsertTypes(state, input, index){
   id   = id || generateUUID()
   name = nameCleanup(name)
   if(index===-1){//if we have a mesh that is not yet registered
-    console.log("name",name, index)
     if(mesh){
       computeBoundingSphere(mesh)
       computeBoundingBox(mesh)
     }
   }
-  else{
+  /*else{
     console.log("already exists",name, index, mesh)
-  }
+  }*/
   const entry = {id, name, mesh}
 
   if(index === -1){
