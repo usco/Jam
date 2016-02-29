@@ -10,6 +10,8 @@ import {getExtension,getNameAndExtension,isValidFile} from '../../utils/utils'
 import {combineLatestObj, mergeActionsByName} from '../../utils/obsUtils'
 import {mergeData} from '../../utils/modelUtils'
 
+import {nameCleanup} from '../../utils/formatters'
+
 
 import {settingsIntent} from    './intents/settings'
 import {commentsIntents} from   './intents/comments'
@@ -63,17 +65,31 @@ export default function intent (sources) {
   const entityActionsFromDom         = makeEntityActionsFromDom(sources.DOM)
   const entityActionsFromYm          = makeEntityActionsFromYm(sources.ym)
 
-  const extras = {entityCandidates$}
+
 
 
   const alreadyExistingTypeMeshData$ = _resources.parsed$
     .filter(data=>data.meta.id !== undefined)
     //.forEach(e=>console.log("alreadyExistingTypeMeshData",e))
 
-  const addEntityTypesFromPostMessage$ =
-    alreadyExistingTypeMeshData$
-   .forEach(e=>console.log("addEntityTypesFromPostMessage",e))
+  //create new part type from basic type data & mesh data
+  const addTypeFromTypeAndMeshData$ = alreadyExistingTypeMeshData$
+    .map(function(data){
+      console.log("data",data)
+      let typeMeta = {
+        name:undefined
+        ,id:data.meta.id
+        ,mesh: data.data.typesMeshes[0].mesh
+      }
+       if(typeMeta.name === undefined){//we want type names in any case, so we infer this base on "file" name
+         typeMeta.name = nameCleanup( data.meta.name )
+       }
+       return typeMeta
+     })
+     .tap(e=>console.log("addEntityTypesFromPostMessage",e))
 
+
+   //we create special "read an html5 file " requests with added id
    const desktopRequests$ = actionsFromPostMessage.addPartData$
     .map(function(data){
       return data.map(function(entry) {
@@ -91,11 +107,13 @@ export default function intent (sources) {
      })
      .tap(e=>console.log("desktopRequests",e))
 
+   const extras = {entityCandidates$,addTypeFromTypeAndMeshData$}
 
    const entityActionNames = [
     'reset'
 
     ,'addEntityTypes'
+    ,'addTypeFromTypeAndMeshData'
     ,'removeEntityType'
     ,'entityCandidates'
 
