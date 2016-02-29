@@ -24,7 +24,7 @@ import {selectionsIntents} from './intents/selections'
 import settings from    '../../core/settings'
 import comments from    '../../core/comments'
 import selections from  '../../core/selections'
-import entityTypes from '../../core/entities/entityTypes'
+import entityTypes from '../../core/entities/types'
 import bom         from '../../core/bom'
 
 import bomIntens from './intents/bom2'

@@ -104,12 +104,13 @@ export default function main(sources) {
 
   //simple query to determine if design already exists
   const queryDesignExists$ = combineLatestObj({design,authData})
-    .filter(data=>data.authData.token !== undefined)
+    .filter(data=>data.authData.token !== undefined && data.design.synched)//only try to save anything when the design is in "synch mode" aka has a ur
     .map(data=>({data, query:'designExists'}))
+    .take(1)
 
   //saving should NOT take place before load is complete IFAND ONLY IF , we are reloading a design
   const saveDesigntoYm$ = state$
-    .filter(state=>state.design.synched)//only try to save anything when the design is in "synch mode" aka has a ur
+    .filter(state=>state.design.synched && state.authData.token !== undefined )//only try to save anything when the design is in "synch mode" aka has a ur
     //skipUntil(designLoaded)
     .flatMap(_=>
       combineLatestObj({
@@ -131,9 +132,11 @@ export default function main(sources) {
   const loadDesignFromYm$ = designExists$//actions.loadDesign
     .filter(e=>e===true)//filter out non existing designs (we cannot load those , duh')
     .flatMap(_=>combineLatestObj({design, authData}))//we inject design & authData
-    .map(data=>({method:'load', data, type:'design'}))
+    .map(data=>({method:'load', data, type:'design'}))//create our query/request
     .tap(e=>console.log("loadDesignFromYm",e))
+    .throttle(5)
     .distinctUntilChanged(null, equals)
+    .take(1)
 
 
   const ymStorage$ = merge(queryDesignExists$, saveDesigntoYm$, loadDesignFromYm$)
