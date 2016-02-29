@@ -11,7 +11,7 @@ export function partSource(addressbar, params){
 }
 
 export function designSource(addressbar, params){
-  return addressbar.get('designUrl')
+  return addressbar.get('designId')
     //.tap(e=>console.log("designUrl",e))
 }
 
