@@ -1,28 +1,9 @@
 import Rx from 'rx'
-let fromEvent = Rx.Observable.fromEvent
-let Observable = Rx.Observable
-let merge = Rx.Observable.merge
-
-import {toArray} from '../utils/utils'
-import {exists} from '../utils/obsUtils'
-import {makeModel, mergeData} from '../utils/modelUtils'
-
+const {fromEvent, merge} = Rx.Observable
 import {findIndex,propEq,adjust} from 'ramda'
-
-import logger from 'log-minim'
-let log = logger("app")
-log.setLevel("debug")
-
-
-function updateEntry(){
-
-}
-
-
-const defaults = {
-  entries:[]
-  ,byId:{}
-}
+import {toArray} from '../../utils/utils'
+import {exists} from '../../utils/obsUtils'
+import {makeModel, mergeData} from '../../utils/modelUtils'
 
 function addBomEntries(state,input){
   //console.log("ADDING BOM entries")
@@ -45,7 +26,7 @@ function createBomEntries(state,input){
 
   let typeUid   = types.latest
   let type      = types.typeData[typeUid]
-  let entryName =  (type !== undefined ? type.name : undefined) 
+  let entryName =  (type !== undefined ? type.name : undefined)
   let meshName  = types.typeUidToMeshName[typeUid]
 
   if(type){
@@ -62,7 +43,7 @@ function createBomEntries(state,input){
         name: entryName,
         version: "0.0.0"
       }
-      
+
       entries = entries.concat( [newEntry] )
       byId[typeUid] = newEntry
     }
@@ -71,28 +52,27 @@ function createBomEntries(state,input){
       byId[typeUid].qty +=1
     }
   }
-  
+
   return { entries, byId }
 }
 
-//how do we deal with this, as it impacts other data structures ? 
+//how do we deal with this, as it impacts other data structures ?
 function removeBomEntries(state,input){
   let toRemove = input
 }
 
 function clearBomEntries(state, input){
   //console.log("clearing BOM", input, state)
-  return mergeData({},defaults)
+  return {entries:[],byId:{}}//mergeData({},defaults)
 }
 
 function updateBomEntries(state, inputs){
   //console.log("updating BOM", inputs, state)
-
-  return inputs.reduce(function(state, {id,attrName,value}){ 
+  return inputs.reduce(function(state, {id,attrName,value}){
 
     const entries = adjust(
       function(item){
-        let updatedData = {} 
+        let updatedData = {}
         updatedData[attrName] = value
         return mergeData({},item,updatedData)
       }
@@ -102,13 +82,11 @@ function updateBomEntries(state, inputs){
     return {entries,byId:{}}
 
   },state)
-
 }
 
 function updateBomEntriesCount(state, inputs){
   //console.log("updateBomEntriesCount",inputs)
-
-  return inputs.reduce(function(state,{id,offset}){    
+  return inputs.reduce(function(state,{id,offset}){
     const entries = adjust(
       function(item){
         const qty = Math.max(item.qty+offset,0)
@@ -119,15 +97,15 @@ function updateBomEntriesCount(state, inputs){
 
     return {entries,byId:{}}
   },state)
-
 }
 
+export default function bom(actions, source) {
+  const defaults = {
+    entries:[]
+    ,byId:{}
+  }
 
-function bom(actions, source) {
   //let updateFns  = {addBomEntries,createBomEntries,removeBomEntries,clearBomEntries}
   let updateFns = {addBomEntries, updateBomEntries, updateBomEntriesCount, clearBomEntries}
   return makeModel(defaults, updateFns, actions, source, {doApplyTransform:false})
 }
-
-
-export default bom
