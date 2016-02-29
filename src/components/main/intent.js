@@ -93,11 +93,12 @@ export default function intent (sources) {
         return data
       })
     })
-    .flatMap(Rx.Observable.fromArray)
+    .flatMap(fromArray)
     .map(function(req){
+      console.log("req",req)
        return assign({
          url:req.uri
-         ,uri:"fake.stl"
+         ,uri:req.data.name//name of the html5 File object
          ,method:'get'
          ,type:'resource'},req)
      })

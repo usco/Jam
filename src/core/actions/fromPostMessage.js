@@ -27,6 +27,7 @@ export function intentsFromPostMessage(drivers){
 
   const loadDesign$ = postMessageWithData$
     .filter(p=>p.data.hasOwnProperty('designId'))
+    .map(data=>data.data.designId)
 
   const addPartData$ = postMessageWithData$
     .filter(p=>p.data.hasOwnProperty('addPartData'))
