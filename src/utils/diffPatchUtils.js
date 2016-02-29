@@ -110,6 +110,39 @@ export function extractChangesBetweenArrays(prev, cur){
 }
 
 
+export function changesFromObservableArrays(data$){
+  return data$
+    .scan(function(acc, cur){
+        return {cur,prev:acc.cur}
+      },{prev:undefined,cur:undefined})
+    .map(function(typeData){
+      let {cur,prev} = typeData
+      let changes = extractChangesBetweenArrays(prev,cur)
+      return changes
+    })
+    .share()
+}
+
+export function changesFromObservableArrays2(data$){
+  data$
+    .scan(function(acc, x){
+      let cur  = x
+      let prev = acc.cur
+
+      cur = Object.keys(cur).map(function(key){
+        return cur[key]
+      })
+      return {cur,prev}
+    },{prev:undefined,cur:undefined})
+    .map(function(typeData){
+      let {cur,prev} = typeData
+      let changes = extractChanges(prev,cur)
+    return changes
+    })
+    .share()
+}
+
+
 
 export function transformEquals(a,b){
     if(!a || !b) return true
