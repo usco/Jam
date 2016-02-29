@@ -1,12 +1,13 @@
 import Rx from 'rx'
-const merge = Rx.Observable.merge
+const {merge} = Rx.Observable
 import {mergeData} from '../../../utils/modelUtils'
-
 import {extractChanges} from '../../../utils/diffPatchUtils'
 
 export function entityInstanceIntents(entityTypes$){
-  
-  const addInstances$ = entityTypes$
+  entityTypes$
+    .forEach(e=>console.log("entityTypes",e))
+
+  const addInstances$ = Rx.Observable.never()/*entityTypes$
     //.distinctUntilChanged()//no worky ?
     .pluck("typeData")
     .scan(function(acc, x){
@@ -15,8 +16,8 @@ export function entityInstanceIntents(entityTypes$){
 
       cur = Object.keys(cur).map(function(key){
         return cur[key]
-      })      
-      return {cur,prev} 
+      })
+      return {cur,prev}
     },{prev:undefined,cur:undefined})
     .map(function(typeData){
       let {cur,prev} = typeData
@@ -25,8 +26,8 @@ export function entityInstanceIntents(entityTypes$){
     return changes
   })
   .pluck("added")
-  .shareReplay(1)
-  
+  .shareReplay(1)*/
+
   return {
     addInstances$
   }

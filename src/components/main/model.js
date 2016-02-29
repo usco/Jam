@@ -1,6 +1,6 @@
 import Rx from 'rx'
 const {merge,just,fromArray} = Rx.Observable
-import {flatten} from 'ramda'
+import {flatten, find, propEq, head} from 'ramda'
 
 import {nameCleanup} from '../../utils/formatters'
 
@@ -95,26 +95,21 @@ export default function model(props$, actions, sources){
   //we FILTER all candidates/certains by their "presence" in the types list
 
   //TODO: go back to basics : some candidate have access to already exisiting types, some others not (first time)
-  const addInstancesCandidates$ = entityActions.entityCandidates$
-    .withLatestFrom(entityTypes$, function(candidateData, entityTypes){
-      const meshName = candidateData.meta.name
-      let typeUid = entityTypes.meshNameToPartTypeUId[candidateData.meta.name]
-      if(typeUid){
-        let tData = entityTypes.typeData[typeUid]
-        return [tData]
-      }
-      return undefined
+  const addInstancesCandidates$ = entityActions.addInstanceCandidates$
+    .tap(e=>console.log("candidates",e))
+    //.filter(data=>data.meta.id === undefined)
+    .combineLatest(entityTypes$, function(candidateData, types){
+      console.log('candidateData',candidateData, types)
+      const meshName = nameCleanup(candidateData.meta.name)
+      return find(propEq('name', meshName))(types)
     })
     .filter(exists)
-
-  const addInstance$ = Rx.Observable.merge(
-      addInstancesCandidates$
-    )
-    .filter(exists)
-    .filter(d=>d.length>0)
+    .map(toArray)
+    .take(1)
+    .repeat()
 
   const entityInstancesBase$  =
-    addInstance$
+    addInstancesCandidates$
     .map(function(newTypes){
       return newTypes.map(function(typeData){
         let instUid = generateUUID()
@@ -133,14 +128,15 @@ export default function model(props$, actions, sources){
 
   //create various components' baseis
   let componentBase$ = entityInstancesBase$
-    .withLatestFrom(entityTypes$, function(instances,types){
+    .withLatestFrom(entityTypes$, function(instances, types){
 
       let data =  instances.map(function(instance){
         let instUid = instance.id
         let typeUid = instance.typeUid
 
         //is this a hack?
-        let mesh = types.typeUidToTemplateMesh[typeUid]
+        let entry = find(propEq('id', typeUid))(types)
+        let mesh = entry.mesh
         let bbox = mesh.boundingBox
         let zOffset = bbox.max.clone().sub(bbox.min)
         zOffset = zOffset.z/2

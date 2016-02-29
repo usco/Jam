@@ -10,9 +10,12 @@ export function intentsFromResources(rawParsedData$){
     const entityCandidates$ = data$//for these we need to infer type , metadata etc
       .filter(d=>d.data.meshOnly === true)
       .map(({meta,data})=>({data:head(data.typesMeshes).mesh, meta}))
+      //.tap(e=>console.log("entityCandidates",e))
+
 
     const entityCertains$ = data$//for these we also have type, metadata etc, so we are CERTAIN of their data
       .filter(d=>d.data.meshOnly === false)
+      //.tap(e=>console.log("entityCertains",e))
 
     return {
         entityCandidates$
@@ -46,7 +49,7 @@ export function intentsFromResources(rawParsedData$){
     })
 
      //TODO : this would need to be filtered based on pre-existing type data
-    const addEntityTypes$ = certains$
+    const addTypes$ = certains$
       .map(function(data){
         return data.data.typesMeta.map(function(typeMeta,index){
           if(typeMeta.name === undefined){//we want type names in any case, so we infer this base on "file" name
@@ -60,7 +63,7 @@ export function intentsFromResources(rawParsedData$){
       })
 
     return {
-        addEntityTypes$
+        addTypes$
       , createMetaComponents$
       , createTransformComponents$
       , createMeshComponents$

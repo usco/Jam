@@ -106,7 +106,7 @@ export function makeEntityActionsFromYm(ym){
   })*/
 
    //TODO : this would need to be filtered based on pre-existing type data ?
-  const addEntityTypes$ = partsData$
+  const addTypes$ = partsData$
     .map(function(data){
       return data.map(function(entry) {
         const mapping = {
@@ -135,7 +135,7 @@ export function makeEntityActionsFromYm(ym){
     .forEach(e=>console.log("meshRequests",e))
 
   return {
-      addEntityTypes$
+      addTypes$
     , createMetaComponents$
     , createTransformComponents$
     //, createMeshComponents$

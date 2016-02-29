@@ -1,127 +1,88 @@
 import Rx from 'rx'
-let fromEvent = Rx.Observable.fromEvent
-let Observable = Rx.Observable
-let merge = Rx.Observable.merge
-
-import logger from 'log-minim'
-let log = logger("app")
-log.setLevel("debug")
-
-import {generateUUID} from '../../utils/utils'
+let {fromEvent,merge} = Rx.Observable
+import {findIndex, propEq} from 'ramda'
+import {generateUUID, toArray} from '../../utils/utils'
 import {nameCleanup} from '../../utils/formatters'
 import {computeBoundingBox,computeBoundingSphere} from 'glView-helpers/lib/meshTools/computeBounds'
 import {makeModel, mergeData} from '../../utils/modelUtils'
 
 
-function typeUidFromMeshName(meshNameToPartTypeUId, meshName){
-  return meshNameToPartTypeUId[ meshName ]
-}
+//one typical entry
+/*
+{
+   "uuid": "a1",
+   "name": "FavoritePart",
+   "description": "test",
+   "binary_document_id": 38546,
+   "binary_document_url": "https://test-s3-assets.youmagine.com/uploads/document/file/38546/UM2CableChain_BedEnd.STL",
+   "source_document_id": null,
+   "source_document_url": "",
+ }*/
 
-function typeFromMeshData(data, typeUidFromMeshName){
-  //console.log("typeFromMeshData",data)
-  let meshName = data.meta.name || ""
-  let name     = nameCleanup(meshName)
+ //actual api functions
+function upsertTypes(state, input, index){
 
-  let id = typeUidFromMeshName(meshName)
-  let templateMesh = undefined
-  let printable    = true
 
-  //no id was given, it means we have a mesh with no entity (yet !)
-  if( !id ) {
-    id = generateUUID()
-    //extract usefull information
-    //we do not return the shape since that becomes the "reference shape/mesh", not the
-    //one that will be shown
-    let mesh = data.data
-
-    templateMesh = mesh
-    computeBoundingSphere(templateMesh)
-    computeBoundingBox(templateMesh)
-  }
-
-  return {id, name, meshName, templateMesh, printable }
-}
-
-function updateTypesData(newTypeData, currentData){
-  //save new data
-  let regData = currentData//.asMutable() //FIXME ...errr
-  let {id, name, meshName,templateMesh} = newTypeData
-
-  let typeData              = regData.typeData//.asMutable()
-  let meshNameToPartTypeUId = regData.meshNameToPartTypeUId//.asMutable()
-  let typeUidToMeshName     = regData.typeUidToMeshName//.asMutable()
-  let typeUidToTemplateMesh = regData.typeUidToTemplateMesh//.asMutable()
-
-  if(id && meshName && templateMesh){
-    typeUidToMeshName[id]      = meshName
-    typeUidToTemplateMesh[id]  = templateMesh
-    meshNameToPartTypeUId[meshName] = id
-
-    typeData[id]={
-      id
-      ,name
+  let {id, name} = input.meta
+  let mesh     = input.data
+  id   = id || generateUUID()
+  name = nameCleanup(name)
+  if(index===-1){//if we have a mesh that is not yet registered
+    console.log("name",name, index)
+    if(mesh){
+      computeBoundingSphere(mesh)
+      computeBoundingBox(mesh)
     }
   }
-
-  return {
-    meshNameToPartTypeUId,
-    typeUidToMeshName,
-    typeUidToTemplateMesh,
-
-    typeData
+  else{
+    console.log("already exists",name, index, mesh)
   }
+  const entry = {id, name, mesh}
+
+  if(index === -1){
+    state = state.concat( toArray(entry) )
+  }
+  else{
+    state = state/*[
+      ...state.slice(0, index),
+      mergeData(state[index], entry),
+      ...state.slice(index + 1)
+    ]*/
+  }
+  return state
 }
 
-/////////////////
-//actual api functions
+function addTypes(state, input){
+  //we have an id , we use that to search for pre-existing data
+  const index = findIndex(propEq('id', input.meta.id))(state)
+  return upsertTypes(state, input, index)
+}
+
 //create/infer a new type based on mesh + metadata
-function entityCandidates(state, input){
-  //log.info("I would register something", state, input)
-  //console.log("I would register something", state, input)
-
-  //prepare lookup function for finding already registered meshes
-  let typeUidLookup = typeUidFromMeshName.bind(null,state.meshNameToPartTypeUId)
-  //create new data
-  let newData = typeFromMeshData(input, typeUidLookup)
-  //update data
-  return updateTypesData(newData,state)
+function addTypeCandidate(state, input){
+  //we have a mesh name , we use that to search for pre-existing data
+  const index = findIndex(propEq('name', nameCleanup(input.meta.name)))(state)
+  return upsertTypes(state, input, index)
 }
 
-function addEntityTypes(state, input){
-
-  input.forEach(function(typeData){
-    state.typeData[typeData.id] = typeData
-  })
-
+function removeTypes(state, input){
+  console.log("remove nodes",state, input)
+  const index = findIndex(propEq('id', input.id))(state)
+  state=[
+    ...state.slice(0, index),
+    ...state.slice(index + 1)
+  ]
   return state
 }
 
 function clearTypes(state, input){
   //log.info("New design, clearing registry",regData)
-  return mergeData(defaults)
+  return []
 }
 
-function addTypeFromTypeAndMeshData(state, input){
-  console.log("addTypeFromTypeAndMeshData")
-  let newEntry = {}
-  newEntry[input.id] = input.mesh
-  const typeUidToTemplateMesh = mergeData(state.typeUidToTemplateMesh,newEntry)
+export default function types(actions, source){
+  const defaults = []
 
-  state = mergeData(state,{typeUidToTemplateMesh})
-  return state
-}
-
-
-export default function entityTypes(actions, source){
-  const defaults = {
-    meshNameToPartTypeUId:{},
-    typeUidToMeshName:{},
-    typeData:{},
-
-    //not sure
-    typeUidToTemplateMesh:{}
-  }
-
-  const updateFns  = {entityCandidates, addEntityTypes, clearTypes, addTypeFromTypeAndMeshData}
-  return makeModel(defaults, updateFns, actions, undefined, {doApplyTransform:false})//since we store meshes, we cannot use immutable data
+  const updateFns  = {addTypes, addTypeCandidate, clearTypes}
+  return makeModel(defaults, updateFns, actions)//since we store THREE.js meshes, we cannot use actual immutable data
 }

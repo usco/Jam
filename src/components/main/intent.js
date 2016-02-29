@@ -41,7 +41,7 @@ export default function intent (sources) {
 
   //FIXME: damned  relative paths ! actual path (relative to THIS module) is '../../core/sources/' , relative to the loader it is '.'
   const refinedSourceData$ = normalizeData( extractDataFromRawSources( dataSources, '.' ) )//q.tap(e=>console.log("foo",e))
-    .tap(e=>console.log("refinedSourceData$",e))
+    //.tap(e=>console.log("refinedSourceData$",e))
 
   //const actions            = actionsFromSources(sources, path.resolve(__dirname,'./actions')+'/' )
 
@@ -74,19 +74,15 @@ export default function intent (sources) {
 
   //create new part type from basic type data & mesh data
   const addTypeFromTypeAndMeshData$ = alreadyExistingTypeMeshData$
-    .map(function(data){
-      console.log("data",data)
-      let typeMeta = {
-        name:undefined
-        ,id:data.meta.id
-        ,mesh: data.data.typesMeshes[0].mesh
+    .map(function(entry){
+      const data = entry.data.typesMeshes[0].mesh
+      const meta = {
+        name:nameCleanup( entry.meta.name )
+        ,id:entry.meta.id
       }
-       if(typeMeta.name === undefined){//we want type names in any case, so we infer this base on "file" name
-         typeMeta.name = nameCleanup( data.meta.name )
-       }
-       return typeMeta
+       return {id:entry.meta.id, data, meta}
      })
-     .tap(e=>console.log("addEntityTypesFromPostMessage",e))
+     //.tap(e=>console.log("addEntityTypesFromPostMessage",e))
 
 
    //we create special "read an html5 file " requests with added id
@@ -105,18 +101,20 @@ export default function intent (sources) {
          ,method:'get'
          ,type:'resource'},req)
      })
-     .tap(e=>console.log("desktopRequests",e))
 
-   const extras = {entityCandidates$,addTypeFromTypeAndMeshData$}
+   const extras = {
+     addInstanceCandidates$:entityCandidates$
+     ,addTypeCandidate$:entityCandidates$.filter(data=>data.meta.id === undefined)
+     ,addTypes$:addTypeFromTypeAndMeshData$}
 
    const entityActionNames = [
     'reset'
 
-    ,'addEntityTypes'
-    ,'addTypeFromTypeAndMeshData'
+    ,'addTypes'
+    ,'addTypeCandidate'
     ,'removeEntityType'
-    ,'entityCandidates'
 
+    ,'addInstanceCandidates'
     ,'deleteInstances'
     ,'duplicateInstances'
 
