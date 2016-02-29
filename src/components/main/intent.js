@@ -30,6 +30,9 @@ import {filterExtension, normalizeData, extractDataFromRawSources} from '../../c
 
 import {designSource} from '../../core/sources/addressbar.js'
 
+import assign from 'fast.js/object/assign'//faster object.assign
+
+
 export default function intent (sources) {
   //data sources for our main model
   const dataSources = sources
@@ -63,14 +66,30 @@ export default function intent (sources) {
   const extras = {entityCandidates$}
 
 
- const addEntityTypesFromPostMessage$ = actionsFromPostMessage.addPartData$
-   .map(function(data){
-     return data.map(function(entry) {
-       const data = {id:entry.uuid, file:entry.file}
-       return data
-     })
-   })
+  const alreadyExistingTypeMeshData$ = _resources.parsed$
+    .filter(data=>data.meta.id !== undefined)
+    //.forEach(e=>console.log("alreadyExistingTypeMeshData",e))
+
+  const addEntityTypesFromPostMessage$ =
+    alreadyExistingTypeMeshData$
    .forEach(e=>console.log("addEntityTypesFromPostMessage",e))
+
+   const desktopRequests$ = actionsFromPostMessage.addPartData$
+    .map(function(data){
+      return data.map(function(entry) {
+        const data = {id:entry.uuid, data:entry.file}
+        return data
+      })
+    })
+    .flatMap(Rx.Observable.fromArray)
+    .map(function(req){
+       return assign({
+         url:req.uri
+         ,uri:"fake.stl"
+         ,method:'get'
+         ,type:'resource'},req)
+     })
+     .tap(e=>console.log("desktopRequests",e))
 
 
    const entityActionNames = [
@@ -111,6 +130,7 @@ export default function intent (sources) {
 
   //OUTbound requests to various sources
   let requests = assetRequests( refinedSourceData$ )
+    requests.desktop$ = requests.desktop$.merge(desktopRequests$)
 
   return {
     settingActions
@@ -128,7 +148,5 @@ export default function intent (sources) {
     ,progress:_resources
 
     ,requests
-
-    //,loadDesign
   }
 }
