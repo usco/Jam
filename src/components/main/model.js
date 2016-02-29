@@ -25,7 +25,7 @@ import settings from    '../../core/settings'
 import comments from    '../../core/comments'
 import selections from  '../../core/selections'
 import entityTypes from '../../core/entities/types'
-import bom         from '../../core/bom'
+import bom         from '../../core/bom/index'
 
 import bomIntens from './intents/bom2'
 
@@ -158,8 +158,6 @@ export default function model(props$, actions, sources){
     })
     .shareReplay(1)
 
-  ///main stuff
-
   //annotations
   let addAnnotations$ = addAnnotation(actions.annotationsActions, settings$)
     .map(toArray)
@@ -179,8 +177,8 @@ export default function model(props$, actions, sources){
   let {bounds$}        = makeBoundingSystem(boundActions)
 
   //selections => only for real time view
-  const typesInstancesRegistry$ =  makeRegistry(meta$, entityTypes$)
-  const selections$             = selections( selectionsIntents({DOM,events}, typesInstancesRegistry$) )
+  const typesInstancesRegistry$ = makeRegistry(meta$, entityTypes$)
+  const selections$             = selections( selectionsIntents({DOM, events}, typesInstancesRegistry$) )
     .merge(metaActions.removeComponents$.map(a=> ({instIds:[],bomIds:[]}) )) //after an instance is removed, unselect
 
   const currentSelections$ = selections$//selections$.pluck("instIds")
@@ -196,13 +194,11 @@ export default function model(props$, actions, sources){
   //close some cycles
   replicateStream(currentSelections$, proxySelections$)
 
-
   const bomActions = bomIntens(sources, entityTypes$, metaActions, entityActions, actions)
   const bom$ = bom(bomActions)
 
   //not entirely sure, we need a way to observe any fetch/updload etc operation
   const operationsInProgress$ = actions.progress.combinedProgress$.startWith(undefined)
-
 
   ////
   const design$ = actions.designActions.loadDesign$
@@ -222,7 +218,6 @@ export default function model(props$, actions, sources){
 
   //combine all the above to get our dynamic state
   const state$ = combineLatestObj({
-
     selections$
     ,bom$
     ,comments$
@@ -244,7 +239,6 @@ export default function model(props$, actions, sources){
 
     //authData
     ,authData$
-
   }).shareReplay(1)
 
 

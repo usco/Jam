@@ -16,7 +16,7 @@ export function entityInstanceIntents(entityTypes$){
 }
 
 
-export default function bomIntent(drivers, entityTypes$, coreActions, entityActions, actions){
+export default function bomIntent(sources, entityTypes$, coreActions, entityActions, actions){
 
   //BOM
   const addBomEntries$ = entityInstanceIntents(entityTypes$)

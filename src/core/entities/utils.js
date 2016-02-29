@@ -72,7 +72,7 @@ export function remapMetaActions(entityActions, componentBase$, currentSelection
     ,updateComponents$
     ,duplicateComponents$
     ,removeComponents$
-    ,clear$:entityActions.reset$
+    ,clearDesign$:entityActions.clearDesign$
   }
 }
 
@@ -96,7 +96,7 @@ export function remapMeshActions(entityActions, componentBase$, currentSelection
     createComponents$
     ,duplicateComponents$
     ,removeComponents$
-    ,clear$:entityActions.reset$
+    ,clearDesign$:entityActions.clearDesign$
   }
 }
 
@@ -131,7 +131,7 @@ export function remapTransformActions(entityActions, componentBase$, currentSele
     ,updateComponents$
     ,duplicateComponents$
     ,removeComponents$
-    ,clear$:entityActions.reset$
+    ,clearDesign$:entityActions.clearDesign$
   }
 }
 
@@ -153,6 +153,6 @@ export function remapBoundsActions(entityActions, componentBase$, currentSelecti
     createComponents$
     ,duplicateComponents$
     ,removeComponents$
-    ,clear$: entityActions.reset$
+    ,clearDesign$: entityActions.clearDesign$
   }
 }

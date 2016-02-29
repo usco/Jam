@@ -22,7 +22,7 @@ export function intentsFromPostMessage(drivers){
   const getStatus$ = postMessageWithData$
     .filter(p=>p.data.hasOwnProperty("getStatus"))
 
-  const clear$ = postMessageWithData$
+  const clearDesign$ = postMessageWithData$
     .filter(p=>p.data.hasOwnProperty("clear"))
 
   const loadDesign$ = postMessageWithData$
@@ -37,7 +37,7 @@ export function intentsFromPostMessage(drivers){
     captureScreen$
     ,getTransforms$
     ,getStatus$
-    ,clear$
+    ,clearDesign$
     ,loadDesign$
     ,addPartData$
   }
