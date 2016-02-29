@@ -36,16 +36,16 @@ export default function intent (sources) {
 
   //FIXME: damned  relative paths ! actual path (relative to THIS module) is '../../core/sources/' , relative to the loader it is '.'
   const refinedSourceData$ = normalizeData( extractDataFromRawSources( dataSources, '.' ) )//q.tap(e=>console.log("foo",e))
+    .tap(e=>console.log("refinedSourceData$",e))
 
   //const actions            = actionsFromSources(sources, path.resolve(__dirname,'./actions')+'/' )
 
   //this one is specific to design sources/ids
-  const loadDesign = designSource(sources.addressbar)
+  const loadDesign$ = designSource(sources.addressbar)
     .flatMap(fromArray)
 
   //settings
   const settingActions   = settingsIntent(sources)
-
   //comments
   const commentActions   = commentsIntents(sources)
 
@@ -54,7 +54,6 @@ export default function intent (sources) {
   //actions from various sources
   const actionsFromPostMessage = intentsFromPostMessage(sources)
   const actionsFromEvents      = intentsFromEvents(sources)
-
   const {entityCandidates$, entityCertains$}= intentsFromResources(_resources.parsed$)//these MIGHT become instances, or something else, we just are not 100% sure
 
   const entityActionsFromResources   = makeEntityActionsFromResources(entityCertains$)
@@ -62,6 +61,17 @@ export default function intent (sources) {
   const entityActionsFromYm          = makeEntityActionsFromYm(sources.ym)
 
   const extras = {entityCandidates$}
+
+
+ const addEntityTypesFromPostMessage$ = actionsFromPostMessage.addPartData$
+   .map(function(data){
+     return data.map(function(entry) {
+       const data = {id:entry.uuid, file:entry.file}
+       return data
+     })
+   })
+   .forEach(e=>console.log("addEntityTypesFromPostMessage",e))
+
 
    const entityActionNames = [
     'reset'
@@ -79,7 +89,10 @@ export default function intent (sources) {
     ,'createMeshComponents'
   ]
 
-  const actionsSources = [entityActionsFromDom, actionsFromPostMessage, entityActionsFromResources, actionsFromEvents, extras]
+  const actionsSources = [
+    entityActionsFromDom, actionsFromPostMessage,
+    entityActionsFromResources, actionsFromEvents,
+    entityActionsFromYm, extras]
   const entityActions  = mergeActionsByName(actionsSources, entityActionNames)
   //console.log("entityActions",entityActions)
 
@@ -89,6 +102,11 @@ export default function intent (sources) {
 
   const bomActions = {
     updateBomEntries$:actionsFromEvents.updateBomEntries$
+  }
+
+   //const designActions  =mergeActionsByName([actionsFromPostMessage], entityActionNames)
+  const designActions = {
+    loadDesign$:actionsFromPostMessage.loadDesign$.merge(loadDesign$)
   }
 
   //OUTbound requests to various sources
@@ -103,6 +121,7 @@ export default function intent (sources) {
     ,entityActions
     ,annotationsActions
     ,bomActions
+    ,designActions
 
     ,apiActions:actionsFromPostMessage
 
@@ -110,6 +129,6 @@ export default function intent (sources) {
 
     ,requests
 
-    ,loadDesign
+    //,loadDesign
   }
 }

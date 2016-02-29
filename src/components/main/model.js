@@ -211,7 +211,7 @@ export default function model(props$, actions, sources){
 
 
   ////
-  const design$ = actions.loadDesign
+  const design$ = actions.designActions.loadDesign$
     .map(data=>({synched:true, id:data, ns:'ym'}))
     .startWith({synched:false, id:undefined, ns:'ym'})
     .tap(e=>console.log("design",e))
