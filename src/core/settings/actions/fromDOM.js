@@ -1,5 +1,9 @@
+import Rx from 'rx'
+const {merge} = Rx.Observable
+import {keycodes, isValidElementEvent} from '../../../interactions/keyboard'
+import {toArray} from '../../../utils/utils'
 
-export function intent(DOM, params){
+export default function intent(DOM, params){
 
   //hack for firefox only as it does not correct get the "checked" value : note : this is not an issue in cycle.js
   let is_firefox_or_chrome  = (navigator.userAgent.toLowerCase().indexOf('firefox') > -1 ||
@@ -13,6 +17,10 @@ export function intent(DOM, params){
   const toggleShowAnnot$  = DOM.select(".settingsView .showAnnot").events("change").map(checked)
   const toggleAutoRotate$ = DOM.select(".settingsView .autoRotate").events("change").map(checked)
   const toggleFullScreen$ = DOM.select(".fullScreenToggler").events("click")
+
+  //const toggleAutoSelectNewEntities$ = Rx.Observable.just(true) //TODO: make settable
+  //tools
+  //const toggleRepeatTool$            = Rx.Observable.just(false) // does a tool gets stopped after a single use or not
 
   let keyUps$ = Rx.Observable.fromEvent(document, 'keyup') //DOM.select(":root").events("keyup")
     .filter(isValidElementEvent)// stop for input, select, and textarea etc
@@ -43,6 +51,9 @@ export function intent(DOM, params){
     })
 
   return {
-    clearDesign$
+    setActiveTool$
+    ,toggleAutoRotate$
+    ,toggleShowGrid$
+    ,toggleShowAnnot$
   }
 }

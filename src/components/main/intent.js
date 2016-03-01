@@ -13,7 +13,12 @@ import {mergeData} from '../../utils/modelUtils'
 import {nameCleanup} from '../../utils/formatters'
 
 
-import {settingsIntent} from    './intents/settings'
+//import {settingsIntent} from    './intents/settings'
+import settingsIntentFromDOM from '../../core/settings/actions/fromDOM'
+import settingsIntentFromAddressbar from '../../core/settings/actions/fromAddressbar'
+import settingsIntentFromLocalStorage from '../../core/settings/actions/fromLocalStorage'
+
+
 import {commentsIntents} from   './intents/comments'
 import {selectionsIntents} from './intents/selections'
 import {bomIntent} from         './intents/bom'
@@ -24,6 +29,7 @@ import assetRequests from '../../utils/assetRequests'
 //
 import {intentsFromEvents} from '../../core/actions/fromEvents'
 import {intentsFromPostMessage} from '../../core/actions/fromPostMessage'
+import {intentsFromAddressbar} from '../../core/actions/fromAddressbar'
 import {intentsFromResources,makeEntityActionsFromResources} from '../../core/actions/fromResources'
 import {makeEntityActionsFromDom} from '../../core/actions/fromDom'
 import {makeEntityActionsFromYm} from '../../core/actions/fromYm'
@@ -50,7 +56,13 @@ export default function intent (sources) {
     .flatMap(fromArray)
 
   //settings
-  const settingActions   = settingsIntent(sources)
+  const settingActionSources = [settingsIntentFromDOM(sources.DOM)
+    ,settingsIntentFromAddressbar(sources.addressbar)
+    , settingsIntentFromLocalStorage(sources.localStorage)]
+  const settingActions   = mergeActionsByName(settingActionSources)//settingsIntent(sources)
+
+  console.log("settingActions",settingActions)
+
   //comments
   const commentActions   = commentsIntents(sources)
 
@@ -59,6 +71,7 @@ export default function intent (sources) {
   //actions from various sources
   const actionsFromPostMessage = intentsFromPostMessage(sources)
   const actionsFromEvents      = intentsFromEvents(sources)
+  const actionsFromAddressbar  = intentsFromAddressbar(sources)
   const {entityCandidates$, entityCertains$}= intentsFromResources(_resources.parsed$)//these MIGHT become instances, or something else, we just are not 100% sure
 
   const entityActionsFromResources   = makeEntityActionsFromResources(entityCertains$)
@@ -89,19 +102,18 @@ export default function intent (sources) {
    const desktopRequests$ = actionsFromPostMessage.addPartData$
     .map(function(data){
       return data.map(function(entry) {
-        const data = {id:entry.uuid, data:entry.file}
-        return data
+        return {
+          id:entry.uuid
+          ,uri:entry.file.name//name of the html5 File object
+          ,method:'get'
+          ,data:entry.file
+          //url:req.uri
+          ,src:'desktop'
+          ,type:'resource'}
       })
     })
     .flatMap(fromArray)
-    .map(function(req){
-      console.log("req",req)
-       return assign({
-         url:req.uri
-         ,uri:req.data.name//name of the html5 File object
-         ,method:'get'
-         ,type:'resource'},req)
-     })
+
 
    const extras = {
      addInstanceCandidates$:entityCandidates$
@@ -147,7 +159,10 @@ export default function intent (sources) {
 
   //OUTbound requests to various sources
   let requests = assetRequests( refinedSourceData$ )
-    requests.desktop$ = requests.desktop$.merge(desktopRequests$)
+    requests.desktop$ = requests.desktop$
+      .merge(desktopRequests$)
+    requests.http$ = requests.http$
+      .merge(entityActionsFromYm.requests$)
 
   return {
     settingActions
