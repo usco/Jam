@@ -25,7 +25,6 @@ import assetRequests from '../../utils/assetRequests'
 //
 import {intentsFromEvents} from '../../core/actions/fromEvents'
 import {intentsFromPostMessage} from '../../core/actions/fromPostMessage'
-import {intentsFromAddressbar} from '../../core/actions/fromAddressbar'
 import {intentsFromResources,makeEntityActionsFromResources} from '../../core/actions/fromResources'
 import {makeEntityActionsFromDom} from '../../core/actions/fromDom'
 import {makeEntityActionsFromYm} from '../../core/actions/fromYm'
@@ -62,14 +61,11 @@ export default function intent (sources) {
   //actions from various sources
   const actionsFromPostMessage = intentsFromPostMessage(sources)
   const actionsFromEvents      = intentsFromEvents(sources)
-  const actionsFromAddressbar  = intentsFromAddressbar(sources)
   const {entityCandidates$, entityCertains$}= intentsFromResources(_resources.parsed$)//these MIGHT become instances, or something else, we just are not 100% sure
 
   const entityActionsFromResources   = makeEntityActionsFromResources(entityCertains$)
   const entityActionsFromDom         = makeEntityActionsFromDom(sources.DOM)
   const entityActionsFromYm          = makeEntityActionsFromYm(sources.ym)
-
-
 
 
   const alreadyExistingTypeMeshData$ = _resources.parsed$
