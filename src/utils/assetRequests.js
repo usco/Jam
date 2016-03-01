@@ -4,13 +4,21 @@ import {exists,getExtension,getNameAndExtension, isValidFile, isValidUrl, isEmpt
 import assign from 'fast.js/object/assign'//faster object.assign
 
 
+function isPreFormatedRequest(data){
+  return (data.hasOwnProperty && data.hasOwnProperty('uri') && data.hasOwnProperty('method') )//already preformated request
+}
+
 function isValidDataSource(data){
-  const valid =  isValidFile(data) || isValidUrl(data)
+  const valid =  isPreFormatedRequest(data) || isValidFile(data) || isValidUrl(data)
   return valid
 }
 
 function dataSource(data){
-  if(isValidFile(data)){
+
+  if(isPreFormatedRequest(data)){
+    return data
+  }
+  else if(isValidFile(data)){
     return {
       src:'desktop'
       ,uri: data.name
@@ -49,6 +57,7 @@ export default function assetRequests(inputs, sources){
       const cached = cache[req.uri]
       return cached === undefined
     })
+    .tap(e=>console.log("assetRequest",e))
 
   // request from http driver
   const httpRequests$ = requests$
