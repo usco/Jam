@@ -110,6 +110,7 @@ export default function main(sources) {
 
   //saving should NOT take place before load is complete IFAND ONLY IF , we are reloading a design
   const saveDesigntoYm$ = state$
+    .filter(state=>state.settings.saveMode===true)//do not save anything if not in save mode
     .filter(state=>state.design.synched && state.authData.token !== undefined )//only try to save anything when the design is in "synch mode" aka has a ur
     //skipUntil(designLoaded)
     .flatMap(_=>

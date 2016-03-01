@@ -13,11 +13,7 @@ import {mergeData} from '../../utils/modelUtils'
 import {nameCleanup} from '../../utils/formatters'
 
 
-//import {settingsIntent} from    './intents/settings'
-import settingsIntentFromDOM from '../../core/settings/actions/fromDOM'
-import settingsIntentFromAddressbar from '../../core/settings/actions/fromAddressbar'
-import settingsIntentFromLocalStorage from '../../core/settings/actions/fromLocalStorage'
-
+import settingsIntent from    '../../core/settings/intents'
 
 import {commentsIntents} from   './intents/comments'
 import {selectionsIntents} from './intents/selections'
@@ -56,12 +52,7 @@ export default function intent (sources) {
     .flatMap(fromArray)
 
   //settings
-  const settingActionSources = [settingsIntentFromDOM(sources.DOM)
-    ,settingsIntentFromAddressbar(sources.addressbar)
-    , settingsIntentFromLocalStorage(sources.localStorage)]
-  const settingActions   = mergeActionsByName(settingActionSources)//settingsIntent(sources)
-
-  console.log("settingActions",settingActions)
+  const settingActions   = settingsIntent(sources)
 
   //comments
   const commentActions   = commentsIntents(sources)
