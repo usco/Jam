@@ -1,8 +1,8 @@
 <html>
   <head>
     <title>Jam ! Test App(embed)</title>
-    <style> 
-    
+    <style>
+
     .warned{
       color:blue;
     }
@@ -56,8 +56,6 @@
       }, 10000)
 
 
-     
-
       setTimeout(function() {
         //to get transform data
         embeded.postMessage({"getTransforms":null},"*")
@@ -65,7 +63,7 @@
 
       //test
       setTimeout(function() {
-        //send html5 FILE object 
+        //send html5 FILE object
         console.log("send html5 FILE data")
 
         var fileParts = ['<a id="a"><b id="b">hey!</b></a>']
@@ -77,7 +75,7 @@
 
       setTimeout(function() {
         //to get transform data
-        embeded.postMessage({"getStatus":null},"*")
+        embeded.postMessage({getStatus:null},"*")
       }, 8000)
 
       setTimeout(function() {
@@ -85,10 +83,34 @@
       }, 9000)
 
 
+      setTimeout(function() {
+        embeded.postMessage({designId:"144"},"*")
+      }, 9000)
+
+      setTimeout(function() {
+        // base64 string (stl cube)
+        var base64str = "TUVTSC1NRVNILU1FU0gtTUVTSC1NRVNILU1FU0gtTUVTSC1NRVNILU1FU0gtTUVTSC1NRVNILU1FU0gtTUVTSC1NRVNILU1FU0gtTUVTSAoMAAAAAACAvwAAAIAAAACAAAAAAAAAIEEAACBBAAAAAAAAIEEAAAAAAAAAAAAAAAAAACBBAAAAAIC/AAAAAAAAAAAAAAAAAAAgQQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAIEEAAAAAgD8AAACAAAAAAAAAIEEAAAAAAAAgQQAAIEEAACBBAAAAAAAAIEEAACBBAAAgQQAAAACAPwAAAAAAAAAAAAAgQQAAAAAAACBBAAAgQQAAAAAAAAAAAAAgQQAAIEEAAAAAAAAAAAAAAACAvwAAAAAAAAAAAAAAAAAAAAAAACBBAAAAAAAAAAAAACBBAAAAAAAAIEEAAAAAAAAAAIC/AAAAAAAAAAAAAAAAAAAgQQAAAAAAAAAAAAAAAAAAIEEAAAAAAAAgQQAAAAAAAAAAgD8AAAAAAAAgQQAAIEEAACBBAAAgQQAAIEEAAAAAAAAAAAAAIEEAAAAAAAAAAAAAAACAPwAAAAAAACBBAAAgQQAAIEEAAAAAAAAgQQAAAAAAAAAAAAAgQQAAIEEAAAAAAAAAAAAAAACAvwAAAAAAAAAAAAAAAAAAAAAAACBBAAAAAAAAIEEAACBBAAAAAAAAAAAAAAAAAAAAAIC/AAAgQQAAAAAAAAAAAAAAAAAAAAAAAAAAAAAgQQAAIEEAAAAAAAAAAAAAAAAAAAAAgD8AACBBAAAgQQAAIEEAAAAAAAAgQQAAIEEAAAAAAAAAAAAAIEEAAAAAAAAAAAAAAACAPwAAIEEAACBBAAAgQQAAAAAAAAAAAAAgQQAAIEEAAAAAAAAgQQAA";
+        var binary = atob(base64str.replace(/\s/g, ''))
+        // get binary length
+        var len = binary.length;
+        // create ArrayBuffer with binary length
+        var buffer = new ArrayBuffer(len)
+        // create 8-bit Array
+        var view = new Uint8Array(buffer)
+        // save unicode of binary data into 8-bit Array
+        for (var i = 0; i < len; i++) {
+         view[i] = binary.charCodeAt(i)
+        }
+
+        // create the blob object with content-type "application/pdf"
+        var data = new Blob( [view], { type: "application/sla" })
+        var file = new File([data], 'cube.stl')
+
+        embeded.postMessage({addPartData:{uuid:"8D118F05-E695-43BE-B934-D72BB11890B2",file}},"*")
+      }, 200)
+
+
     </script>
 
   </body>
 </html>
-
-
-
