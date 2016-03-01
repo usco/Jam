@@ -1,7 +1,7 @@
 import Rx from 'rx'
 const Observable = Rx.Observable
 const {merge, fromEvent, of} = Rx.Observable
-import {makeModel, mergeData} from '../utils/modelUtils'
+import {makeModel, mergeData} from '../../utils/modelUtils'
 
 
 function setAllValues(state, input){
