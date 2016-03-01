@@ -1,6 +1,7 @@
+import Rx from 'rx'
+const {fromArray} = Rx.Observable
+import {head, pick, equals} from 'ramda'
 import {nameCleanup} from '../../utils/formatters'
-import {head} from 'ramda'
-import {pick, equals} from 'ramda'
 
 
 function remapJson(mapping, input){
@@ -114,9 +115,10 @@ export function makeEntityActionsFromYm(ym){
         }
         const fieldNames = ['id','name','description','binary_document_id','binary_document_url','source_document_id','source_document_url']
         const data = pick( fieldNames, remapJson(mapping, entry) )
-        return data
+        return {id:data.id, data:undefined, meta:data}
       })
     })
+    .flatMap(fromArray)
     //.forEach(e=>console.log("addEntityTypes",e))
 
 
