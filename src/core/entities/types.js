@@ -21,37 +21,37 @@ import {makeModel, mergeData} from '../../utils/modelUtils'
 
  //actual api functions
 function upsertTypes(state, input, index){
-
-
   let {id, name} = input.meta
   let mesh     = input.data
-  id   = id || generateUUID()
+
   name = nameCleanup(name)
   if(index===-1){//if we have a mesh that is not yet registered
     if(mesh){
       computeBoundingSphere(mesh)
       computeBoundingBox(mesh)
     }
+    id   = id || generateUUID()
   }
-  /*else{
-    console.log("already exists",name, index, mesh)
-  }*/
+  else{
+    id = state[index].id || generateUUID()
+  }
   const entry = {id, name, mesh}
 
   if(index === -1){
     state = state.concat( toArray(entry) )
   }
   else{
-    state = state/*[
+    state = [
       ...state.slice(0, index),
       mergeData(state[index], entry),
       ...state.slice(index + 1)
-    ]*/
+    ]
   }
   return state
 }
 
 function addTypes(state, input){
+  console.log("addTypes",state,input)
   //we have an id , we use that to search for pre-existing data
   const index = findIndex(propEq('id', input.meta.id))(state)
   return upsertTypes(state, input, index)
@@ -59,6 +59,7 @@ function addTypes(state, input){
 
 //create/infer a new type based on mesh + metadata
 function addTypeCandidate(state, input){
+  console.log("addTypeCandidate",state,input)
   //we have a mesh name , we use that to search for pre-existing data
   const index = findIndex(propEq('name', nameCleanup(input.meta.name)))(state)
   return upsertTypes(state, input, index)
