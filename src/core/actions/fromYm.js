@@ -26,19 +26,19 @@ function rawData(ym){
     .filter(res=>res.request.method==='get' && res.request.type === 'ymLoad' && res.request.typeDetail=== 'bom')
     .mergeAll()
     .pluck('response')
-    .tap(e=>console.log("in bom: ",e))
+    //.tap(e=>console.log("in bom: ",e))
 
   const parts = ym
     .filter(res=>res.request.method==='get' && res.request.type === 'ymLoad' && res.request.typeDetail=== 'parts')
     .mergeAll()
     .pluck('response')
-    .tap(e=>console.log("in parts: ",e))
+    //.tap(e=>console.log("in parts: ",e))
 
   const assemblies = ym
     .filter(res=>res.request.method==='get' && res.request.type === 'ymLoad' && res.request.typeDetail=== 'assemblies')
     .mergeAll()
     .pluck('response')
-    .tap(e=>console.log("in assemblies: ",e))
+    //.tap(e=>console.log("in assemblies: ",e))
 
     return {
       bom
@@ -74,7 +74,7 @@ export function makeEntityActionsFromYm(ym){
         return { id:data.id,  value:data }
       })
     })
-    .tap(e=>console.log("meta",e))
+    //.tap(e=>console.log("meta",e))
 
   const createTransformComponents$ = assemblyData$
     .map(function(datas){
@@ -93,7 +93,7 @@ export function makeEntityActionsFromYm(ym){
         return { id:data.id,  value:data }
       })
     })
-    .tap(e=>console.log("transforms",e))
+    //.tap(e=>console.log("transforms",e))
 
   /*const createMeshComponents$      = assemblyData$
     .map(function(data){
@@ -131,15 +131,18 @@ export function makeEntityActionsFromYm(ym){
         const fieldNames = ['id','name','description','binary_document_id','binary_document_url','source_document_id','source_document_url']
         const data = pick( fieldNames, remapJson(mapping, entry) )
 
-        return {src:'http', uri: data.binary_document_url, id:data.id}
+        return {src:'http', method:'get', uri: data.binary_document_url, url:data.binary_document_url, id:data.id, type:'resource'}
       })
     })
-    .forEach(e=>console.log("meshRequests",e))
+    .flatMap(fromArray)
+    .filter(req=>req.uri !== undefined && req.uri !== '')
+    .tap(e=>console.log("meshRequests",e))
 
   return {
       addTypes$
     , createMetaComponents$
     , createTransformComponents$
     //, createMeshComponents$
+    ,requests$:meshRequests$
   }
 }
