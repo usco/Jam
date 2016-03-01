@@ -21,7 +21,7 @@ import {remapEntityActions,remapMetaActions,
 
 import {selectionsIntents} from './intents/selections'
 
-import settings from    '../../core/settings'
+import settings from    '../../core/settings/settings'
 import comments from    '../../core/comments'
 import selections from  '../../core/selections'
 import entityTypes from '../../core/entities/types'
@@ -102,12 +102,13 @@ export default function model(props$, actions, sources){
       return find(propEq('name', meshName))(types)
     })
     .filter(exists)
+    .filter(candidate=>candidate.mesh !== undefined)
+    //.tap(e=>console.log("addInstancesCandidates",e))
     .map(toArray)
     .take(1)
     .repeat()
 
-  const entityInstancesBase$  =
-    addInstancesCandidates$
+  const entityInstancesBase$  = addInstancesCandidates$
     .map(function(newTypes){
       return newTypes.map(function(typeData){
         let instUid = generateUUID()
