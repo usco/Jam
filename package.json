@@ -44,8 +44,8 @@
     "webpack-dev-server": "^1.7.0"
   },
   "dependencies": {
-    "@cycle/core": "^5.0.1",
-    "@cycle/dom": "^7.1.1",
+    "@cycle/core": "^6.0.3",
+    "@cycle/dom": "^9.1.0",
     "addressbar": "^0.4.3",
     "classnames": "^2.2.1",
     "cycle-simple-http-driver": "kaosat-dev/cycle-simple-http-driver",
