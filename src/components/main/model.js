@@ -26,8 +26,7 @@ import comments from    '../../core/comments'
 import selections from  '../../core/selections'
 import entityTypes from '../../core/entities/types'
 import bom         from '../../core/bom/index'
-
-import bomIntens from './intents/bom2'
+import bomIntents from '../../core/bom/intents'
 
 import {authToken} from '../../core/sources/addressbar.js'
 
@@ -195,7 +194,7 @@ export default function model(props$, actions, sources){
   //close some cycles
   replicateStream(currentSelections$, proxySelections$)
 
-  const bomActions = bomIntens(sources, entityTypes$, metaActions, entityActions, actions)
+  const bomActions = bomIntents(sources, entityTypes$, metaActions, entityActions, actions)
   const bom$ = bom(bomActions)
 
   //not entirely sure, we need a way to observe any fetch/updload etc operation

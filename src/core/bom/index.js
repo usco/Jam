@@ -6,7 +6,7 @@ import {exists} from '../../utils/obsUtils'
 import {makeModel, mergeData} from '../../utils/modelUtils'
 
 function addBomEntries(state,input){
-  //console.log("ADDING BOM entries")
+  console.log("ADDING BOM entries", state, input)
   //FIXME , make immutable
   let newData = toArray(input) || []
   let entries = state.entries.concat(newData)
@@ -99,7 +99,7 @@ function updateBomEntriesCount(state, inputs){
   },state)
 }
 
-export default function bom(actions, source) {
+export default function bom(actions) {
   const defaults = {
     entries:[]
     ,byId:{}
@@ -107,5 +107,5 @@ export default function bom(actions, source) {
 
   //let updateFns  = {addBomEntries,createBomEntries,removeBomEntries,clearBomEntries}
   let updateFns = {addBomEntries, updateBomEntries, updateBomEntriesCount, clearBomEntries}
-  return makeModel(defaults, updateFns, actions, source, {doApplyTransform:false})
+  return makeModel(defaults, updateFns, actions)
 }

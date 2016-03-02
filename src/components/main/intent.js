@@ -135,10 +135,6 @@ export default function intent (sources) {
     creationStep$: actionsFromEvents.createAnnotationStep$
   }
 
-  const bomActions = {
-    updateBomEntries$:actionsFromEvents.updateBomEntries$
-  }
-
    //const designActions  =mergeActionsByName([actionsFromPostMessage], entityActionNames)
   const designActions = {
     loadDesign$:actionsFromPostMessage.loadDesign$.merge(loadDesign$)
@@ -159,7 +155,6 @@ export default function intent (sources) {
     //,selectionActions
     ,entityActions
     ,annotationsActions
-    ,bomActions
     ,designActions
 
     ,apiActions:actionsFromPostMessage

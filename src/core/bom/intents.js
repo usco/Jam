@@ -1,29 +1,20 @@
 import Rx from 'rx'
 const {merge} = Rx.Observable
-import {mergeData} from '../../../utils/modelUtils'
-import {changesFromObservableArrays} from '../../../utils/diffPatchUtils'
+import {mergeData} from '../../utils/modelUtils'
+import {changesFromObservableArrays2} from '../../utils/diffPatchUtils'
 
-export function entityInstanceIntents(entityTypes$){
-  entityTypes$
-    .forEach(e=>console.log("entityTypes",e))
-
-  const addInstances$ = changesFromObservableArrays(entityTypes$)
-    .pluck('upserted')
-
-  return {
-    addInstances$
-  }
-}
+import bomIntentFromEvents from './actions/fromEvents'
 
 
 export default function bomIntent(sources, entityTypes$, coreActions, entityActions, actions){
 
   //BOM
-  const addBomEntries$ = entityInstanceIntents(entityTypes$)
-    .addInstances$//in truth this just mean "a new type was added"
+  const addBomEntries$ = changesFromObservableArrays2(entityTypes$)
+    .pluck('added')//"a new type was added"
+    //.tap(e=>console.log("type added",e))
     .map(function(typeDatas){
       return typeDatas.map(function({id,name}){
-        return {id,name,qty:0,version:"0.0.1",unit:"QA",printable:true}
+        return {id,name,qty:0,phys_qty:0, version:"0.0.1", unit:"QA", printable:true}
       })
     })
 
@@ -31,9 +22,8 @@ export default function bomIntent(sources, entityTypes$, coreActions, entityActi
     .createComponents$
     .map(function(data){
       return data
-        .map(v=>v.value.typeUid)
-        .map(function(id){
-          return {offset:1,id}
+        .map(function(dat){
+          return {offset:1,id:dat.typeUid}
         })
     })
     .merge(
@@ -47,13 +37,12 @@ export default function bomIntent(sources, entityTypes$, coreActions, entityActi
 
   const decreaseBomEntries$ = coreActions
     .removeComponents$
-    .do(d=>console.log("removing",d))
+    .do(d=>console.log("removing on of",d))
     .map(function(data){
       return data
         .filter(d=>d.id !== undefined)
-        .map(d=>d.typeUid)
-        .map(function(id){
-          return {offset:-1,id}
+        .map(function(dat){
+          return {offset:-1,id:dat.typeUid}
         })
     })
 
@@ -63,10 +52,14 @@ export default function bomIntent(sources, entityTypes$, coreActions, entityActi
   )
 
   let clearBomEntries$ = merge(
-    entityActions.reset$
+    entityActions.clearDesign$
   )
+  
+  /*      bomIntentFromEvents(sources.events)
+    ]
+    return mergeActionsByName(settingActionSources)*/
 
-  const updateBomEntries$ = actions.bomActions.updateBomEntries$
+  const updateBomEntries$ = bomIntentFromEvents(sources.events).updateBomEntries$
 
   let bomActions = mergeData( {addBomEntries$, updateBomEntriesCount$, clearBomEntries$, updateBomEntries$} )
 
