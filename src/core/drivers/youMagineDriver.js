@@ -3,11 +3,11 @@ const Observable= Rx.Observable
 const {fromEvent, fromArray, just, merge, concat, concatAll} = Observable
 
 import {combineLatestObj, replicateStream} from '../../utils/obsUtils'
-import {safeJSONParse, toArray} from '../../utils/utils'
-import {extractChangesBetweenArrays} from '../../utils/diffPatchUtils'
+import {safeJSONParse, toArray, remapJson} from '../../utils/utils'
+import {changesFromObservableArrays} from '../../utils/diffPatchUtils'
 
 import assign from 'fast.js/object/assign'//faster object.assign
-import {pick, equals} from 'ramda'
+import {pick, equals, head, pluck} from 'ramda'
 
 function jsonToFormData(jsonData){
   jsonData = JSON.parse( JSON.stringify( jsonData ) )
@@ -36,22 +36,7 @@ function jsonToFormData(jsonData){
   return formData
 }
 
-function remapJson(mapping, input){
-
-  const result =  Object.keys(input)
-    .reduce(function(obj, key){
-      if(key in mapping){
-        obj[mapping[key]] = input[key]
-      }
-      else{
-        obj[key] = input[key]
-      }
-      return obj
-    },{})
-  return result
-}
-
-function makeApiStream(source$, design$, authData$, outputMapper){
+function makeApiStream(source$, outputMapper, design$, authData$){
   const upsert$  = source$
     .map(d=>d.upserted)
     .withLatestFrom(design$, authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
@@ -67,18 +52,7 @@ function makeApiStream(source$, design$, authData$, outputMapper){
   return merge(upsert$, delete$)
 }
 
-function changesFromObservableArrays(data$){
-  return data$
-    .scan(function(acc, cur){
-        return {cur,prev:acc.cur}
-      },{prev:undefined,cur:undefined})
-    .map(function(typeData){
-      let {cur,prev} = typeData
-      let changes = extractChangesBetweenArrays(prev,cur)
-      return changes
-    })
-    .share()
-}
+
 
 //storage driver for YouMagine designs & data etc
 export default function makeYMDriver(httpDriver, params={}){
@@ -100,14 +74,7 @@ export default function makeYMDriver(httpDriver, params={}){
   let apiBaseUri = testMode !== undefined ? apiBaseTestUri : apiBaseProdUri
   let authData   = (login !== undefined && password!==undefined) ? (`${login}:${password}@`) : ''
 
-  const assemblyId = 'default'
-  //const documentsUri = `${urlBase}://${authData}${apiBaseUri}/designs/${designId}/documents/${params.documentId}${authTokenStr}`
-
   function youMagineStorageDriver(outgoing$){
-
-    function getItem(item){
-      return just( {} ).map(safeJSONParse)
-    }
 
     function toParts(method='put', data){
       const {designId, authToken} = data
@@ -195,6 +162,8 @@ export default function makeYMDriver(httpDriver, params={}){
       const {designId, authToken} = data
       const entries   = data._entries || []
 
+      const assemblyId = head( pluck('assemblyId',entries) )//head(entries).assemblyId
+
       const authTokenStr  = `/?auth_token=${authToken}`
       const designUri     = `${urlBase}://${authData}${apiBaseUri}/designs/${designId}`
       const assembliesUri = `${designUri}/assemblies/${assemblyId}/entries`
@@ -242,17 +211,6 @@ export default function makeYMDriver(httpDriver, params={}){
       })
       //.tap(e=>console.log("designExistsRequest",e))
 
-    /*const getAssembliesList$ = Rx.Observable.just({
-          url: `${designUri}/assemblies${authTokenStr}`
-          , method: "post"
-          , send: jsonToFormData({name:'default','uuid':'default'})
-          , type: "ymSave"
-          , typeDetail: "assemblies_default"})
-          // parts$, bom$, assemblies$)*/
-    /*const makeAssembliesEntry$ =
-      .withLatestFrom(design$,authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
-      .map(toBom.bind(null,'put'))*/
-
     //////////
     //deal with saving
     const save$ = outgoing$
@@ -265,6 +223,8 @@ export default function makeYMDriver(httpDriver, params={}){
       .pluck('design')
     const authData$ = save$
       .pluck('authData')
+    const assembly$ = save$
+      .pluck('assembly')
 
     const load$ = outgoing$
       .debounce(50)//only load if last events were less than 50 ms appart
@@ -313,14 +273,36 @@ export default function makeYMDriver(httpDriver, params={}){
         }
       })
 
+    load$
+      .withLatestFrom(lDesign$,lAuthData$,(_,design,authData)=>({designId:design.id,authToken:authData.token}))
+      .map(function(data){//FIXME: semi hack
+        const {designId, authToken} = data
+
+        const authTokenStr  = `/?auth_token=${authToken}`
+        const designUri     = `${urlBase}://${authData}${apiBaseUri}/designs/${designId}`
+        const assembliesUri = `${designUri}/assemblies${authTokenStr}`
+
+        let request = Rx.DOM.ajax({
+          url: assembliesUri,
+          crossDomain: true,
+          async: true
+        })
+
+        console.log("request",request)
+        return request
+      })
+      .forEach(e=>console.log("testRequest",e))
+
+
     const getAssemblies$ = load$
       .withLatestFrom(lDesign$,lAuthData$,(_,design,authData)=>({designId:design.id,authToken:authData.token}))
+
       .map(function(data){
         const {designId, authToken} = data
 
         const authTokenStr  = `/?auth_token=${authToken}`
         const designUri     = `${urlBase}://${authData}${apiBaseUri}/designs/${designId}`
-        const assembliesUri = `${designUri}/assemblies/default/entries${authTokenStr}`
+        const assembliesUri = `${designUri}/assemblies${authTokenStr}`
 
         return {
             url    : assembliesUri
@@ -331,16 +313,41 @@ export default function makeYMDriver(httpDriver, params={}){
         }
       })
 
+      const getAssemblyEntries$ = load$
+        .withLatestFrom(lDesign$,lAuthData$,(_,design,authData)=>({designId:design.id,authToken:authData.token}))
+        //FIXME: semi hack
+        .combineLatest()
+        .map(function(data){
+          const {designId, authToken} = data
+
+          const authTokenStr  = `/?auth_token=${authToken}`
+          const designUri     = `${urlBase}://${authData}${apiBaseUri}/designs/${designId}`
+          const assembliesUri = `${designUri}/assemblies${authTokenStr}`
+
+          return {
+              url    : assembliesUri
+            , method : 'get'
+            , type   :'ymLoad'
+            , typeDetail:'assemblyEntry'
+            , responseType:'json'
+          }
+        })
+
+      /*const makeAssembliesEntry$ =
+        .withLatestFrom(design$,authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
+        .map(toBom.bind(null,'put'))*/
+
+
     //saving stuff
     ////
     const bom$ = changesFromObservableArrays(
-      save$.pluck("bom","entries")
+      save$.pluck("bom")
         .distinctUntilChanged( null, equals )
     )
 
     const parts$ = changesFromObservableArrays(
       save$
-        .pluck("bom","entries")
+        .pluck("bom")
         .distinctUntilChanged( null, equals )
     )
 
@@ -353,9 +360,9 @@ export default function makeYMDriver(httpDriver, params={}){
       .map(dataFromItems)
     )
 
-    const partsOut$    = makeApiStream(parts$, design$, authData$, toParts)
-    const bomOut$      = makeApiStream(bom$  , design$, authData$, toBom)
-    const assemblyOut$ = makeApiStream(assemblies$ , design$, authData$, toBom)
+    const partsOut$    = makeApiStream(parts$, toParts, design$, authData$)
+    const bomOut$      = makeApiStream(bom$  , toBom, design$, authData$)
+    const assemblyOut$ = makeApiStream(assemblies$ ,toAssemblies, design$, authData$)
 
     //Finally put it all together
     const allSaveRequests$ = merge(partsOut$, bomOut$, assemblyOut$)
@@ -380,6 +387,11 @@ export default function makeYMDriver(httpDriver, params={}){
         return combineLatestObj({response$, request$})//.materialize()//FIXME: still do not get this one
       })
       .forEach(e=>console.log("saving done (if all went well)"))
+
+    inputs$
+      .filter(res$=>res$.request.typeDetail === 'assemblies')
+      .mergeAll()
+      .forEach(e=>console.log("recieved assemblies",e))
 
     return inputs$
   }
