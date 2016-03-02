@@ -71,36 +71,15 @@ export default function main(sources) {
     .map(data=> data.error ? false : true)//if we have an error return false, true otherwise
     //.forEach(e=>console.log("designExists: ",e))
 
-  /*const inBom = sources.ym
-    .filter(res=>res.request.method==='get' && res.request.type === 'ymLoad' && res.request.typeDetail=== 'bom')
-    .mergeAll()
-    .pluck('response')
-    .forEach(e=>console.log("in bom: ",e))
-
-  const inParts = sources.ym
-    .filter(res=>res.request.method==='get' && res.request.type === 'ymLoad' && res.request.typeDetail=== 'parts')
-    .mergeAll()
-    .pluck('response')
-    .forEach(e=>console.log("in parts: ",e))
-
-  const inAssemblies = sources.ym
-    .filter(res=>res.request.method==='get' && res.request.type === 'ymLoad' && res.request.typeDetail=== 'assemblies')
-    .mergeAll()
-    .pluck('response')
-    .forEach(e=>console.log("in assemblies: ",e))*/
-
-
-  //const designLoaded$ = combineLatestObj({inParts, inBom, inAssemblies})
-  //  .startWith(true)
-
   //output to ym
-  const bomToYm = state$.pluck("bom")
-  const entityMetaToYm = state$.pluck("meta")
-  const entityTransformsToYm = state$.pluck("transforms")
-  const entitymeshesToYm = state$.pluck("meshes")
-  const parts   = state$.pluck("types")
+  const bomToYm = state$.pluck('bom')
+  const entityMetaToYm = state$.pluck('meta')
+  const entityTransformsToYm = state$.pluck('transforms')
+  const entitymeshesToYm = state$.pluck('meshes')
+  const parts   = state$.pluck('types')
   const design  = state$.pluck('design')
   const authData= state$.pluck('authData')
+  const assembly= state$.pluck('assembly')
 
   //simple query to determine if design already exists
   const queryDesignExists$ = combineLatestObj({design,authData})
@@ -122,6 +101,7 @@ export default function main(sources) {
         , eMeshs: entitymeshesToYm
         , design
         , authData
+        , assembly
       })
     )
     .map(function(data){
@@ -131,6 +111,9 @@ export default function main(sources) {
 
   //if the design exists, load data, otherwise...whataver
   const loadDesignFromYm$ = designExists$//actions.loadDesign
+    .withLatestFrom(state$.pluck('settings','saveMode'),function(designExists, saveMode){
+      return designExists && !saveMode
+    })
     .filter(e=>e===true)//filter out non existing designs (we cannot load those , duh')
     .flatMap(_=>combineLatestObj({design, authData}))//we inject design & authData
     .map(data=>({method:'load', data, type:'design'}))//create our query/request

@@ -107,8 +107,14 @@ export default function model(props$, actions, sources){
     .take(1)
     .repeat()
 
+  //FIXME: just a hack ! ideally all instances should just have an assembly id
+  const assembly$ = just(generateUUID())
+
   const entityInstancesBase$  = addInstancesCandidates$
-    .map(function(newTypes){
+    .combineLatest(assembly$,function(newTypes, assemblyId){
+      return {newTypes, assemblyId}
+    })
+    .map(function({newTypes,assemblyId}){
       return newTypes.map(function(typeData){
         let instUid = generateUUID()
         let typeUid = typeData.id
@@ -118,6 +124,7 @@ export default function model(props$, actions, sources){
           id:instUid
           ,typeUid
           ,name:instName
+          ,assemblyId
         }
         return instanceData
       })
@@ -131,6 +138,7 @@ export default function model(props$, actions, sources){
       let data =  instances.map(function(instance){
         let instUid = instance.id
         let typeUid = instance.typeUid
+        let assemblyId = instance.assemblyId
 
         //is this a hack?
         let entry = find(propEq('id', typeUid))(types)
@@ -147,6 +155,7 @@ export default function model(props$, actions, sources){
         return {
           instUid
           ,typeUid
+          ,assemblyId
           ,instance
           ,mesh
           ,zOffset
@@ -204,7 +213,7 @@ export default function model(props$, actions, sources){
   const design$ = actions.designActions.loadDesign$
     .map(data=>({synched:true, id:data, ns:'ym'}))
     .startWith({synched:false, id:undefined, ns:'ym'})
-    .tap(e=>console.log("design",e))
+    .tap(e=>console.log("designInfos",e))
 
   //////other data
   const appData$ = sources.appMeta
@@ -237,6 +246,7 @@ export default function model(props$, actions, sources){
     //infos about current design
     ,design$
 
+    ,assembly$
     //authData
     ,authData$
   }).shareReplay(1)
