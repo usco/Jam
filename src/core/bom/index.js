@@ -1,33 +1,38 @@
 import Rx from 'rx'
 const {fromEvent, merge} = Rx.Observable
 import {findIndex,propEq,adjust,flatten} from 'ramda'
-import {toArray} from '../../utils/utils'
-import {exists} from '../../utils/obsUtils'
+import {toArray, exists} from '../../utils/utils'
 import {makeModel, mergeData} from '../../utils/modelUtils'
 
 
 
 function upsertBomEntry(state, input){
   const index = findIndex(propEq('id', input.id))(state)
-  const entry = input.data
 
   if(index===-1){//if we have a bom entry that is new
+    const bomEntryDefaults = {name:undefined, qty:0, phys_qty:0, version:"0.0.1", unit:"QA", printable:true}
+    const entry = mergeData(bomEntryDefaults,input.data)
     return state = state.concat( toArray(entry) )
   }else{//we already have this same bom entry
     state = [
       ...state.slice(0, index),
-      mergeData(state[index], entry),
+      mergeData(state[index], input.data),
       ...state.slice(index + 1)
     ]
+    return state
   }
 }
 
 function addBomEntries(state,input){
-  console.log("ADDING BOM entries", state, input)
+  console.log("upsert BOM entries", state, input)
   let newData = toArray(input) || []
-  let entries = flatten( newData.map(upsertBomEntry.bind(null,state)) )
+  return newData.filter(exists)
+    .reduce(function(state, entry){
+      return upsertBomEntry(state, entry)
 
-  return entries
+  },state)
+  //let entries = flatten( newData.filter(exists).map(upsertBomEntry.bind(null,state)) )
+
 }
 
 function createBomEntries(state,input){
@@ -79,12 +84,12 @@ function removeBomEntries(state, input){
 }
 
 function clearBomEntries(state, input){
-  //console.log("clearing BOM", input, state)
   return []
 }
 
 function updateBomEntries(state, inputs){
-  //console.log("updating BOM", inputs, state)
+  return addBomEntries(state, inputs)
+  /*console.log("updating BOM", inputs, state)
   return inputs.reduce(function(state, {id,attrName,value}){
 
     const entries = adjust(
@@ -98,7 +103,7 @@ function updateBomEntries(state, inputs){
 
     return entries
 
-  },state)
+  },state)*/
 }
 
 function updateBomEntriesCount(state, inputs){

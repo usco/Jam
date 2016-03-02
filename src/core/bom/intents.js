@@ -1,20 +1,23 @@
 import Rx from 'rx'
 const {merge} = Rx.Observable
 import {mergeData} from '../../utils/modelUtils'
-import {changesFromObservableArrays} from '../../utils/diffPatchUtils'
+import {changesFromObservableArrays2} from '../../utils/diffPatchUtils'
+import {mergeActionsByName} from '../../utils/obsUtils'
 
 import bomIntentFromEvents from './actions/fromEvents'
+import bomIntentFromYm from './actions/fromYm'
 
 
 export default function bomIntent(sources, entityTypes$, coreActions, entityActions, actions){
 
   //BOM
-  const addBomEntries$ = changesFromObservableArrays(entityTypes$)
-    .pluck('upserted')//"a new type was added"
-    //.tap(e=>console.log("type added",e))
+  const addBomEntries$ = changesFromObservableArrays2(entityTypes$)
+    .pluck('added')//"a new type was added"
+    .tap(e=>console.log("type added",e))
     .map(function(typeDatas){
       return typeDatas.map(function({id,name}){
-        const data = {id,name, qty:0, phys_qty:0, version:"0.0.1", unit:"QA", printable:true}
+        //const data = {id, name, qty:0, phys_qty:0, version:"0.0.1", unit:"QA", printable:true}
+        const data = {id, name}
         return {id, data}
       })
     })
@@ -56,11 +59,13 @@ export default function bomIntent(sources, entityTypes$, coreActions, entityActi
     entityActions.clearDesign$
   )
 
-  /*      bomIntentFromEvents(sources.events)
-    ]
-    return mergeActionsByName(settingActionSources)*/
+  const settingActionSources = [
+      bomIntentFromEvents(sources.events)
+    , bomIntentFromYm(sources.ym)
+  ]
+  const extraActions =  mergeActionsByName(settingActionSources)
 
-  const updateBomEntries$ = bomIntentFromEvents(sources.events).updateBomEntries$
+  const updateBomEntries$ = extraActions.updateBomEntries$
 
   let bomActions = mergeData( {addBomEntries$, updateBomEntriesCount$, clearBomEntries$, updateBomEntries$} )
 

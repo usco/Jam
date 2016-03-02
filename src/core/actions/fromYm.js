@@ -2,31 +2,11 @@ import Rx from 'rx'
 const {fromArray} = Rx.Observable
 import {head, pick, equals} from 'ramda'
 import {nameCleanup} from '../../utils/formatters'
+import {remapJson} from '../../utils/utils'
 
 
-function remapJson(mapping, input){
-
-  const result =  Object.keys(input)
-    .reduce(function(obj, key){
-      if(key in mapping){
-        obj[mapping[key]] = input[key]
-      }
-      else{
-        obj[key] = input[key]
-      }
-      return obj
-    },{})
-  //console.log("remapJson",result)
-  return result
-}
 
 function rawData(ym){
-
-  const bom = ym
-    .filter(res=>res.request.method==='get' && res.request.type === 'ymLoad' && res.request.typeDetail=== 'bom')
-    .mergeAll()
-    .pluck('response')
-    //.tap(e=>console.log("in bom: ",e))
 
   const parts = ym
     .filter(res=>res.request.method==='get' && res.request.type === 'ymLoad' && res.request.typeDetail=== 'parts')
@@ -41,8 +21,7 @@ function rawData(ym){
     //.tap(e=>console.log("in assemblies: ",e))
 
     return {
-      bom
-      ,parts
+      parts
       ,assemblies
     }
   }
@@ -52,8 +31,6 @@ export function makeEntityActionsFromYm(ym){
   const data = rawData(ym)
 
   const createMeshComponents$      = Rx.Observable.never()
-
-  data.parts.forEach(e=>console.log("foo",e))
 
   const partsData$ = data.parts
     .share()
@@ -93,7 +70,7 @@ export function makeEntityActionsFromYm(ym){
         return { id:data.id,  value:data }
       })
     })
-    //.tap(e=>console.log("transforms",e))
+    .tap(e=>console.log("transforms",e))
 
   /*const createMeshComponents$      = assemblyData$
     .map(function(data){
@@ -137,6 +114,8 @@ export function makeEntityActionsFromYm(ym){
     .flatMap(fromArray)
     .filter(req=>req.uri !== undefined && req.uri !== '')
     .tap(e=>console.log("meshRequests",e))
+
+
 
   return {
       addTypes$
