@@ -9,7 +9,7 @@ export function remapEntityActions(entityActions, currentSelections$){
 
   const duplicateInstances$ = entityActions.duplicateInstances$
     .withLatestFrom(currentSelections$,function(_,selections){
-      console.log("selections to duplicate",selections)
+      //console.log("selections to duplicate",selections)
       const newId = generateUUID()
       return selections.map(s=>mergeData(s,{newId}) )
     })
@@ -17,7 +17,7 @@ export function remapEntityActions(entityActions, currentSelections$){
 
   const deleteInstances$ = entityActions.deleteInstances$
     .withLatestFrom(currentSelections$,function(_,selections){
-      console.log("selections to remove",selections)
+      //console.log("selections to remove",selections)
       return selections
     })
     .share()
@@ -34,10 +34,11 @@ export function remapMetaActions(entityActions, componentBase$, currentSelection
   const createComponentsFromBase$ = componentBase$
     .filter(c=>c.length>0)
     .map(function(datas){
-      return datas.map(function({instUid, typeUid, instance}){
-        return { id:instUid,  value:{ id:instUid, typeUid, name:instance.name } }
+      return datas.map(function({instUid, typeUid, assemblyId, instance}){
+        return { id:instUid,  value:{ id:instUid, typeUid, name:instance.name, assemblyId } }
       })
     })
+
   const createComponentsFromAnnots$ = annotationCreations$
     .filter(c=>c.length>0)
     .map(function(datas){
