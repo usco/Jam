@@ -1,28 +1,40 @@
 import Rx from 'rx'
 const {fromEvent, merge} = Rx.Observable
-import {findIndex,propEq,adjust} from 'ramda'
+import {findIndex,propEq,adjust,flatten} from 'ramda'
 import {toArray} from '../../utils/utils'
 import {exists} from '../../utils/obsUtils'
 import {makeModel, mergeData} from '../../utils/modelUtils'
 
+
+
+function upsertBomEntry(state, input){
+  const index = findIndex(propEq('id', input.id))(state)
+  const entry = input.data
+
+  if(index===-1){//if we have a bom entry that is new
+    return state = state.concat( toArray(entry) )
+  }else{//we already have this same bom entry
+    state = [
+      ...state.slice(0, index),
+      mergeData(state[index], entry),
+      ...state.slice(index + 1)
+    ]
+  }
+}
+
 function addBomEntries(state,input){
   console.log("ADDING BOM entries", state, input)
-  //FIXME , make immutable
   let newData = toArray(input) || []
-  let entries = state.entries.concat(newData)
+  let entries = flatten( newData.map(upsertBomEntry.bind(null,state)) )
 
-  let byId = {}
-  return {
-    entries
-    ,byId
-  }
+  return entries
 }
 
 function createBomEntries(state,input){
   let {combos,types} = input
   //console.log("I would register something in BOM", input, state)
 
-  let {entries,byId} = state
+  let entries = state
 
   let typeUid   = types.latest
   let type      = types.typeData[typeUid]
@@ -56,14 +68,19 @@ function createBomEntries(state,input){
   return { entries, byId }
 }
 
-//how do we deal with this, as it impacts other data structures ?
-function removeBomEntries(state,input){
-  let toRemove = input
+//remove an entry
+function removeBomEntries(state, input){
+  const index = findIndex(propEq('id', input.id))(state)
+  state=[
+    ...state.slice(0, index),
+    ...state.slice(index + 1)
+  ]
+  return state
 }
 
 function clearBomEntries(state, input){
   //console.log("clearing BOM", input, state)
-  return {entries:[],byId:{}}//mergeData({},defaults)
+  return []
 }
 
 function updateBomEntries(state, inputs){
@@ -76,10 +93,10 @@ function updateBomEntries(state, inputs){
         updatedData[attrName] = value
         return mergeData({},item,updatedData)
       }
-      , findIndex(propEq('id', id))(state.entries) //get index of the one we want to change
-      , state.entries)//input data
+      , findIndex(propEq('id', id))(state) //get index of the one we want to change
+      , state)//input data
 
-    return {entries,byId:{}}
+    return entries
 
   },state)
 }
@@ -92,20 +109,15 @@ function updateBomEntriesCount(state, inputs){
         const qty = Math.max(item.qty+offset,0)
         return mergeData({},item,{qty:qty})
       }
-      , findIndex(propEq('id', id))(state.entries) //get index of the one we want to change
-      , state.entries)
+      , findIndex(propEq('id', id))(state) //get index of the one we want to change
+      , state)
 
-    return {entries,byId:{}}
+    return entries
   },state)
 }
 
 export default function bom(actions) {
-  const defaults = {
-    entries:[]
-    ,byId:{}
-  }
-
-  //let updateFns  = {addBomEntries,createBomEntries,removeBomEntries,clearBomEntries}
-  let updateFns = {addBomEntries, updateBomEntries, updateBomEntriesCount, clearBomEntries}
+  const defaults = []
+  const updateFns = {addBomEntries, updateBomEntries, updateBomEntriesCount, clearBomEntries}
   return makeModel(defaults, updateFns, actions)
 }

@@ -32,11 +32,11 @@ export function EntityInfosWrapper(state$, DOM) {
 
     return selectedInstIds$
       .combineLatest(state$,function(ids,state){
-        
+
         let transforms = ids.map(function(id){
           return state.transforms[id]
         })
-        
+
         let meta = ids.map(function(id){
           return state.meta[id]
         })
@@ -53,8 +53,8 @@ export function EntityInfosWrapper(state$, DOM) {
 export function BOMWrapper(state$, DOM){
   function makeBomProps(state$){
     let fieldNames = ["name","qty","unit","version","printable"]
-    let sortableFields = ["id","name","qty","unit","printable"]  
-    let editableFields = ["name"] 
+    let sortableFields = ["id","name","qty","unit","printable"]
+    let editableFields = ["name"]
 
     let fieldNames$      = just(fieldNames)
     let editableFields$  = just(editableFields)
@@ -63,7 +63,7 @@ export function BOMWrapper(state$, DOM){
     //let show$            = state$.pluck("settings").pluck("appMode").map(mode=> mode !=='viewer')
 
     let entries$ = state$
-      .map(s=>s.bom.entries)
+      .map(s=>s.bom)
       .distinctUntilChanged()
 
     let bomProps$ = combineLatestObj( {fieldNames$,sortableFields$,editableFields$,entries$,selectedEntries$} )
@@ -125,7 +125,7 @@ export function CommentsWrapper(state$, DOM){
     })
     .map(getFirstsData)
     .shareReplay(1)
-    
+
 
   function getFirstsData(list){
     if(list.length === 0) return undefined
@@ -178,5 +178,3 @@ export function progressBarWrapper(state$, DOM){
 
   return ProgressBar({DOM,props$})
 }
-
-
