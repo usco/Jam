@@ -106,11 +106,51 @@ export function generateUUID() {
   }()
 }
 
-
+//convert a string to a boolean
 export function stringToBoolean(string){
  switch(string.toLowerCase().trim()){
     case "true": case "yes": case "1": return true;
     case "false": case "no": case "0": case null: return false;
     default: return Boolean(string);
   }
+}
+
+/*
+Remap the field from the input object using the
+provided mapping object (key=>outkey) ie:
+input = {foo:42}
+remapJson({foo:baz},input) => {baz:42}
+*/
+export function remapJson(mapping, input){
+  const result =  Object.keys(input)
+    .reduce(function(obj, key){
+      if(key in mapping){
+        obj[mapping[key]] = input[key]
+      }
+      else{
+        obj[key] = input[key]
+      }
+      return obj
+    },{})
+  return result
+}
+
+/*
+convert the field from the input object using the
+provided mapping object (key=>outkey) ie:
+input = {foo:"42"}
+remapJson({foo:parseFloat},input) => {baz:42}
+*/
+function coerceTypes(mapping, input){
+  const result =  Object.keys(input)
+    .reduce(function(obj, key){
+      if(key in mapping && obj[key] !== null && obj[key] !== undefined){
+        obj[key] = mapping[key](input[key])
+      }
+      else{
+        obj[key] = input[key]
+      }
+      return obj
+    },{})
+  return result
 }
