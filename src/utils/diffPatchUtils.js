@@ -124,7 +124,7 @@ export function changesFromObservableArrays(data$){
 }
 
 export function changesFromObservableArrays2(data$){
-  data$
+  return data$
     .scan(function(acc, x){
       let cur  = x
       let prev = acc.cur
