@@ -91,6 +91,11 @@ function clearBomEntries(state, input){
 }
 
 function updateBomEntries(state, inputs){
+  inputs = inputs.map(function({attrName,id,value}){
+    let data = {}
+    data[attrName] = value
+    return mergeData({id},{data})
+  })
   return addBomEntries(state, inputs)
   /*console.log("updating BOM", inputs, state)
   return inputs.reduce(function(state, {id,attrName,value}){
