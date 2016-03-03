@@ -13,7 +13,7 @@ export default function bomIntent(sources, entityTypes$, coreActions, entityActi
   const typeChanges$ = changesFromObservableArrays(entityTypes$).share()
 
   //BOM
-  const addBomEntries$ = typeChanges$
+  const upsertBomEntries$ = typeChanges$
     .pluck('upserted')//"a new type was added"
     .filter(e=>e.length>0)
     .tap(e=>console.log("type added",e))
@@ -80,7 +80,7 @@ export default function bomIntent(sources, entityTypes$, coreActions, entityActi
 
   const updateBomEntries$ = extraActions.updateBomEntries$
 
-  let bomActions = mergeData( {addBomEntries$, updateBomEntriesCount$, clearBomEntries$, removeBomEntries$, updateBomEntries$} )
+  let bomActions = mergeData( {upsertBomEntries$, updateBomEntriesCount$, clearBomEntries$, removeBomEntries$, updateBomEntries$} )
 
   return bomActions
 }

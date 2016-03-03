@@ -23,7 +23,7 @@ function upsertBomEntry(state, input){
   }
 }
 
-function addBomEntries(state,input){
+function upsertBomEntries(state,input){
   console.log("upsert BOM entries", state, input)
   let newData = toArray(input) || []
   return newData.filter(exists)
@@ -96,22 +96,7 @@ function updateBomEntries(state, inputs){
     data[attrName] = value
     return mergeData({id},{data})
   })
-  return addBomEntries(state, inputs)
-  /*console.log("updating BOM", inputs, state)
-  return inputs.reduce(function(state, {id,attrName,value}){
-
-    const entries = adjust(
-      function(item){
-        let updatedData = {}
-        updatedData[attrName] = value
-        return mergeData({},item,updatedData)
-      }
-      , findIndex(propEq('id', id))(state) //get index of the one we want to change
-      , state)//input data
-
-    return entries
-
-  },state)*/
+  return upsertBomEntries(state, inputs)
 }
 
 function updateBomEntriesCount(state, inputs){
@@ -131,6 +116,6 @@ function updateBomEntriesCount(state, inputs){
 
 export default function bom(actions) {
   const defaults = []
-  const updateFns = {addBomEntries, updateBomEntries, updateBomEntriesCount, removeBomEntries, clearBomEntries}
+  const updateFns = {upsertBomEntries, updateBomEntries, updateBomEntriesCount, removeBomEntries, clearBomEntries}
   return makeModel(defaults, updateFns, actions)
 }

@@ -8,7 +8,7 @@ export default function intent(ym, params){
     .mergeAll()
     .pluck('response')
 
-  const updateBomEntries$ = bom
+  const upsertBomEntries$ = bom
     .map(function(data){
       return data.map(function(entry) {
         const mapping = {
@@ -24,9 +24,9 @@ export default function intent(ym, params){
         return {id:data.id, data}
       })
     })
-    .tap(e=>console.log("addBomEntries",e))
+    .tap(e=>console.log("upsertBomEntries",e))
 
   return {
-    updateBomEntries$
+    upsertBomEntries$
   }
 }
