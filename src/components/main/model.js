@@ -167,6 +167,34 @@ export default function model(props$, actions, sources){
     })
     .shareReplay(1)
 
+
+  actions.entityActions.createMeshComponents$ = actions.entityActions.createMeshComponents$
+    .combineLatest(entityTypes$, function(meshComponents, types){
+      return meshComponents.map(function(component){
+        console.log("stuff stuff")
+        if(component.data){
+          return component
+        }else{
+          const {typeUid} = component
+          let entry = find(propEq('id', typeUid))(types)
+          if(entry && entry.mesh){
+            let mesh = entry.mesh
+            //let bbox = mesh.boundingBox
+            //let zOffset = bbox.max.clone().sub(bbox.min)
+            //zOffset = zOffset.z/2
+            //bbox = { min:bbox.min.toArray(), max:bbox.max.toArray() }
+
+            //injecting data like this is the right way ?
+            mesh.material = mesh.material.clone()
+            mesh = mesh.clone()
+            return mergeData({}, component, {value:{mesh}})
+          }else{
+            return component
+          }
+        }
+      }).filter(data=>data.value!==undefined)
+    })
+
   //annotations
   let addAnnotations$ = addAnnotation(actions.annotationsActions, settings$)
     .map(toArray)

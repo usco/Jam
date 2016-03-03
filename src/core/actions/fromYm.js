@@ -26,11 +26,8 @@ function rawData(ym){
     }
   }
 
-
 export function makeEntityActionsFromYm(ym){
   const data = rawData(ym)
-
-  const createMeshComponents$      = Rx.Observable.never()
 
   const partsData$ = data.parts
     .share()
@@ -65,23 +62,26 @@ export function makeEntityActionsFromYm(ym){
 
         data.pos = data.pos.map(parseFloat)
         data.rot = data.rot.map(parseFloat)
-        data.sca = data.rot.map(parseFloat)
+        data.sca = data.sca.map(parseFloat)
         //NOTE :we are doing these to make them compatible with remapMetaActions helpers, not sure this is the best
         return { id:data.id,  value:data }
       })
     })
     //.tap(e=>console.log("transforms",e))
 
-  /*const createMeshComponents$      = assemblyData$
-    .map(function(data){
-    return data.data.instMeta.map(function(instMeta){
-        let meshData = head( data.data.typesMeshes.filter(mesh=>mesh.typeUid === instMeta.typeUid) )
-        return {
-          id:instMeta.instUid
-          ,value:{mesh:meshData.mesh.clone()}
+  const createMeshComponents$      = assemblyData$
+    .map(function(datas){
+      return datas.map(function(entry){
+        const mapping = {
+          'uuid':'id'
+          ,'part_uuid':'typeUid'
         }
+        const fieldNames = ['id','typeUid']
+        let data = pick( fieldNames, remapJson(mapping, entry) )
+        return { id:data.id, typeUid:data.typeUid, value:undefined }
       })
-  })*/
+    })
+    //.tap(e=>console.log("meshes",e))
 
    //TODO : this would need to be filtered based on pre-existing type data ?
   const addTypes$ = partsData$
@@ -99,6 +99,7 @@ export function makeEntityActionsFromYm(ym){
     //.forEach(e=>console.log("addEntityTypes",e))
 
 
+  //send out requests to fetch data
   const meshRequests$ = partsData$
     .map(function(data){
       return data.map(function(entry) {
@@ -116,12 +117,11 @@ export function makeEntityActionsFromYm(ym){
     //.tap(e=>console.log("meshRequests",e))
 
 
-
   return {
       addTypes$
     , createMetaComponents$
     , createTransformComponents$
-    //, createMeshComponents$
+    , createMeshComponents$
     ,requests$:meshRequests$
   }
 }
