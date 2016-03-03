@@ -1,7 +1,7 @@
 import Rx from 'rx'
 const {merge} = Rx.Observable
 import {mergeData} from '../../utils/modelUtils'
-import {changesFromObservableArrays2} from '../../utils/diffPatchUtils'
+import {changesFromObservableArrays} from '../../utils/diffPatchUtils'
 import {mergeActionsByName} from '../../utils/obsUtils'
 
 import bomIntentFromEvents from './actions/fromEvents'
@@ -10,15 +10,28 @@ import bomIntentFromYm from './actions/fromYm'
 
 export default function bomIntent(sources, entityTypes$, coreActions, entityActions, actions){
 
+  const typeChanges$ = changesFromObservableArrays(entityTypes$).share()
+
   //BOM
-  const addBomEntries$ = changesFromObservableArrays2(entityTypes$)
-    .pluck('added')//"a new type was added"
+  const addBomEntries$ = typeChanges$
+    .pluck('upserted')//"a new type was added"
+    .filter(e=>e.length>0)
     .tap(e=>console.log("type added",e))
     .map(function(typeDatas){
       return typeDatas.map(function({id,name}){
         //const data = {id, name, qty:0, phys_qty:0, version:"0.0.1", unit:"QA", printable:true}
         const data = {id, name}
         return {id, data}
+      })
+    })
+
+  const removeBomEntries$  = typeChanges$
+    .pluck('removed')
+    .filter(e=>e.length>0)
+    .tap(e=>console.log("type removed",e))
+    .map(function(typeDatas){
+      return typeDatas.map(function({id}){
+        return {id}
       })
     })
 
@@ -67,7 +80,7 @@ export default function bomIntent(sources, entityTypes$, coreActions, entityActi
 
   const updateBomEntries$ = extraActions.updateBomEntries$
 
-  let bomActions = mergeData( {addBomEntries$, updateBomEntriesCount$, clearBomEntries$, updateBomEntries$} )
+  let bomActions = mergeData( {addBomEntries$, updateBomEntriesCount$, clearBomEntries$, removeBomEntries$, updateBomEntries$} )
 
   return bomActions
 }

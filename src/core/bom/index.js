@@ -74,13 +74,16 @@ function createBomEntries(state,input){
 }
 
 //remove an entry
-function removeBomEntries(state, input){
-  const index = findIndex(propEq('id', input.id))(state)
-  state=[
-    ...state.slice(0, index),
-    ...state.slice(index + 1)
-  ]
-  return state
+function removeBomEntries(state, inputs){
+  //console.log("removeBomEntries",inputs)
+  return inputs.reduce(function(state, input){
+    const index = findIndex(propEq('id', input.id))(state)
+    state=[
+      ...state.slice(0, index),
+      ...state.slice(index + 1)
+    ]
+    return state
+  },state)
 }
 
 function clearBomEntries(state, input){
@@ -123,6 +126,6 @@ function updateBomEntriesCount(state, inputs){
 
 export default function bom(actions) {
   const defaults = []
-  const updateFns = {addBomEntries, updateBomEntries, updateBomEntriesCount, clearBomEntries}
+  const updateFns = {addBomEntries, updateBomEntries, updateBomEntriesCount, removeBomEntries, clearBomEntries}
   return makeModel(defaults, updateFns, actions)
 }

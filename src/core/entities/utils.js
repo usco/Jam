@@ -16,9 +16,15 @@ export function remapEntityActions(entityActions, currentSelections$){
     .share()
 
   const deleteInstances$ = entityActions.deleteInstances$
-    .withLatestFrom(currentSelections$,function(_,selections){
-      //console.log("selections to remove",selections)
-      return selections
+    .withLatestFrom(currentSelections$,function(deleteInfos,selections){
+      //[object], []
+      if(selections.length >0)
+      {
+        return selections
+      }else{
+        return deleteInfos
+      }
+
     })
     .share()
 

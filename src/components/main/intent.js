@@ -101,18 +101,31 @@ export default function intent (sources) {
     })
     .flatMap(fromArray)
 
+  const removeTypes$ = actionsFromPostMessage.removePartData$
+    .map(function(data){
+      return data.map(entry=>({id:entry.uuid}))
+    })
+
+  const deleteInstances$ = actionsFromPostMessage.removePartData$
+    .map(function(data){
+      return data.map(entry=>({typeUid:entry.uuid}))
+    })
+    .tap(e=>console.log("deleteInstances",e))
 
    const extras = {
      addInstanceCandidates$:entityCandidates$
      ,addTypeCandidate$:entityCandidates$.filter(data=>data.meta.id === undefined)
-     ,addTypes$:addTypeFromTypeAndMeshData$}
+     ,addTypes$:addTypeFromTypeAndMeshData$
+     ,removeTypes$:removeTypes$
+     ,deleteInstances$
+   }
 
    const entityActionNames = [
     'reset'
 
     ,'addTypes'
     ,'addTypeCandidate'
-    ,'removeEntityType'
+    ,'removeTypes'
 
     ,'addInstanceCandidates'
     ,'deleteInstances'

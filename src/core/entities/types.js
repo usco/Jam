@@ -51,7 +51,7 @@ function upsertTypes(state, input, index){
 }
 
 function addTypes(state, input){
-  console.log("addTypes",state,input)
+  //console.log("addTypes",state,input)
   //we have an id , we use that to search for pre-existing data
   const index = findIndex(propEq('id', input.meta.id))(state)
   return upsertTypes(state, input, index)
@@ -59,20 +59,23 @@ function addTypes(state, input){
 
 //create/infer a new type based on mesh + metadata
 function addTypeCandidate(state, input){
-  console.log("addTypeCandidate",state,input)
+  //console.log("addTypeCandidate",state,input)
   //we have a mesh name , we use that to search for pre-existing data
   const index = findIndex(propEq('name', nameCleanup(input.meta.name)))(state)
   return upsertTypes(state, input, index)
 }
 
-function removeTypes(state, input){
-  console.log("remove nodes",state, input)
-  const index = findIndex(propEq('id', input.id))(state)
-  state=[
-    ...state.slice(0, index),
-    ...state.slice(index + 1)
-  ]
-  return state
+function removeTypes(state, inputs){
+  //console.log("remove types",state, inputs)
+  state = inputs.reduce(function(state, input){
+    const index = findIndex(propEq('id', input.id))(state)
+    state=[
+      ...state.slice(0, index),
+      ...state.slice(index + 1)
+    ]
+    return state
+  },state)
+ return state
 }
 
 function clearTypes(state, input){
@@ -83,6 +86,6 @@ function clearTypes(state, input){
 export default function types(actions, source){
   const defaults = []
 
-  const updateFns  = {addTypes, addTypeCandidate, clearTypes}
+  const updateFns  = {addTypes, addTypeCandidate, removeTypes, clearTypes}
   return makeModel(defaults, updateFns, actions)//since we store THREE.js meshes, we cannot use actual immutable data
 }
