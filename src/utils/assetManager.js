@@ -95,17 +95,17 @@ function parse(fetched$){
 
   const parsed$ = parseBase$
     .flatMap(function(data){
-      const {uri,id} = data.request//extract uri & id if any
+      const {uri, id, flags} = data.request//extract uri & id if any
       const {name, ext} = getNameAndExtension(uri)
 
       //pack up the data, the parser etc nicely
-      const data$   = of({uri, id, rawData:data.response, ext, name})
+      const data$   = of({uri, id, rawData:data.response, ext, name, flags})
       const parser$ = getParser(ext).pluck('default')// FIXME: for now workaround for es6 modules & babel
       return combineLatestObj({data$, parser$})
     })
     //actual parsing part
-    .flatMap(function( {data,parser} ){
-      const {rawData, uri, ext, name, id} = data
+    .flatMap(function( {data, parser} ){
+      const {rawData, uri, ext, name, id, flags} = data
       const parseOptions = {useWorker:true}
 
       const parsedObs$ = parser(rawData, parseOptions)
@@ -122,7 +122,7 @@ function parse(fetched$){
         .distinctUntilChanged()
         .startWith(0)
 
-      const meta$ = of({uri, ext, name, id})
+      const meta$ = of({uri, ext, name, id, flags})
 
       return combineLatestObj({meta$, data:parsedData$, progress$})
     })

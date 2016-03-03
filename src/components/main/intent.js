@@ -105,6 +105,8 @@ export default function intent (sources) {
     .map(function(data){
       return data.map(entry=>({id:entry.uuid}))
     })
+    .tap(e=>console.log("removeTypes",e))
+
 
   const deleteInstances$ = actionsFromPostMessage.removePartData$
     .map(function(data){
@@ -113,7 +115,7 @@ export default function intent (sources) {
     .tap(e=>console.log("deleteInstances",e))
 
    const extras = {
-     addInstanceCandidates$:entityCandidates$
+     addInstanceCandidates$:entityCandidates$.filter(data=>data.meta.flags!=='noInfer').tap(e=>console.log("entityCandidates",e))
      ,addTypeCandidate$:entityCandidates$.filter(data=>data.meta.id === undefined)
      ,addTypes$:addTypeFromTypeAndMeshData$
      ,removeTypes$:removeTypes$

@@ -15,7 +15,7 @@ function rawData(ym){
     //.tap(e=>console.log("in parts: ",e))
 
   const assemblies = ym
-    .filter(res=>res.request.method==='get' && res.request.type === 'ymLoad' && res.request.typeDetail=== 'assemblies')
+    .filter(res=>res.request.method==='get' && res.request.type === 'ymLoad' && res.request.typeDetail=== 'assemblyEntries')
     .mergeAll()
     .pluck('response')
     //.tap(e=>console.log("in assemblies: ",e))
@@ -70,7 +70,7 @@ export function makeEntityActionsFromYm(ym){
         return { id:data.id,  value:data }
       })
     })
-    .tap(e=>console.log("transforms",e))
+    //.tap(e=>console.log("transforms",e))
 
   /*const createMeshComponents$      = assemblyData$
     .map(function(data){
@@ -108,12 +108,12 @@ export function makeEntityActionsFromYm(ym){
         const fieldNames = ['id','name','description','binary_document_id','binary_document_url','source_document_id','source_document_url']
         const data = pick( fieldNames, remapJson(mapping, entry) )
 
-        return {src:'http', method:'get', uri: data.binary_document_url, url:data.binary_document_url, id:data.id, type:'resource'}
+        return {src:'http', method:'get', uri: data.binary_document_url, url:data.binary_document_url, id:data.id, type:'resource', flags:'noInfer'}
       })
     })
     .flatMap(fromArray)
     .filter(req=>req.uri !== undefined && req.uri !== '')
-    .tap(e=>console.log("meshRequests",e))
+    //.tap(e=>console.log("meshRequests",e))
 
 
 
