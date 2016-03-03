@@ -143,7 +143,7 @@ export function changesFromObservableArrays2(data$){
     },{prev:undefined,cur:undefined})
     .map(function(typeData){
       let {cur,prev} = typeData
-      console.log("diffing",cur,prev)
+      //console.log("diffing",cur,prev)
       let changes = extractChanges(prev,cur)
     return changes
     })
