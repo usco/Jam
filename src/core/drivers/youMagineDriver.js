@@ -273,9 +273,9 @@ export default function makeYMDriver(httpDriver, params={}){
         }
       })
 
-    load$
+    const getAssemblies$ = load$
       .withLatestFrom(lDesign$,lAuthData$,(_,design,authData)=>({designId:design.id,authToken:authData.token}))
-      .map(function(data){//FIXME: semi hack
+      .flatMap(function(data){//FIXME: semi hack
         const {designId, authToken} = data
 
         const authTokenStr  = `/?auth_token=${authToken}`
@@ -287,14 +287,41 @@ export default function makeYMDriver(httpDriver, params={}){
           crossDomain: true,
           async: true
         })
-
-        console.log("request",request)
         return request
       })
-      .forEach(e=>console.log("testRequest",e))
+      .pluck('response')
+      .map(function(data){
+        return head(JSON.parse(data))
+      })
+      .withLatestFrom(lDesign$,lAuthData$,(assemblyData, design,authData)=>({assemblyData,designId:design.id,authToken:authData.token}))
+      .map(function(data){
+        const {designId, authToken, assemblyData} = data
+
+        const authTokenStr  = `/?auth_token=${authToken}`
+        const designUri     = `${urlBase}://${authData}${apiBaseUri}/designs/${designId}`
+        const assembliesUri = `${designUri}/assemblies/${assemblyData.uuid}/entries${authTokenStr}`
+
+        return {
+            url    : assembliesUri
+          , method : 'get'
+          , type   :'ymLoad'
+          , typeDetail:'assemblyEntries'
+          , responseType:'json'
+        }
+      })
+      //.tap(e=>console.log("data",e))
+        /*function (data) {
+          data.response.forEach(function (product) {
+            console.log(product);
+          });
+        },
+        function (error) {
+          // Log the error
+        }
+      )*/
 
 
-    const getAssemblies$ = load$
+    /*const getAssemblies$ = load$
       .withLatestFrom(lDesign$,lAuthData$,(_,design,authData)=>({designId:design.id,authToken:authData.token}))
 
       .map(function(data){
@@ -331,7 +358,7 @@ export default function makeYMDriver(httpDriver, params={}){
             , typeDetail:'assemblyEntry'
             , responseType:'json'
           }
-        })
+        })*/
 
       /*const makeAssembliesEntry$ =
         .withLatestFrom(design$,authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
@@ -346,8 +373,7 @@ export default function makeYMDriver(httpDriver, params={}){
     )
 
     const parts$ = changesFromObservableArrays(
-      save$
-        .pluck("bom")
+      save$.pluck("bom")
         .distinctUntilChanged( null, equals )
     )
 
@@ -370,7 +396,7 @@ export default function makeYMDriver(httpDriver, params={}){
     //const allRequests$ = merge(allSaveRequests$, blaRequests$)
 
     const outToHttp$ = merge(designExistsRequest$, allSaveRequests$, allLoadRequests$)
-      .tap(e=>console.log("outToHttp",e))
+      //.tap(e=>console.log("outToHttp",e))
 
     const inputs$ = httpDriver(outToHttp$)
 
@@ -387,11 +413,6 @@ export default function makeYMDriver(httpDriver, params={}){
         return combineLatestObj({response$, request$})//.materialize()//FIXME: still do not get this one
       })
       .forEach(e=>console.log("saving done (if all went well)"))
-
-    inputs$
-      .filter(res$=>res$.request.typeDetail === 'assemblies')
-      .mergeAll()
-      .forEach(e=>console.log("recieved assemblies",e))
 
     return inputs$
   }
