@@ -41,9 +41,10 @@ function upsertTypes(state, input, index){
     state = state.concat( toArray(entry) )
   }
   else{
+    const newEntry = mergeData(state[index], entry)
     state = [
       ...state.slice(0, index),
-      mergeData(state[index], entry),
+      newEntry,
       ...state.slice(index + 1)
     ]
   }
@@ -51,7 +52,7 @@ function upsertTypes(state, input, index){
 }
 
 function addTypes(state, input){
-  //console.log("addTypes",state,input)
+  console.log("addTypes",state,input)
   //we have an id , we use that to search for pre-existing data
   const index = findIndex(propEq('id', input.meta.id))(state)
   return upsertTypes(state, input, index)
@@ -59,7 +60,7 @@ function addTypes(state, input){
 
 //create/infer a new type based on mesh + metadata
 function addTypeCandidate(state, input){
-  //console.log("addTypeCandidate",state,input)
+  console.log("addTypeCandidate",state,input)
   //we have a mesh name , we use that to search for pre-existing data
   const index = findIndex(propEq('name', nameCleanup(input.meta.name)))(state)
   return upsertTypes(state, input, index)
