@@ -141,7 +141,7 @@ provided mapping object (key=>outkey) ie:
 input = {foo:"42"}
 remapJson({foo:parseFloat},input) => {baz:42}
 */
-function coerceTypes(mapping, input){
+export function coerceTypes(mapping, input){
   const result =  Object.keys(input)
     .reduce(function(obj, key){
       if(key in mapping && obj[key] !== null && obj[key] !== undefined){
