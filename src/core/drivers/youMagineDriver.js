@@ -118,7 +118,7 @@ export default function makeYMDriver(httpDriver, params={}){
 
       const authTokenStr = `/?auth_token=${authToken}`
       const designUri     = `${urlBase}://${authData}${apiBaseUri}/designs/${designId}`
-      const bomUri    = `${designUri}/boms`
+      const bomUri    = `${designUri}/bom`
 
       const fieldNames = ['qty','phys_qty', 'unit', 'part_uuid' , 'part_parameters','part_version']
       const mapping = {
@@ -244,7 +244,7 @@ export default function makeYMDriver(httpDriver, params={}){
 
         const authTokenStr = `/?auth_token=${authToken}`
         const designUri     = `${urlBase}://${authData}${apiBaseUri}/designs/${designId}`
-        const bomUri    = `${designUri}/boms${authTokenStr}`
+        const bomUri    = `${designUri}/bom${authTokenStr}`
 
         return {
             url    : bomUri
