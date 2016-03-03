@@ -38,7 +38,7 @@ export function entityIntents(drivers){
   const deleteInstances$          = DOM.select('.delete').events("click")
   const duplicateInstances$       = DOM.select('.duplicate').events("click")
 
-  const removeEntityType$         = undefined //same as delete type/ remove bom entry
+  const removeTypes$         = undefined //same as delete type/ remove bom entry
 
   //this resets/clears everything: types and instances etc
   const clearDesign$                    = DOM.select('.reset').events("click")

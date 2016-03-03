@@ -109,6 +109,9 @@
         embeded.postMessage({addPartData:{uuid:"8D118F05-E695-43BE-B934-D72BB11890B2",file}},"*")
       }, 200)
 
+    setTimeout(function() {
+      embeded.postMessage({removePartData:{uuid:"8D118F05-E695-43BE-B934-D72BB11890B2"}},"*")
+    },2000)
 
     </script>
 
