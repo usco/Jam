@@ -90,8 +90,7 @@ function fetch(sources, sourceNames=["http","desktop"]){
 function parse(fetched$){
   const parseBase$ = fetched$
     .filter(data=>(data.response !== undefined && data.progress === undefined))
-    .distinctUntilChanged(d=>d.request.uri,equals)
-    //.debounce(10)
+    //.distinctUntilChanged(d=>d.request.uri,equals)
     .shareReplay(1)
 
   const parsed$ = parseBase$
@@ -115,6 +114,7 @@ function parse(fetched$){
       const parsedData$  = parsedObs$
         .filter(e=> e.progress === undefined)//seperate out progress data
         .map(postProcessParsedData)
+        //.tap(e=>console.log("parsedData",e))
 
       const progress$ = parsedObs$
         .filter(e=> e.progress !== undefined)//keep ONLY progress data
@@ -139,7 +139,7 @@ function computeCombinedProgress(fetched$, parsed$){
   function preProcess(selector,data$){
     return data$
       .map(selector)
-      .distinctUntilChanged()
+      //.distinctUntilChanged()
       .filter(d=>exists(d.progress))
   }
 
