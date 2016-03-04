@@ -391,9 +391,8 @@ export default function makeYMDriver(httpDriver, params={}){
     const assemblyOut$ = makeApiStream(assemblies$ ,toAssemblies, design$, authData$)
 
     //Finally put it all together
-    const allSaveRequests$ = merge(partsOut$, bomOut$, assemblyOut$)
+    const allSaveRequests$ = merge(partsOut$, bomOut$, assemblyOut$).debounce(20)//don't spam the api !
     const allLoadRequests$ = merge(getParts$, getBom$, getAssemblies$)
-    //const allRequests$ = merge(allSaveRequests$, blaRequests$)
 
     const outToHttp$ = merge(designExistsRequest$, allSaveRequests$, allLoadRequests$)
       //.tap(e=>console.log("outToHttp",e))
