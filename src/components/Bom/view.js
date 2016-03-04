@@ -12,7 +12,7 @@ export default function view (state$) {
   return state$
     .distinctUntilChanged()
     .map(function({entries, selectedEntries
-      , fieldNames, sortFieldName, sortablesDirection, editableFields, fieldDescriptions, toggled}){
+      , fieldNames, sortFieldName, sortablesDirection, editableFields, fieldDescriptions, units, toggled, readOnly}){
 
       //entries = entries.asMutable()//FIXME: not sure
       //console.log( "selectedEntries in BOM",selectedEntries)
@@ -47,14 +47,21 @@ export default function view (state$) {
         let cells = fieldNames.map(function(name){
           let value = row[name]//JSON.stringify(row[name])
           if(typeof(row[name]) === "boolean"){
-            value = <input type="checkbox" checked={value} />
+            value = <input type="checkbox" checked={value} disabled={readOnly}/>
           }
 
           //editable fields need to be represented differently (hack for now)
           if(editableFields.indexOf(name) > -1){
-            value = <input type="text" value={value} placeholder='not specified' />
+            value = <input type="text" value={value} placeholder='not specified' disabled={readOnly}/>
           }
-          return(<td className="bomEntry cell" attributes={{"data-name": name, "data-id":row.id}} >{value}</td>)
+          else if(name === 'unit'){
+            const options = units.map(unit=><option value={unit} selected={value === unit}> {unit}</option>)
+
+            value = <select value={value} selected={value} disabled={readOnly}>
+              {options}
+            </select>
+          }
+          return(<td className={"bomEntry cell "+name} attributes={{"data-name": name, "data-id":row.id}} >{value}</td>)
         })
 
         //cells.push(<td className="bomEntry cell"> <button>Change Model</button> </td>)

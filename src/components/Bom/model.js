@@ -20,9 +20,11 @@ export default function model(props$, actions){
   const editableFields$    = props$.pluck('editableFields').startWith([]).filter(exists)
   const entries$           = props$.pluck('entries').startWith([]).filter(exists)
   const fieldDescriptions$ = props$.pluck('fieldDescriptions').startWith({})
+  const units$             = props$.pluck('units').startWith([])
   const selectedEntries$   = props$.pluck('selectedEntries').startWith([]).filter(exists)
     .distinctUntilChanged()
     .shareReplay(1)
+  const readOnly$          = props$.pluck('readOnly').startWith(false)
 
 
   //observable of current sorting field (what field do we sort by)
@@ -55,5 +57,5 @@ export default function model(props$, actions){
   const toggled$ = actions.toggle$.startWith(true)
 
   return combineLatestObj({entries$:sortedEntries$, selectedEntries$
-    , fieldNames$, sortFieldName$, sortablesDirection$, editableFields$, fieldDescriptions$, toggled$})
+    , fieldNames$, sortFieldName$, sortablesDirection$, editableFields$, fieldDescriptions$, units$, toggled$, readOnly$})
 }
