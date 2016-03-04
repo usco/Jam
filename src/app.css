@@ -516,19 +516,17 @@ input[type=color]:focus{
 }
 
 .bom .bomEntry .name input[type=text]{
-  min-width: 200px;
+  min-width: 150px;
 }
 .bom .bomEntry .qty input[type=text]{
-  width: 20px;
+  width: 30px;
 }
 .bom .bomEntry .phys_qty input[type=text]{
-  width: 20px;
+  width: 30px;
 }
-
-
-.bom .headerCell{
+/*.bom .headerCell{
   padding: 2px 10px 2px 10px;
-}
+}*/
 
 
 .foo{
