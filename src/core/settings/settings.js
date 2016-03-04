@@ -3,13 +3,17 @@ const Observable = Rx.Observable
 const {merge, fromEvent, of} = Rx.Observable
 import {makeModel, mergeData} from '../../utils/modelUtils'
 
-
+//use mainly when reloading settings from localstorage
 function setAllValues(state, input){
   //console.log("setting settings")
   //TODO : do validation ?
   //we coerce appMode to "editor" when setting all values like this
   //same with saveMode
-  let output = mergeData( state, mergeData( input, {appMode:"editor", saveMode:false})  )
+  let output = mergeData( state, mergeData( input, {
+    appMode:"editor",
+    saveMode:false,
+    activeTool:undefined
+  }))
   return output
 }
 
