@@ -190,13 +190,13 @@ function GLView({drivers, props$}){
   const meshRemovedFromScene$ = new Rx.ReplaySubject(1)
 
   const outlineSelections$ = settings$
-    .filter(s=> s.toolSets.indexOf('edit') !== -1 )//only in edit mode, not view mode
+    .filter(s=> !( s.toolSets.indexOf('view') !== -1 && s.toolSets.length === 1) )// in all but view only mode
     .combineLatest(state$,function(settings, state){
       return state
     })
 
   const zoomToFit$ = settings$
-    .filter(s=> s.toolSets.indexOf('edit') === -1 )//only in view mode, not edit mode
+    .filter(s=> s.toolSets.indexOf('edit') === -1 && s.toolSets.length === 1)//only in view only mode
     .combineLatest(state$.pluck("items"), function(settings,items){
       return items
     })
