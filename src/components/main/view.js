@@ -233,6 +233,7 @@ function makeTopToolBar(state){
     'view'     :viewIcons
     ,'edit'    :editIcons
     ,'annotate':annotIcons
+    ,'bom'     :undefined
   }
 
   const icons = state.settings.toolSets
@@ -252,6 +253,7 @@ function renderUiElements(uiElements){
     'view':renderViewWidgets
     ,'edit':renderEditWidgets
     ,'annotate':renderAnnotWidgets
+    ,'bom':renderBomWidgets
   }
 
   const customWidgets = state.settings.toolSets
@@ -283,6 +285,11 @@ function renderAnnotWidgets(state, uiElements){
 function renderEditWidgets(state, uiElements){
   let { entityInfos, bom } = uiElements
   return [entityInfos, bom]
+}
+
+function renderBomWidgets(state, uiElements){
+  let { bom } = uiElements
+  return [bom]
 }
 
 function renderViewWidgets(state, uiElements){
