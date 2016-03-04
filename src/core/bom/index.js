@@ -10,7 +10,7 @@ function upsertBomEntry(state, input){
   const index = findIndex(propEq('id', input.id))(state)
 
   if(index===-1){//if we have a bom entry that is new
-    const bomEntryDefaults = {name:undefined, qty:0, phys_qty:0, version:"0.0.1", unit:"QA", printable:true}
+    const bomEntryDefaults = {name:undefined, qty:0, phys_qty:0, version:"0.0.1", unit:"EA", printable:true}
     const entry = mergeData(bomEntryDefaults,input.data)
     return state = state.concat( toArray(entry) )
   }else{//we already have this same bom entry

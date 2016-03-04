@@ -12,7 +12,7 @@ export default function view (state$) {
   return state$
     .distinctUntilChanged()
     .map(function({entries, selectedEntries
-      , fieldNames, sortFieldName, sortablesDirection, editableFields, toggled}){
+      , fieldNames, sortFieldName, sortablesDirection, editableFields, fieldDescriptions, toggled}){
 
       //entries = entries.asMutable()//FIXME: not sure
       //console.log( "selectedEntries in BOM",selectedEntries)
@@ -21,6 +21,8 @@ export default function view (state$) {
       //generate headers
       let headers = fieldNames.map( function(name){
         let sortArrow = undefined
+        const editable = editableFields.indexOf(name) > -1
+        const toolTip  = editable? '(editable) '+fieldDescriptions[name] : fieldDescriptions[name]
 
         if( direction !== undefined && sortFieldName === name)
         {
@@ -30,12 +32,15 @@ export default function view (state$) {
             sortArrow = <span className="directionArrow"> &#x25BC; </span>
           }
         }
+        //className={Class(`tooltip-bottom`),
         return (
+
           <th className="headerCell" attributes={{"data-name": name}}>
-            {name} {sortArrow}
+          <span className='tooltip-bottom' attributes={{"data-tooltip": toolTip}}>{name}</span> {sortArrow}
           </th>
         )
       })
+      //{name}
 
 
       let rows    = entries.map( function(row, index){
