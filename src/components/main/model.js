@@ -171,7 +171,6 @@ export default function model(props$, actions, sources){
   actions.entityActions.createMeshComponents$ = actions.entityActions.createMeshComponents$
     .combineLatest(entityTypes$, function(meshComponents, types){
       return meshComponents.map(function(component){
-        console.log("stuff stuff")
         if(component.data){
           return component
         }else{
@@ -239,6 +238,7 @@ export default function model(props$, actions, sources){
 
   ////
   const design$ = actions.designActions.loadDesign$
+    .filter(exists)
     .map(data=>({synched:true, id:data, ns:'ym'}))
     .startWith({synched:false, id:undefined, ns:'ym'})
     .tap(e=>console.log("designInfos",e))

@@ -117,10 +117,10 @@ export default function main(sources) {
     .filter(e=>e===true)//filter out non existing designs (we cannot load those , duh')
     .flatMap(_=>combineLatestObj({design, authData}))//we inject design & authData
     .map(data=>({method:'load', data, type:'design'}))//create our query/request
-    .tap(e=>console.log("loadDesignFromYm",e))
     .throttle(5)
     .distinctUntilChanged(null, equals)
     .take(1)
+    .tap(e=>console.log("loadDesignFromYm",e))
 
 
   const ymStorage$ = merge(queryDesignExists$, saveDesigntoYm$, loadDesignFromYm$)
