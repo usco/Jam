@@ -20,6 +20,7 @@ export default function model(props$, actions){
   const editableFields$    = props$.pluck('editableFields').startWith([]).filter(exists)
   const entries$           = props$.pluck('entries').startWith([]).filter(exists)
   const fieldDescriptions$ = props$.pluck('fieldDescriptions').startWith({})
+  const fieldTypes$        = props$.pluck('fieldTypes').startWith({})
   const units$             = props$.pluck('units').startWith([])
   const selectedEntries$   = props$.pluck('selectedEntries').startWith([]).filter(exists)
     .distinctUntilChanged()
@@ -57,5 +58,5 @@ export default function model(props$, actions){
   const toggled$ = actions.toggle$.startWith(true)
 
   return combineLatestObj({entries$:sortedEntries$, selectedEntries$
-    , fieldNames$, sortFieldName$, sortablesDirection$, editableFields$, fieldDescriptions$, units$, toggled$, readOnly$})
+    , fieldNames$, sortFieldName$, sortablesDirection$, editableFields$, fieldDescriptions$, fieldTypes$, units$, toggled$, readOnly$})
 }

@@ -12,7 +12,7 @@ export default function view (state$) {
   return state$
     .distinctUntilChanged()
     .map(function({entries, selectedEntries
-      , fieldNames, sortFieldName, sortablesDirection, editableFields, fieldDescriptions, units, toggled, readOnly}){
+      , fieldNames, sortFieldName, sortablesDirection, editableFields, fieldDescriptions,fieldTypes, units, toggled, readOnly}){
 
       //entries = entries.asMutable()//FIXME: not sure
       //console.log( "selectedEntries in BOM",selectedEntries)
@@ -46,12 +46,9 @@ export default function view (state$) {
       let rows    = entries.map( function(row, index){
         let cells = fieldNames.map(function(name){
           let value = row[name]//JSON.stringify(row[name])
-          if(typeof(row[name]) === "boolean"){
-            value = <input type="checkbox" checked={value} disabled={readOnly}/>
-          }
 
           //editable fields need to be represented differently (hack for now)
-          if(editableFields.indexOf(name) > -1){
+          /*if(editableFields.indexOf(name) > -1){
             value = <input type="text" value={value} placeholder='not specified' disabled={readOnly}/>
           }
           else if(name === 'unit'){
@@ -60,7 +57,30 @@ export default function view (state$) {
             value = <select value={value} selected={value} disabled={readOnly}>
               {options}
             </select>
+          }*/
+
+          switch(fieldTypes[name]){
+            case 'text':
+              value = <input type="text" value={value} placeholder='not specified' disabled={readOnly}/>
+            break;
+            case 'number':
+              value = <input type="number" value={value} disabled={readOnly}/>
+            break;
+            case 'list'://FIXME : not generic, only works for unit
+              const options = units.map(unit=><option value={unit} selected={value === unit}> {unit}</option>)
+              value = <select value={value} selected={value} disabled={readOnly}>
+                {options}
+              </select>
+            break;
+            case 'boolean':
+              value = <input type="checkbox" checked={value} disabled={readOnly}/>
+
+            break;
+            default:
+              value = value
+            break;
           }
+
           return(<td className={"bomEntry cell "+name} attributes={{"data-name": name, "data-id":row.id}} >{value}</td>)
         })
 

@@ -1,7 +1,7 @@
 import Rx from 'rx'
 const {fromEvent, merge} = Rx.Observable
 import {findIndex,propEq,adjust,flatten} from 'ramda'
-import {toArray, exists} from '../../utils/utils'
+import {toArray, exists, coerceTypes} from '../../utils/utils'
 import {makeModel, mergeData} from '../../utils/modelUtils'
 
 
@@ -91,9 +91,15 @@ function clearBomEntries(state, input){
 }
 
 function updateBomEntries(state, inputs){
+  const typeMapping = {
+    'qty': function(value){return Math.max( Math.round(value), 0)} // quantities of parts are always positive, always integers
+    ,'phys_qty': function(value){return Math.max( value, 0)} //physical quantities in our cases are always positive (no negative lengths, weifhts, volumes)
+  }
+
   inputs = inputs.map(function({attrName,id,value}){
     let data = {}
     data[attrName] = value
+    data = coerceTypes(typeMapping, data)
     return mergeData({id},{data})
   })
   return upsertBomEntries(state, inputs)

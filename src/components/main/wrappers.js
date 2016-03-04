@@ -62,12 +62,20 @@ export function BOMWrapper(state$, DOM){
       ,'unit':'use EA for "each", or SI/ imperial units'
       ,'printable':'is this a printable part?'
     }
+    const fieldTypes     = {
+      'name':'text'
+      ,'qty':'number'
+      ,'phys_qty':'number'
+      ,'unit':'list'
+      ,'printable':'boolean'
+    }
 
     const fieldNames$        = just(fieldNames)
     const editableFields$    = just(editableFields)
     const sortableFields$    = just(sortableFields)
     const selectedEntries$   = state$.pluck("selections").pluck("bomIds")
     const fieldDescriptions$ = just(fieldDescriptions)
+    const fieldTypes$        = just(fieldTypes)
     const units$             = just(['EA','m','in','kg','lb','l'])
     //let show$            = state$.pluck("settings").pluck("appMode").map(mode=> mode !=='viewer')
     const entries$ = state$
@@ -78,7 +86,7 @@ export function BOMWrapper(state$, DOM){
 
     let bomProps$ = combineLatestObj( {
       fieldNames$, sortableFields$, editableFields$, entries$,
-      selectedEntries$, fieldDescriptions$, units$, readOnly$} )
+      selectedEntries$, fieldDescriptions$, fieldTypes$, units$, readOnly$} )
 
     return bomProps$
   }

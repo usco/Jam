@@ -1,5 +1,5 @@
 import Rx from 'rx'
-const fromEvent = Rx.Observable.fromEvent
+const {fromEvent,merge} = Rx.Observable
 
 export default function intent(DOM){
   const entryTapped$  = DOM.select(".bomEntry").events('click',true)//capture == true
@@ -14,6 +14,7 @@ export default function intent(DOM){
     .do(e=>e.stopPropagation())
 
   const changeEntryValue$ = DOM.select('.bomEntry input[type=text]').events('change')
+    .merge(DOM.select('.bomEntry input[type=number]').events('change'))
     .do(e=>e.stopPropagation())
     .map(function(e){
       const actualTarget = e.currentTarget.parentElement.dataset
@@ -23,6 +24,7 @@ export default function intent(DOM){
         ,value:e.target.value
       }
     })
+
   const checkEntry$ = DOM.select('.bomEntry input[type=checkbox]').events('change')
     .do(e=>e.stopPropagation())
     .map(function(e){
@@ -45,7 +47,7 @@ export default function intent(DOM){
       }
     })
 
-  const editEntry$ = Rx.Observable.merge(
+  const editEntry$ = merge(
     changeEntryValue$
     ,checkEntry$
     ,entryOptionChange$

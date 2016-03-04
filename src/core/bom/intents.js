@@ -1,5 +1,6 @@
 import Rx from 'rx'
 const {merge} = Rx.Observable
+import {exists} from '../../utils/utils'
 import {mergeData} from '../../utils/modelUtils'
 import {changesFromObservableArrays} from '../../utils/diffPatchUtils'
 import {mergeActionsByName} from '../../utils/obsUtils'
@@ -37,31 +38,36 @@ export default function bomIntent(sources, entityTypes$, coreActions, entityActi
 
   const increaseBomEntries$ = coreActions
     .createComponents$
-    .map(function(data){
-      return data
-        .map(function(dat){
-          return {offset:1,id:dat.typeUid}
-        })
-    })
+      //.filter(exists)
+      .map(function(data){
+        return data
+          .filter(dat=>dat.value.typeUid!==undefined)
+          .map(function(dat){
+            return {offset:1,id:dat.value.typeUid}
+          })
+      })
     .merge(
       coreActions.duplicateComponents$
-      .map(function(data){
-        return data.map(function(dat){
-          return {offset:1,id:dat.typeUid}
+        .tap(e=>console.log("duplicateComponents",e))
+        //.filter(exists)
+        .map(function(data){
+          return data
+            .filter(dat=> dat.typeUid!== undefined || dat.value.typeUid!==undefined )
+            .map(function(dat){
+              return {offset:1,id:dat.typeUid}
+          })
         })
-      })
     )
 
   const decreaseBomEntries$ = coreActions
     .removeComponents$
-    .do(d=>console.log("removing on of",d))
-    .map(function(data){
-      return data
-        .filter(d=>d.id !== undefined)
-        .map(function(dat){
-          return {offset:-1,id:dat.typeUid}
-        })
-    })
+      .map(function(data){
+        return data
+          .filter(d=>d.id !== undefined)
+          .map(function(dat){
+            return {offset:-1,id:dat.typeUid}
+          })
+      })
 
   const updateBomEntriesCount$ = merge(
     increaseBomEntries$
@@ -78,9 +84,11 @@ export default function bomIntent(sources, entityTypes$, coreActions, entityActi
   ]
   const extraActions =  mergeActionsByName(settingActionSources)
 
+  const upsertBomEntriesAll$ = extraActions.upsertBomEntries$.merge(upsertBomEntries$)
   const updateBomEntries$ = extraActions.updateBomEntries$
 
-  let bomActions = mergeData( {upsertBomEntries$, updateBomEntriesCount$, clearBomEntries$, removeBomEntries$, updateBomEntries$} )
+  let bomActions = mergeData( {upsertBomEntries$, updateBomEntriesCount$, updateBomEntries$,  upsertBomEntries$:upsertBomEntriesAll$,
+    clearBomEntries$, removeBomEntries$} )
 
   return bomActions
 }
