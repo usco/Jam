@@ -43,7 +43,7 @@ export default function bomIntent(sources, entityTypes$, coreActions, entityActi
         return data
           .filter(dat=>dat.value.typeUid!==undefined)
           .map(function(dat){
-            return {offset:1,id:dat.value.typeUid}
+            return {offset:1, id:dat.value.typeUid}
           })
       })
     .merge(
@@ -54,7 +54,7 @@ export default function bomIntent(sources, entityTypes$, coreActions, entityActi
           return data
             .filter(dat=> dat.typeUid!== undefined || dat.value.typeUid!==undefined )
             .map(function(dat){
-              return {offset:1,id:dat.typeUid}
+              return {offset:1, id:dat.typeUid}
           })
         })
     )

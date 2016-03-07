@@ -47,17 +47,10 @@ export default function view (state$) {
         let cells = fieldNames.map(function(name){
           let value = row[name]//JSON.stringify(row[name])
 
-          //editable fields need to be represented differently (hack for now)
-          /*if(editableFields.indexOf(name) > -1){
-            value = <input type="text" value={value} placeholder='not specified' disabled={readOnly}/>
+          //special case for quantities
+          if(name === 'qty'){
+            value += row['_qtyOffset'] // we add quantity offset (dynamic quantities , inferable from assembly)
           }
-          else if(name === 'unit'){
-            const options = units.map(unit=><option value={unit} selected={value === unit}> {unit}</option>)
-
-            value = <select value={value} selected={value} disabled={readOnly}>
-              {options}
-            </select>
-          }*/
 
           switch(fieldTypes[name]){
             case 'text':
