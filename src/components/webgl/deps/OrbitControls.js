@@ -55,7 +55,7 @@ var OrbitControls = function ( object, domElement, upVector ) {
     var phiDelta = 0
     var thetaDelta = 0
     var scale = 1
-    
+
     var origPhiDelta = phiDelta
     var origThetaDelta = thetaDelta
     var origScale = scale
@@ -63,9 +63,9 @@ var OrbitControls = function ( object, domElement, upVector ) {
     //to add control of multiple cameras
     this.addObject = function( object, options={}){
       if(this.objects.indexOf(object) != -1) return
-      const DEFAULTS = {userZoom:true, userPan:true, userRotate:true} 
+      const DEFAULTS = {userZoom:true, userPan:true, userRotate:true}
       options = assign({}, DEFAULTS, options)
-      
+
       this.objects.push( object )
       this.objectOptions.push(options)
       this.centers.push( new THREE.Vector3() )
@@ -83,13 +83,13 @@ var OrbitControls = function ( object, domElement, upVector ) {
           var object = this.objects[i]
           var center = this.centers[i]
           var camState = this.camStates[i]
-          
+
           var curThetaDelta = camState.thetaDelta
           var curPhiDelta   = camState.phiDelta
           var curScale      = camState.scale
-          
+
           var lastPosition = camState.lastPosition
-          
+
           var position = object.position
           var offset = position.clone().sub( center )
 
@@ -115,7 +115,7 @@ var OrbitControls = function ( object, domElement, upVector ) {
                 if(scope.objectOptions[index].userRotate){
                   scope.camStates[index].thetaDelta += getAutoRotationAngle()
                 }
-              })   
+              })
           }
 
           theta += curThetaDelta
@@ -152,13 +152,13 @@ var OrbitControls = function ( object, domElement, upVector ) {
               this.dispatchEvent( changeEvent )
 
               lastPosition.copy( object.position )
-              
+
           }
           else
           {
             //fireDeActivated()
           }
-          
+
           camState.thetaDelta /= 1.5
           camState.phiDelta /= 1.5
           camState.scale = 1
@@ -172,12 +172,12 @@ var OrbitControls = function ( object, domElement, upVector ) {
     function getZoomScale() {
       return Math.pow( 0.95, scope.userZoomSpeed )
     }
-    
+
     this.enable= function (){
       scope.enabled = true
       this.enabled = true
     }
-    
+
     this.disable = function(){
       scope.enabled = false
       this.enabled = false
@@ -193,13 +193,13 @@ var OrbitControls = function ( object, domElement, upVector ) {
         let center = this.centers[index]
         center = new THREE.Vector3()
         this.camStates[index].phiDelta   = origPhiDelta
-        this.camStates[index].thetaDelta = origThetaDelta 
+        this.camStates[index].thetaDelta = origThetaDelta
         this.camStates[index].scale = origScale = scale
       })
 
       this.update()
-    } 
-    
+    }
+
     this.setObservables=function(observables){
       let {dragMoves$, zooms$} = observables
 
@@ -207,7 +207,6 @@ var OrbitControls = function ( object, domElement, upVector ) {
 
       /* are these useful ?
       scope.userZoomSpeed = 0.6
-
       onPinch
       */
       function zoom(zoomDir, zoomScale, cameras){
@@ -222,11 +221,11 @@ var OrbitControls = function ( object, domElement, upVector ) {
             if(zoomDir < 0) scope.camStates[index].scale /= zoomScale
             if(zoomDir > 0) scope.camStates[index].scale *= zoomScale
           }
-        })  
+        })
       }
 
       function rotate(cameras, angle){
-        
+
         if ( scope.enabled === false ) return
         if ( scope.userRotate === false ) return
 
@@ -237,7 +236,7 @@ var OrbitControls = function ( object, domElement, upVector ) {
             scope.camStates[index].phiDelta   += angle.y
 
           }
-        })   
+        })
       }
 
       //TODO: implement
@@ -251,11 +250,11 @@ var OrbitControls = function ( object, domElement, upVector ) {
               let distance = _origDist.clone()
               distance.transformDirection( object.matrix )
               distance.multiplyScalar( scope.userPanSpeed )
-              
+
               object.position.add( distance )
               scope.centers[index].add( distance )
             }
-          })  
+          })
       }
 
 
@@ -266,19 +265,19 @@ var OrbitControls = function ( object, domElement, upVector ) {
           /*if ( angle === undefined ) {
           angle = 2 * Math.PI /180  * scope.userRotateSpeed
         }*/
-          let angle ={x:0,y:0} 
+          let angle ={x:0,y:0}
           angle.x = 2 * Math.PI * delta.x / PIXELS_PER_ROUND * scope.userRotateSpeed
           angle.y = -2 * Math.PI * delta.y / PIXELS_PER_ROUND * scope.userRotateSpeed
-              
+
           //console.log("rotate by angle",angle)
           /*if ( angle === undefined ) {
             angle = 2 * Math.PI /180  * scope.userRotateSpeed
-          } */     
+          } */
           rotate(self.objects, angle)
 
         })
         //.subscribe(e=>e)//console.log("dragMoves",e.delta))
- 
+
       zooms$
         .subscribe(function(delta){
           let zoomScale = undefined
@@ -288,7 +287,7 @@ var OrbitControls = function ( object, domElement, upVector ) {
           zoom(delta, zoomScale, self.objects)
         })
         //.subscribe(e=>e)//console.log("zoom",e))
-    
+
   }
 }
 

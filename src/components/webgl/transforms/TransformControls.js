@@ -558,7 +558,7 @@ var TransformControls = function ( camera, domElement ) {
 	this.space = "world";
 	this.size = 1;
 	this.axis = null;
-	
+
 	this.enabled=true;
 
 	var scope = this;
@@ -643,7 +643,7 @@ var TransformControls = function ( camera, domElement ) {
 		domElement.addEventListener( "touchend", onPointerUp, true );
 		domElement.addEventListener( "touchcancel", onPointerUp, true );
 		domElement.addEventListener( "touchleave", onPointerUp, true );
-	} 
+	}
 
   this.setObservables=function(observables){
   	console.log("setting observables")
@@ -684,7 +684,7 @@ var TransformControls = function ( camera, domElement ) {
 		this.gizmo["translate"].hide();
 		this.gizmo["rotate"].hide();
 		this.gizmo["scale"].hide();
-		//if(_mode) 
+		//if(_mode)
 		this.gizmo[_mode].show();
 
 		this.update();
@@ -780,13 +780,15 @@ var TransformControls = function ( camera, domElement ) {
 
 		var pointer = event.changedTouches ? event.changedTouches[ 0 ] : event;
 
-		if ( pointer.button === 0 || pointer.button === undefined ) {
+		//console.log("pointer",pointer.button)
+
+		if ( pointer.button === 0 || pointer.button === 2 || pointer.button === undefined ) {
 
 			var intersect = intersectObjects( pointer, scope.gizmo[_mode].pickers.children );
 
 			if ( intersect ) {
 
-				console.log("intersected")
+				//console.log("intersected")
 				scope.dispatchEvent( mouseDownEvent );
 
 				scope.axis = intersect.object.name;
