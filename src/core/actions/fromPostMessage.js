@@ -8,7 +8,7 @@ export function intentsFromPostMessage(drivers){
   const postMessageWithData$ = postMessage$
     .filter(p=>p.hasOwnProperty("data"))
 
-  const captureScreen$ = postMessageWithData$ 
+  const captureScreen$ = postMessageWithData$
     .filter(p=>p.data.hasOwnProperty("captureScreen"))
     .withLatestFrom(drivers.DOM.select(".glView .container canvas").observable,function(request,element){
       element = element[0]
@@ -16,19 +16,36 @@ export function intentsFromPostMessage(drivers){
     })
 
   //this one might need refactoring
-  const getTransforms$ = postMessageWithData$ 
+  const getTransforms$ = postMessageWithData$
     .filter(p=>p.data.hasOwnProperty("getTransforms"))
 
-  const getStatus$ = postMessageWithData$ 
+  const getStatus$ = postMessageWithData$
     .filter(p=>p.data.hasOwnProperty("getStatus"))
 
-  const clear$ = postMessageWithData$ 
+  const clearDesign$ = postMessageWithData$
     .filter(p=>p.data.hasOwnProperty("clear"))
+
+  const loadDesign$ = postMessageWithData$
+    .filter(p=>p.data.hasOwnProperty('designId'))
+    .map(data=>data.data.designId)
+
+  const addPartData$ = postMessageWithData$
+    .filter(p=>p.data.hasOwnProperty('addPartData'))
+    .map(data=>data.data.addPartData)
+    .map(toArray)
+
+  const removePartData$ = postMessage$
+    .filter(p=>p.data.hasOwnProperty('removePartData'))
+    .map(data=>data.data.removePartData)
+    .map(toArray)
 
   return {
     captureScreen$
     ,getTransforms$
     ,getStatus$
-    ,clear$
+    ,clearDesign$
+    ,loadDesign$
+    ,addPartData$
+    ,removePartData$
   }
 }

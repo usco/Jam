@@ -14,12 +14,12 @@ import {toArray,itemsEqual} from '../../utils/utils'
 import {getCoordsFromPosSizeRect} from './deps/Selector'
 
 
-//get original data +  picking infos 
+//get original data +  picking infos
 function addPickingInfos( inStream$, containerResizes$, camera, scene ){
   return inStream$
     .withLatestFrom(
       containerResizes$,
-      function(event, clientRect){          
+      function(event, clientRect){
         if(event){
           let input = document.querySelector('.container')//canvas
           let clientRect = input.getBoundingClientRect()
@@ -101,10 +101,10 @@ export default function intent(drivers, data){
     .map( objectAndPosition )
 
   const zoomToFit$ = Rx.Observable.just(true) //DOM.select('#zoomToFit').events("click")
-  
-        
+
+
   //Stream of selected meshes
-  const selectMeshes$ = merge( 
+  const selectMeshes$ = merge(
       shortSingleTapsWPicking$.map( meshFrom )
       ,longTapsWPicking$.map( meshFrom )
     )
@@ -113,12 +113,12 @@ export default function intent(drivers, data){
     .shareReplay(1)
 
 
-  //what are the active controls : camera, object tranforms, 
+  //what are the active controls : camera, object tranforms,
   let tControlsActive$ = merge(
     fromEvent(transformControls,"mouseDown").map(true),
     fromEvent(transformControls,"mouseUp").map(false)
   ).startWith(false)
- 
+
   //let activeControls$
   //if transformControls are active, filter out dragMove gestures
   let fDragMoves$ = dragMoves$
@@ -126,7 +126,7 @@ export default function intent(drivers, data){
       if(tCActive) return undefined
       return dragMoves
     })
-    .filter(exists) 
+    .filter(exists)
   //actual stream used for camera controls
   let filteredInteractions$ = {dragMoves$:fDragMoves$, zooms$}
 
@@ -134,9 +134,10 @@ export default function intent(drivers, data){
   const selectionsTransforms$ = fromEvent(transformControls, 'objectChange')
     .map(targetObject)
     .map(function(t){
-      return {pos:t.position.toArray(),
-        rot:t.rotation.toArray(),
-        sca:t.scale.toArray()
+      return {
+        pos:t.position.toArray().slice(0,3),
+        rot:t.rotation.toArray().slice(0,3),
+        sca:t.scale.toArray().slice(0,3)
       }
     })
 
@@ -154,6 +155,6 @@ export default function intent(drivers, data){
 
     ,selectionsTransforms$
 
-    
+
   }
 }

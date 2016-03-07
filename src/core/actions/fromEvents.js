@@ -28,10 +28,6 @@ export function intentsFromEvents(drivers){
     updateMetaComponent$
     ,updateTransformComponent$
   )
-  
-  //bom
-  const updateBomEntries$ = events
-    .select("bom").events("editEntry$").map(toArray)
 
   //measurements & annotations
   const shortSingleTaps$ = events
@@ -41,11 +37,10 @@ export function intentsFromEvents(drivers){
     .map( (event)=>event.detail.pickingInfos)
     .filter( (pickingInfos)=>pickingInfos.length>0)
     .map(first)
-    .share()  
+    .share()
 
   return {
     updateComponent$
     ,createAnnotationStep$
-    ,updateBomEntries$
   }
 }

@@ -9,20 +9,26 @@ export function remapEntityActions(entityActions, currentSelections$){
 
   const duplicateInstances$ = entityActions.duplicateInstances$
     .withLatestFrom(currentSelections$,function(_,selections){
-      console.log("selections to duplicate",selections)
+      //console.log("selections to duplicate",selections)
       const newId = generateUUID()
       return selections.map(s=>mergeData(s,{newId}) )
     })
     .share()
 
   const deleteInstances$ = entityActions.deleteInstances$
-    .withLatestFrom(currentSelections$,function(_,selections){
-      console.log("selections to remove",selections)
-      return selections
+    .withLatestFrom(currentSelections$,function(deleteInfos,selections){
+      //[object], []
+      if(selections.length >0)
+      {
+        return selections
+      }else{
+        return deleteInfos
+      }
+
     })
     .share()
 
-  return mergeData(entityActions, 
+  return mergeData(entityActions,
     {
       duplicateInstances$
       ,deleteInstances$
@@ -34,10 +40,11 @@ export function remapMetaActions(entityActions, componentBase$, currentSelection
   const createComponentsFromBase$ = componentBase$
     .filter(c=>c.length>0)
     .map(function(datas){
-      return datas.map(function({instUid, typeUid, instance}){
-        return { id:instUid,  value:{ id:instUid, typeUid, name:instance.name } }
+      return datas.map(function({instUid, typeUid, assemblyId, instance}){
+        return { id:instUid,  value:{ id:instUid, typeUid, name:instance.name, assemblyId } }
       })
     })
+
   const createComponentsFromAnnots$ = annotationCreations$
     .filter(c=>c.length>0)
     .map(function(datas){
@@ -55,7 +62,7 @@ export function remapMetaActions(entityActions, componentBase$, currentSelection
     //.tap(e=>console.log("creating meta component",e))
 
   const removeComponents$ = entityActions.deleteInstances$
-  
+
   const updateComponents$ = entityActions.updateComponent$
      .filter(u=>u.target === "meta")
      .pluck("data")
@@ -72,7 +79,7 @@ export function remapMetaActions(entityActions, componentBase$, currentSelection
     ,updateComponents$
     ,duplicateComponents$
     ,removeComponents$
-    ,clear$:entityActions.reset$
+    ,clearDesign$:entityActions.clearDesign$
   }
 }
 
@@ -96,7 +103,7 @@ export function remapMeshActions(entityActions, componentBase$, currentSelection
     createComponents$
     ,duplicateComponents$
     ,removeComponents$
-    ,clear$:entityActions.reset$
+    ,clearDesign$:entityActions.clearDesign$
   }
 }
 
@@ -119,7 +126,6 @@ export function remapTransformActions(entityActions, componentBase$, currentSele
      .filter(u=>u.target === "transforms")
      .pluck("data")
      .withLatestFrom(currentSelections$.map(s => s.map(s=>s.id)),function(transforms, instIds){
-        console.log("instIds",instIds)
         return instIds.map(function(instId){
           return {id:instId, value:transforms}
         })
@@ -132,7 +138,7 @@ export function remapTransformActions(entityActions, componentBase$, currentSele
     ,updateComponents$
     ,duplicateComponents$
     ,removeComponents$
-    ,clear$:entityActions.reset$
+    ,clearDesign$:entityActions.clearDesign$
   }
 }
 
@@ -149,11 +155,11 @@ export function remapBoundsActions(entityActions, componentBase$, currentSelecti
   const removeComponents$ = entityActions.deleteInstances$
 
   const duplicateComponents$ = entityActions.duplicateInstances$
-  
+
   return {
     createComponents$
     ,duplicateComponents$
     ,removeComponents$
-    ,clear$: entityActions.reset$
+    ,clearDesign$: entityActions.clearDesign$
   }
 }

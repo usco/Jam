@@ -30,21 +30,34 @@ export function createComponents(defaults, state, inputs){
     //FIXME big hack, use mutability
 
     //console.log("done createComponents",state)
-    return state 
+    return state
 
   },state)
 
- 
+
 }
 
 export function removeComponents(state, inputs){
+  //FIXME: update data structures
   //console.log("removeComponents",inputs)
 
-  return inputs.reduce(function(state,selection){   
+  return inputs.reduce(function(state,input){
     state = mergeData({},state)
-    //FIXME big hack, use mutability
-    delete state[selection.id]
-    return state 
+    if(input.hasOwnProperty('id')){
+      //FIXME big hack, use mutability
+      delete state[input.id]
+    }
+    else if(input.hasOwnProperty('typeUid')){
+      state = Object.keys(state).reduce(function(outState, id){
+        if(state[id].typeUid !== input.typeUid){
+          outState[id] = state[id]
+        }
+        return outState
+      },{})
+
+    }
+
+    return state
   },state)
 
 
@@ -68,7 +81,7 @@ export function duplicateComponents(state, inputs){
       clone.pickable = source.pickable
 
     }else{
-      clone = mergeData({},source) 
+      clone = mergeData({},source)
       clone.id = newId
     }
 
@@ -77,9 +90,9 @@ export function duplicateComponents(state, inputs){
     state[newId] = clone
 
     //console.log("done duplicateComponents",state)
-    return state 
+    return state
   },state)
-  
+
 }
 
 //other helpers
@@ -94,4 +107,3 @@ export function makeActionsFromApiFns(apiFns){
 
    return actions
 }
-

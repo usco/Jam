@@ -61,6 +61,13 @@ let instance = require('jsondiffpatch').create({
       return '$$index:' + index;
     }
   })
+//to ignore functions
+instance.processor.pipes.diff.before('trivial', function ignoreFunctionDiffFilter(context) {
+    if (typeof context.left === 'function' || typeof context.right === 'function' ) {
+        context.setResult(undefined);
+        context.exit();
+    }
+})
 
 export function extractChangesBetweenArrays(prev, cur){
   let delta = instance.diff(prev, cur)
@@ -107,6 +114,40 @@ export function extractChangesBetweenArrays(prev, cur){
   }
 
   return result
+}
+
+
+export function changesFromObservableArrays(data$){
+  return data$
+    .scan(function(acc, cur){
+        return {cur,prev:acc.cur}
+      },{prev:undefined,cur:undefined})
+    .map(function(typeData){
+      let {cur,prev} = typeData
+      let changes = extractChangesBetweenArrays(prev,cur)
+      return changes
+    })
+    .share()
+}
+
+export function changesFromObservableArrays2(data$){
+  return data$
+    .scan(function(acc, x){
+      let cur  = x
+      let prev = acc.cur
+
+      cur = Object.keys(cur).map(function(key){
+        return cur[key]
+      })
+      return {cur,prev}
+    },{prev:undefined,cur:undefined})
+    .map(function(typeData){
+      let {cur,prev} = typeData
+      //console.log("diffing",cur,prev)
+      let changes = extractChanges(prev,cur)
+    return changes
+    })
+    .share()
 }
 
 

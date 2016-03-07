@@ -52,29 +52,27 @@ export function replicateStream(origin$, proxy$) {
 }
 
 /*merges an array of action objects into a single object :ie
- [{doBar$, doFoo$}, {doBaz$, doBar$}] => {doBar$, doFoo$, doBaz$} 
+ [{doBar$, doFoo$}, {doBaz$, doBar$}] => {doBar$, doFoo$, doBaz$}
 */
-export function mergeActionsByName(actionSources, validActions){
+export function mergeActionsByName(actionSources, validActions=[]){
 
   return actionSources.reduce(function(result, actions){
     //console.log("acions",Object.keys(actions),validActions)
     Object.keys(actions)
-      .filter(key=>validActions.indexOf(key.replace('$',''))>-1)
+      .filter(key=> validActions.length === 0 || validActions.indexOf(key.replace('$',''))>-1)
       .map(function(key){
         const action = actions[key]
         if(key in result){
           result[key] = merge(result[key], action)
         }else{
           result[key] = action
-        }       
+        }
       })
 
     return result
   },{})
- 
+
 }
-
-
 
 export function logNext( next ){
   log.info( next )
@@ -124,5 +122,5 @@ function wrapArrayParallel (items) {
 
 /*TODO: implement, we need to find a way to do inverted filtering*/
 function opposite(method){
-  
+
 }

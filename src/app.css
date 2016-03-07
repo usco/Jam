@@ -13,9 +13,9 @@ body{
   font-family: 'Open Sans', sans-serif;
   /*-webkit-transition: opacity 0.5s ease-in;
   opacity:1;*/
-  
+
   overflow:hidden;
-  
+
   /*make things unselectable, cross browser*/
   -webkit-touch-callout: none;
   -webkit-user-select: none;
@@ -219,6 +219,8 @@ button[disabled=disabled]:hover, button:disabled:hover{
   line-height: 0.8em;
   font-size: 0.8em;
   font-family: inherit;
+
+  text-overflow: ellipsis;
 }
 
 .toolbarBottom input[type=number]{
@@ -331,16 +333,16 @@ input[type=color]:focus{
 @keyframes spinner {
     to {transform: rotate(360deg);}
 }
- 
+
 @-webkit-keyframes spinner {
     to {-webkit-transform: rotate(360deg);}
 }
- 
+
 .spinner {
     min-width: 30px;
     min-height: 30px;
 }
- 
+
 .spinner:before {
     content: 'Loading…';
     position: absolute;
@@ -351,7 +353,7 @@ input[type=color]:focus{
     margin-top: -13px;
     margin-left: -13px;
 }
- 
+
 .spinner:not(:required):before {
     content: '';
     border-radius: 50%;
@@ -360,7 +362,7 @@ input[type=color]:focus{
     animation: spinner .6s linear infinite;
     -webkit-animation: spinner .6s linear infinite;
 }
-  
+
 /*//////////////*/
 /*camview controls overlay*/
 .camViewControls{
@@ -504,18 +506,50 @@ input[type=color]:focus{
 }
 
 .bom input[type=text]{
-  min-width: 150px;
   border: none;
   background: none;
   color: #555555;
 }
 
 .bom tr.selected input[type=text]{
-  min-width: 150px;
   border: none;
   background: none;
   color: white;
 }
+
+.bom .bomEntry .name input[type=text]{
+  min-width: 150px;
+  text-overflow: ellipsis;
+}
+.bom .bomEntry .qty input[type=number]{
+  width: 50px;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  border: none;
+  border-width: 0px;
+  width: 10em;
+  max-width: 50px;
+  border: none;
+  line-height: 0.8em;
+  font-size: 0.8em;
+  font-family: inherit;
+}
+.bom .bomEntry .phys_qty input[type=number]{
+  width: 50px;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  border: none;
+  border-width: 0px;
+  width: 10em;
+  max-width: 50px;
+  border: none;
+  line-height: 0.8em;
+  font-size: 0.8em;
+  font-family: inherit;
+}
+/*.bom .headerCell{
+  padding: 2px 10px 2px 10px;
+}*/
 
 
 .foo{
@@ -541,7 +575,7 @@ input[type=color]:focus{
 }
 .fullScreenToggler button{
   margin: 0;
-  padding: 0; 
+  padding: 0;
 }
 
 /*//////////////////*/
@@ -685,16 +719,16 @@ input[type=color]:focus{
 @keyframes spinner {
     to {transform: rotate(360deg);}
 }
- 
+
 @-webkit-keyframes spinner {
     to {-webkit-transform: rotate(360deg);}
 }
- 
+
 .spinner {
     min-width: 30px;
     min-height: 30px;
 }
- 
+
 .spinner:before {
     content: 'Loading…';
     position: absolute;
@@ -705,7 +739,7 @@ input[type=color]:focus{
     margin-top: -13px;
     margin-left: -13px;
 }
- 
+
 .spinner:not(:required):before {
     content: '';
     border-radius: 50%;
@@ -720,7 +754,7 @@ input[type=color]:focus{
 }
 
 .visible{
-  opacity: 1!important; 
+  opacity: 1!important;
 }
 
 .innerWrapper{
@@ -985,15 +1019,15 @@ http://cbracco.me/a-simple-css-tooltip/
   -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
   filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=0);
   opacity: 0;
-  -webkit-transition: 
+  -webkit-transition:
       opacity 0.2s ease-in-out,
         visibility 0.2s ease-in-out,
         -webkit-transform 0.2s cubic-bezier(0.71, 1.7, 0.77, 1.24);
-    -moz-transition:    
+    -moz-transition:
         opacity 0.2s ease-in-out,
         visibility 0.2s ease-in-out,
         -moz-transform 0.2s cubic-bezier(0.71, 1.7, 0.77, 1.24);
-    transition:         
+    transition:
         opacity 0.2s ease-in-out,
         visibility 0.2s ease-in-out,
         transform 0.2s cubic-bezier(0.71, 1.7, 0.77, 1.24);
@@ -1084,7 +1118,7 @@ http://cbracco.me/a-simple-css-tooltip/
 .tooltip-top:focus:after*/ {
   -webkit-transform: translateY(-12px);
   -moz-transform:    translateY(-12px);
-  transform:         translateY(-12px); 
+  transform:         translateY(-12px);
 }
 
 /* Left */
@@ -1110,7 +1144,7 @@ http://cbracco.me/a-simple-css-tooltip/
 .tooltip-left:focus:after*/ {
   -webkit-transform: translateX(-12px);
   -moz-transform:    translateX(-12px);
-  transform:         translateX(-12px); 
+  transform:         translateX(-12px);
 }
 
 /* Bottom */
@@ -1135,7 +1169,7 @@ http://cbracco.me/a-simple-css-tooltip/
 .tooltip-bottom:focus:after */{
   -webkit-transform: translateY(12px);
   -moz-transform:    translateY(12px);
-  transform:         translateY(12px); 
+  transform:         translateY(12px);
 }
 
 /* Right */
@@ -1159,7 +1193,7 @@ http://cbracco.me/a-simple-css-tooltip/
 .tooltip-right:focus:after */{
   -webkit-transform: translateX(12px);
   -moz-transform:    translateX(12px);
-  transform:         translateX(12px); 
+  transform:         translateX(12px);
 }
 
 /* Move directional arrows down a bit for left/right tooltips */

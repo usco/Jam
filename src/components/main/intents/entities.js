@@ -11,13 +11,13 @@ function dataFromMesh(objTransform$){
   return objTransform$
     .filter(hasEntity)
     .map(
-      function(m){ 
+      function(m){
         return {
-          ids:m.userData.entity.id, 
+          ids:m.userData.entity.id,
           pos:toArray(m.position),
           rot:toArray(m.rotation),
           sca:toArray(m.scale)
-        } 
+        }
     })
     .shareReplay(1)
 }
@@ -38,10 +38,10 @@ export function entityIntents(drivers){
   const deleteInstances$          = DOM.select('.delete').events("click")
   const duplicateInstances$       = DOM.select('.duplicate').events("click")
 
-  const removeEntityType$         = undefined //same as delete type/ remove bom entry
+  const removeTypes$         = undefined //same as delete type/ remove bom entry
 
   //this resets/clears everything: types and instances etc
-  const reset$                    = DOM.select('.reset').events("click")
+  const clearDesign$                    = DOM.select('.reset').events("click")
 
 
   const updateMetaComponent$ = events
@@ -70,7 +70,7 @@ export function entityIntents(drivers){
     ,updateComponent$
     ,duplicateInstances$
     ,deleteInstances$
-    ,reset$
+    ,clearDesign$
   }
 
   return entityActions
@@ -104,7 +104,7 @@ export function entityIntents(drivers){
     contextMenuActions$.map(undefined)
   )
 
-  deleteAllInstances$ = 
+  deleteAllInstances$ =
     deleteAllInstances$
     .merge(
       drivers.postMessages
@@ -116,7 +116,7 @@ export function entityIntents(drivers){
   let replaceAll$ = new Rx.Subject()
 
   return {
-    
+
     selectionTransforms$
 
     ,contextTaps$
@@ -126,7 +126,7 @@ export function entityIntents(drivers){
     ,duplicateInstances$
 
     ,replaceAll$
-    
+
     addNote$,
     measureDistance$,
     measureThickness$,
@@ -144,7 +144,7 @@ export function annotationIntents(interactions){
     .map( (event)=>event.detail.pickingInfos)
     .filter( (pickingInfos)=>pickingInfos.length>0)
     .map(first)
-    .share()  
+    .share()
 
   return {
     creationStep$ : annotationCreationStep$

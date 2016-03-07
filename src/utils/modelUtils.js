@@ -16,21 +16,21 @@ export function mergeData(currentData, ...inputs){
   return assign({}, currentData, ...inputs)
 }
 
-//need to make sure source data structure is right 
+//need to make sure source data structure is right
 export function applyDefaults(data$, defaults){
   return data$.map(function(data){
     return mergeData(defaults,data)
   })
 }
 
-//need to make sure the "type" (immutable) is right 
+//need to make sure the "type" (immutable) is right
 export function applyTransform(data$, transform){
   return data$.map(function(data){
     return transform(data)
   })
 }
 
-function logHistory(currentData, history){ 
+function logHistory(currentData, history){
   let past   = [currentData].concat(history.past)
   let future = []
 
@@ -61,7 +61,7 @@ function makeRedoMod$(actions){
       console.log("Redoing")
 
       let nState = history.future[0]
-      let past = [state].concat(history.past) 
+      let past = [state].concat(history.past)
       let future = history.future.slice(1)
 
       history = mergeData(history,{past,future})
@@ -84,13 +84,13 @@ export function makeModifications(actions, updateFns, options){
     let opName = key.replace(/\$/g, "")
     let modFn  = updateFns[opName]
 
-     //how to make this better? 
+     //how to make this better?
     if(opName==="undo") return makeUndoMod$(actions)
     if(opName === "redo") return makeRedoMod$(actions)
 
     //here is where the "magic happens"
     //for each "operation/action" we map it to an observable with history & state
-    
+
     //console.log("op",op,"opName",opName,"modFn",modFn)
     if(modFn && op){
 
@@ -98,7 +98,7 @@ export function makeModifications(actions, updateFns, options){
         .map((input) => (state) => {
 
           if(options.history)
-          { 
+          {
             let history = logHistory(state, state.history)
           }
           state   = modFn(state, input)//call the adapted function
@@ -116,7 +116,7 @@ export function makeModifications(actions, updateFns, options){
           return state
         })
 
-      return mod$ 
+      return mod$
     }
   })
   .filter(e=>e!==undefined)
@@ -129,42 +129,46 @@ export function makeModifications(actions, updateFns, options){
 
 //from futurice/power-ui
 /**
-   * smartStateFold is supposed to be given as the argument a
-   * `scan` operation over a stream of state|updateFn. State is
-   * expected to be an object, and updateFn is a function that
-   * takes old state and produces new state.
-   * Example:
-   * --s0---fn1----fn2----s10------>
-   *      scan(smartStateFold)
-   * --s0---s1-----s2-----s10------>
-   *
-   * where s1 = fn1(s0)
-   * where s2 = fn2(s1)
-   */
+* smartStateFold is supposed to be given as the argument a
+* `scan` operation over a stream of state|updateFn. State is
+* expected to be an object, and updateFn is a function that
+* takes old state and produces new state.
+* Example:
+* --s0---fn1----fn2----s10------>
+*      scan(smartStateFold)
+* --s0---s1-----s2-----s10------>
+*
+* where s1 = fn1(s0)
+* where s2 = fn2(s1)
+*/
 export function smartStateFold(prev, curr) {
-    if (typeof curr === 'function') {
-      return curr(prev)
-    } else {
-      return prev(curr)
-    }
+  //console.log("prev",prev,"cur",curr)
+  if (typeof curr === 'function') {
+    return curr(prev)
+  } else if(typeof curr === 'function'){
+    return prev(curr)
+  }else{
+    return prev
   }
+}
 
 
 export function makeModel(defaults, updateFns, actions, source, options={doApplyTransform:false} ){
   let mods$ =  makeModifications(actions, updateFns, options)
-  
+
+  //console.log("defaults",defaults)
   let source$ = source || just( defaults)
+  //  .tap(e=>console.log("source",e))
 
   source$ = applyDefaults(source$, defaults)
 
   if(options.doApplyTransform){
-    source$ = applyTransform( source$, transform )
+   source$ = applyTransform( source$, transform )
   }
 
   return mods$
-    .merge(source$)
-    .scan(smartStateFold)//combine existing data with new one
-    //.scan((currentData, modFn) => modFn(currentData))//combine existing data with new one
-    //.distinctUntilChanged()
-    .shareReplay(1)
+   .merge(source$)
+   .scan(smartStateFold, defaults)//combine existing data with new one
+   //.distinctUntilChanged()
+   .shareReplay(1)
 }

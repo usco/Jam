@@ -1,14 +1,19 @@
 import Rx from 'rx'
 const Observable = Rx.Observable
 const {merge, fromEvent, of} = Rx.Observable
-import {makeModel, mergeData} from '../utils/modelUtils'
+import {makeModel, mergeData} from '../../utils/modelUtils'
 
-
+//use mainly when reloading settings from localstorage
 function setAllValues(state, input){
   //console.log("setting settings")
   //TODO : do validation ?
   //we coerce appMode to "editor" when setting all values like this
-  let output = mergeData( state, mergeData( input, {appMode:"editor"})  )
+  //same with saveMode
+  let output = mergeData( state, mergeData( input, {
+    appMode:"editor",
+    saveMode:false,
+    activeTool:undefined
+  }))
   return output
 }
 
@@ -43,15 +48,18 @@ function setAppMode(state, input){
   }else if(input==='editor'){
     toolSets = ['view','edit']
   }
-  console.log("toolSets",toolSets)
   let output = mergeData( state, {toolSets})
-  console.log("setting app mode",input)
   return output
 }
 
 function setToolsets(state, input){
   let output = mergeData( state, {toolSets:input})
   //console.log("setting app mode",output)
+  return output
+}
+
+function setSaveMode(state, input){
+  let output = mergeData( state, {saveMode:input})
   return output
 }
 
@@ -63,6 +71,7 @@ function settings(actions, source){
   const defaults = {
     webglEnabled:true,
     appMode:"editor",
+    saveMode:false,
     autoSelectNewEntities:true,
     activeTool:undefined,
     repeatTool:false,
@@ -84,7 +93,10 @@ function settings(actions, source){
     }
   }
 
-  let updateFns  = {setAllValues, toggleShowGrid, toggleAutoRotate, setActiveTool, setAppMode, setToolsets}
+  let updateFns  = {setAllValues, toggleShowGrid,
+    toggleAutoRotate, setActiveTool, setAppMode, setToolsets,
+    setSaveMode
+  }
   return makeModel(defaults, updateFns, actions, source)
 }
 

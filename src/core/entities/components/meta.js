@@ -11,6 +11,7 @@ export function makeMetaSystem(actions){
     name: undefined,
     id:   undefined,
     typeUid: undefined,
+    assemblyId:undefined,
     color: "#07a9ff"
   }
 
@@ -28,7 +29,7 @@ export function makeMetaSystem(actions){
       state[id] = mergeData(orig,newAttrs)
       return state
     },state)
-    
+
   }
 
   function clone(state, input){

@@ -2,11 +2,29 @@ import {nameCleanup} from '../../utils/formatters'
 import {head} from 'ramda'
 
 
+export function intentsFromResources(rawParsedData$){
 
-export function makeEntityActions(certains$){
+  const data$ = rawParsedData$
+    .share()
+
+  const entityCandidates$ = data$//for these we need to infer type , metadata etc
+    .filter(d=>d.data.meshOnly === true)
+    .map(({meta,data})=>({data:head(data.typesMeshes).mesh, meta}))
+    //.tap(e=>console.log("entityCandidates",e))
 
 
+  const entityCertains$ = data$//for these we also have type, metadata etc, so we are CERTAIN of their data
+    .filter(d=>d.data.meshOnly === false)
+    //.tap(e=>console.log("entityCertains",e))
 
+  return {
+      entityCandidates$
+    , entityCertains$
+  }
+}
+
+export function makeEntityActionsFromResources(certains$){
+  certains$ = certains$
   const createMetaComponents$      = certains$.map(data=>data.data.instMeta)
     //NOTE :we are doing these to make them compatible with remapMetaActions helpers, not sure this is the best
     .map(function(datas){
@@ -14,7 +32,7 @@ export function makeEntityActions(certains$){
         return { id:instUid,  value:{ id:instUid, typeUid, name } }
       })
     })
-  const createTransformComponents$ = certains$.pluck('mesh')
+  const createTransformComponents$ = certains$.map(data=>data.data.instTransforms)
     .map(function(datas){
       return datas.map(function({instUid, transforms}){
         return { id:instUid, value:{pos:[transforms[11],transforms[10],transforms[9]]} }
@@ -31,7 +49,7 @@ export function makeEntityActions(certains$){
   })
 
    //TODO : this would need to be filtered based on pre-existing type data
-  const addEntityTypes$ = certains$
+  const addTypes$ = certains$
     .map(function(data){
       return data.data.typesMeta.map(function(typeMeta,index){
         if(typeMeta.name === undefined){//we want type names in any case, so we infer this base on "file" name
@@ -45,7 +63,7 @@ export function makeEntityActions(certains$){
     })
 
   return {
-      addEntityTypes$
+      addTypes$
     , createMetaComponents$
     , createTransformComponents$
     , createMeshComponents$

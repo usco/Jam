@@ -1,6 +1,6 @@
 import Rx from 'rx'
 const {merge,just,fromArray} = Rx.Observable
-import {flatten} from 'ramda'
+import {flatten, find, propEq, head} from 'ramda'
 
 import {nameCleanup} from '../../utils/formatters'
 
@@ -21,13 +21,12 @@ import {remapEntityActions,remapMetaActions,
 
 import {selectionsIntents} from './intents/selections'
 
-import settings from    '../../core/settings'
+import settings from    '../../core/settings/settings'
 import comments from    '../../core/comments'
 import selections from  '../../core/selections'
-import entityTypes from '../../core/entities/entityTypes'
-import bom         from '../../core/bom'
-
-import bomIntens from './intents/bom2'
+import entityTypes from '../../core/entities/types'
+import bom         from '../../core/bom/index'
+import bomIntents from '../../core/bom/intents'
 
 import {authToken} from '../../core/sources/addressbar.js'
 
@@ -95,27 +94,27 @@ export default function model(props$, actions, sources){
   //we FILTER all candidates/certains by their "presence" in the types list
 
   //TODO: go back to basics : some candidate have access to already exisiting types, some others not (first time)
-  const addInstancesCandidates$ = entityActions.entityCandidates$
-    .withLatestFrom(entityTypes$, function(candidateData, entityTypes){
-      const meshName = candidateData.meta.name
-      let typeUid = entityTypes.meshNameToPartTypeUId[candidateData.meta.name]
-      if(typeUid){
-        let tData = entityTypes.typeData[typeUid]
-        return [tData]
-      }
-      return undefined
+  const addInstancesCandidates$ = entityActions.addInstanceCandidates$
+    //.filter(data=>data.meta.id === undefined)
+    .combineLatest(entityTypes$, function(candidateData, types){
+      const meshName = nameCleanup(candidateData.meta.name)
+      return find(propEq('name', meshName))(types)
     })
     .filter(exists)
+    .filter(candidate=>candidate.mesh !== undefined)
+    //.tap(e=>console.log("addInstancesCandidates",e))
+    .map(toArray)
+    .take(1)
+    .repeat()
 
-  const addInstance$ = Rx.Observable.merge(
-      addInstancesCandidates$
-    )
-    .filter(exists)
-    .filter(d=>d.length>0)
+  //FIXME: just a hack ! ideally all instances should just have an assembly id
+  const assembly$ = just(generateUUID())
 
-  const entityInstancesBase$  =
-    addInstance$
-    .map(function(newTypes){
+  const entityInstancesBase$  = addInstancesCandidates$
+    .combineLatest(assembly$,function(newTypes, assemblyId){
+      return {newTypes, assemblyId}
+    })
+    .map(function({newTypes,assemblyId}){
       return newTypes.map(function(typeData){
         let instUid = generateUUID()
         let typeUid = typeData.id
@@ -125,6 +124,7 @@ export default function model(props$, actions, sources){
           id:instUid
           ,typeUid
           ,name:instName
+          ,assemblyId
         }
         return instanceData
       })
@@ -133,14 +133,16 @@ export default function model(props$, actions, sources){
 
   //create various components' baseis
   let componentBase$ = entityInstancesBase$
-    .withLatestFrom(entityTypes$, function(instances,types){
+    .withLatestFrom(entityTypes$, function(instances, types){
 
       let data =  instances.map(function(instance){
         let instUid = instance.id
         let typeUid = instance.typeUid
+        let assemblyId = instance.assemblyId
 
         //is this a hack?
-        let mesh = types.typeUidToTemplateMesh[typeUid]
+        let entry = find(propEq('id', typeUid))(types)
+        let mesh = entry.mesh
         let bbox = mesh.boundingBox
         let zOffset = bbox.max.clone().sub(bbox.min)
         zOffset = zOffset.z/2
@@ -153,6 +155,7 @@ export default function model(props$, actions, sources){
         return {
           instUid
           ,typeUid
+          ,assemblyId
           ,instance
           ,mesh
           ,zOffset
@@ -164,7 +167,32 @@ export default function model(props$, actions, sources){
     })
     .shareReplay(1)
 
-  ///main stuff
+
+  actions.entityActions.createMeshComponents$ = actions.entityActions.createMeshComponents$
+    .combineLatest(entityTypes$, function(meshComponents, types){
+      return meshComponents.map(function(component){
+        if(component.data){
+          return component
+        }else{
+          const {typeUid} = component
+          let entry = find(propEq('id', typeUid))(types)
+          if(entry && entry.mesh){
+            let mesh = entry.mesh
+            //let bbox = mesh.boundingBox
+            //let zOffset = bbox.max.clone().sub(bbox.min)
+            //zOffset = zOffset.z/2
+            //bbox = { min:bbox.min.toArray(), max:bbox.max.toArray() }
+
+            //injecting data like this is the right way ?
+            mesh.material = mesh.material.clone()
+            mesh = mesh.clone()
+            return mergeData({}, component, {value:{mesh}})
+          }else{
+            return component
+          }
+        }
+      }).filter(data=>data.value!==undefined)
+    })
 
   //annotations
   let addAnnotations$ = addAnnotation(actions.annotationsActions, settings$)
@@ -185,8 +213,8 @@ export default function model(props$, actions, sources){
   let {bounds$}        = makeBoundingSystem(boundActions)
 
   //selections => only for real time view
-  const typesInstancesRegistry$ =  makeRegistry(meta$, entityTypes$)
-  const selections$             = selections( selectionsIntents({DOM,events}, typesInstancesRegistry$) )
+  const typesInstancesRegistry$ = makeRegistry(meta$, entityTypes$)
+  const selections$             = selections( selectionsIntents({DOM, events}, typesInstancesRegistry$) )
     .merge(metaActions.removeComponents$.map(a=> ({instIds:[],bomIds:[]}) )) //after an instance is removed, unselect
 
   const currentSelections$ = selections$//selections$.pluck("instIds")
@@ -202,19 +230,18 @@ export default function model(props$, actions, sources){
   //close some cycles
   replicateStream(currentSelections$, proxySelections$)
 
-
-  const bomActions = bomIntens(sources, entityTypes$, metaActions, entityActions, actions)
+  const bomActions = bomIntents(sources, entityTypes$, metaActions, entityActions, actions)
   const bom$ = bom(bomActions)
 
   //not entirely sure, we need a way to observe any fetch/updload etc operation
   const operationsInProgress$ = actions.progress.combinedProgress$.startWith(undefined)
 
-
   ////
-  const design$ = actions.loadDesign
+  const design$ = actions.designActions.loadDesign$
+    .filter(exists)
     .map(data=>({synched:true, id:data, ns:'ym'}))
     .startWith({synched:false, id:undefined, ns:'ym'})
-    .tap(e=>console.log("design",e))
+    .tap(e=>console.log("designInfos",e))
 
   //////other data
   const appData$ = sources.appMeta
@@ -222,11 +249,12 @@ export default function model(props$, actions, sources){
   //authentification data, if any
   const authData$ = authToken(sources.addressbar)
     .flatMap(fromArray)
+    .filter(exists)
     .map(token => ({token}))
+    .startWith({token:undefined})
 
   //combine all the above to get our dynamic state
   const state$ = combineLatestObj({
-
     selections$
     ,bom$
     ,comments$
@@ -246,9 +274,9 @@ export default function model(props$, actions, sources){
     //infos about current design
     ,design$
 
+    ,assembly$
     //authData
     ,authData$
-
   }).shareReplay(1)
 
 

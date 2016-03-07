@@ -1,16 +1,15 @@
 import {hasModelUrl, filterByExtensions} from './utils'
 
 export function partMesh(postMessage$, params){
-  return filterByExtensions( 
+  return filterByExtensions(
     postMessage$.pluck("data").filter(hasModelUrl).pluck("modelUrl")
       .map(data=>[data])//always return array
     , params.get('extensions','meshes') )//we only let actual mesh "data" through
   //.map(data => ( {src:'http', uri:data} )  )
 }
 
-
 export function partSource(postMessage$, params){
-  return filterByExtensions( 
+  return filterByExtensions(
     postMessage$.pluck("data").filter(hasModelUrl).pluck("sourceUrl")
       .map(data=>[data])//always return array
 

@@ -4,13 +4,21 @@ import {exists,getExtension,getNameAndExtension, isValidFile, isValidUrl, isEmpt
 import assign from 'fast.js/object/assign'//faster object.assign
 
 
+function isPreFormatedRequest(data){
+  return (data.hasOwnProperty && data.hasOwnProperty('uri') && data.hasOwnProperty('method') )//already preformated request
+}
+
 function isValidDataSource(data){
-  const valid =  isValidFile(data) || isValidUrl(data)
+  const valid =  isPreFormatedRequest(data) || isValidFile(data) || isValidUrl(data)
   return valid
 }
 
 function dataSource(data){
-  if(isValidFile(data)){
+
+  if(isPreFormatedRequest(data)){
+    return data
+  }
+  else if(isValidFile(data)){
     return {
       src:'desktop'
       ,uri: data.name
@@ -25,8 +33,6 @@ function dataSource(data){
 }
 
 export default function assetRequests(inputs, sources){
-  //const {meshSources$,srcSources$} = inputs
-
   //FIXME: caching should be done at a higher level , to prevent useless requests
   const resourceCache$ = undefined
   const cache = {}
@@ -46,36 +52,14 @@ export default function assetRequests(inputs, sources){
       return {src:source.src, uri, data, ext, name}
     })
 
-  //baseRequest$
-  //  .forEach(e=>console.log("sort of requests",e))
-
   const requests$ = baseRequest$
     .filter(function(req){
       const cached = cache[req.uri]
-      return cached ===undefined
+      return cached === undefined
     })
+    .tap(e=>console.log("assetRequest",e))
 
-  /*const results$ = merge(
-      fetch(sources)
-      //TODO: merge with cached results
-    )*/
-  /*const request  = of( e.request )
-      const response = e.pluck("response")
-      const progress = e.pluck("progress")
-      return combineLatestObj({response,request,progress})*/
-
-  /*var sources = {
-    'desktop': of("desktop"),
-    'http': of("bar")
-  }
-  var source = Rx.Observable.case(
-    function(){
-      return 'http'
-    }
-    ,sources)
-    .forEach(e=>console.log("testing",e))*/
-
-  // request from http driver 
+  // request from http driver
   const httpRequests$ = requests$
     .filter(r=>r.src==="http")
     .map(function(req){
@@ -84,7 +68,6 @@ export default function assetRequests(inputs, sources){
         ,method:'get'
         ,type:'resource'},req)
     })
-
 
   //request from desktop store (source only)
   const desktopRequests$ = requests$
@@ -101,6 +84,6 @@ export default function assetRequests(inputs, sources){
     ,desktop$:desktopRequests$
   }
 
-  return requests 
-  
+  return requests
+
 }

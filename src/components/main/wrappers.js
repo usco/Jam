@@ -32,11 +32,11 @@ export function EntityInfosWrapper(state$, DOM) {
 
     return selectedInstIds$
       .combineLatest(state$,function(ids,state){
-        
+
         let transforms = ids.map(function(id){
           return state.transforms[id]
         })
-        
+
         let meta = ids.map(function(id){
           return state.meta[id]
         })
@@ -52,21 +52,41 @@ export function EntityInfosWrapper(state$, DOM) {
 
 export function BOMWrapper(state$, DOM){
   function makeBomProps(state$){
-    let fieldNames = ["name","qty","unit","version","printable"]
-    let sortableFields = ["id","name","qty","unit","printable"]  
-    let editableFields = ["name"] 
+    const fieldNames     = ["name","qty","phys_qty","unit","printable"]
+    const sortableFields = ["id","name","qty","unit","printable"]
+    const editableFields = ['name','qty','phys_qty']
+    const fieldDescriptions = {
+      'name':'name of the parts'
+      ,'qty':'quantities of this parts'
+      ,'phys_qty':'physical quantity: ie 10 cm'
+      ,'unit':'use EA for "each", or SI/ imperial units'
+      ,'printable':'is this a printable part?'
+    }
+    const fieldTypes     = {
+      'name':'text'
+      ,'qty':'number'
+      ,'phys_qty':'number'
+      ,'unit':'list'
+      ,'printable':'boolean'
+    }
 
-    let fieldNames$      = just(fieldNames)
-    let editableFields$  = just(editableFields)
-    let sortableFields$  = just(sortableFields)
-    let selectedEntries$ = state$.pluck("selections").pluck("bomIds")
+    const fieldNames$        = just(fieldNames)
+    const editableFields$    = just(editableFields)
+    const sortableFields$    = just(sortableFields)
+    const selectedEntries$   = state$.pluck("selections").pluck("bomIds")
+    const fieldDescriptions$ = just(fieldDescriptions)
+    const fieldTypes$        = just(fieldTypes)
+    const units$             = just(['EA','m','in','kg','lb','l'])
     //let show$            = state$.pluck("settings").pluck("appMode").map(mode=> mode !=='viewer')
-
-    let entries$ = state$
-      .map(s=>s.bom.entries)
+    const entries$ = state$
+      .map(s=>s.bom)
       .distinctUntilChanged()
+    const readOnly$ = state$.pluck('settings')
+      .map(s=> !(s.toolSets.indexOf('edit') !== -1))
 
-    let bomProps$ = combineLatestObj( {fieldNames$,sortableFields$,editableFields$,entries$,selectedEntries$} )
+    let bomProps$ = combineLatestObj( {
+      fieldNames$, sortableFields$, editableFields$, entries$,
+      selectedEntries$, fieldDescriptions$, fieldTypes$, units$, readOnly$} )
 
     return bomProps$
   }
@@ -125,7 +145,7 @@ export function CommentsWrapper(state$, DOM){
     })
     .map(getFirstsData)
     .shareReplay(1)
-    
+
 
   function getFirstsData(list){
     if(list.length === 0) return undefined
@@ -178,5 +198,3 @@ export function progressBarWrapper(state$, DOM){
 
   return ProgressBar({DOM,props$})
 }
-
-
