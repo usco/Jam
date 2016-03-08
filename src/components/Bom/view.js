@@ -46,25 +46,25 @@ export default function view (state$) {
       let rows    = entries.map( function(row, index){
         let cells = fieldNames.map(function(name){
           let value = row[name]//JSON.stringify(row[name])
+          let cellToolTip = undefined
 
-          //editable fields need to be represented differently (hack for now)
-          /*if(editableFields.indexOf(name) > -1){
-            value = <input type="text" value={value} placeholder='not specified' disabled={readOnly}/>
+          //special case for quantities
+          if(name === 'qty'){
+            const qtyOffset = row['_qtyOffset']
+            //cellToolTip = value>0 ? `Manually added items:${qtyOffset}` : undefined
+            value +=  qtyOffset// we add quantity offset (dynamic quantities , inferable from assembly)
           }
-          else if(name === 'unit'){
-            const options = units.map(unit=><option value={unit} selected={value === unit}> {unit}</option>)
-
-            value = <select value={value} selected={value} disabled={readOnly}>
-              {options}
-            </select>
-          }*/
+          cellToolTip = readOnly? undefined: cellToolTip//if the field is disabled do not add any extra toolTip
 
           switch(fieldTypes[name]){
             case 'text':
-              value = <input type="text" value={value} placeholder='not specified' disabled={readOnly}/>
+              value = <input type="text" value={value} placeholder='not specified' disabled={readOnly} />
             break;
             case 'number':
-              value = <input type="number" value={value} disabled={readOnly}/>
+              value = <input type="number" value={value} disabled={readOnly} />
+              //<span className="tooltip-bottom" attributes={{"data-tooltip": cellToolTip}} >
+
+              //</span>
             break;
             case 'list'://FIXME : not generic, only works for unit
               const options = units.map(unit=><option value={unit} selected={value === unit}> {unit}</option>)
