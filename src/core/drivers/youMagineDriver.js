@@ -5,9 +5,11 @@ const {fromEvent, fromArray, just, merge, concat, concatAll} = Observable
 import {combineLatestObj, replicateStream} from '../../utils/obsUtils'
 import {safeJSONParse, toArray, remapJson} from '../../utils/utils'
 import {changesFromObservableArrays} from '../../utils/diffPatchUtils'
+import {mergeData} from '../../utils/modelUtils'
+
 
 import assign from 'fast.js/object/assign'//faster object.assign
-import {pick, equals, head, pluck} from 'ramda'
+import {pick, omit, equals, head, pluck} from 'ramda'
 
 function jsonToFormData(jsonData){
   jsonData = JSON.parse( JSON.stringify( jsonData ) )
@@ -51,7 +53,6 @@ function makeApiStream(source$, outputMapper, design$, authData$){
 
   return merge(upsert$, delete$)
 }
-
 
 
 //storage driver for YouMagine designs & data etc
@@ -129,7 +130,10 @@ export default function makeYMDriver(httpDriver, params={}){
       }
 
       const requests = entries.map(function(entry){
-        const refined = pick( fieldNames, remapJson(mapping, entry) )
+        let outEntry = mergeData({}, entry)
+        outEntry.qty = outEntry.qty - entry._qtyOffset //adjust quantity, removing any dynamic counts
+        const refined = pick( fieldNames, remapJson(mapping, outEntry) )
+
         const send    = jsonToFormData(refined)
 
         return {
