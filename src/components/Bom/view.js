@@ -97,8 +97,9 @@ export default function view (state$) {
         })
 
         if(isAdder){
-          cells.push(<td className={baseClassName}> <button type='submit' className='addBomEntry' >Add</button> </td>)
+          cells.push(<td className={baseClassName}> <button type='button' className='addBomEntry' >Add</button> </td>)
         }else if(row._qtyOffset===0){
+
           const deleteIconSvg = `<svg version="1.1" id="Trash" xmlns="http://www.w3.org/2000/svg"
             width="16" height="16" x="0px" y="0px" data-icon="duplicate" viewBox="0 0 20 20" class="icon">
             <path d="M3.389,7.113L4.49,18.021C4.551,18.482,6.777,19.998,10,20c3.225-0.002,5.451-1.518,5.511-1.979l1.102-10.908

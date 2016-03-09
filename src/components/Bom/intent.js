@@ -7,15 +7,15 @@ import {combineLatestObj} from '../../utils/obsUtils'
 
 export default function intent(DOM){
   const entryTapped$  = DOM.select(".bom .normal").events('click',true)//capture == true
-    .do(e=>e.stopPropagation())
+    .tap(e=>e.stopPropagation())
     .map(e => e.currentTarget.dataset.id)
     //e.target.attributes["data-transform"].value
 
   const headerTapped$ = DOM.select(".headerCell").events('click',true)
-    .do(e=>e.stopPropagation())
+    .tap(e=>e.stopPropagation())
 
   const removeEntry$ = DOM.select('.bom .removeBomEntry').events('click')
-    .do(e=>e.stopPropagation())
+    .tap(e=>e.stopPropagation())
     .map(function(e){
       const actualTarget = e.currentTarget.dataset
       return {
@@ -24,7 +24,7 @@ export default function intent(DOM){
     })
     .tap(e=>console.log("removeEntry",e))
 
-  const addEntryTapped$ = DOM.select('.addBomEntryForm').events('submit')
+  const addEntryTapped$ = DOM.select('.addBomEntry').events('click')
     .tap(function(e){
       e.preventDefault()
       return false
@@ -43,14 +43,19 @@ export default function intent(DOM){
   const addEntry$ = addEntryTapped$//newEntryValues$
     .withLatestFrom(newEntryValues$,((_,data)=>data))
     .filter(data=>data.name !== undefined)
-    .tap(e=>console.log("raw addEntry data",e))
+    //.tap(e=>console.log("raw addEntry data",e))
     //  const addEntry$ = getFieldValues({name:'', qty:0, phys_qty:0, unit:'EA', printable:false}, DOM, '.bom .adder', addEntryTapped$)
-    //    .tap(e=>console.log("raw addEntry data",e))
 
+  DOM.select('.textInput').events('keydown')
+    .forEach(e=>console.log("keydown",e))
 
   const changeEntryValue$ = DOM.select('.bom .normal input[type=text]').events('change')
     .merge(DOM.select('.bom .normal input[type=number]').events('change'))
-    .do(e=>e.stopPropagation())
+    .tap(e=>e.stopPropagation())
+    .tap(function(e){
+      e.preventDefault()
+      return false
+    })
     .map(function(e){
       const actualTarget = e.currentTarget.parentElement.dataset
       return {
@@ -61,7 +66,7 @@ export default function intent(DOM){
     })
 
   const checkEntry$ = DOM.select('.bom .normal input[type=checkbox]').events('change')
-    .do(e=>e.stopPropagation())
+    .tap(e=>e.stopPropagation())
     .map(function(e){
       const actualTarget = e.currentTarget.parentElement.dataset
       return {
@@ -88,11 +93,10 @@ export default function intent(DOM){
     ,entryOptionChange$
     )
 
-  const toggle$  = DOM.select(".bomToggler").events("click")//toggle should be scoped?
+  const toggle$  = DOM.select(".bomToggler")
+    .events("click")//toggle should be scoped?
     .map(true)
-    .scan((acc,val)=>!acc)
-
-
+    .scan((acc,val)=>!acc,true)//intitial value of scan needs to match the one of "startWith" in "toggled" model
 
   //FIMXE: pressing enter in the name edit, add multiple copies
   return {

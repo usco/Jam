@@ -55,8 +55,8 @@ export default function model(props$, actions){
       return output
     })
 
-  const toggled$ = actions.toggle$.startWith(true)
-
+  const toggled$ = actions.toggle$
+    .startWith(true)
 
   function makeNewEntryDefaults(){
 
@@ -78,9 +78,6 @@ export default function model(props$, actions){
   const newEntryValues$ = actions.addEntry$
     .map(e=>(makeNewEntryDefaults()))
     .startWith(makeNewEntryDefaults())
-    .tap(e=>console.log("setting newEntryValues",e))
-
-
 
   return combineLatestObj({entries$:sortedEntries$, selectedEntries$
     , fieldNames$, sortFieldName$, sortablesDirection$, editableFields$, fieldDescriptions$, fieldTypes$, units$,
