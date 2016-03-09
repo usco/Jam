@@ -14,8 +14,14 @@ export default function intent(events, params){
     .map(data=>({id:data.id,data}))//convert data structure to something the BOM model can deal with
     .map(toArray)
 
+  const removeBomEntries$ = events
+    .select('bom').events('removeEntry$')
+    .map(toArray)
+
   return {
     updateBomEntries$
     ,upsertBomEntries$
+    ,removeBomEntries$
+
   }
 }

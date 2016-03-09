@@ -505,10 +505,12 @@ input[type=color]:focus{
   padding: 5 5 5 5;
 }
 
+
 .bom input[type=text]{
   border: none;
   background: none;
   color: #555555;
+  font-family: 'Open Sans', sans-serif;
 }
 
 .bom tr.selected input[type=text]{
@@ -560,7 +562,7 @@ input[type=color]:focus{
 .bom .adder{
   font-style: italic;
   color: #827D7D;
-  background: #EFEFEF;
+  background: white;
 }
 .bom .adder input[type=text]{
   color:#827D7D;
@@ -586,6 +588,30 @@ input[type=color]:focus{
     color: #827D7D;
     font-style: italic!important;
 }
+
+/*.bom .adder button{
+  color: white;
+  padding: 2 5 2 5;
+  background: #5fc5fb;
+  margin: 0;
+}
+
+
+.bom button .icon{
+  background: white;
+  fill:red
+}*/
+
+/*.bom button:hover path .icon{
+  fill:black !important;
+}*/
+
+/*.bom button:hover .icon{
+  background: white;
+}*/
+
+
+
 
 
 .foo{

@@ -86,9 +86,10 @@ export default function bomIntent(sources, entityTypes$, coreActions, entityActi
 
   const upsertBomEntriesAll$ = extraActions.upsertBomEntries$.merge(upsertBomEntries$)
   const updateBomEntries$ = extraActions.updateBomEntries$
+  const removeBomEntriesAll$ = extraActions.removeBomEntries$.merge(removeBomEntries$)
 
   let bomActions = mergeData( {upsertBomEntries$, updateBomEntriesCount$, updateBomEntries$,  upsertBomEntries$:upsertBomEntriesAll$,
-    clearBomEntries$, removeBomEntries$} )
+    clearBomEntries$, removeBomEntries$:removeBomEntriesAll$} )
 
   return bomActions
 }

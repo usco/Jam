@@ -14,19 +14,15 @@ export default function intent(DOM){
   const headerTapped$ = DOM.select(".headerCell").events('click',true)
     .do(e=>e.stopPropagation())
 
-  const removeEntry$ = DOM.select('.bom .removeBomEntry').events('click',true)
+  const removeEntry$ = DOM.select('.bom .removeBomEntry').events('click')
     .do(e=>e.stopPropagation())
     .map(function(e){
-      const actualTarget = e.currentTarget.parentElement.dataset
+      const actualTarget = e.currentTarget.dataset
       return {
         id:actualTarget.id
-        ,attrName:actualTarget.name
-        ,value:e.target.checked
       }
     })
-    .tap(e=>console.log("removeEntry"))
-
-  removeEntry$.forEach(e=>console.log("removeEntry",e))
+    .tap(e=>console.log("removeEntry",e))
 
   const addEntryTapped$ = DOM.select('.addBomEntryForm').events('submit')
     .tap(function(e){
@@ -46,6 +42,7 @@ export default function intent(DOM){
 
   const addEntry$ = addEntryTapped$//newEntryValues$
     .withLatestFrom(newEntryValues$,((_,data)=>data))
+    .filter(data=>data.name !== undefined)
     .tap(e=>console.log("raw addEntry data",e))
     //  const addEntry$ = getFieldValues({name:'', qty:0, phys_qty:0, unit:'EA', printable:false}, DOM, '.bom .adder', addEntryTapped$)
     //    .tap(e=>console.log("raw addEntry data",e))
@@ -95,12 +92,17 @@ export default function intent(DOM){
     .map(true)
     .scan((acc,val)=>!acc)
 
+
+
+  //FIMXE: pressing enter in the name edit, add multiple copies
   return {
     entryTapped$
     ,headerTapped$
-    ,editEntry$
+
     ,addEntry$
+    ,editEntry$
     ,removeEntry$
+
     ,toggle$
   }
 }

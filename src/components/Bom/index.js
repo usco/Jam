@@ -14,12 +14,15 @@ export default function Bom({DOM, props$}) {
   const state$  = model(props$,actions)
   const vtree$  = view(state$)
 
+  actions.removeEntry$.forEach(e=>e)
+
   return {
     DOM: vtree$,
     events: {
       entryTapped$:actions.entryTapped$
       ,editEntry$:actions.editEntry$
       ,addEntry$:actions.addEntry$
+      ,removeEntry$:actions.removeEntry$
     }
   }
 }
