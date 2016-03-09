@@ -3,8 +3,12 @@ import Cycle from '@cycle/core'
 import Rx from 'rx'
 import {hJSX} from '@cycle/dom'
 import Class from "classnames"
+import {prepend} from 'ramda'
 
 import tooltipIconBtn from '../widgets/TooltipIconButton'
+
+import {generateUUID} from '../../utils/utils'
+
 
 
 export default function view (state$) {
@@ -12,7 +16,7 @@ export default function view (state$) {
   return state$
     .distinctUntilChanged()
     .map(function({entries, selectedEntries
-      , fieldNames, sortFieldName, sortablesDirection, editableFields, fieldDescriptions,fieldTypes, units, toggled, readOnly}){
+      , fieldNames, sortFieldName, sortablesDirection, editableFields, fieldDescriptions,fieldTypes, units, newEntryValues, toggled, readOnly}){
 
       //entries = entries.asMutable()//FIXME: not sure
       //console.log( "selectedEntries in BOM",selectedEntries)
@@ -34,69 +38,101 @@ export default function view (state$) {
         }
         //className={Class(`tooltip-bottom`),
         return (
-
           <th className="headerCell" attributes={{"data-name": name}}>
           <span className='tooltip-bottom' attributes={{"data-tooltip": toolTip}}>{name}</span> {sortArrow}
           </th>
         )
       })
-      //{name}
 
+      //add editable row for new entries before all the rest
+      const uiEntries = prepend(newEntryValues, entries)
 
-      let rows    = entries.map( function(row, index){
+      let rows    = uiEntries.map( function(row, index){
+        const isDynamic = row['_qtyOffset'] !== 0 ? true: false //are we dealing with a "dynamic" entry ie from a 3d file
+        const isAdder   = row.hasOwnProperty('_adder')
+        const baseClassName = "bomEntry cell"
+
         let cells = fieldNames.map(function(name){
-          let value = row[name]//JSON.stringify(row[name])
           let cellToolTip = undefined
+
+          //console.log("name",name,"value",value)
 
           //special case for quantities
           if(name === 'qty'){
             const qtyOffset = row['_qtyOffset']
             //cellToolTip = value>0 ? `Manually added items:${qtyOffset}` : undefined
-            value +=  qtyOffset// we add quantity offset (dynamic quantities , inferable from assembly)
+            //value +=  qtyOffset// we add quantity offset (dynamic quantities , inferable from assembly)
           }
           cellToolTip = readOnly? undefined: cellToolTip//if the field is disabled do not add any extra toolTip
 
+          const disabled  = (isDynamic && name ==='phys_qty') || readOnly //if readony or if we have a dynamic entry called phys_qty, disable
+          const dataValue = (isDynamic && name ==='phys_qty')? 'n/a' : row[name]
+
+        //  console.log("dataValue", dataValue,units)
+          let value = ''
           switch(fieldTypes[name]){
             case 'text':
-              value = <input type="text" value={value} placeholder='not specified' disabled={readOnly} />
+              value = <input type="text" value={dataValue} name={name} placeholder='not specified' disabled={disabled} />
             break;
             case 'number':
-              value = <input type="number" value={value} disabled={readOnly} />
+              value = <input type="number" value={dataValue} min={0} name={name} disabled={disabled} />
               //<span className="tooltip-bottom" attributes={{"data-tooltip": cellToolTip}} >
-
               //</span>
             break;
-            case 'list'://FIXME : not generic, only works for unit
-              const options = units.map(unit=><option value={unit} selected={value === unit}> {unit}</option>)
-              value = <select value={value} selected={value} disabled={readOnly}>
+            case 'list'://FIXME : not generic, only works for unit// selected={dataValue}
+              const options = units.map(unit=><option value={unit} selected={dataValue === unit}> {unit}</option>)
+              value = <select name={name}  value={dataValue}disabled={disabled} key={generateUUID()}> //VDOM BUG: need to force a new uuid or it will not rerender correctly
                 {options}
               </select>
             break;
             case 'boolean':
-              value = <input type="checkbox" checked={value} disabled={readOnly}/>
-
+              value = <input type="checkbox" checked={dataValue} value={dataValue} name={name}  disabled={disabled} key={generateUUID()}/> //VDOM BUG: need to force a new uuid or it will not rerender correctly
             break;
             default:
-              value = value
+              value = `${value}`
             break;
           }
 
-          return(<td className={"bomEntry cell "+name} attributes={{"data-name": name, "data-id":row.id}} >{value}</td>)
+          return(<td className={`${baseClassName} ${name}`} attributes={{"data-name": name, "data-id":row.id}} >{value}</td>)
         })
 
-        //cells.push(<td className="bomEntry cell"> <button>Change Model</button> </td>)
+        if(isAdder){
+          cells.push(<td className={baseClassName}> <button type='submit' className='addBomEntry' >Add</button> </td>)
+        }else{
+          cells.push(<td className={baseClassName}> <button type='button' className='removeBomEntry' attributes={{"data-name": name, "data-id":row.id}}>Remove</button> </td>)
+        }
 
-        let selected = selectedEntries.indexOf(row.id) > -1
+        const selected = selectedEntries.indexOf(row.id) > -1
 
         return(
           <tr
-            className={Class("bomEntry", {selected: selected})}
+            className={Class("bomEntry", {selected, adder:isAdder, normal:!isAdder})}
             attributes={{"data-name": row.name, "data-id":row.id}} key={index}
             >
-            {cells}
+              {cells}
           </tr>
         )
       })
+
+      //add editable row for new entries before all the rest
+      /*function createAddNewEntryEditorLine(){
+
+
+        let cells = fieldNames.map(function(name){
+
+
+        })
+
+        return(
+          <tr
+            className={Class("bomEntry")}
+            attributes={{"data-name": 'newEntry', "data-id":undefined}} key='newEntry'
+            >
+          </tr>
+        )
+      }
+      rows = prepend(createAddNewEntryEditorLine(),rows)
+      console.log("rows",rows)*/
 
       const iconSvg = `<svg xmlns="http://www.w3.org/2000/svg" version="1.1" id="List" class="icon"
         x="0px" y="0px" viewBox="0 0 20 20" enable-background="new 0 0 20 20" xml:space="preserve">
@@ -107,7 +143,8 @@ export default function view (state$) {
       let content = undefined
 
       if(toggled){
-        content = <table >
+        content = <form className='addBomEntryForm'>
+          <table >
             <thead>
               <tr>
                 {headers}
@@ -117,6 +154,7 @@ export default function view (state$) {
               {rows}
             </tbody>
           </table>
+        </form>
       }
 
       return (

@@ -13,12 +13,13 @@ export default function Bom({DOM, props$}) {
   const actions = intent(DOM)
   const state$  = model(props$,actions)
   const vtree$  = view(state$)
-    
+
   return {
     DOM: vtree$,
     events: {
       entryTapped$:actions.entryTapped$
       ,editEntry$:actions.editEntry$
+      ,addEntry$:actions.addEntry$
     }
   }
 }

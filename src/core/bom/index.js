@@ -120,8 +120,8 @@ function updateBomEntriesCount(state, inputs){
     const entries = adjust(
       function(item){
         const _qtyOffset =  Math.max(item._qtyOffset + offset, 0)
-        //const qty        = item.qty+item._q,0)
-        return mergeData({},item,{_qtyOffset})
+        const qty        = Math.max(item.qty+ offset, _qtyOffset)
+        return mergeData({},item,{_qtyOffset, qty})
       }
       , findIndex(propEq('id', id))(state) //get index of the one we want to change
       , state)
