@@ -75,7 +75,8 @@ export default function view (state$) {
               value = <input type="text" value={dataValue} name={name} placeholder='not specified' disabled={disabled} />
             break;
             case 'number':
-              value = <input type="number" value={dataValue} min={0} name={name} disabled={disabled} />
+              const steps = (name === 'qty')? 1:0.01
+              value = <input type="number" value={dataValue} min={0} steps={steps} name={name} disabled={disabled} />
               //<span className="tooltip-bottom" attributes={{"data-tooltip": cellToolTip}} >
               //</span>
             break;
@@ -160,7 +161,7 @@ export default function view (state$) {
       let content = undefined
 
       if(toggled){
-        content = <form className='addBomEntryForm'>
+        content =
           <table >
             <thead>
               <tr>
@@ -171,7 +172,6 @@ export default function view (state$) {
               {rows}
             </tbody>
           </table>
-        </form>
       }
 
       return (

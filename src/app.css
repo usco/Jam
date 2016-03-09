@@ -564,6 +564,12 @@ input[type=color]:focus{
   color: #827D7D;
   background: white;
 }
+
+.bom .adder td {
+  border-collapse: separate;
+  border: 1px solid #EFEFEF !important;
+}
+
 .bom .adder input[type=text]{
   color:#827D7D;
   font-style: italic!important;
@@ -589,7 +595,7 @@ input[type=color]:focus{
     font-style: italic!important;
 }
 
-/*.bom .adder button{
+.bom .adder button{
   color: white;
   padding: 2 5 2 5;
   background: #5fc5fb;
@@ -597,18 +603,24 @@ input[type=color]:focus{
 }
 
 
-.bom button .icon{
+
+
+.bom .bomEntry button .icon{
   background: white;
-  fill:red
+}
+
+/*.bom .bomEntry button .icon path{
+  fill: rgba(0, 0, 0, 0)!important;
 }*/
 
-/*.bom button:hover path .icon{
+.bom .bomEntry button:hover .icon{
+  background: #F4F4F4;
+}
+
+.bom .bomEntry button:hover .icon path{
+  /*background: white;*/
   fill:black !important;
-}*/
-
-/*.bom button:hover .icon{
-  background: white;
-}*/
+}
 
 
 
