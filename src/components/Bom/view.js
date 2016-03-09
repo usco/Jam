@@ -45,7 +45,7 @@ export default function view (state$) {
       })
 
       //add editable row for new entries before all the rest
-      const uiEntries = prepend(newEntryValues, entries)
+      const uiEntries = readOnly? entries: prepend(newEntryValues, entries)
 
       let rows    = uiEntries.map( function(row, index){
         const isDynamic = row['_qtyOffset'] !== 0 ? true: false //are we dealing with a "dynamic" entry ie from a 3d file
