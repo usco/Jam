@@ -1,3 +1,5 @@
+import Rx from 'rx'
+const {fromArray} = Rx.Observable
 import {toArray, exists} from '../../../utils/utils'
 
 export default function intent(postMessage, params){
@@ -16,22 +18,42 @@ export default function intent(postMessage, params){
     //.map(entry=>({id:entry.uuid}))
     .map(toArray)
 
+  const removeTypes$ = removePartData$
+    .map(function(data){
+      return data.map(entry=>({id:entry.uuid}))
+    })
+    .tap(e=>console.log("removeTypes (fromPostMessage)",e))
 
-    /*const removeTypes$ = actionsFromPostMessage.removePartData$
-      .map(function(data){
-        return data.map()
-      })
-      .tap(e=>console.log("removeTypes (fromPostMessage)",e))
+  const deleteInstances$ = removePartData$
+    .map(function(data){
+      return data.map(entry=>({typeUid:entry.uuid}))
+    })
+    .tap(e=>console.log("deleteInstances (fromPostMessage)",e))
 
-
-    const deleteInstances$ = actionsFromPostMessage.removePartData$
-      .map(function(data){
-        return data.map(entry=>({typeUid:entry.uuid}))
-      })
-      .tap(e=>console.log("deleteInstances",e))*/
+    //we create special "read an html5 file " requests with added id
+    const desktopRequests$ = addPartData$
+     .map(function(data){
+       return data.map(function(entry) {
+         return {
+           id:entry.uuid
+           ,uri:entry.file.name//name of the html5 File object
+           ,method:'get'
+           ,data:entry.file
+           //url:req.uri
+           ,src:'desktop'
+           ,type:'resource'}
+       })
+     })
+     .flatMap(fromArray)
 
   return {
     addPartData$,
-    removePartData$
+    removePartData$,
+
+    removeTypes$,
+    deleteInstances$,
+    
+    //UGH
+    desktopRequests$
   }
 }

@@ -4,17 +4,13 @@ const {merge,fromArray,of} = Rx.Observable
 import {equals, cond, T, always, head, flatten} from 'ramda'
 import path from 'path'
 
-import {first,toggleCursor} from '../../utils/otherUtils'
-import {exists,toArray} from '../../utils/utils'
-import {getExtension,getNameAndExtension,isValidFile} from '../../utils/utils'
-import {combineLatestObj, mergeActionsByName} from '../../utils/obsUtils'
+import {exists} from '../../utils/utils'
 import {mergeData} from '../../utils/modelUtils'
 
 import designIntents from '../../core/design/intents'
 import entityIntents from '../../core/entities/intents'
 import settingsIntent from    '../../core/settings/intents'
 import commentsIntents from   '../../core/comments/intents'
-
 
 import {selectionsIntents} from './intents/selections'
 import {bomIntent} from         './intents/bom'
@@ -47,35 +43,12 @@ export default function intent (sources) {
   //comments
   const commentActions   = commentsIntents(sources)
 
-
-  //actions from various sources
-  const actionsFromPostMessage = intentsFromPostMessage(sources)
-
-   //we create special "read an html5 file " requests with added id
-   const desktopRequests$ = Rx.Observable.never() /*actionsFromPostMessage.addPartData$
-    .map(function(data){
-      return data.map(function(entry) {
-        return {
-          id:entry.uuid
-          ,uri:entry.file.name//name of the html5 File object
-          ,method:'get'
-          ,data:entry.file
-          //url:req.uri
-          ,src:'desktop'
-          ,type:'resource'}
-      })
-    })
-    .flatMap(fromArray)*/
-
-
-  //console.log("entityActions",entityActions)
-
   //OUTbound requests to various sources
   let requests = assetRequests( refinedSourceData$ )
     requests.desktop$ = requests.desktop$
-      //.merge(desktopRequests$)
+      .merge(entityActions.desktopRequests$)
     requests.http$ = requests.http$
-      //.merge(entityActionsFromYm.requests$)
+      .merge(entityActions.requests$)
 
   return {
     settingActions
@@ -86,7 +59,7 @@ export default function intent (sources) {
     ,commentActions
     ,annotationsActions:{creationStep$:Rx.Observable.never()}
 
-    ,apiActions:actionsFromPostMessage
+    ,apiActions:intentsFromPostMessage(sources)
 
     ,progress:_resources
 

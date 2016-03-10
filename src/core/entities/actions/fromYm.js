@@ -123,6 +123,7 @@ export default function intent(ym, params){
     , createMetaComponents$
     , createTransformComponents$
     , createMeshComponents$
-    ,requests$:meshRequests$
+    
+    , requests$:meshRequests$
   }
 }
