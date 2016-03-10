@@ -456,9 +456,16 @@ input[type=color]:focus{
 
   cursor: default;
 }
+
 .bom .bomToggler{
   right: 10px;
   position: fixed;
+}
+
+.bom th{
+  font-weight: normal;
+  text-transform: capitalize;
+  font-size: 0.9em;
 }
 
 .bom table{

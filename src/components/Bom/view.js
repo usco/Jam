@@ -72,7 +72,8 @@ export default function view (state$) {
           let value = ''
           switch(fieldTypes[name]){
             case 'text':
-              value = <input type="text" value={dataValue} name={name} placeholder='not specified' disabled={disabled} />
+              const placeholder = isAdder? 'f.e:velcro, nuts, bolts' : 'not specified'
+              value = <input type="text" value={dataValue} name={name} placeholder={placeholder} disabled={disabled} />
             break;
             case 'number':
               const steps = (name === 'qty')? 1:0.01
