@@ -1,7 +1,7 @@
 import Rx from 'rx'
 const {merge} = Rx.Observable
-import {first} from '../../utils/otherUtils'
-import {exists,toArray} from '../../utils/utils'
+import {first} from '../../../utils/otherUtils'
+import {exists,toArray} from '../../../utils/utils'
 
 export default function intent(events, params){
   //entities/components
@@ -35,6 +35,10 @@ export default function intent(events, params){
     .filter( (pickingInfos)=>pickingInfos.length>0)
     .map(first)
     .share()
+
+  /*const annotationsActions =  {
+    creationStep$: actionsFromEvents.createAnnotationStep$
+  }*/
 
   return {
     updateComponent$

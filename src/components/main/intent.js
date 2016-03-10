@@ -10,11 +10,11 @@ import {getExtension,getNameAndExtension,isValidFile} from '../../utils/utils'
 import {combineLatestObj, mergeActionsByName} from '../../utils/obsUtils'
 import {mergeData} from '../../utils/modelUtils'
 
-import {nameCleanup} from '../../utils/formatters'
-
+import designIntents from '../../core/design/intents'
 import entityIntents from '../../core/entities/intents'
 import settingsIntent from    '../../core/settings/intents'
-import commentsIntents from   '.../../core/comments/intents'
+import commentsIntents from   '../../core/comments/intents'
+
 
 import {selectionsIntents} from './intents/selections'
 import {bomIntent} from         './intents/bom'
@@ -24,7 +24,6 @@ import assetRequests from '../../utils/assetRequests'
 
 //
 import {intentsFromPostMessage} from '../../core/actions/fromPostMessage'
-import {intentsFromResources,makeEntityActionsFromResources} from '../../core/actions/fromResources'
 
 import {filterExtension, normalizeData, extractDataFromRawSources} from '../../core/sources/utils'
 
@@ -43,47 +42,27 @@ export default function intent (sources) {
 
   //const actions            = actionsFromSources(sources, path.resolve(__dirname,'./actions')+'/' )
 
-  //this one is specific to design sources/ids
-  const loadDesign$ = designSource(sources.addressbar)
-    .flatMap(fromArray)
+  let _resources = resources(sources)
+  //we also require resources as a source
+  sources = mergeData(sources, {resources:_resources})
+  console.log("sources",sources)
 
-
+  //design
+  const designActions   = designIntents(sources)
   //entities
-  const entityActions2 = entityIntents(sources)
+  const entityActions   = entityIntents(sources)
   //settings
   const settingActions   = settingsIntent(sources)
   //comments
   const commentActions   = commentsIntents(sources)
 
 
-  let _resources = resources(sources)
 
   //actions from various sources
   const actionsFromPostMessage = intentsFromPostMessage(sources)
-  const {entityCandidates$, entityCertains$}= intentsFromResources(_resources.parsed$)//these MIGHT become instances, or something else, we just are not 100% sure
-
-  const entityActionsFromResources   = makeEntityActionsFromResources(entityCertains$)
-
-
-  const alreadyExistingTypeMeshData$ = _resources.parsed$
-    .filter(data=>data.meta.id !== undefined)
-    //.forEach(e=>console.log("alreadyExistingTypeMeshData",e))
-
-  //create new part type from basic type data & mesh data
-  const addTypeFromTypeAndMeshData$ = alreadyExistingTypeMeshData$
-    .map(function(entry){
-      const data = entry.data.typesMeshes[0].mesh
-      const meta = {
-        name:nameCleanup( entry.meta.name )
-        ,id:entry.meta.id
-      }
-       return {id:entry.meta.id, data, meta}
-     })
-     //.tap(e=>console.log("addEntityTypesFromPostMessage",e))
-
 
    //we create special "read an html5 file " requests with added id
-   const desktopRequests$ = actionsFromPostMessage.addPartData$
+   const desktopRequests$ = Rx.Observable.never() /*actionsFromPostMessage.addPartData$
     .map(function(data){
       return data.map(function(entry) {
         return {
@@ -96,68 +75,17 @@ export default function intent (sources) {
           ,type:'resource'}
       })
     })
-    .flatMap(fromArray)
-
-  const removeTypes$ = actionsFromPostMessage.removePartData$
-    .map(function(data){
-      return data.map(entry=>({id:entry.uuid}))
-    })
-    .tap(e=>console.log("removeTypes (fromPostMessage)",e))
+    .flatMap(fromArray)*/
 
 
-  const deleteInstances$ = actionsFromPostMessage.removePartData$
-    .map(function(data){
-      return data.map(entry=>({typeUid:entry.uuid}))
-    })
-    .tap(e=>console.log("deleteInstances",e))
-
-   const extras = {
-     addInstanceCandidates$:entityCandidates$.filter(data=>data.meta.flags!=='noInfer').tap(e=>console.log("entityCandidates",e))
-     ,addTypeCandidate$:entityCandidates$.filter(data=>data.meta.id === undefined)
-     ,addTypes$:addTypeFromTypeAndMeshData$
-     ,removeTypes$:removeTypes$
-     ,deleteInstances$
-   }
-
-   const entityActionNames = [
-    'reset'
-
-    ,'addTypes'
-    ,'addTypeCandidate'
-    ,'removeTypes'
-
-    ,'addInstanceCandidates'
-    ,'deleteInstances'
-    ,'duplicateInstances'
-
-    ,'updateComponent'
-    ,'createMetaComponents'
-    ,'createTransformComponents'
-    ,'createMeshComponents'
-  ]
-
-  const actionsSources = [
-    entityActionsFromDom, actionsFromPostMessage,
-    entityActionsFromResources, actionsFromEvents,
-    entityActionsFromYm, extras]
-  const entityActions  = mergeActionsByName(actionsSources, entityActionNames)
   //console.log("entityActions",entityActions)
-
-  const annotationsActions =  {
-    creationStep$: actionsFromEvents.createAnnotationStep$
-  }
-
-   //const designActions  =mergeActionsByName([actionsFromPostMessage], entityActionNames)
-  const designActions = {
-    loadDesign$:actionsFromPostMessage.loadDesign$.merge(loadDesign$)
-  }
 
   //OUTbound requests to various sources
   let requests = assetRequests( refinedSourceData$ )
     requests.desktop$ = requests.desktop$
       .merge(desktopRequests$)
     requests.http$ = requests.http$
-      .merge(entityActionsFromYm.requests$)
+      //.merge(entityActionsFromYm.requests$)
 
   return {
     settingActions
@@ -165,9 +93,9 @@ export default function intent (sources) {
     ,commentActions
 
     //,selectionActions
-    ,entityActions
-    ,annotationsActions
     ,designActions
+    ,entityActions
+    ,annotationsActions:{creationStep$:Rx.Observable.never()}
 
     ,apiActions:actionsFromPostMessage
 

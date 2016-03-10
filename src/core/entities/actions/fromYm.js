@@ -1,8 +1,8 @@
 import Rx from 'rx'
 const {fromArray} = Rx.Observable
 import {head, pick, equals} from 'ramda'
-import {nameCleanup} from '../../utils/formatters'
-import {remapJson} from '../../utils/utils'
+import {nameCleanup} from '../../../utils/formatters'
+import {remapJson} from '../../../utils/utils'
 
 
 
@@ -26,7 +26,7 @@ function rawData(ym){
     }
   }
 
-export function makeEntityActionsFromYm(ym){
+export default function intent(ym, params){
   const data = rawData(ym)
 
   const partsData$ = data.parts
