@@ -1,4 +1,5 @@
-export function intent(postMessage, params){
+export default function intent(postMessage, params){
+  
   const postMessage$ = drivers.postMessage
     .filter(exists)
     .filter(p=>p.hasOwnProperty("data"))
