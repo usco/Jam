@@ -18,6 +18,18 @@ export default function intent(events, params){
     .select('bom').events('removeEntry$')
     .map(toArray)
 
+  /*
+  function hasClear(data){
+    if(data && data.hasOwnProperty("clear")) return true
+      return false
+  }
+  const clearBomEntries$ = merge(
+      drivers.DOM.select('.clearAll').events('click')
+      , drivers.DOM.select('.reset').events('click')//DEBUG ONLY
+      , drivers.postMessage
+        .filter(hasClear)
+    )*/
+
   return {
     updateBomEntries$
     ,upsertBomEntries$
