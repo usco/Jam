@@ -1,4 +1,6 @@
-import {fromArray, exists} from '../../../utils/utils'
+import Rx from 'rx'
+const {fromArray} = Rx.Observable
+import {exists} from '../../../utils/utils'
 
 export default function intent(addressbar, params){
   const loadDesign$   = addressbar.get("designId")
@@ -7,10 +9,7 @@ export default function intent(addressbar, params){
 
   const setAuthToken$ = addressbar.get('authToken')
 
-  /*export function designSource(addressbar, params){
-    return addressbar.get('designId')
-      //.tap(e=>console.log("designUrl",e))
-  }
+  /*
 
   export function authToken(addressbar, params){
     return addressbar.get('authToken')
@@ -20,6 +19,6 @@ export default function intent(addressbar, params){
 
   return {
     loadDesign$
-    ,setAuthToken$
+    //,setAuthToken$
   }
 }

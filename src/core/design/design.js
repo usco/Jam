@@ -41,9 +41,8 @@ function clearDesign(state, input){
   return defaults
 }
 
-function model(actions, source){
+export default function design(actions, source){
+  console.log("design")
   let updateFns  = {newDesign, updateDesign, loadDesign, clearDesign}
-  return makeModel(defaults, updateFns, actions, undefined, {doApplyTransform:false})//since we store meshes, we cannot use immutable data
+  return makeModel(defaults, updateFns, actions, source)
 }
-
-export default model
