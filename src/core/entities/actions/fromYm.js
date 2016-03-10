@@ -95,6 +95,7 @@ export function makeEntityActionsFromYm(ym){
         return {id:data.id, data:undefined, meta:data}
       })
     })
+    //.combineLatestObj()
     .flatMap(fromArray)
     //.forEach(e=>console.log("addEntityTypes",e))
 
@@ -114,7 +115,7 @@ export function makeEntityActionsFromYm(ym){
     })
     .flatMap(fromArray)
     .filter(req=>req.uri !== undefined && req.uri !== '')
-    //.tap(e=>console.log("meshRequests",e))
+    .tap(e=>console.log("meshRequests",e))
 
 
   return {

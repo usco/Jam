@@ -1,3 +1,8 @@
+import Rx from 'rx'
+const {merge} = Rx.Observable
+import {first} from '../../utils/otherUtils'
+import {exists,toArray} from '../../utils/utils'
+
 export default function intent(events, params){
   //entities/components
   const updateMetaComponent$ = events
@@ -21,7 +26,18 @@ export default function intent(events, params){
     ,updateTransformComponent$
   )
 
+  //measurements & annotations
+  const shortSingleTaps$ = events
+    .select("gl").events("shortSingleTaps$")
+
+  const createAnnotationStep$ = shortSingleTaps$
+    .map( (event)=>event.detail.pickingInfos)
+    .filter( (pickingInfos)=>pickingInfos.length>0)
+    .map(first)
+    .share()
+
   return {
     updateComponent$
+    ,createAnnotationStep$
   }
 }

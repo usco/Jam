@@ -22,20 +22,9 @@ export function intentsFromPostMessage(drivers){
   const getStatus$ = postMessageWithData$
     .filter(p=>p.data.hasOwnProperty("getStatus"))
 
-  const clearDesign$ = postMessageWithData$
-    .filter(p=>p.data.hasOwnProperty("clear"))
-
-  const loadDesign$ = postMessageWithData$
-    .filter(p=>p.data.hasOwnProperty('designId'))
-    .map(data=>data.data.designId)
-
-
-
   return {
     captureScreen$
     ,getTransforms$
     ,getStatus$
-    ,clearDesign$
-    ,loadDesign$
   }
 }

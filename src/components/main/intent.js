@@ -12,10 +12,10 @@ import {mergeData} from '../../utils/modelUtils'
 
 import {nameCleanup} from '../../utils/formatters'
 
-
+import entityIntents from '../../core/entities/intents'
 import settingsIntent from    '../../core/settings/intents'
+import commentsIntents from   '.../../core/comments/intents'
 
-import {commentsIntents} from   './intents/comments'
 import {selectionsIntents} from './intents/selections'
 import {bomIntent} from         './intents/bom'
 
@@ -23,11 +23,8 @@ import {resources} from '../../utils/assetManager'
 import assetRequests from '../../utils/assetRequests'
 
 //
-import {intentsFromEvents} from '../../core/actions/fromEvents'
 import {intentsFromPostMessage} from '../../core/actions/fromPostMessage'
 import {intentsFromResources,makeEntityActionsFromResources} from '../../core/actions/fromResources'
-import {makeEntityActionsFromDom} from '../../core/actions/fromDom'
-import {makeEntityActionsFromYm} from '../../core/actions/fromYm'
 
 import {filterExtension, normalizeData, extractDataFromRawSources} from '../../core/sources/utils'
 
@@ -50,22 +47,22 @@ export default function intent (sources) {
   const loadDesign$ = designSource(sources.addressbar)
     .flatMap(fromArray)
 
+
+  //entities
+  const entityActions2 = entityIntents(sources)
   //settings
   const settingActions   = settingsIntent(sources)
-
   //comments
   const commentActions   = commentsIntents(sources)
+
 
   let _resources = resources(sources)
 
   //actions from various sources
   const actionsFromPostMessage = intentsFromPostMessage(sources)
-  const actionsFromEvents      = intentsFromEvents(sources)
   const {entityCandidates$, entityCertains$}= intentsFromResources(_resources.parsed$)//these MIGHT become instances, or something else, we just are not 100% sure
 
   const entityActionsFromResources   = makeEntityActionsFromResources(entityCertains$)
-  const entityActionsFromDom         = makeEntityActionsFromDom(sources.DOM)
-  const entityActionsFromYm          = makeEntityActionsFromYm(sources.ym)
 
 
   const alreadyExistingTypeMeshData$ = _resources.parsed$
@@ -105,7 +102,7 @@ export default function intent (sources) {
     .map(function(data){
       return data.map(entry=>({id:entry.uuid}))
     })
-    .tap(e=>console.log("removeTypes",e))
+    .tap(e=>console.log("removeTypes (fromPostMessage)",e))
 
 
   const deleteInstances$ = actionsFromPostMessage.removePartData$

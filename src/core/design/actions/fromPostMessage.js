@@ -5,6 +5,7 @@ export function intent(postMessage, params){
 
   const loadDesign$ = postMessage$
     .filter(p=>p.data.hasOwnProperty('designId'))
+    .map(data=>data.data.designId)
 
   const clearDesign$ = postMessage$
     .filter(p=>p.data.hasOwnProperty("clear"))
