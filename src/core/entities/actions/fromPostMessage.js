@@ -1,4 +1,4 @@
-export function intent(postMessage, params){
+export default function intent(postMessage, params){
   const postMessage$ = postMessage
     .filter(exists)
     .filter(p=>p.hasOwnProperty("data"))
