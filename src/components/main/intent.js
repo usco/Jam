@@ -4,7 +4,6 @@ const {merge,fromArray,of} = Rx.Observable
 import {equals, cond, T, always, head, flatten} from 'ramda'
 import path from 'path'
 
-import {exists} from '../../utils/utils'
 import {mergeData} from '../../utils/modelUtils'
 
 import designIntents from '../../core/design/intents'
@@ -12,16 +11,13 @@ import entityIntents from '../../core/entities/intents'
 import settingsIntent from    '../../core/settings/intents'
 import commentsIntents from   '../../core/comments/intents'
 
-import {selectionsIntents} from './intents/selections'
-import {bomIntent} from         './intents/bom'
-
 import {resources} from '../../utils/assetManager'
 import assetRequests from '../../utils/assetRequests'
 
 //
 import {intentsFromPostMessage} from '../../core/actions/fromPostMessage'
 
-import {filterExtension, normalizeData, extractDataFromRawSources} from '../../core/sources/utils'
+import {normalizeData, extractDataFromRawSources} from '../../core/sources/utils'
 
 
 export default function intent (sources) {

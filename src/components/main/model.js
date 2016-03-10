@@ -19,13 +19,13 @@ import {addAnnotation} from '../../core/entities/annotations'
 import {remapEntityActions,remapMetaActions,
   remapMeshActions,remapTransformActions,remapBoundsActions} from '../../core/entities/utils'
 
-import {selectionsIntents} from './intents/selections'
+import selectionsIntents from '../../core/selections/intents'
 
 import design from      '../../core/design/design'
 import settings from    '../../core/settings/settings'
 import comments from    '../../core/comments/comments'
 
-import selections from  '../../core/selections'
+import selections from  '../../core/selections/selections'
 import entityTypes from '../../core/entities/types'
 import bom         from '../../core/bom/index'
 import bomIntents from '../../core/bom/intents'
@@ -219,7 +219,7 @@ export default function model(props$, actions, sources){
 
   //selections => only for real time view
   const typesInstancesRegistry$ = makeRegistry(meta$, entityTypes$)
-  const selections$             = selections( selectionsIntents({DOM, events}, typesInstancesRegistry$) )
+  const selections$             = selections( selectionsIntents(sources, {idsMapper$:typesInstancesRegistry$}) )
     .merge(metaActions.removeComponents$.map(a=> ({instIds:[],bomIds:[]}) )) //after an instance is removed, unselect
 
   const currentSelections$ = selections$//selections$.pluck("instIds")
