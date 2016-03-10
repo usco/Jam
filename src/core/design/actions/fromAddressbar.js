@@ -1,3 +1,5 @@
+import {fromArray, exists} from '../../../utils/utils'
+
 export default function intent(addressbar, params){
   const loadDesign$   = addressbar.get("designId")
     .flatMap(fromArray)

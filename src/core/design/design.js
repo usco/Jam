@@ -1,5 +1,6 @@
 import Rx from 'rx'
 let {fromEvent, Observable, merge} = Rx.Observable
+import {makeModel, mergeData} from '../../utils/modelUtils'
 
 
 const defaults = {

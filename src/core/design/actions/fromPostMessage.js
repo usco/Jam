@@ -1,6 +1,8 @@
+import {exists} from '../../../utils/utils'
+
 export default function intent(postMessage, params){
-  
-  const postMessage$ = drivers.postMessage
+
+  const postMessage$ = postMessage
     .filter(exists)
     .filter(p=>p.hasOwnProperty("data"))
 
