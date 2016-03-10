@@ -10,11 +10,6 @@ export function partSource(addressbar, params){
     //.map(data =>  ({src:'http', uri:data})  )
 }
 
-export function designSource(addressbar, params){
-  return addressbar.get('designId')
-    //.tap(e=>console.log("designUrl",e))
-}
-
 export function authToken(addressbar, params){
   return addressbar.get('authToken')
     //.tap(e=>console.log("authToken",e))

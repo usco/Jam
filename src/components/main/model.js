@@ -21,9 +21,9 @@ import {remapEntityActions,remapMetaActions,
 
 import {selectionsIntents} from './intents/selections'
 
+import design from      '../../core/design/design'
 import settings from    '../../core/settings/settings'
 import comments from    '../../core/comments/comments'
-import design from      '../../core/design/design'
 
 import selections from  '../../core/selections'
 import entityTypes from '../../core/entities/types'
@@ -84,7 +84,10 @@ export default function model(props$, actions, sources){
 
   let entityActions = actions.entityActions
 
+  const design$ = design(actions.designActions)
+    .tap(e=>console.log("designData",e))
   const settings$      = settings( actions.settingActions )
+    .tap(e=>console.log("settings",e))
   const entityTypes$   = entityTypes( actions.entityActions )
   const comments$      = comments( actions.commentActions )
 
@@ -237,9 +240,6 @@ export default function model(props$, actions, sources){
 
   //not entirely sure, we need a way to observe any fetch/updload etc operation
   const operationsInProgress$ = actions.progress.combinedProgress$.startWith(undefined)
-
-  ////
-  const design$ = design(actions.designActions)
 
   //////other data
   const appData$ = sources.appMeta

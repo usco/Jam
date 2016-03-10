@@ -27,25 +27,16 @@ import {intentsFromPostMessage} from '../../core/actions/fromPostMessage'
 
 import {filterExtension, normalizeData, extractDataFromRawSources} from '../../core/sources/utils'
 
-import {designSource} from '../../core/sources/addressbar.js'
-
-import assign from 'fast.js/object/assign'//faster object.assign
-
 
 export default function intent (sources) {
-  //data sources for our main model
-  const dataSources = sources
-
   //FIXME: damned  relative paths ! actual path (relative to THIS module) is '../../core/sources/' , relative to the loader it is '.'
-  const refinedSourceData$ = normalizeData( extractDataFromRawSources( dataSources, '.' ) )//q.tap(e=>console.log("foo",e))
+  const refinedSourceData$ = normalizeData( extractDataFromRawSources( sources, '.' ) )//q.tap(e=>console.log("foo",e))
     //.tap(e=>console.log("refinedSourceData$",e))
 
   //const actions            = actionsFromSources(sources, path.resolve(__dirname,'./actions')+'/' )
-
   let _resources = resources(sources)
   //we also require resources as a source
   sources = mergeData(sources, {resources:_resources})
-  console.log("sources",sources)
 
   //design
   const designActions   = designIntents(sources)
@@ -55,7 +46,6 @@ export default function intent (sources) {
   const settingActions   = settingsIntent(sources)
   //comments
   const commentActions   = commentsIntents(sources)
-
 
 
   //actions from various sources
@@ -83,18 +73,17 @@ export default function intent (sources) {
   //OUTbound requests to various sources
   let requests = assetRequests( refinedSourceData$ )
     requests.desktop$ = requests.desktop$
-      .merge(desktopRequests$)
+      //.merge(desktopRequests$)
     requests.http$ = requests.http$
       //.merge(entityActionsFromYm.requests$)
 
   return {
     settingActions
 
-    ,commentActions
-
     //,selectionActions
     ,designActions
     ,entityActions
+    ,commentActions
     ,annotationsActions:{creationStep$:Rx.Observable.never()}
 
     ,apiActions:actionsFromPostMessage
