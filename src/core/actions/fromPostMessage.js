@@ -29,15 +29,7 @@ export function intentsFromPostMessage(drivers){
     .filter(p=>p.data.hasOwnProperty('designId'))
     .map(data=>data.data.designId)
 
-  const addPartData$ = postMessageWithData$
-    .filter(p=>p.data.hasOwnProperty('addPartData'))
-    .map(data=>data.data.addPartData)
-    .map(toArray)
 
-  const removePartData$ = postMessage$
-    .filter(p=>p.data.hasOwnProperty('removePartData'))
-    .map(data=>data.data.removePartData)
-    .map(toArray)
 
   return {
     captureScreen$
@@ -45,7 +37,5 @@ export function intentsFromPostMessage(drivers){
     ,getStatus$
     ,clearDesign$
     ,loadDesign$
-    ,addPartData$
-    ,removePartData$
   }
 }
