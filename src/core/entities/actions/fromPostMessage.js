@@ -45,6 +45,7 @@ export default function intent(postMessage, params){
        })
      })
      .flatMap(fromArray)
+     .tap(e=>console.log("desktopRequests (fromPostMessage)",e))
 
   return {
     addPartData$,
@@ -52,7 +53,7 @@ export default function intent(postMessage, params){
 
     removeTypes$,
     deleteInstances$,
-    
+
     //UGH
     desktopRequests$
   }

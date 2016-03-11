@@ -145,7 +145,7 @@ export default function intents(resources, params){
   //
   const alreadyExistingTypeMeshData$ = resources
       .filter(data=>data.meta.id !== undefined)
-      //.forEach(e=>console.log("alreadyExistingTypeMeshData",e))
+      .tap(e=>console.log("alreadyExistingTypeMeshData",e))
 
   //create new part type from basic type data & mesh data
   const addTypeFromTypeAndMeshData$ = alreadyExistingTypeMeshData$

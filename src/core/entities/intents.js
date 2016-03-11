@@ -16,7 +16,7 @@ export default function intents(sources){
 
     //special cases
     , actionsFromResources(sources.resources.parsed$)
-    , actionsFromYm(sources.ym)
+    , actionsFromYm({ym:sources.ym, resources:sources.resources.parsed$ })//special signature
   ]
 
   return mergeActionsByName(actionsSources)
