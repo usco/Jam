@@ -2,8 +2,8 @@ import Rx from 'rx'
 const {fromArray} = Rx.Observable
 import {head, pick, equals} from 'ramda'
 import {nameCleanup} from '../../../utils/formatters'
-import {remapJson} from '../../../utils/utils'
-
+import {remapJson, toArray, exists} from '../../../utils/utils'
+import {mergeData} from '../../../utils/modelUtils'
 
 
 function rawData(ym){
@@ -26,7 +26,7 @@ function rawData(ym){
     }
   }
 
-export default function intent(ym, params){
+export default function intent({ym, resources}, params){
   const data = rawData(ym)
 
   const partsData$ = data.parts
@@ -68,9 +68,18 @@ export default function intent(ym, params){
       })
     })
     //.tap(e=>console.log("transforms",e))
+    /*ext: "stl"
+flags: "noInfer"
+id: "1535f856dd0iT"
+name: "UM2CableChain_BedEnd.STL"
+uri: "https://test-s3-assets.youmagine.com/uploads/docu*/
+
+  resources.filter(data=>data.meta.id !== undefined)
+    .forEach(e=>console.log("got back ok mesh resource",e))
 
   const createMeshComponents$      = assemblyData$
     .map(function(datas){
+      console.log("meshDatas",datas)
       return datas.map(function(entry){
         const mapping = {
           'uuid':'id'
@@ -81,7 +90,20 @@ export default function intent(ym, params){
         return { id:data.id, typeUid:data.typeUid, value:undefined }
       })
     })
-    //.tap(e=>console.log("meshes",e))
+    .flatMap(fromArray)
+    .combineLatest(resources.filter(data=>data.meta.id !== undefined),function(data, meshData){
+      //console.log("data", data, "meshData",meshData)
+      let mesh = meshData.data.typesMeshes[0].mesh.clone()//meh ?
+      mesh.material = mesh.material.clone()
+      mesh.userData = {}
+
+      const validCombo = (data.typeUid === meshData.meta.id)
+      const result = validCombo? mergeData(data, {value:{mesh}}): undefined
+      return result
+    })
+    .filter(exists)
+    .map(toArray)
+    //.tap(e=>console.log("meshComponent",e))
 
    //TODO : this would need to be filtered based on pre-existing type data ?
   const addTypes$ = partsData$
@@ -95,7 +117,6 @@ export default function intent(ym, params){
         return {id:data.id, data:undefined, meta:data}
       })
     })
-    //.combineLatestObj()
     .flatMap(fromArray)
     //.forEach(e=>console.log("addEntityTypes",e))
 
@@ -123,7 +144,7 @@ export default function intent(ym, params){
     , createMetaComponents$
     , createTransformComponents$
     , createMeshComponents$
-    
+
     , requests$:meshRequests$
   }
 }
