@@ -9,7 +9,7 @@ import bomIntentFromEvents from './actions/fromEvents'
 import bomIntentFromYm from './actions/fromYm'
 
 
-export default function bomIntent(sources, entityTypes$, coreActions, entityActions, actions){
+export default function bomIntent(sources, entityTypes$, metaActions, entityActions){
 
   const typeChanges$ = changesFromObservableArrays(entityTypes$).share()
 
@@ -36,7 +36,7 @@ export default function bomIntent(sources, entityTypes$, coreActions, entityActi
       })
     })
 
-  const increaseBomEntries$ = coreActions
+  const increaseBomEntries$ = metaActions
     .createComponents$
       //.filter(exists)
       .map(function(data){
@@ -47,7 +47,7 @@ export default function bomIntent(sources, entityTypes$, coreActions, entityActi
           })
       })
     .merge(
-      coreActions.duplicateComponents$
+      metaActions.duplicateComponents$
         .tap(e=>console.log("duplicateComponents",e))
         //.filter(exists)
         .map(function(data){
@@ -59,15 +59,16 @@ export default function bomIntent(sources, entityTypes$, coreActions, entityActi
         })
     )
 
-  const decreaseBomEntries$ = coreActions
-    .removeComponents$
-      .map(function(data){
-        return data
-          .filter(d=>d.id !== undefined)
-          .map(function(dat){
-            return {offset:-1,id:dat.typeUid}
-          })
-      })
+  const decreaseBomEntries$ = entityActions.deleteInstances$
+    .tap(e=>console.log("deleteInstances A1",e))
+    .map(function(data){
+      return data
+        .filter(d=>d.id !== undefined || d.typeUid!==undefined)
+        .map(function(dat){
+          return {offset:-1,id:dat.typeUid}
+        })
+    })
+    .tap(e=>console.log("decreaseBomEntries",e))
 
   const updateBomEntriesCount$ = merge(
     increaseBomEntries$
@@ -86,7 +87,7 @@ export default function bomIntent(sources, entityTypes$, coreActions, entityActi
 
   const upsertBomEntriesAll$ = extraActions.upsertBomEntries$.merge(upsertBomEntries$)
   const updateBomEntries$ = extraActions.updateBomEntries$
-  const removeBomEntriesAll$ = extraActions.removeBomEntries$.merge(removeBomEntries$)
+  const removeBomEntriesAll$ = removeBomEntries$//extraActions.removeBomEntries$.merge(removeBomEntries$)
 
   let bomActions = mergeData( {upsertBomEntries$, updateBomEntriesCount$, updateBomEntries$,  upsertBomEntries$:upsertBomEntriesAll$,
     clearBomEntries$, removeBomEntries$:removeBomEntriesAll$} )

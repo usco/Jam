@@ -67,7 +67,7 @@ function addTypeCandidate(state, input){
 }
 
 function removeTypes(state, inputs){
-  //console.log("remove types",state, inputs)
+  console.log("remove types",state, inputs)  
   state = inputs.reduce(function(state, input){
     const index = findIndex(propEq('id', input.id))(state)
     state=[

@@ -36,6 +36,20 @@ export default function intent(events, params){
     .map(first)
     .share()
 
+
+  const removePartData$ =  events // same as removeBomEntries
+    .select('bom').events('removeEntry$')
+    .map(toArray)
+
+  const removeTypes$ = removePartData$
+    .tap(e=>console.log("removeTypes(fromEvent:bom)",e))
+
+  const deleteInstances$ = removePartData$
+    .map(function(data){
+      return data.map(entry=>({typeUid:entry.id}))
+    })
+    .tap(e=>console.log("deleteInstances (fromEvent:bom)",e))
+
   /*const annotationsActions =  {
     creationStep$: actionsFromEvents.createAnnotationStep$
   }*/
@@ -43,5 +57,7 @@ export default function intent(events, params){
   return {
     updateComponent$
     ,createAnnotationStep$
+    ,removeTypes$
+    ,deleteInstances$
   }
 }

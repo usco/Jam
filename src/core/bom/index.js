@@ -84,7 +84,7 @@ function createBomEntries(state,input){
 
 //remove an entry
 function removeBomEntries(state, inputs){
-  //console.log("removeBomEntries",inputs)
+  console.log("removeBomEntries",inputs)
   return inputs.reduce(function(state, input){
     const index = findIndex(propEq('id', input.id))(state)
     state=[
@@ -117,8 +117,13 @@ function updateBomEntries(state, inputs){
 //these are only for dynamic entries ie : if a part gets duplicated , deleted etc
 //as such they are dealt with seperatly
 function updateBomEntriesCount(state, inputs){
-  //console.log("updateBomEntriesCount",inputs)
+  console.log("updateBomEntriesCount",inputs)
   return inputs.reduce(function(state,{id,offset}){
+    //TODO: refactor
+    const idx = findIndex(propEq('id', id))(state)
+    if(idx === -1){
+      return state
+    }
     const entries = adjust(
       function(item){
         const _qtyOffset =  Math.max(item._qtyOffset + offset, 0)

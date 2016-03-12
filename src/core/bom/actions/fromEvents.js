@@ -33,7 +33,7 @@ export default function intent(events, params){
   return {
     updateBomEntries$
     ,upsertBomEntries$
-    ,removeBomEntries$
+    //,removeBomEntries$
 
   }
 }

@@ -235,7 +235,7 @@ export default function model(props$, actions, sources){
   //close some cycles
   replicateStream(currentSelections$, proxySelections$)
 
-  const bomActions = bomIntents(sources, entityTypes$, metaActions, entityActions, actions)
+  const bomActions = bomIntents(sources, entityTypes$, metaActions, entityActions)
   const bom$ = bom(bomActions)
 
   //not entirely sure, we need a way to observe any fetch/updload etc operation
