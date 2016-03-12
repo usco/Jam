@@ -17,7 +17,9 @@ function upsertBomEntry(state, input){
       , phys_qty:0
       , version:"0.0.1"
       , unit:"EA"
-      , printable:true}
+      , printable:true
+      , dynamic:false
+    }
     const entry = mergeData(bomEntryDefaults,input.data)
     return state = state.concat( toArray(entry) )
   }else{//we already have this same bom entry
@@ -113,7 +115,7 @@ function updateBomEntries(state, inputs){
 }
 
 //these are only for dynamic entries ie : if a part gets duplicated , deleted etc
-//as such they are deal with particularly
+//as such they are dealt with seperatly
 function updateBomEntriesCount(state, inputs){
   //console.log("updateBomEntriesCount",inputs)
   return inputs.reduce(function(state,{id,offset}){
@@ -121,7 +123,7 @@ function updateBomEntriesCount(state, inputs){
       function(item){
         const _qtyOffset =  Math.max(item._qtyOffset + offset, 0)
         const qty        = Math.max(item.qty+ offset, _qtyOffset)
-        return mergeData({},item,{_qtyOffset, qty})
+        return mergeData({},item,{_qtyOffset, qty, dynamic:true})
       }
       , findIndex(propEq('id', id))(state) //get index of the one we want to change
       , state)

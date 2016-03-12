@@ -48,7 +48,7 @@ export default function view (state$) {
       const uiEntries = readOnly? entries: prepend(newEntryValues, entries)
 
       let rows    = uiEntries.map( function(row, index){
-        const isDynamic = row['_qtyOffset'] !== 0 ? true: false //are we dealing with a "dynamic" entry ie from a 3d file
+        const isDynamic = row.dynamic//row['_qtyOffset'] !== 0 ? true: false //are we dealing with a "dynamic" entry ie from a 3d file
         const isAdder   = row.hasOwnProperty('_adder')
         const baseClassName = "bomEntry cell"
 
@@ -65,7 +65,7 @@ export default function view (state$) {
           }
           cellToolTip = readOnly? undefined: cellToolTip//if the field is disabled do not add any extra toolTip
 
-          const disabled  = (isDynamic && name ==='phys_qty') || readOnly //if readony or if we have a dynamic entry called phys_qty, disable
+          const disabled  = (isDynamic && (name ==='phys_qty' || name === 'unit' )) || readOnly //if readony or if we have a dynamic entry called phys_qty, disable
           const dataValue = (isDynamic && name ==='phys_qty')? 'n/a' : row[name]
 
         //  console.log("dataValue", dataValue,units)
@@ -77,7 +77,8 @@ export default function view (state$) {
             break;
             case 'number':
               const steps = (name === 'qty')? 1:0.01
-              value = <input type="number" value={dataValue} min={0} steps={steps} name={name} disabled={disabled} />
+              const min   = isDynamic? row['_qtyOffset'] : 0
+              value = <input type="number" value={dataValue} min={min} steps={steps} name={name} disabled={disabled} />
               //<span className="tooltip-bottom" attributes={{"data-tooltip": cellToolTip}} >
               //</span>
             break;
