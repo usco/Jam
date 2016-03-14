@@ -39,6 +39,7 @@ export default function bomIntent(sources, entityTypes$, metaActions, entityActi
   const increaseBomEntries$ = metaActions
     .createComponents$
       //.filter(exists)
+      .tap(e=>console.log("increaseBomEntries(from createComponents)",e))
       .map(function(data){
         return data
           .filter(dat=>dat.value.typeUid!==undefined)
@@ -48,7 +49,7 @@ export default function bomIntent(sources, entityTypes$, metaActions, entityActi
       })
     .merge(
       metaActions.duplicateComponents$
-        .tap(e=>console.log("duplicateComponents",e))
+        .tap(e=>console.log("increaseBomEntries (from duplicateComponents)",e))
         //.filter(exists)
         .map(function(data){
           return data
