@@ -38,18 +38,20 @@ function jsonToFormData(jsonData){
   return formData
 }
 
-function makeApiStream(source$, outputMapper, design$, authData$){
+function makeApiStream(source$, outputMapper, design$, authData$, debounceRate=0){
   const upsert$  = source$
     .map(d=>d.upserted)
     .withLatestFrom(design$, authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
     .map(outputMapper.bind(null,'put'))
     .flatMap(fromArray)
+    .debounce(debounceRate)
 
   const delete$ = source$
     .map(d=>d.removed)
     .withLatestFrom(design$, authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
     .map(outputMapper.bind(null,'delete'))
-    .flatMap(fromArray)
+    .flatMap(fromArray) //we do NOT debounce deletes, we want them all !
+
 
   return merge(upsert$, delete$)
 }
@@ -90,6 +92,7 @@ export default function makeYMDriver(httpDriver, params={}){
         'id':'uuid'
         ,'params':'part_parameters'
       }
+
       /*"binary_document_id": null,
       "binary_document_url": "",
       "source_document_id": null,
@@ -386,20 +389,20 @@ export default function makeYMDriver(httpDriver, params={}){
           metadata:save$.pluck('eMetas')
         , transforms:save$.pluck('eTrans')
         , meshes: save$.pluck('eMeshs')})
-      .debounce(1)
       .map(dataFromItems)
     )
 
-    const partsOut$    = makeApiStream(parts$, toParts, design$, authData$)
-    const bomOut$      = makeApiStream(bom$  , toBom, design$, authData$)
-    const assemblyOut$ = makeApiStream(assemblies$ ,toAssemblies, design$, authData$)
+    const debounceRate = 20//don't spam the api !
+    const partsOut$    = makeApiStream(parts$, toParts, design$, authData$, debounceRate)
+    const bomOut$      = makeApiStream(bom$  , toBom, design$, authData$, debounceRate)
+    const assemblyOut$ = makeApiStream(assemblies$ ,toAssemblies, design$, authData$, debounceRate)
 
     //Finally put it all together
-    const allSaveRequests$ = merge(partsOut$, bomOut$, assemblyOut$).debounce(20)//don't spam the api !
+    const allSaveRequests$ = merge(partsOut$, bomOut$, assemblyOut$)
     const allLoadRequests$ = merge(getParts$, getBom$, getAssemblies$)
 
     const outToHttp$ = merge(designExistsRequest$, allSaveRequests$, allLoadRequests$)
-      //.tap(e=>console.log("outToHttp",e))
+      .tap(e=>console.log("outToHttp",e))
 
     const inputs$ = httpDriver(outToHttp$)
 
