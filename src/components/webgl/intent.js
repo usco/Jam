@@ -1,7 +1,5 @@
 import Rx from 'rx'
-let fromEvent = Rx.Observable.fromEvent
-let merge = Rx.Observable.merge
-let combineLatest = Rx.Observable.combineLatest
+const {fromEvent,merge,combineLatest} = Rx.Observable
 
 import {pointerInteractions,interactionsFromCEvents,preventScroll} from '../../interactions/pointers'
 import {windowResizes,elementResizes} from '../../interactions/sizing'
@@ -45,14 +43,14 @@ function objectAndPosition(pickingInfo){
 }
 
 
-export default function intent(drivers, data){
-  let {DOM} = drivers
+export default function intent(sources, data){
+  let {DOM} = sources
   let {camera, scene, transformControls} = data
 
-  let windowResizes$ = windowResizes(1) //get from intents/interactions ?
-  let elementResizes$ = elementResizes(".container",1)
+  const windowResizes$ = windowResizes(1) //get from intents/interactions ?
+  const elementResizes$ = elementResizes(".container",1)
 
-  let {shortSingleTaps$,
+  const {shortSingleTaps$,
     shortDoubleTaps$,
     longTaps$,
     zooms$,
@@ -71,7 +69,7 @@ export default function intent(drivers, data){
   //Prevent contextmenu for all of the gl canvas FIXME: side effect ?
   DOM.select('canvas').events('contextmenu').subscribe( e => preventDefault(e) )
 
-  //stream of container resize events 
+  //stream of container resize events
   const containerResizes$ = windowResizes$
     .map(function(){
       let input = document.querySelector('.container')//canvas
@@ -80,11 +78,23 @@ export default function intent(drivers, data){
     .filter(exists)
     .startWith({width:window.innerWidth, height:window.innerHeight, aspect:window.innerWidth/window.innerHeight, bRect:undefined})
 
+  //are the transform controls active : ie we are dragging, rotating, scaling an object
+  const tControlsActive$ = merge(
+    fromEvent(transformControls,"mouseDown").map(true),
+    fromEvent(transformControls,"mouseUp").map(false)
+  ).startWith(false)
+  //.tap(e=>console.log( "transform controls active",e ))
+
   const shortSingleTapsWPicking$ = addPickingInfos(shortSingleTaps$, windowResizes$, camera, scene)
     .shareReplay(1)
   const shortDoubleTapsWPicking$ = addPickingInfos(shortDoubleTaps$, windowResizes$, camera, scene)
     .shareReplay(1)
-  let longTapsWPicking$          = addPickingInfos(longTaps$, windowResizes$, camera, scene)
+  const longTapsWPicking$          = addPickingInfos(longTaps$, windowResizes$, camera, scene)
+    .withLatestFrom(tControlsActive$,function(longTaps, tCActive){//disable long taps in case we are manipulating an object
+      if(longTaps) return undefined
+      return dragMoves
+    })
+    .filter(exists)
     .shareReplay(1)
 
   //contextmenu observable should return undifined when any other basic interaction
@@ -104,23 +114,14 @@ export default function intent(drivers, data){
 
   const zoomToFit$ = Rx.Observable.just(true) //DOM.select('#zoomToFit').events("click")
 
-
   //Stream of selected meshes
   const selectMeshes$ = merge(
       shortSingleTapsWPicking$.map( meshFrom )
       ,longTapsWPicking$.map( meshFrom )
     )
-    .map(toArray)//important !!
+    .map(toArray)//important !! consumers expect arrays
     //.distinctUntilChanged()
     .shareReplay(1)
-
-
-  //are the transform controls active : ie we are dragging, rotating, scaling an object
-  let tControlsActive$ = merge(
-    fromEvent(transformControls,"mouseDown").map(true),
-    fromEvent(transformControls,"mouseUp").map(false)
-  ).startWith(false)
-  //.tap(e=>console.log( "transform controls active",e ))
 
   //if transformControls are active
   // filter out dragMove gestures: ie prevent camera from moving/rotating
