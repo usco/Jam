@@ -101,7 +101,7 @@ export default function view (state$) {
 
         if(isAdder){
           cells.push(<td className={baseClassName}> <button type='button' className='addBomEntry' >Add</button> </td>)
-        }else{
+        }else if(!readOnly){
 
           const deleteIconSvg = `<svg version="1.1" id="Trash" xmlns="http://www.w3.org/2000/svg"
             width="16" height="16" x="0px" y="0px" data-icon="duplicate" viewBox="0 0 20 20" class="icon">
@@ -118,7 +118,6 @@ export default function view (state$) {
               <span innerHTML={deleteIconSvg}/>
             </button>
           </td>
-
           cells.push(removerCell)
         }
 
