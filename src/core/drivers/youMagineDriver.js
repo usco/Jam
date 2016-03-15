@@ -38,22 +38,39 @@ function jsonToFormData(jsonData){
   return formData
 }
 
-function makeApiStream(source$, outputMapper, design$, authData$, debounceRate=0){
+function makeApiStream(source$, outputMapper, design$, authData$){
   const upsert$  = source$
     .map(d=>d.upserted)
     .withLatestFrom(design$, authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
     .map(outputMapper.bind(null,'put'))
-    .flatMap(fromArray)
-    .debounce(debounceRate)
+    //.flatMap(fromArray)
+    //.debounce(debounceRate)//FIXME : should only be done if consecutive items are the same
 
   const delete$ = source$
     .map(d=>d.removed)
     .withLatestFrom(design$, authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
     .map(outputMapper.bind(null,'delete'))
-    .flatMap(fromArray) //we do NOT debounce deletes, we want them all !
+    //.flatMap(fromArray) //we do NOT debounce deletes, we want them all !
 
+  return merge(upsert$, delete$)//.tap(e=>console.log("api stream",e))
+  //const out$ =  merge(upsert$, delete$)
 
-  return merge(upsert$, delete$)
+}
+
+//spread out requests with TIME amount of time between each of them
+function spreadRequests(time=300, data$){
+  /*return Rx.Observable.zip(
+    out$,
+    Rx.Observable.timer(0, 2000),
+    function(item, i) { console.log("data",item); return item}
+  ).tap(e=>console.log("api stream",e))*/
+  return data$.flatMap(function(items){
+    return Rx.Observable.from(items).zip(
+      Rx.Observable.interval(time),
+      function(item, index) { console.log("data",item); return item }
+    )
+  })//.tap(e=>console.log("api stream",e))
+
 }
 
 
@@ -137,6 +154,7 @@ export default function makeYMDriver(httpDriver, params={}){
         outEntry.qty = outEntry.qty - entry._qtyOffset //adjust quantity, removing any dynamic counts
         const refined = pick( fieldNames, remapJson(mapping, outEntry) )
 
+        console.log("goint to save Bom entry",entry)
         const send    = jsonToFormData(refined)
 
         return {
@@ -374,14 +392,19 @@ export default function makeYMDriver(httpDriver, params={}){
 
     //saving stuff
     ////
+    const dataDebounceRate = 20//debounce rate (in ms) for the input RAW data , affects the rate of request GENERATION, not of outbound requests
+    const requestDebounceRate = 500//time in ms between each emited http request : ie don't spam the api !
+
     const bom$ = changesFromObservableArrays(
       save$.pluck("bom")
         .distinctUntilChanged( null, equals )
+        .debounce(dataDebounceRate)
     )
 
     const parts$ = changesFromObservableArrays(
       save$.pluck("bom")
         .distinctUntilChanged( null, equals )
+        .debounce(dataDebounceRate)
     )
 
     const assemblies$ = changesFromObservableArrays(
@@ -389,16 +412,17 @@ export default function makeYMDriver(httpDriver, params={}){
           metadata:save$.pluck('eMetas')
         , transforms:save$.pluck('eTrans')
         , meshes: save$.pluck('eMeshs')})
+          .debounce(dataDebounceRate)
       .map(dataFromItems)
     )
 
-    const debounceRate = 20//don't spam the api !
-    const partsOut$    = makeApiStream(parts$, toParts, design$, authData$, debounceRate)
-    const bomOut$      = makeApiStream(bom$  , toBom, design$, authData$, debounceRate)
-    const assemblyOut$ = makeApiStream(assemblies$ ,toAssemblies, design$, authData$, debounceRate)
+
+    const partsOut$    = makeApiStream(parts$, toParts, design$, authData$)
+    const bomOut$      = makeApiStream(bom$  , toBom, design$, authData$)
+    const assemblyOut$ = makeApiStream(assemblies$ ,toAssemblies, design$, authData$)
 
     //Finally put it all together
-    const allSaveRequests$ = merge(partsOut$, bomOut$, assemblyOut$)
+    const allSaveRequests$ = spreadRequests( 500, merge(partsOut$, bomOut$, assemblyOut$) )
     const allLoadRequests$ = merge(getParts$, getBom$, getAssemblies$)
 
     const outToHttp$ = merge(designExistsRequest$, allSaveRequests$, allLoadRequests$)
