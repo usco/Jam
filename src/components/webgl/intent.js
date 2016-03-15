@@ -68,9 +68,11 @@ export default function intent(drivers, data){
     dragMoves$
   )//.subscribe(e=>wobble.stop())
 
+  //Prevent contextmenu for all of the gl canvas FIXME: side effect ?
   DOM.select('canvas').events('contextmenu').subscribe( e => preventDefault(e) )
 
-  let containerResizes$ = windowResizes$
+  //stream of container resize events 
+  const containerResizes$ = windowResizes$
     .map(function(){
       let input = document.querySelector('.container')//canvas
       if(input) return input.getBoundingClientRect()
@@ -113,21 +115,23 @@ export default function intent(drivers, data){
     .shareReplay(1)
 
 
-  //what are the active controls : camera, object tranforms,
+  //are the transform controls active : ie we are dragging, rotating, scaling an object
   let tControlsActive$ = merge(
     fromEvent(transformControls,"mouseDown").map(true),
     fromEvent(transformControls,"mouseUp").map(false)
   ).startWith(false)
+  //.tap(e=>console.log( "transform controls active",e ))
 
-  //let activeControls$
-  //if transformControls are active, filter out dragMove gestures
+  //if transformControls are active
+  // filter out dragMove gestures: ie prevent camera from moving/rotating
   let fDragMoves$ = dragMoves$
-    .combineLatest(tControlsActive$,function(dragMoves,tCActive){
+    .withLatestFrom(tControlsActive$,function(dragMoves,tCActive){
       if(tCActive) return undefined
       return dragMoves
     })
     .filter(exists)
-  //actual stream used for camera controls
+
+  //actual stream used for camera controls: dragMove gestures + zoom gestures
   let filteredInteractions$ = {dragMoves$:fDragMoves$, zooms$}
 
   //stream of transformations done on the current selection
@@ -154,7 +158,5 @@ export default function intent(drivers, data){
     ,filteredInteractions$
 
     ,selectionsTransforms$
-
-
   }
 }

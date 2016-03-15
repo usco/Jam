@@ -62,6 +62,8 @@ function lazyLoad(moduleNamePath){
   return obs
 }
 
+
+
 //this functions extracts data recieved from sources, adds error handling etc
 function fetch(sources, sourceNames=["http","desktop"]){
   const chosenSources = sourceNames

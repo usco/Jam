@@ -175,7 +175,7 @@ function GLView({drivers, props$}){
   let selectionsContainer = new THREE.Scene() //unfortunate way to handle things in three.js
 
   let camera   = makeCamera(config.cameras[0])
-  let controls = makeControls(config.controls[0])
+  let controls = makeControls(config.controls[0]) //create "orbit" controls
   let transformControls = new TransformControls( camera )
 
   let grid        = new LabeledGrid(200, 200, 10, config.cameras[0].up)
