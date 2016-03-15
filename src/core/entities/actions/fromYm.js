@@ -77,7 +77,42 @@ uri: "https://test-s3-assets.youmagine.com/uploads/docu*/
   resources.filter(data=>data.meta.id !== undefined)
     .forEach(e=>console.log("got back ok mesh resource",e))
 
-  const createMeshComponents$      = assemblyData$
+  const meshComponentMeshes$ = resources.filter(data=>data.meta.id !== undefined)
+
+  const meshComponentAssemblyData$      = assemblyData$
+    .map(function(datas){
+      console.log("meshDatas",datas)
+      return datas.map(function(entry){
+        const mapping = {
+          'uuid':'id'
+          ,'part_uuid':'typeUid'
+        }
+        const fieldNames = ['id','typeUid']
+        let data = pick( fieldNames, remapJson(mapping, entry) )
+        return { id:data.id, typeUid:data.typeUid, value:undefined }
+      })
+    })
+
+  const createMeshComponents$ = meshComponentMeshes$
+    .combineLatest(meshComponentAssemblyData$,function(meshData, datas){
+
+      return datas.map(function(data){
+        //console.log("data bla bla mesh",data)
+        let mesh = meshData.data.typesMeshes[0].mesh.clone()//meh ?
+        mesh.material = mesh.material.clone()
+        mesh.userData = {}
+
+        const validCombo = (data.typeUid === meshData.meta.id)
+        const result = validCombo? mergeData(data, {value:{mesh}}): undefined
+
+        //console.log("createMeshComponents",result)
+        return result
+      }).filter(exists)
+
+    })
+    .map(toArray)
+    .tap(e=>console.log("meshComponent",e))
+  /*const createMeshComponents$      = assemblyData$
     .map(function(datas){
       console.log("meshDatas",datas)
       return datas.map(function(entry){
@@ -91,7 +126,7 @@ uri: "https://test-s3-assets.youmagine.com/uploads/docu*/
       })
     })
     .flatMap(fromArray)
-    .combineLatest(resources.filter(data=>data.meta.id !== undefined),function(data, meshData){
+    .combineLatest(meshComponentMeshes$,function(data, meshData){
       //console.log("data", data, "meshData",meshData)
       let mesh = meshData.data.typesMeshes[0].mesh.clone()//meh ?
       mesh.material = mesh.material.clone()
@@ -99,10 +134,12 @@ uri: "https://test-s3-assets.youmagine.com/uploads/docu*/
 
       const validCombo = (data.typeUid === meshData.meta.id)
       const result = validCombo? mergeData(data, {value:{mesh}}): undefined
+
+      console.log("createMeshComponents",result)
       return result
     })
     .filter(exists)
-    .map(toArray)
+    .map(toArray)*/
     //.tap(e=>console.log("meshComponent",e))
 
    //TODO : this would need to be filtered based on pre-existing type data ?
