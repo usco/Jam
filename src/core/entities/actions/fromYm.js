@@ -81,7 +81,6 @@ uri: "https://test-s3-assets.youmagine.com/uploads/docu*/
 
   const meshComponentAssemblyData$      = assemblyData$
     .map(function(datas){
-      console.log("meshDatas",datas)
       return datas.map(function(entry){
         const mapping = {
           'uuid':'id'
@@ -97,21 +96,20 @@ uri: "https://test-s3-assets.youmagine.com/uploads/docu*/
     .combineLatest(meshComponentAssemblyData$,function(meshData, datas){
 
       return datas.map(function(data){
-        //console.log("data bla bla mesh",data)
         let mesh = meshData.data.typesMeshes[0].mesh.clone()//meh ?
         mesh.material = mesh.material.clone()
         mesh.userData = {}
 
         const validCombo = (data.typeUid === meshData.meta.id)
         const result = validCombo? mergeData(data, {value:{mesh}}): undefined
-
         //console.log("createMeshComponents",result)
         return result
       }).filter(exists)
 
     })
     .map(toArray)
-    .tap(e=>console.log("meshComponent",e))
+    //.tap(e=>console.log("meshComponent",e))
+
   /*const createMeshComponents$      = assemblyData$
     .map(function(datas){
       console.log("meshDatas",datas)

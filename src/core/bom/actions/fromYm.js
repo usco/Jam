@@ -8,7 +8,7 @@ export default function intent(ym, params){
     .mergeAll()
     .pluck('response')
 
-  bom$.forEach(e=>console.log("BOM from ym",e))
+  //bom$.forEach(e=>console.log("BOM from ym",e))
 
   const upsertBomEntries$ = bom$
     .map(function(data){

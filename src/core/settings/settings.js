@@ -36,8 +36,8 @@ function toggleAutoRotate(state, input){
 }
 
 function setActiveTool(state, input){
-  let output = mergeData( state, {activeTool:input})
   console.log("setting activeTool",input)
+  let output = mergeData( state, {activeTool:input})
   return output
 }
 

@@ -26,7 +26,7 @@ function renderCommentsList (comments) {
     </svg>`
 
   let listElements = comments.map(function(comment){
-    return <li className="item" > 
+    return <li className="item" >
         <header>
           <span innerHTML={iconSvg}> </span>
           <span className="author">{comment.author}</span> <span>commented 0.5h ago </span>
@@ -41,9 +41,9 @@ function renderCommentsList (comments) {
   </ul>
 }
 
-/*<EditableItem id="newComment" 
-          data={newComment.text}  
-          placeholder="what are your thoughts..." 
+/*<EditableItem id="newComment"
+          data={newComment.text}
+          placeholder="what are your thoughts..."
           multiline="true"
           changeHandler={changeHandler}
         />*/
@@ -55,14 +55,14 @@ function renderCommentCreator (newCommentContent){
        viewBox="0 0 20 20" enable-background="new 0 0 20 20" >
       <path fill="#FFFFFF" d="M18,6v7c0,1.1-0.9,2-2,2h-4v3l-4-3H4c-1.101,0-2-0.9-2-2V6c0-1.1,0.899-2,2-2h12C17.1,4,18,4.9,18,6z"/>
     </svg>`
-  
+
   return  (
     <div className="item new">
       <header innerHTML={iconSvg} >
           Leave a comment
       </header>
       <div className="content">
-        <textarea name="textarea" className="newCommentContent" placeholder="What are your thoughts..." 
+        <textarea name="textarea" className="newCommentContent" placeholder="What are your thoughts..."
           value={newCommentContent}>
         </textarea>
       </div>
@@ -106,7 +106,7 @@ function renderComments(toggled, comments, entity, newCommentContent){
 
     commentsList = bykey(key)
     commentsList = commentsList.asMutable()
-    console.log("entity", entity, "key",key,"commentsList",commentsList)
+    //console.log("entity", entity, "key",key,"commentsList",commentsList)
     if(!commentsList){
       commentsList = []
     }
@@ -121,7 +121,7 @@ function renderComments(toggled, comments, entity, newCommentContent){
     )
 
   }
-  
+
   return (
     <div className="comments">
 
@@ -142,14 +142,14 @@ export default function view(state$){
         {
           text: "foo bar baz"
           ,author:"DR WhoBrown"}
-          , 
+          ,
           {
           text: "indeed"
           ,author:"Roborbarbar"}
         ]*/
 
         return renderComments( toggled, comments, entity, newCommentContent )
-        
+
       }
     )
 }
