@@ -2,7 +2,8 @@ import Rx from 'rx'
 const {fromEvent,merge} = Rx.Observable
 import {getFormResults, getFieldValues} from '../../utils/domUtils'
 import {combineLatestObj} from '../../utils/obsUtils'
-
+import {mergeData} from '../../utils/modelUtils'
+import {generateUUID} from '../../utils/utils'
 
 
 export default function intent(DOM){
@@ -23,6 +24,7 @@ export default function intent(DOM){
       }
     })
     .tap(e=>console.log("removeEntry",e))
+    .share()
 
   const addEntryTapped$ = DOM.select('.addBomEntry').events('click')
     .tap(function(e){
@@ -43,8 +45,13 @@ export default function intent(DOM){
   const addEntry$ = addEntryTapped$//newEntryValues$
     .withLatestFrom(newEntryValues$,((_,data)=>data))
     .filter(data=>data.name !== undefined)
+    .map(function(data){//inject extra data
+      return mergeData({},data,{id:generateUUID()})
+    })
+    .share()//VERY important, you don't want duplicate uuid generation etc
     //.tap(e=>console.log("raw addEntry data",e))
     //  const addEntry$ = getFieldValues({name:'', qty:0, phys_qty:0, unit:'EA', printable:false}, DOM, '.bom .adder', addEntryTapped$)
+
 
   DOM.select('.textInput').events('keydown')
     .forEach(e=>console.log("keydown",e))

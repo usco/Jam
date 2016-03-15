@@ -2,6 +2,7 @@ import Rx from 'rx'
 const {merge} = Rx.Observable
 import {first} from '../../../utils/otherUtils'
 import {exists,toArray} from '../../../utils/utils'
+import {mergeData} from '../../../utils/modelUtils'
 
 export default function intent(events, params){
   //entities/components
@@ -54,10 +55,18 @@ export default function intent(events, params){
     creationStep$: actionsFromEvents.createAnnotationStep$
   }*/
 
+  const addTypes$ = events//from bom
+    .select('bom').events('addEntry$')
+    .map(data=>({id:data.id,meta:data}))//convert data structure to something the BOM model can deal with
+    //.map(toArray)
+
   return {
-    updateComponent$
-    ,createAnnotationStep$
+    addTypes$
     ,removeTypes$
+
     ,deleteInstances$
+
+    ,updateComponent$
+    ,createAnnotationStep$
   }
 }
