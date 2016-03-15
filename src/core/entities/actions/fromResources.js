@@ -152,7 +152,7 @@ export default function intents(resources, params){
     .map(function(entry){
       const data = entry.data.typesMeshes[0].mesh
       const meta = {
-        name:nameCleanup( entry.meta.name )
+        name: entry.meta.name//DO NOT cleanup the name/remove the extension, the entity types model takes care of that
         ,id:entry.meta.id
       }
        return {id:entry.meta.id, data, meta}

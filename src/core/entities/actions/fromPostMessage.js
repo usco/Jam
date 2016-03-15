@@ -11,6 +11,7 @@ export default function intent(postMessage, params){
     .filter(p=>p.data.hasOwnProperty('addPartData'))
     .map(data=>data.data.addPartData)
     .map(toArray)
+    .tap(e=>console.log("addPartData (fromPostMessage)",e))
 
   const removePartData$ = postMessage$
     .filter(p=>p.data.hasOwnProperty('removePartData'))
