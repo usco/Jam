@@ -9,6 +9,7 @@
     "test-browser": "testem",
     "start": "NODE_ENV=dev node server.js",
     "build": "NODE_ENV=production webpack -p",
+    "build-test": "NODE_ENV=production MODE=test webpack -p",
     "profile": "webpack --profile --json > stats.json",
     "release": "npm run release-patch",
     "release-patch": "git checkout master && npm run build; git commit -a -m 'chore(dist): built dist/'; npm version patch && git push origin master --tags ",
@@ -39,9 +40,12 @@
     "mocha": "^2.2.5",
     "react-hot-loader": "^1.2.2",
     "rollup": "^0.21.2",
+    "string-replace-webpack-plugin": "0.0.3",
     "style-loader": "^0.13.0",
     "webpack": "^1.7.2",
-    "webpack-dev-server": "^1.7.0"
+    "webpack-dev-server": "^1.7.0",
+    "webpack-strip": "^0.1.0",
+    "webpack-strip-logs": "^0.1.2"
   },
   "dependencies": {
     "@cycle/core": "^6.0.3",

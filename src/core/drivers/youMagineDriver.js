@@ -77,21 +77,14 @@ function spreadRequests(time=300, data$){
 //storage driver for YouMagine designs & data etc
 export default function makeYMDriver(httpDriver, params={}){
   const defaults = {
-    apiBaseProdUri:'api.youmagine.com/v1'
-    ,apiBaseTestUri:''
+    apiBaseUri:'api.youmagine.com/v1'
     ,urlBase:'https'
-
-    ,designId:undefined
-
-    ,testMode:true
     ,login:undefined
     ,password:undefined
   }
   params = assign({},defaults,params)
 
-  let { apiBaseProdUri, apiBaseTestUri, urlBase, testMode, login, password} = params
-
-  let apiBaseUri = testMode !== undefined ? apiBaseTestUri : apiBaseProdUri
+  let { apiBaseUri, urlBase, testMode, login, password} = params
   let authData   = (login !== undefined && password!==undefined) ? (`${login}:${password}@`) : ''
 
   function youMagineStorageDriver(outgoing$){
