@@ -26,7 +26,7 @@ export default function intent(DOM){
 
   const changeTransforms$ = merge(
     DOM.select(".transformsInput").events('change')
-    ,DOM.select(".transformsInput").events('input')
+    //DOM.select(".transformsInput").events('input')
   )
     .map(function(e){
       let val = parseFloat(e.target.value)
@@ -40,7 +40,7 @@ export default function intent(DOM){
     .distinctUntilChanged()
     //.debounce(20)
     .shareReplay(1)
-  
+
 
   const changeMeta$ = merge(
     changeName$.map(function(value){return {name:value} })
