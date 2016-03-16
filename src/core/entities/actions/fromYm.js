@@ -72,10 +72,46 @@ export default function intent({ym, resources}, params){
 flags: "noInfer"
 id: "1535f856dd0iT"
 name: "UM2CableChain_BedEnd.STL"
-uri: "https://test-s3-assets.youmagine.com/uploads/docu*/
+uri: "*/
 
-  resources.filter(data=>data.meta.id !== undefined)
-    .forEach(e=>console.log("got back ok mesh resource",e))
+
+  //this makes sure that meshes ALWAYS get resolved, regardless of the order
+  //that mesh information and metadata gets recieved
+  function combineAndWaitUntil(meshesData$, assemblyData$){
+    const obs = new Rx.ReplaySubject()
+
+    let metas = []
+    let meshes = {}
+
+    function matchAttempt(id){
+      metas.forEach(function(data){
+        const mesh = meshes[data.typeUid]
+        if( mesh !== undefined ){
+          //mesh = mesh.clone()//meh ?
+          //mesh.material = mesh.material.clone()
+          //mesh.userData = {}
+          const result = mergeData(data, {value:{mesh}})
+          obs.onNext(result)//ONLY emit data when we have a match
+        }
+      })
+    }
+
+    meshesData$
+      .forEach(function(meshData){
+        let mesh = meshData.data.typesMeshes[0].mesh
+        meshes[ meshData.meta.id ] = mesh
+        matchAttempt(meshData.meta.id)
+      })
+
+    assemblyData$
+      .flatMap(fromArray)
+      .forEach(function(data){
+        metas.push(data)
+        matchAttempt(data.typeUid)
+      })
+
+    return obs
+  }
 
   const meshComponentMeshes$ = resources.filter(data=>data.meta.id !== undefined)
 
@@ -92,7 +128,11 @@ uri: "https://test-s3-assets.youmagine.com/uploads/docu*/
       })
     })
 
-  const createMeshComponents$ = meshComponentMeshes$
+
+    const createMeshComponents$ = combineAndWaitUntil(meshComponentMeshes$, meshComponentAssemblyData$)
+      .map(toArray)
+
+  /*const createMeshComponents$ = meshComponentMeshes$
     .combineLatest(meshComponentAssemblyData$,function(meshData, datas){
 
       return datas.map(function(data){
@@ -107,7 +147,8 @@ uri: "https://test-s3-assets.youmagine.com/uploads/docu*/
       }).filter(exists)
 
     })
-    .map(toArray)
+    .map(toArray)*/
+
     //.tap(e=>console.log("meshComponent",e))
 
   /*const createMeshComponents$      = assemblyData$
@@ -156,7 +197,7 @@ uri: "https://test-s3-assets.youmagine.com/uploads/docu*/
     //.forEach(e=>console.log("addEntityTypes",e))
 
 
-  //send out requests to fetch data
+  //send out requests to fetch data for meshes
   const meshRequests$ = partsData$
     .map(function(data){
       return data.map(function(entry) {
