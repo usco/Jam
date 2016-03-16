@@ -31,9 +31,9 @@ export default function view (state$) {
         if( direction !== undefined && sortFieldName === name)
         {
           if(direction){
-            sortArrow = <span className="directionArrow"> &#x25B2; </span>
+            sortArrow = <span className="directionArrow"> <span className="asc"/> </span>
           }else{
-            sortArrow = <span className="directionArrow"> &#x25BC; </span>
+            sortArrow = <span className="directionArrow"> <span className="desc"/> </span>
           }
         }
         //className={Class(`tooltip-bottom`),

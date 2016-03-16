@@ -505,6 +505,23 @@ input[type=color]:focus{
 .bom .directionArrow{
   font-size: 0.6em;
 }
+.bom .directionArrow .asc:after {
+    content: "▲";
+    /*
+    &#x25B2;
+     ▼
+    */
+}
+.bom .directionArrow .desc:after {
+    content: "▼";
+    /*
+    &#x25B2;
+     ▼
+    */
+}
+
+
+
 
 .bom .bomEntry .cell{
   text-align: center;
