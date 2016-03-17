@@ -16,7 +16,7 @@ var srcPath = "src"
 
 var production = process.env.NODE_ENV === 'production';
 var dev        = process.env.NODE_ENV === 'dev';
-var testMode   = process.env.MODE === undefined ? true: process.env.MODE
+var testMode   = (process.env.MODE === undefined || process.env.MODE !== 'production') ? true: false
 
 var getSymlinkedModules = function(){
 
