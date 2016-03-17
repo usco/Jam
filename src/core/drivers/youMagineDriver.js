@@ -36,7 +36,7 @@ function spreadRequests(time=300, data$){
   return data$.flatMap(function(items){
     return Rx.Observable.from(items).zip(
       Rx.Observable.interval(time),
-      function(item, index) { console.log("data",item); return item }
+      function(item, index) { return item }
     )
   })//.tap(e=>console.log("api stream",e))
 
@@ -115,8 +115,6 @@ export default function makeYMDriver(httpDriver, params={}){
         let outEntry = mergeData({}, entry)
         outEntry.qty = outEntry.qty - entry._qtyOffset //adjust quantity, removing any dynamic counts
         const refined = pick( fieldNames, remapJson(mapping, outEntry) )
-
-        console.log("goint to save Bom entry",entry)
         const send    = jsonToFormData(refined)
 
         return {
@@ -384,15 +382,12 @@ export default function makeYMDriver(httpDriver, params={}){
     const bomOut$      = makeApiStream(bom$  , toBom, design$, authData$)
     const assemblyOut$ = makeApiStream(assemblies$ ,toAssemblies, design$, authData$)
 
-    bomOut$.forEach(e=>console.log("OUT bom ",e))
-    partsOut$.forEach(e=>console.log("OUT parts ",e))
-
     //Finally put it all together
     const allSaveRequests$ = spreadRequests( 500, merge(partsOut$, bomOut$, assemblyOut$) )
     const allLoadRequests$ = merge(getParts$, getBom$, getAssemblies$)
 
     const outToHttp$ = merge(designExistsRequest$, allSaveRequests$, allLoadRequests$)
-      .tap(e=>console.log("requests out to http",e))
+      //.tap(e=>console.log("requests out to http",e))
 
     const inputs$ = httpDriver(outToHttp$)
 

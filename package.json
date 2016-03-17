@@ -4,7 +4,7 @@
   "description": "jam! experimental version",
   "main": "index.js",
   "scripts": {
-    "mocha": "mocha --compilers js:babel-core/register src/**/*.spec.js test src/api.spec.js",
+    "mocha": "mocha --compilers js:babel-core/register src/core/drivers/youMagineDriver.spec.js src/**/*.spec.js test src/api.spec.js",
     "test": "npm run mocha",
     "test-browser": "testem",
     "start": "NODE_ENV=dev node server.js",
