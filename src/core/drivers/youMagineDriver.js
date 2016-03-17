@@ -6,55 +6,24 @@ import {combineLatestObj, replicateStream} from '../../utils/obsUtils'
 import {safeJSONParse, toArray, remapJson} from '../../utils/utils'
 import {changesFromObservableArrays} from '../../utils/diffPatchUtils'
 import {mergeData} from '../../utils/modelUtils'
-
+import {jsonToFormData} from '../../utils/httpUtils'
 
 import assign from 'fast.js/object/assign'//faster object.assign
 import {pick, omit, equals, head, pluck} from 'ramda'
 
-function jsonToFormData(jsonData){
-  jsonData = JSON.parse( JSON.stringify( jsonData ) )
-  let formData = new FormData()
-  for(let fieldName in jsonData){
-    let value = jsonData[fieldName]
-    //value = encodeURIComponent(JSON.stringify(value))
-    //value = JSON.stringify(value)
-    //value = value.replace(/\"/g, '')
-    if(Object.prototype.toString.call(value) === "[object Object]"){
-      value = JSON.stringify(value)
-      // console.log("value",value)
-    }
-    if(Object.prototype.toString.call(value) === "[object Array]"){
-      //value = //JSON.stringify(value)
-      //value = 'arr[]', arr[i]//value.reduce()
-      //console.log("value",value)
-      value = `{ ${value.join(',')} }`
-    }
-
-    //console.log("append",fieldName, value)
-    formData.append(fieldName, value)
-
-  }
-  //throw new Error("fpp")
-  return formData
-}
 
 function makeApiStream(source$, outputMapper, design$, authData$){
   const upsert$  = source$
     .map(d=>d.upserted)
     .withLatestFrom(design$, authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
     .map(outputMapper.bind(null,'put'))
-    //.flatMap(fromArray)
-    //.debounce(debounceRate)//FIXME : should only be done if consecutive items are the same
 
   const delete$ = source$
     .map(d=>d.removed)
     .withLatestFrom(design$, authData$,(_entries,design,authData)=>({_entries,designId:design.id,authToken:authData.token}))
     .map(outputMapper.bind(null,'delete'))
-    //.flatMap(fromArray) //we do NOT debounce deletes, we want them all !
 
-  return merge(upsert$, delete$)//.tap(e=>console.log("api stream",e))
-  //const out$ =  merge(upsert$, delete$)
-
+  return merge(upsert$, delete$)
 }
 
 //spread out requests with TIME amount of time between each of them
@@ -189,17 +158,16 @@ export default function makeYMDriver(httpDriver, params={}){
       const fieldNames = ['uuid','name','color','pos','rot','sca','part_uuid']
       const mapping = {'id':'uuid', 'typeUid':'part_uuid'}
       const requests = entries.map(function(entry){
+        const refined = pick( fieldNames, remapJson(mapping, entry) )
+        const send    = jsonToFormData(refined)
 
-      const refined = pick( fieldNames, remapJson(mapping, entry) )
-      const send    = jsonToFormData(refined)
-
-        return {
-              url    : `${assembliesUri}/${refined.uuid}${authTokenStr}`
-            , method
-            , send
-            , type   :'ymSave'
-            , typeDetail :'assemblies'
-          }
+          return {
+                url    : `${assembliesUri}/${refined.uuid}${authTokenStr}`
+              , method
+              , send
+              , type   :'ymSave'
+              , typeDetail :'assemblies'
+            }
       })
       return requests
     }
@@ -244,6 +212,7 @@ export default function makeYMDriver(httpDriver, params={}){
     const assembly$ = save$
       .pluck('assembly')
 
+    //deal wiht loading basics
     const load$ = outgoing$
       .debounce(50)//only load if last events were less than 50 ms appart
       .filter(data=>data.method === 'load')
@@ -252,6 +221,7 @@ export default function makeYMDriver(httpDriver, params={}){
 
     const lDesign$ = load$
       .pluck('design')
+
     const lAuthData$ = load$
       .pluck('authData')
 
@@ -414,16 +384,19 @@ export default function makeYMDriver(httpDriver, params={}){
     const bomOut$      = makeApiStream(bom$  , toBom, design$, authData$)
     const assemblyOut$ = makeApiStream(assemblies$ ,toAssemblies, design$, authData$)
 
+    bomOut$.forEach(e=>console.log("OUT bom ",e))
+    partsOut$.forEach(e=>console.log("OUT parts ",e))
+
     //Finally put it all together
     const allSaveRequests$ = spreadRequests( 500, merge(partsOut$, bomOut$, assemblyOut$) )
     const allLoadRequests$ = merge(getParts$, getBom$, getAssemblies$)
 
     const outToHttp$ = merge(designExistsRequest$, allSaveRequests$, allLoadRequests$)
-      .tap(e=>console.log("outToHttp",e))
+      .tap(e=>console.log("requests out to http",e))
 
     const inputs$ = httpDriver(outToHttp$)
 
-    const saveResponses$ = inputs$
+    /*const saveResponses$ = inputs$
       .filter(res$ => res$.request.type === 'ymSave')//handle errors etc
       .flatMap(data => {
         const responseWrapper$ = data.catch(e=>{
@@ -435,7 +408,7 @@ export default function makeYMDriver(httpDriver, params={}){
 
         return combineLatestObj({response$, request$})//.materialize()//FIXME: still do not get this one
       })
-      .forEach(e=>console.log("saving done (if all went well)"))
+      .forEach(e=>console.log("saving done (if all went well)"))*/
 
     return inputs$
   }
