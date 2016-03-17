@@ -16,8 +16,7 @@ var srcPath = "src"
 
 var production = process.env.NODE_ENV === 'production';
 var dev        = process.env.NODE_ENV === 'dev';
-var testMode   = process.env.MODE     === 'test'
-
+var testMode   = process.env.MODE === undefined ? true: process.env.MODE
 
 var getSymlinkedModules = function(){
 
@@ -98,6 +97,8 @@ var config= {
                 replacement: function (match, p1, offset, string) {
                     if(testMode){
                       return 'api-test.'
+                    }else{
+                      return 'api.'
                     }
                 }
             }
