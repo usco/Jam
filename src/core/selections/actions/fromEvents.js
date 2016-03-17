@@ -8,8 +8,8 @@ function extractEntities(data){
 
 export function reverseSelections(intents, idsMapper$){
 
-  Array.prototype.flatMap = function(lambda) { 
-    return Array.prototype.concat.apply([], this.map(lambda)) 
+  Array.prototype.flatMap = function(lambda) {
+    return Array.prototype.concat.apply([], this.map(lambda))
   }
 
   //what we want is actually typeUid!
@@ -22,18 +22,18 @@ export function reverseSelections(intents, idsMapper$){
     })
     //.do(e=>console.log("selectedBomEntries",e))
     .merge(intents.selectBomEntries$)
-    
-  //select entities from bom entries  
+
+  //select entities from bom entries
   const selectEntities$ = intents
-    .selectBomEntries$ 
+    .selectBomEntries$
     //.do(e=>console.log("reversing BOM selections to selectEntities"))
-    .withLatestFrom(idsMapper$,function(bomIds,idsMapper){ 
+    .withLatestFrom(idsMapper$,function(bomIds,idsMapper){
       return flatten( bomIds.map(id=>idsMapper.instUidFromTypeUid[id]) ).filter(exists)
     })
     //.do(e=>console.log("selectedEntities",e))
     .merge(intents.selectEntities$)
-    
-    
+
+
   return{
     selectEntities$:selectEntities$.distinctUntilChanged(null,equals)
     ,selectBomEntries$:selectBomEntries$.distinctUntilChanged(null,equals)
@@ -41,14 +41,15 @@ export function reverseSelections(intents, idsMapper$){
 }
 
 
-export function selectionsIntents(drivers, idsMapper$){
-  
-  let selectEntities$ = drivers.events.select("gl").events("selectedMeshes$")
+export default function intent(events, params){
+  const {idsMapper$} = params
+
+  const selectEntities$ = events.select("gl").events("selectedMeshes$")
     .map(extractEntities)
     .map(toArray)
     .shareReplay(1)
 
-  let selectBomEntries$ = drivers.events.select("bom").events("entryTapped$")
+  const selectBomEntries$ = events.select("bom").events("entryTapped$")
     .map(toArray)
     .shareReplay(1)
 

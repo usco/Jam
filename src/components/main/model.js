@@ -19,11 +19,13 @@ import {addAnnotation} from '../../core/entities/annotations'
 import {remapEntityActions,remapMetaActions,
   remapMeshActions,remapTransformActions,remapBoundsActions} from '../../core/entities/utils'
 
-import {selectionsIntents} from './intents/selections'
+import selectionsIntents from '../../core/selections/intents'
 
+import design from      '../../core/design/design'
 import settings from    '../../core/settings/settings'
-import comments from    '../../core/comments'
-import selections from  '../../core/selections'
+import comments from    '../../core/comments/comments'
+
+import selections from  '../../core/selections/selections'
 import entityTypes from '../../core/entities/types'
 import bom         from '../../core/bom/index'
 import bomIntents from '../../core/bom/intents'
@@ -82,7 +84,10 @@ export default function model(props$, actions, sources){
 
   let entityActions = actions.entityActions
 
+  const design$ = design(actions.designActions)
+    .tap(e=>console.log("designData",e))
   const settings$      = settings( actions.settingActions )
+    .tap(e=>console.log("settings",e))
   const entityTypes$   = entityTypes( actions.entityActions )
   const comments$      = comments( actions.commentActions )
 
@@ -214,7 +219,7 @@ export default function model(props$, actions, sources){
 
   //selections => only for real time view
   const typesInstancesRegistry$ = makeRegistry(meta$, entityTypes$)
-  const selections$             = selections( selectionsIntents({DOM, events}, typesInstancesRegistry$) )
+  const selections$             = selections( selectionsIntents(sources, {idsMapper$:typesInstancesRegistry$}) )
     .merge(metaActions.removeComponents$.map(a=> ({instIds:[],bomIds:[]}) )) //after an instance is removed, unselect
 
   const currentSelections$ = selections$//selections$.pluck("instIds")
@@ -230,18 +235,11 @@ export default function model(props$, actions, sources){
   //close some cycles
   replicateStream(currentSelections$, proxySelections$)
 
-  const bomActions = bomIntents(sources, entityTypes$, metaActions, entityActions, actions)
+  const bomActions = bomIntents(sources, entityTypes$, metaActions, entityActions)
   const bom$ = bom(bomActions)
 
   //not entirely sure, we need a way to observe any fetch/updload etc operation
   const operationsInProgress$ = actions.progress.combinedProgress$.startWith(undefined)
-
-  ////
-  const design$ = actions.designActions.loadDesign$
-    .filter(exists)
-    .map(data=>({synched:true, id:data, ns:'ym'}))
-    .startWith({synched:false, id:undefined, ns:'ym'})
-    .tap(e=>console.log("designInfos",e))
 
   //////other data
   const appData$ = sources.appMeta

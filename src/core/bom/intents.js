@@ -9,7 +9,7 @@ import bomIntentFromEvents from './actions/fromEvents'
 import bomIntentFromYm from './actions/fromYm'
 
 
-export default function bomIntent(sources, entityTypes$, coreActions, entityActions, actions){
+export default function bomIntent(sources, entityTypes$, metaActions, entityActions){
 
   const typeChanges$ = changesFromObservableArrays(entityTypes$).share()
 
@@ -36,38 +36,40 @@ export default function bomIntent(sources, entityTypes$, coreActions, entityActi
       })
     })
 
-  const increaseBomEntries$ = coreActions
+  const increaseBomEntries$ = metaActions
     .createComponents$
       //.filter(exists)
+      .tap(e=>console.log("increaseBomEntries(from createComponents)",e))
       .map(function(data){
         return data
           .filter(dat=>dat.value.typeUid!==undefined)
           .map(function(dat){
-            return {offset:1,id:dat.value.typeUid}
+            return {offset:1, id:dat.value.typeUid}
           })
       })
     .merge(
-      coreActions.duplicateComponents$
-        .tap(e=>console.log("duplicateComponents",e))
+      metaActions.duplicateComponents$
+        .tap(e=>console.log("increaseBomEntries (from duplicateComponents)",e))
         //.filter(exists)
         .map(function(data){
           return data
             .filter(dat=> dat.typeUid!== undefined || dat.value.typeUid!==undefined )
             .map(function(dat){
-              return {offset:1,id:dat.typeUid}
+              return {offset:1, id:dat.typeUid}
           })
         })
     )
 
-  const decreaseBomEntries$ = coreActions
-    .removeComponents$
-      .map(function(data){
-        return data
-          .filter(d=>d.id !== undefined)
-          .map(function(dat){
-            return {offset:-1,id:dat.typeUid}
-          })
-      })
+  const decreaseBomEntries$ = entityActions.deleteInstances$
+    .tap(e=>console.log("deleteInstances A1",e))
+    .map(function(data){
+      return data
+        .filter(d=>d.id !== undefined || d.typeUid!==undefined)
+        .map(function(dat){
+          return {offset:-1,id:dat.typeUid}
+        })
+    })
+    .tap(e=>console.log("decreaseBomEntries",e))
 
   const updateBomEntriesCount$ = merge(
     increaseBomEntries$
@@ -86,9 +88,10 @@ export default function bomIntent(sources, entityTypes$, coreActions, entityActi
 
   const upsertBomEntriesAll$ = extraActions.upsertBomEntries$.merge(upsertBomEntries$)
   const updateBomEntries$ = extraActions.updateBomEntries$
+  const removeBomEntriesAll$ = removeBomEntries$//extraActions.removeBomEntries$.merge(removeBomEntries$)
 
   let bomActions = mergeData( {upsertBomEntries$, updateBomEntriesCount$, updateBomEntries$,  upsertBomEntries$:upsertBomEntriesAll$,
-    clearBomEntries$, removeBomEntries$} )
+    clearBomEntries$, removeBomEntries$:removeBomEntriesAll$} )
 
   return bomActions
 }

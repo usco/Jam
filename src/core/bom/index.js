@@ -10,7 +10,16 @@ function upsertBomEntry(state, input){
   const index = findIndex(propEq('id', input.id))(state)
 
   if(index===-1){//if we have a bom entry that is new
-    const bomEntryDefaults = {name:undefined, qty:0, phys_qty:0, version:"0.0.1", unit:"EA", printable:true}
+    const bomEntryDefaults = {
+      name:undefined
+      , qty:0
+      , _qtyOffset:0//this is for "dynamic" entities only , and should be disregarded when saving the bom
+      , phys_qty:0
+      , version:"0.0.1"
+      , unit:"EA"
+      , printable:true
+      , dynamic:false
+    }
     const entry = mergeData(bomEntryDefaults,input.data)
     return state = state.concat( toArray(entry) )
   }else{//we already have this same bom entry
@@ -75,7 +84,7 @@ function createBomEntries(state,input){
 
 //remove an entry
 function removeBomEntries(state, inputs){
-  //console.log("removeBomEntries",inputs)
+  console.log("removeBomEntries",inputs)
   return inputs.reduce(function(state, input){
     const index = findIndex(propEq('id', input.id))(state)
     state=[
@@ -105,13 +114,21 @@ function updateBomEntries(state, inputs){
   return upsertBomEntries(state, inputs)
 }
 
+//these are only for dynamic entries ie : if a part gets duplicated , deleted etc
+//as such they are dealt with seperatly
 function updateBomEntriesCount(state, inputs){
-  //console.log("updateBomEntriesCount",inputs)
+  console.log("updateBomEntriesCount",inputs)
   return inputs.reduce(function(state,{id,offset}){
+    //TODO: refactor
+    const idx = findIndex(propEq('id', id))(state)
+    if(idx === -1){
+      return state
+    }
     const entries = adjust(
       function(item){
-        const qty = Math.max(item.qty+offset,0)
-        return mergeData({},item,{qty:qty})
+        const _qtyOffset =  Math.max(item._qtyOffset + offset, 0)
+        const qty        = Math.max(item.qty+ offset, _qtyOffset)
+        return mergeData({},item,{_qtyOffset, qty, dynamic:true})
       }
       , findIndex(propEq('id', id))(state) //get index of the one we want to change
       , state)

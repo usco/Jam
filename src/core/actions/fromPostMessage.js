@@ -22,30 +22,9 @@ export function intentsFromPostMessage(drivers){
   const getStatus$ = postMessageWithData$
     .filter(p=>p.data.hasOwnProperty("getStatus"))
 
-  const clearDesign$ = postMessageWithData$
-    .filter(p=>p.data.hasOwnProperty("clear"))
-
-  const loadDesign$ = postMessageWithData$
-    .filter(p=>p.data.hasOwnProperty('designId'))
-    .map(data=>data.data.designId)
-
-  const addPartData$ = postMessageWithData$
-    .filter(p=>p.data.hasOwnProperty('addPartData'))
-    .map(data=>data.data.addPartData)
-    .map(toArray)
-
-  const removePartData$ = postMessage$
-    .filter(p=>p.data.hasOwnProperty('removePartData'))
-    .map(data=>data.data.removePartData)
-    .map(toArray)
-
   return {
     captureScreen$
     ,getTransforms$
     ,getStatus$
-    ,clearDesign$
-    ,loadDesign$
-    ,addPartData$
-    ,removePartData$
   }
 }

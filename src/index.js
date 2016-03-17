@@ -19,7 +19,7 @@ import makeYMDriver       from './core/drivers/youMagineDriver'
 //////////setup drivers
 let domDriver      = makeDOMDriver('#jamRoot')
 //other drivers
-let postMessage  = postMessageDriver  
+let postMessage  = postMessageDriver
 let localStorage = localStorageDriver
 let addressbar   = addressbarDriver
 let browserCaps  = browserCapsDriver
@@ -42,7 +42,19 @@ let drivers = {
    ,ym:ymDriver
 }
 
+
 console.log("---READY TO START JAM!---")
+const mode = "production"
+if(mode==="production"){
+  //remove console.log statements // FIXME: temporary hack
+  console._log = console.log
+  console._info = console.info
+  console._warn = console.warn
+  console.log  = function(){}
+  console.info = function(){}
+  console.warn = function(){}
+}
+
 
 Cycle.run(main, drivers)
 

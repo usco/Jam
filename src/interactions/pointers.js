@@ -1,19 +1,11 @@
 import Rx from 'rx'
-let Observable= Rx.Observable
-let fromEvent = Observable.fromEvent
-let merge     = Rx.Observable.merge
-
-import logger from '../utils/log'
-let log = logger("interactions")
-log.setLevel("info")
+const {fromEvent, merge, empty, just } = Rx.Observable
 
 import {preventDefault,isTextNotEmpty,formatData,exists} from '../utils/obsUtils'
 import {normalizeWheel} from './utils'
 import assign from 'fast.js/object/assign'//faster object.assign
 
-
 //various helpers
-
 function hasTwoTouchPoints(event) {
   return event.touches && event.touches.length === 2
 }
@@ -49,19 +41,19 @@ function isLong(elapsed, maxTime){
  export function clicks(mouseDowns, mouseUps, mouseMoves, timing=200, deltaSqr){
     /*
     "pseudo click" that does not trigger when there was
-    a mouse movement 
+    a mouse movement
     */
     let fakeClicksOld = mouseDowns.flatMap( function( md ){
       let start   = { x: md.clientX, y: md.clientY }
 
-      //get only valid moves 
+      //get only valid moves
       let mMoves  = mouseMoves
         .map( false )
         .bufferWithTimeOrCount(timing,1)
         .filter( x => x.length == 1 )
         .map( x => x[0])
 
-      let __moves = mMoves.merge(Observable.return(true))//default to true
+      let __moves = mMoves.merge(just(true))//default to true
 
       return __moves.combineLatest(mouseUps, function(m, mu){
         //log.info(m, mu)
@@ -77,10 +69,10 @@ function isLong(elapsed, maxTime){
    let fakeClicks = mouseDowns
     .flatMap( function(downEvent){
         let target = downEvent.currentTarget
-        return Observable.amb(
+        return Rx.Observable.amb(
           [
             // Skip if we get a movement before a mouse up
-            mouseMoves.take(1).flatMap( x => Rx.Observable.empty() ),
+            mouseMoves.take(1).flatMap( x => empty() ),
             mouseUps.take(1)
           ])//.map(function(event){console.log(event) return event})
       })
@@ -93,12 +85,12 @@ function altMouseMoves( mouseMoves ){
  return mouseMoves
       .skip(1)
       .zip( mouseMoves, function(a, b){
-        
+
         let data = {
             client:{x: a.clientX,y: a.clientY },
             delta:{x: a.clientX - b.clientX, y: a.clientY - b.clientY}
           }
-        
+
           return assign(data, b)
         }
       )
@@ -112,16 +104,19 @@ function taps(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
    return mouseDowns
       .flatMap( function(downEvent){
         let target = downEvent.currentTarget
-        return Observable.amb(
+        //const startTime = Date.now()//TODO: use time difference to determine if it was a short or a long tap ?
+
+        return Rx.Observable.amb(
           [
             // Skip if we get a movement before a mouse up
             mouseMoves
               .filter( data => isMoving(data.delta, deltaSqr) )//allow for small movement (shaky hands!)
-              .take(1).flatMap( x => Rx.Observable.empty() ),
+              .take(1).flatMap( x => empty() ).timeInterval(),
 
-            mouseUps.take(1),
 
-          ]).timeout(longPressDelay, Rx.Observable.empty())
+            mouseUps.take(1).timeInterval(),
+
+          ])//.timeout(longPressDelay, empty())
     })
 }
 
@@ -130,20 +125,20 @@ function holds(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
    return mouseDowns
       .flatMap( function(downEvent){
         let target = downEvent.currentTarget
-        return Observable.amb(
+        return Rx.Observable.amb(
           [
             // Skip if we get a movement before timeout
             mouseMoves
               .filter( data => isMoving(data.delta, deltaSqr) )//allow for small movement (shaky hands!)
-              .take(1).flatMap( x => Rx.Observable.empty() ),
+              .take(1).flatMap( x => empty() ),
 
             //Skip if we get a mouseup before main timeout
-            mouseUps.take(1).flatMap( x => Rx.Observable.empty() ),
+            mouseUps.take(1).flatMap( x => empty() ),
 
-            Rx.Observable.return(2).delay(longPressDelay).timeout(longPressDelay, Rx.Observable.return(downEvent))
+            just(2).delay(longPressDelay).timeout(longPressDelay, just(downEvent))
 
           ])
-        //.timeout(longPressDelay, Rx.Observable.empty())
+        //.timeout(longPressDelay, empty())
     })
 }
 
@@ -156,7 +151,7 @@ function holds(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
         return Observable.amb(
           [
             // Skip if we get a mouse up before we move
-            mouseUps.take(1).flatMap( x => Rx.Observable.empty() ),
+            mouseUps.take(1).flatMap( x => empty() ),
 
             mouseMoves.take(1).map(function(x){
               return{
@@ -165,7 +160,7 @@ function holds(mouseDowns, mouseUps, mouseMoves, longPressDelay=800, deltaSqr){
                 drags: mouseMoves.takeUntil(mouseUps).map(function(x){
                   return {
                     delta: x.delta,
-                    offset: { 
+                    offset: {
                       x: x.client.x - downEvent.clientX,
                       y: x.client.y - downEvent.clientY
                     }
@@ -207,7 +202,7 @@ function drags3(mouseDowns$, mouseUps, mouseMoves, longPressDelay=800, deltaSqr)
     return mouseMoves
       .map(function (e) {
         //console.log("drags3 mousemove",mm);
-        //(mm.preventDefault) ? mm.preventDefault() : mm.returnValue = false 
+        //(mm.preventDefault) ? mm.preventDefault() : mm.returnValue = false
         let delta = {
             left: e.clientX - startX,
             top: e.clientY - startY
@@ -219,15 +214,7 @@ function drags3(mouseDowns$, mouseUps, mouseMoves, longPressDelay=800, deltaSqr)
   })
 }
 
-
 function touchDrags(touchStart$, touchEnd$, touchMove$){
-  /*touchStart$
-    .forEach(e=>console.log("touchStart",e))
-  touchEnd$
-    .forEach(e=>console.log("touchend",e))
-  touchMove$
-    .forEach(e=>console.log("touchMove",e))*/
-
   return touchStart$
     .flatMap(function(ts){
 
@@ -254,39 +241,7 @@ function touchDrags(touchStart$, touchEnd$, touchMove$){
         .takeUntil(touchEnd$)
 
     })
-
-  /*touchMoves$ = 
-    touchMoves$
-    .map(function(e){
-      console.log("modding touchMoves")
-      let start = e.changedTouches[0]
-      let startX = 0
-      let startY = 0
-      if(start)
-      {
-        let startX = start.clientX
-        let startY = start.clientY
-      }
-      let mm = e.changedTouches[e.changedTouches.length-1]
-      if(mm){
-
-        let delta = {
-          left: mm.clientX - startX
-          ,top: mm.clientY - startY
-          ,x:(mm.clientX - startX)/1000
-          ,y:(mm.clientY - startY)/1000
-        }
-
-        const output = assign({}, mm, {delta})
-        return output
-
-      }
-      
-    })*/
-
-  
 }
-
 
 //pinch, taken from https://github.com/hugobessaa/rx-react-pinch
 function pinches(touchstarts, touchmoves, touchEnds) {
@@ -299,7 +254,6 @@ function pinches(touchstarts, touchmoves, touchEnds) {
           .takeUntil(touchEnds)
       })
 }
-
 
 export function interactionsFromEvents(targetEl){
   let mouseDowns$  = fromEvent(targetEl, 'mousedown')
@@ -334,28 +288,16 @@ export function interactionsFromCEvents(targetEl, rTarget='canvas'){
     return targetEl.select(rTarget).events(eventName)
   }
 
+  const mouseDowns$  = fromCEvent(targetEl, 'mousedown')
+  const mouseUps$    = fromCEvent(targetEl, 'mouseup')
+  const mouseLeaves$ = fromCEvent(targetEl, 'mouseleave').merge(fromCEvent(targetEl, 'mouseout') )
+  const mouseMoves$  = altMouseMoves(fromCEvent(targetEl, 'mousemove')).takeUntil(mouseLeaves$)
+  const rightClicks$ = fromCEvent(targetEl, 'contextmenu').do(preventDefault)// disable the context menu / right click
+  const zooms$       = fromCEvent(targetEl, 'wheel')
 
-  let mouseDowns$  = fromCEvent(targetEl, 'mousedown')
-  let mouseUps$    = fromCEvent(targetEl, 'mouseup')
-  let mouseLeaves$ = fromCEvent(targetEl, 'mouseleave').merge(fromCEvent(targetEl, 'mouseout') )
-  let mouseMoves$  = altMouseMoves(fromCEvent(targetEl, 'mousemove')).takeUntil(mouseLeaves$)
-  let rightClicks$ = fromCEvent(targetEl, 'contextmenu').do(preventDefault)// disable the context menu / right click
-  let zooms$       = fromCEvent(targetEl, 'wheel')
-
-  let touchStart$  = fromCEvent(targetEl,'touchstart')//dom.touchstart(window)
-  let touchMoves$ = fromCEvent(targetEl,'touchmove')//dom.touchmove(window)
-  let touchEnd$    = fromCEvent(targetEl,'touchend')//dom.touchend(window)
-
- 
-  
-
-  /*setTimeout(function() {
-    let elem = document.querySelector(".glView")
-    fromEvent(elem, 'mousemove').forEach(e=>console.log("mouseMoves",e))
-    let elem2 = document.querySelector(".container")
-
-
-  }, 15000)*/
+  const touchStart$  = fromCEvent(targetEl,'touchstart')//dom.touchstart(window)
+  const touchMoves$ = fromCEvent(targetEl,'touchmove')//dom.touchmove(window)
+  const touchEnd$    = fromCEvent(targetEl,'touchend')//dom.touchend(window)
 
   return {
     mouseDowns$,
@@ -370,64 +312,66 @@ export function interactionsFromCEvents(targetEl, rTarget='canvas'){
   }
 }
 
-export function pointerInteractions (baseInteractions){  
-  let multiClickDelay = 250
-  let longPressDelay  = 250
+export function pointerInteractions (baseInteractions){
+  const multiClickDelay = 250
+  const longPressDelay  = 250
 
-  let minDelta        = 25//max 50 pixels delta
-  let deltaSqr        = (minDelta*minDelta)
+  const minDelta        = 25//max 50 pixels delta
+  const deltaSqr        = (minDelta*minDelta)
 
   let {
-    mouseDowns$, mouseUps$, rightclicks$, mouseMoves$, 
+    mouseDowns$, mouseUps$, rightclicks$, mouseMoves$,
     touchStart$, touchMoves$, touchEnd$,
     zooms$ } = baseInteractions
 
   //mouseMoves$.forEach(e=>console.log("mousemove",e))
 
   ///// now setup the more complex interactions
-  let taps$ = taps( 
+  const taps$ = taps(
     merge(mouseDowns$,touchStart$), //mouse & touch interactions starts
     merge(mouseUps$,touchEnd$),     //mouse & touch interactions ends
     mouseMoves$, longPressDelay, deltaSqr).share()
 
-  let tapStream$ = taps$
-    .filter( event => ('button' in event && event.button === 0) ) //FIXME : bad filter ! 
+  const shortTaps$ = taps$
+    .filter(e=>e.interval <= longPressDelay)
+    .map(e=>e.value)
+    .filter( event => ('button' in event && event.button === 0) ) //FIXME : bad filter !
     .buffer(function() { return taps$.debounce( multiClickDelay ) })
     .map( list => ({list:list,nb:list.length}) )
     .share()
 
-
-  //normalize zooms (should this be elsewhere)
+  //normalize zooms (should this be elsewhere ?)
   zooms$ = zooms$.map(normalizeWheel)
 
   //we get our custom right clicks
-  let rightClicks2 = taps$.filter( event => ('button' in event && event.button === 2) )
-  let holds$       = holds(mouseDowns$, mouseUps$, mouseMoves$, longPressDelay, deltaSqr)
+  const rightClicks2 = taps$.filter( event => ('button' in event && event.button === 2) )
+  const holds$       = holds(mouseDowns$, mouseUps$, mouseMoves$, longPressDelay, deltaSqr)
 
-  let shortSingleTaps$ = tapStream$.filter( x => x.nb == 1 ).flatMap(e=>e.list)
-  let shortDoubleTaps$ = tapStream$.filter( x => x.nb == 2 ).flatMap(e=>e.list).take(1).repeat()
-  
+  const shortSingleTaps$ = shortTaps$.filter( x => x.nb == 1 ).flatMap(e=>e.list)
+  const shortDoubleTaps$ = shortTaps$.filter( x => x.nb == 2 ).flatMap(e=>e.list).take(1).repeat()
+
   //static , long held taps, for context menus etc
-  // longTaps: either HELD leftmouse/pointer or HELD right click
-  let longTaps$= holds$.take(1).repeat()
+  // longTaps: either HELD leftmouse/pointer or HELD right click //FIXME : needs to be "UNTIL" mouseUp
+  //and not fire before mouseUp
+  const longTaps$= taps$.filter(e=>e.interval > longPressDelay)
+    .map(e=>e.value)//holds$.take(1).repeat()//.timeout(longPressDelay, empty())
+    //.tap(e=>console.log("taps with LONG timeInterval",e))
 
   //drag move interactions (continuously firing)
-  let dragMoves$   = merge(
+  const dragMoves$   = merge(
     drags3(mouseDowns$, mouseUps$, mouseMoves$, longPressDelay, deltaSqr),
     touchDrags(touchStart$, touchEnd$, touchMoves$)
   )
     .takeUntil(longTaps$).repeat()//no drag moves if there is a context action already taking place
 
-  //dragMoves$.forEach(e=>console.log("dragMoves",e))
-
   return {
-    taps:tapStream$, 
+    taps:taps$.map(e=>e.value),
     shortSingleTaps$,
     shortDoubleTaps$,
     longTaps$,
     dragMoves$,
     zooms$
-  } 
+  }
  }
 
 

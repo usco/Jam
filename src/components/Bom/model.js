@@ -1,5 +1,5 @@
-import {exists} from '../../utils/obsUtils'
-import {combineLatestObj} from '../../utils/obsUtils'
+import {exists, combineLatestObj} from '../../utils/obsUtils'
+import {generateUUID} from '../../utils/utils'
 
 function sortBy(fieldName){
   return function(a,b){
@@ -55,8 +55,31 @@ export default function model(props$, actions){
       return output
     })
 
-  const toggled$ = actions.toggle$.startWith(true)
+  const toggled$ = actions.toggle$
+    .startWith(true)
+
+  function makeNewEntryDefaults(){
+
+    const newEntryDefaults = {
+        name:""
+        , qty:0
+        , _qtyOffset:0//this is for "dynamic" entities only , and should be disregarded when saving the bom
+        , phys_qty:0
+        , version:"0.0.1"
+        , unit:"EA"
+        , printable:false
+        , _adder:true//special flag for adder
+        , id : generateUUID()//this is a what allows forcing the dom to refresh
+      }
+      return newEntryDefaults
+  }
+
+
+  const newEntryValues$ = actions.addEntry$
+    .map(e=>(makeNewEntryDefaults()))
+    .startWith(makeNewEntryDefaults())
 
   return combineLatestObj({entries$:sortedEntries$, selectedEntries$
-    , fieldNames$, sortFieldName$, sortablesDirection$, editableFields$, fieldDescriptions$, fieldTypes$, units$, toggled$, readOnly$})
+    , fieldNames$, sortFieldName$, sortablesDirection$, editableFields$, fieldDescriptions$, fieldTypes$, units$,
+    newEntryValues$, toggled$, readOnly$})
 }

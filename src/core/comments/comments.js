@@ -1,14 +1,12 @@
 import Rx from 'rx'
-let fromEvent = Rx.Observable.fromEvent
-let Observable = Rx.Observable
-let merge = Rx.Observable.merge
+const {fromEvent,merge} = Rx.Observable
 
-import logger from '../utils/log'
+import logger from '../../utils/log'
 let log = logger("comments")
 log.setLevel("info")
 
-import {toArray, generateUUID} from '../utils/utils'
-import {makeModel, mergeData} from '../utils/modelUtils'
+import {toArray, generateUUID} from '../../utils/utils'
+import {makeModel, mergeData} from '../../utils/modelUtils'
 
 //"comments" system
 //helper function to get data by key
@@ -27,8 +25,8 @@ function addComments(state, input){
   const comments = state.data.concat(
       newComments.map(function(comment){
         let {id,typeUid} = comment.target
-        let text           = comment.text 
-        let author         = "jon doe"  //FIXME: how to deal with authors ? 
+        let text           = comment.text
+        let author         = "jon doe"  //FIXME: how to deal with authors ?
 
         let key = [id,typeUid]
         let entry = {text, author, key}

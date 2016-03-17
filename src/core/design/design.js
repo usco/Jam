@@ -1,24 +1,23 @@
-import assign from 'fast.js/object/assign'//faster object.assign
-import logger from 'log-minim'
-let log = logger("design")
-log.setLevel("error")
-
 import Rx from 'rx'
-let fromEvent = Rx.Observable.fromEvent
-let Observable = Rx.Observable
-let merge = Rx.Observable.merge
+let {fromEvent, Observable, merge} = Rx.Observable
+import {makeModel, mergeData} from '../../utils/modelUtils'
+
 
 const defaults = {
-   name       : undefined
+  /* name       : undefined
   ,description: undefined
   ,version    : undefined//"0.0.0",
   ,authors    : []
   ,tags       : []
   ,licenses   : []
   ,meta       : undefined
-  
+
   ,id         : undefined
-  ,uri        : undefined
+  ,uri        : undefined*/
+
+  id:undefined,
+  ns:undefined,
+  synched:false
 }
 
 
@@ -33,10 +32,17 @@ function updateDesign(state, input){
   return design
 }
 
-
-function model(actions, source){
-  let updateFns  = {newDesign, updateDesign}
-  return makeModel(defaults, updateFns, actions, undefined, {doApplyTransform:false})//since we store meshes, we cannot use immutable data
+function loadDesign(state, input){
+  console.log("designInfos",input)
+  return {synched:true, id:input, ns:'ym'}
 }
 
-export default model
+function clearDesign(state, input){
+  return defaults
+}
+
+export default function design(actions, source){
+  console.log("design")
+  let updateFns  = {newDesign, updateDesign, loadDesign, clearDesign}
+  return makeModel(defaults, updateFns, actions, source)
+}

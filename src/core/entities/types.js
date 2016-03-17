@@ -14,7 +14,7 @@ import {makeModel, mergeData} from '../../utils/modelUtils'
    "name": "FavoritePart",
    "description": "test",
    "binary_document_id": 38546,
-   "binary_document_url": "https://test-s3-assets.youmagine.com/uploads/document/file/38546/UM2CableChain_BedEnd.STL",
+   "binary_document_url": "xxx/38546/UM2CableChain_BedEnd.STL",
    "source_document_id": null,
    "source_document_url": "",
  }*/
@@ -67,7 +67,7 @@ function addTypeCandidate(state, input){
 }
 
 function removeTypes(state, inputs){
-  //console.log("remove types",state, inputs)
+  console.log("remove types",state, inputs)
   state = inputs.reduce(function(state, input){
     const index = findIndex(propEq('id', input.id))(state)
     state=[

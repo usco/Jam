@@ -17,15 +17,14 @@ export function remapEntityActions(entityActions, currentSelections$){
 
   const deleteInstances$ = entityActions.deleteInstances$
     .withLatestFrom(currentSelections$,function(deleteInfos,selections){
-      //[object], []
-      if(selections.length >0)
-      {
+      //console.log("I am asked to delete instances",deleteInfos,selections)
+      if(deleteInfos === undefined){//delete by id, based on selections
         return selections
-      }else{
+      }else{//delete by typeUid, based on input data
         return deleteInfos
       }
-
     })
+    .tap(e=>console.log("I am going to delete instances",e))
     .share()
 
   return mergeData(entityActions,
