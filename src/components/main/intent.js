@@ -1,10 +1,12 @@
 import Rx from 'rx'
-const {merge,fromArray,of} = Rx.Observable
+const {merge, fromArray, of} = Rx.Observable
 
 import {equals, cond, T, always, head, flatten} from 'ramda'
 import path from 'path'
 
 import {mergeData} from '../../utils/modelUtils'
+import {preventBackNavigation} from '../../interactions/keyboard'
+
 
 import designIntents from '../../core/design/intents'
 import entityIntents from '../../core/entities/intents'
@@ -21,6 +23,10 @@ import {normalizeData, extractDataFromRawSources} from '../../core/sources/utils
 
 
 export default function intent (sources) {
+  //disable backspace navigation for MacOs
+  preventBackNavigation()
+
+
   //FIXME: damned  relative paths ! actual path (relative to THIS module) is '../../core/sources/' , relative to the loader it is '.'
   const refinedSourceData$ = normalizeData( extractDataFromRawSources( sources, '.' ) )//q.tap(e=>console.log("foo",e))
     //.tap(e=>console.log("refinedSourceData$",e))
