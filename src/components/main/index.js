@@ -43,18 +43,10 @@ export default function main(sources) {
     , entityInfos.DOM, comments.DOM, progressBar.DOM, help.DOM)
   const events$ = of( {gl:gl.events, entityInfos:entityInfos.events
     , bom:bom.events, comments:comments.events} )
-
-
-
-
   const postMsg$ = api( actions,state$ ).postMsg$
-
-  //output to localStorage
-  //in this case, settings
-  const localStorage$ = state$
-    .pluck("settings")
+  const localStorage$ = state$  //output to localStorage
+    .pluck("settings")  //in this case, settings
     .map( s=>({"jam!-settings":JSON.stringify(s)}) )
-
 
   //ym
   //this are responses from ym
