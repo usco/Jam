@@ -1,20 +1,3 @@
-//partStream:
-//quadruplets? 
-//mesh(bin),source, params , metadata, 
-
-/*
-import {
-  addEntityInstances$, 
-  updateInstance$, 
-  deleteInstances$, 
-  duplicateInstances$, 
-  deleteAllInstances$,
-  selectEntities$
-   } from './actions'
-
-   */
-
-
 import {exists} from '../../utils/obsUtils'
 import {mergeData} from '../../utils/modelUtils'
 
@@ -54,7 +37,7 @@ function addInstances(state, {input,settings}){
 
   let instances = state.instances.concat(entities)
   let byId = reduceToIuidBasedHash(instances)
-  
+
   state = mergeData( state, {instances, byId} )
 
   //set selections, if need be
@@ -65,7 +48,7 @@ function addInstances(state, {input,settings}){
   return state
 }
 
-/*remove an entity : it actually only 
+/*remove an entity : it actually only
   removes it from the active assembly
 */
 function deleteInstance(state, input){
@@ -85,7 +68,7 @@ function deleteAllInstances(state, input){
   log.info("removing all entities ")
 
   state = mergeData( state, {instances:[], byId:{} } )
-  
+
   return state
 }
 
@@ -141,11 +124,11 @@ function duplicateInstances(state, {input,settings}){
     }
     for(let key in original ){
       if( onlyCopy.indexOf( key ) > -1 ){
-        dupe[key] = JSON.parse(JSON.stringify(original[key])) 
+        dupe[key] = JSON.parse(JSON.stringify(original[key]))
       }
     }
     //FIXME : needs to work with all entity types
-    dupe.name = original.name + "" 
+    dupe.name = original.name + ""
     return dupe
   }
 
@@ -154,7 +137,7 @@ function duplicateInstances(state, {input,settings}){
   let instances = state.instances.concat(dupes)
   let byId = reduceToIuidBasedHash(instances)
   state = mergeData( state, {instances, byId} )
-   
+
   //set selections, if need be
   //if(settings.autoSelectNewEntities) selectEntities$( dupes.map(i=>i.id) )
 
@@ -230,7 +213,7 @@ function makeModification$(intent){
     ,_deleteInstances$
     ,_deleteAllInstances$
     ,_duplicateInstances$
-    
+
     ,_createInstance$
     ,_replaceAll$
   )

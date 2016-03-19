@@ -2,11 +2,32 @@ import {toArray,exists} from '../../../utils/utils'
 import {hasEntity, getEntity} from '../../../utils/entityUtils'
 import {flatten,equals} from 'ramda'
 
+export default function intent(events, params){
+  const {idsMapper$} = params
+
+  const selectEntities$ = events.select("gl").events("selectedMeshes$")
+    .map(extractEntities)
+    .map(toArray)
+    .shareReplay(1)
+
+  const selectBomEntries$ = events.select("bom").events("entryTapped$")
+    .map(toArray)
+    .shareReplay(1)
+
+  return reverseSelections({
+     selectEntities$
+    ,selectBomEntries$
+  },idsMapper$)
+
+}
+
+
+
 function extractEntities(data){
   return data.filter(hasEntity).map(getEntity).map(e=>e.id)
 }
 
-export function reverseSelections(intents, idsMapper$){
+function reverseSelections(intents, idsMapper$){
 
   Array.prototype.flatMap = function(lambda) {
     return Array.prototype.concat.apply([], this.map(lambda))
@@ -38,24 +59,4 @@ export function reverseSelections(intents, idsMapper$){
     selectEntities$:selectEntities$.distinctUntilChanged(null,equals)
     ,selectBomEntries$:selectBomEntries$.distinctUntilChanged(null,equals)
   }
-}
-
-
-export default function intent(events, params){
-  const {idsMapper$} = params
-
-  const selectEntities$ = events.select("gl").events("selectedMeshes$")
-    .map(extractEntities)
-    .map(toArray)
-    .shareReplay(1)
-
-  const selectBomEntries$ = events.select("bom").events("entryTapped$")
-    .map(toArray)
-    .shareReplay(1)
-
-  return reverseSelections({
-     selectEntities$
-    ,selectBomEntries$
-  },idsMapper$)
-
 }

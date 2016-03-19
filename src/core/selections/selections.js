@@ -1,24 +1,16 @@
 import Rx from 'rx'
-let Observable = Rx.Observable
-let merge = Rx.Observable.merge
-
+const {merge} = Rx.Observable
 import {toArray} from '../../utils/utils'
 import {makeModel, mergeData} from '../../utils/modelUtils'
 
 function selectEntities(state, input){
   //log.info("selecting entitites",sentities)
-  let entityIds = toArray(input)
-
-  state.instIds = entityIds
-  return state
+  return mergeData( state, {instIds:toArray(input)} )
 }
 
 function selectBomEntries(state, input){
-  //log.info("selecting bom entries",sBomIds)
-  let bomIds = toArray(input)
-
-  state.bomIds = bomIds
-  return state
+  //log.info("selecting types",sBomIds)
+  return mergeData( state, {bomIds:toArray(input)} )
 }
 
 function selections(actions, source){

@@ -72,7 +72,7 @@ export default function model(props$, actions, sources){
   const selections$             = selections( selectionsIntents(sources, {idsMapper$:typesInstancesRegistry$}) )
     .merge(metaActions.removeComponents$.map(a=> ({instIds:[],bomIds:[]}) )) //after an instance is removed, unselect
 
-  const currentSelections$ = selections$//selections$.pluck("instIds")
+  const currentSelections$ = selections$
     .withLatestFrom(typesInstancesRegistry$,function(selections,registry){
       return selections.instIds.map(function(id){
         const typeUid = registry.typeUidFromInstUid[id]
@@ -87,7 +87,6 @@ export default function model(props$, actions, sources){
 
   const bomActions = bomIntents(sources, entityTypes$, metaActions, entityActions)
   const bom$ = bom(bomActions)
-
 
   //not entirely sure, we need a way to observe any fetch/updload etc operation
   const operationsInProgress$ = actions.progress.combinedProgress$.startWith(undefined)
