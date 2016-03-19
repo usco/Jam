@@ -21,8 +21,9 @@ describe("api", function() {
         "key":{pos:[0,0,1],rot:[0,1,2.5],sca:[1,1,1.25]}
       }
     })
-      
+
     api(actions, state$)
+      .outputs$
       .forEach(function(data) {
         const {request, response, requestName} = data
 
@@ -51,14 +52,15 @@ describe("api", function() {
         activeTool:"hat"
       }
     })
-      
+
     api(actions, state$)
+      .outputs$
       .forEach(function(data) {
         const {request, response, requestName} = data
 
         assert.strictEqual(requestName,"getStatus")
         assert.deepEqual(response,{activeTool:"hat"})
-        
+
         done()
       })
   })
@@ -81,8 +83,9 @@ describe("api", function() {
       }
 
       const state$ = of({})
-        
+
       api(actions, state$)
+        .outputs$
         .forEach(function(data) {
           const {request, response, requestName} = data
 

@@ -7,7 +7,7 @@ import path from 'path'
 import {mergeData} from '../../utils/modelUtils'
 import {preventBackNavigation} from '../../interactions/keyboard'
 
-
+import apiIntents from '../../core/api/intents'
 import designIntents from '../../core/design/intents'
 import entityIntents from '../../core/entities/intents'
 import settingsIntent from    '../../core/settings/intents'
@@ -15,9 +15,6 @@ import commentsIntents from   '../../core/comments/intents'
 
 import {resources} from '../../utils/assetManager'
 import assetRequests from '../../utils/assetRequests'
-
-//
-import {intentsFromPostMessage} from '../../core/actions/fromPostMessage'
 
 import {normalizeData, extractDataFromRawSources} from '../../core/sources/utils'
 
@@ -45,6 +42,9 @@ export default function intent (sources) {
   //comments
   const commentActions   = commentsIntents(sources)
 
+  //API
+  const apiActions       = apiIntents(sources)
+
   //OUTbound requests to various sources
   let requests = assetRequests( refinedSourceData$ )
     requests.desktop$ = requests.desktop$
@@ -61,7 +61,7 @@ export default function intent (sources) {
     ,commentActions
     ,annotationsActions:{creationStep$:Rx.Observable.never()}
 
-    ,apiActions:intentsFromPostMessage(sources)
+    ,apiActions
 
     ,progress:_resources
 

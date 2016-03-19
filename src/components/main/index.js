@@ -19,7 +19,7 @@ import model  from './model'
 import view   from './view'
 
 
-import api from '../../api'
+import api from '../../core/api/api'
 
 export default function main(sources) {
   const {DOM} = sources
@@ -45,14 +45,9 @@ export default function main(sources) {
     , bom:bom.events, comments:comments.events} )
 
 
-  function postMsg(api$){
-     return api$.map(data=>{
-        const {request, response, requestName} = data
-        return {target: request.source, message: response, targetOrigin:request.origin, requestName }
-      })
-  }
 
-  const postMsg$ = postMsg( api( actions,state$ ) )
+
+  const postMsg$ = api( actions,state$ ).postMsg$
 
   //output to localStorage
   //in this case, settings

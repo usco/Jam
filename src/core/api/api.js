@@ -2,7 +2,7 @@ import Rx from 'rx'
 const merge = Rx.Observable.merge
 const of = Rx.Observable.of
 import assign from 'fast.js/object/assign'//faster object.assign
-import {domElementToImage} from './utils/imgUtils'
+import {domElementToImage} from '../../utils/imgUtils'
 
 
 export default function api(actions, state$)
@@ -37,9 +37,20 @@ export default function api(actions, state$)
       return {request, response:img, requestName:"captureScreen"}
     })
 
-  return merge(
+  const apiOutputs$ = merge(
     transforms$
     ,status$
-    ,screenCapture$
-  )
+    ,screenCapture$)
+
+  //for now stop gap solution
+  //specific sinks, this requires us knowing the origin of the actions ...
+  //ie TODO!!!
+  const postMsg$ = apiOutputs$
+    .map(data=>{
+      const {request, response, requestName} = data
+      return {target: request.source, message: response, targetOrigin:request.origin, requestName }
+    })
+
+  return {outputs$:apiOutputs$, postMsg$}
+
 }

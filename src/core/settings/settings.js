@@ -3,6 +3,19 @@ const Observable = Rx.Observable
 const {merge, fromEvent, of} = Rx.Observable
 import {makeModel, mergeData} from '../../utils/modelUtils'
 
+
+/*shortcuts:[
+  {keys:'⌘+z,ctrl+z', "command":'undo'},
+  {keys:'⌘+shift+z,ctrl+shift+z', "command":'redo'},
+
+  {keys:'⌘+r,ctrl+d', "command":'duplicateEntities'},
+  {keys:'delete,backspace'    , "command":'removeEntities'},
+  {keys:'m'         , "command":'toTranslateMode'},
+  {keys:'r'         , "command":'toRotateMode'},
+  {keys:'s'         , "command":'toScaleMode'}
+],*/
+
+
 //use mainly when reloading settings from localstorage
 function setAllValues(state, input){
   //console.log("setting settings")
