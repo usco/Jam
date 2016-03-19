@@ -16,7 +16,9 @@ export default function view (state$) {
   return state$
     .distinctUntilChanged()
     .map(function({entries, selectedEntries
-      , fieldNames, sortFieldName, sortablesDirection, editableFields, fieldDescriptions,fieldTypes, units, newEntryValues, toggled, readOnly}){
+      , fieldNames, sortFieldName, sortablesDirection, editableFields,
+       fieldDescriptions,fieldTypes, units, newEntryValues, toggled, removeEntryRequested,
+       readOnly}){
 
       //entries = entries.asMutable()//FIXME: not sure
       //console.log( "selectedEntries in BOM",selectedEntries)
@@ -68,7 +70,6 @@ export default function view (state$) {
           const disabled  = (isDynamic && (name ==='phys_qty' || name === 'unit' )) || readOnly //if readony or if we have a dynamic entry called phys_qty, disable
           const dataValue = (isDynamic && name ==='phys_qty')? 'n/a' : row[name]
 
-        //  console.log("dataValue", dataValue,units)
           let value = ''
           switch(fieldTypes[name]){
             case 'text':
@@ -123,14 +124,28 @@ export default function view (state$) {
 
         const selected = selectedEntries.indexOf(row.id) > -1
 
-        return(
-          <tr
-            className={Class("bomEntry", {selected, adder:isAdder, normal:!isAdder})}
-            attributes={{"data-name": row.name, "data-id":row.id}} key={index}
-            >
-              {cells}
+
+        if(removeEntryRequested !== undefined && removeEntryRequested.id === row.id){
+          return <tr className={Class("bomEntry removal", {normal:!isAdder})}
+          attributes={{"data-name": row.name, "data-id":row.id}} key={index}>
+            <td className="cell" attributes={{colspan:"100%"}}>
+              <span>This will delete this part type (and copies), are you sure ?</span>
+              <span>
+                <button className="confirm" attributes={{"data-name": row.name, "data-id":row.id}}>Yes</button>
+                <button className="cancel">No</button>
+              </span>
+            </td>
           </tr>
-        )
+        }else{//normal row
+          return( <tr
+             className={Class("bomEntry", {selected, adder:isAdder, normal:!isAdder})}
+             attributes={{"data-name": row.name, "data-id":row.id}} key={index}
+             >
+               {cells}
+           </tr>
+         )
+        }
+
       })
 
       //add editable row for new entries before all the rest

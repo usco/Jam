@@ -55,8 +55,20 @@ export default function model(props$, actions){
       return output
     })
 
+  ////////
   const toggled$ = actions.toggle$
     .startWith(true)
+
+  const removeEntryRequested$ = actions.removeEntryRequest$
+    .startWith(undefined)
+    .merge(
+      actions.removeEntryRequestCancel$.map(undefined)
+    ).merge(
+      actions.removeEntry$.map(undefined)
+    )
+    .tap(e=>console.log("removeEntryRequested",e))
+
+  actions.removeEntry$.forEach(e=>console.log("gna gna"))
 
   function makeNewEntryDefaults(){
 
@@ -81,5 +93,5 @@ export default function model(props$, actions){
 
   return combineLatestObj({entries$:sortedEntries$, selectedEntries$
     , fieldNames$, sortFieldName$, sortablesDirection$, editableFields$, fieldDescriptions$, fieldTypes$, units$,
-    newEntryValues$, toggled$, readOnly$})
+    newEntryValues$, toggled$, removeEntryRequested$, readOnly$})
 }

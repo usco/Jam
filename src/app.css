@@ -646,7 +646,21 @@ input[type=color]:focus{
   fill:black !important;
 }
 
+.bom .removal {
+  height: 42px;
+}
 
+.bom .removal span{
+  padding: 5 5 5 5;
+  font-size: 11px;
+
+}
+
+.bom .removal button{
+  color: white;
+  padding: 2 5 2 5;
+  background: #5fc5fb;
+}
 
 
 

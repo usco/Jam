@@ -10,15 +10,32 @@ export default function intent(DOM){
   const entryTapped$  = DOM.select(".bom .normal").events('click',true)//capture == true
     .tap(e=>e.stopPropagation())
     .map(e => e.currentTarget.dataset.id)
-    //e.target.attributes["data-transform"].value
 
   const headerTapped$ = DOM.select(".headerCell").events('click',true)
     .tap(e=>e.stopPropagation())
 
-  const removeEntry$ = DOM.select('.bom .removeBomEntry').events('click')
+  const removeEntryRequest$ = DOM.select('.bom .removeBomEntry').events('click')
     .tap(e=>e.stopPropagation())
     .map(function(e){
       const actualTarget = e.currentTarget.dataset
+      return {
+        id:actualTarget.id
+      }
+    })
+
+  const removeEntryRequestCancel$ =  DOM.select('.bom .removal .cancel').events('click')
+    .tap(e=>e.stopPropagation())
+    .map(function(e){
+      const actualTarget = e.currentTarget.dataset
+      return {
+        id:actualTarget.id
+      }
+    })
+
+  const removeEntry$ = DOM.select('.bom .removal .confirm').events('click')//DOM.select('.bom .removeBomEntry').events('click')
+    .tap(e=>e.stopPropagation())
+    .map(function(e){
+      const actualTarget = e.currentTarget.dataset//.dataset
       return {
         id:actualTarget.id
       }
@@ -112,6 +129,8 @@ export default function intent(DOM){
 
     ,addEntry$
     ,editEntry$
+    ,removeEntryRequest$
+    ,removeEntryRequestCancel$
     ,removeEntry$
 
     ,toggle$
