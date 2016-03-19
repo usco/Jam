@@ -9,6 +9,7 @@ import {preventBackNavigation} from '../../interactions/keyboard'
 
 import apiIntents from '../../core/api/intents'
 import designIntents from '../../core/design/intents'
+import authIntents   from '../../core/auth/intents'
 import entityIntents from '../../core/entities/intents'
 import settingsIntent from    '../../core/settings/intents'
 import commentsIntents from   '../../core/comments/intents'
@@ -39,6 +40,8 @@ export default function intent (sources) {
   const entityActions   = entityIntents(sources)
   //settings
   const settingActions   = settingsIntent(sources)
+  //auth
+  const authActions      = authIntents(sources)
   //comments
   const commentActions   = commentsIntents(sources)
 
@@ -57,6 +60,7 @@ export default function intent (sources) {
 
     //,selectionActions
     ,designActions
+    ,authActions
     ,entityActions
     ,commentActions
     ,annotationsActions:{creationStep$:Rx.Observable.never()}

@@ -21,17 +21,18 @@ import {remapEntityActions,remapMetaActions,
 import selectionsIntents from '../../core/selections/intents'
 
 import design from      '../../core/design/design'
+import auth from '../../core/auth/auth.js'
 import settings from    '../../core/settings/settings'
-import comments from    '../../core/comments/comments'
 
+import comments from    '../../core/comments/comments'
 import selections from  '../../core/selections/selections'
+
 import entityTypes from '../../core/entities/types'
 import makeTypeInstanceMapping from '../../core/entities/typeInstanceMapping'
 import entitiesExtra from '../../core/entities/entitiesExtra'
 import bom         from '../../core/bom/index'
 import bomIntents from '../../core/bom/intents'
 
-import {authToken} from '../../core/sources/addressbar.js'
 
 
 export default function model(props$, actions, sources){
@@ -41,6 +42,7 @@ export default function model(props$, actions, sources){
   let entityActions = actions.entityActions
 
   const design$ = design(actions.designActions)
+  const authData$ = auth(actions.authActions) //authentification data, if any
   const settings$      = settings( actions.settingActions )
 
   const entityTypes$   = entityTypes( actions.entityActions )
@@ -93,13 +95,6 @@ export default function model(props$, actions, sources){
 
   //////other data
   const appData$ = sources.appMeta
-
-  //authentification data, if any
-  const authData$ = authToken(sources.addressbar)
-    .flatMap(fromArray)
-    .filter(exists)
-    .map(token => ({token}))
-    .startWith({token:undefined})
 
   //combine all the above to get our dynamic state
   const state$ = combineLatestObj({
