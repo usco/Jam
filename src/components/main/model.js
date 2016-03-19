@@ -41,14 +41,14 @@ export default function model(props$, actions, sources){
 
   let entityActions = actions.entityActions
 
-  const design$ = design(actions.designActions)
+  const design$   = design(actions.designActions)
   const authData$ = auth(actions.authActions) //authentification data, if any
-  const settings$      = settings( actions.settingActions )
+  const settings$ = settings( actions.settingActions )
 
-  const entityTypes$   = entityTypes( actions.entityActions )
-  const comments$      = comments( actions.commentActions )
+  const types$    = entityTypes( actions.entityActions )
+  const comments$ = comments( actions.commentActions )
 
-  const {createMeshComponents$,componentBase$, assembly$} = entitiesExtra(actions, entityTypes$)
+  const {createMeshComponents$,componentBase$, assembly$} = entitiesExtra(actions, types$)
   entityActions.createMeshComponents$ = createMeshComponents$
 
   //annotations
@@ -70,7 +70,7 @@ export default function model(props$, actions, sources){
   const {bounds$}        = makeBoundingSystem(boundActions)
 
   //selections => only for real time view
-  const typesInstancesRegistry$ = makeTypeInstanceMapping(meta$, entityTypes$)
+  const typesInstancesRegistry$ = makeTypeInstanceMapping(meta$, types$)
   const selections$             = selections( selectionsIntents(sources, {idsMapper$:typesInstancesRegistry$}) )
     .merge(metaActions.removeComponents$.map(a=> ({instIds:[],bomIds:[]}) )) //after an instance is removed, unselect
 
@@ -87,7 +87,7 @@ export default function model(props$, actions, sources){
   //close some cycles
   replicateStream(currentSelections$, proxySelections$)
 
-  const bomActions = bomIntents(sources, entityTypes$, metaActions, entityActions)
+  const bomActions = bomIntents(sources, types$, metaActions, entityActions)
   const bom$ = bom(bomActions)
 
   //not entirely sure, we need a way to observe any fetch/updload etc operation
@@ -106,14 +106,14 @@ export default function model(props$, actions, sources){
     ,meta$
     ,transforms$
     ,meshes$
-    ,types$:entityTypes$
+    ,types$
 
     //app level data, meta data , settings etc
     ,operationsInProgress$
     ,appData$
     ,settings$
 
-    //infos about current design
+    //infos about current design etc
     ,design$
     ,assembly$
     ,authData$
