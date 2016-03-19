@@ -1,5 +1,5 @@
 import Rx from 'rx'
-const {merge,just,fromArray} = Rx.Observable
+const {merge, just, fromArray} = Rx.Observable
 import {flatten, find, propEq, head} from 'ramda'
 
 import {nameCleanup} from '../../utils/formatters'
@@ -14,7 +14,7 @@ import {makeTransformsSystem} from '../../core/entities/components/transforms'
 import {makeMeshSystem} from '../../core/entities/components/mesh'
 import {makeBoundingSystem} from '../../core/entities/components/bounds'
 
-import {addAnnotation} from '../../core/entities/annotations'
+import {addAnnotation} from '../../core/entities/annotations/annotations'
 
 import {remapEntityActions,remapMetaActions,
   remapMeshActions,remapTransformActions,remapBoundsActions} from '../../core/entities/utils'
@@ -27,55 +27,11 @@ import comments from    '../../core/comments/comments'
 
 import selections from  '../../core/selections/selections'
 import entityTypes from '../../core/entities/types'
+import makeTypeInstanceMapping from '../../core/entities/typeInstanceMapping'
 import bom         from '../../core/bom/index'
 import bomIntents from '../../core/bom/intents'
 
 import {authToken} from '../../core/sources/addressbar.js'
-
-
-function makeRegistry(instances$, types$){
-  //register type=> instance & vice versa
-  let base = {typeUidFromInstUid:{},instUidFromTypeUid:{}}
-
-  instances$ = instances$.map(function(instances){
-    let res = []
-    Object.keys(instances).map(function(key){
-      res.push( instances[key] )
-    })
-    return res
-  })
-
-  return combineLatestObj({instances$,types$})
-    .map(function({instances, types}){
-
-      let instUidFromTypeUid = instances
-        .reduce(function(prev,instance){
-          if(!prev[instance.typeUid]){
-            prev[instance.typeUid] = []//instance.id
-          }
-
-          prev[instance.typeUid].push( instance.id )
-          return prev
-        },{})
-
-      let typeUidFromInstUid = instances
-        .reduce(function(prev,instance){
-          prev[instance.id] = instance.typeUid
-          return prev
-        },{})
-
-      return {instUidFromTypeUid,typeUidFromInstUid}
-    })
-}
-
-  /*possible sources of instances
-    directly:
-    - addressBar
-    - postMessage
-    - drag & drop
-    Indirectly:
-      - duplicates of other instances
-  */
 
 
 export default function model(props$, actions, sources){
@@ -85,9 +41,8 @@ export default function model(props$, actions, sources){
   let entityActions = actions.entityActions
 
   const design$ = design(actions.designActions)
-    .tap(e=>console.log("designData",e))
   const settings$      = settings( actions.settingActions )
-    .tap(e=>console.log("settings",e))
+
   const entityTypes$   = entityTypes( actions.entityActions )
   const comments$      = comments( actions.commentActions )
 
@@ -218,7 +173,7 @@ export default function model(props$, actions, sources){
   let {bounds$}        = makeBoundingSystem(boundActions)
 
   //selections => only for real time view
-  const typesInstancesRegistry$ = makeRegistry(meta$, entityTypes$)
+  const typesInstancesRegistry$ = makeTypeInstanceMapping(meta$, entityTypes$)
   const selections$             = selections( selectionsIntents(sources, {idsMapper$:typesInstancesRegistry$}) )
     .merge(metaActions.removeComponents$.map(a=> ({instIds:[],bomIds:[]}) )) //after an instance is removed, unselect
 
@@ -257,8 +212,6 @@ export default function model(props$, actions, sources){
     ,bom$
     ,comments$
 
-    ,operationsInProgress$
-
     //entity components
     ,meta$
     ,transforms$
@@ -266,17 +219,15 @@ export default function model(props$, actions, sources){
     ,types$:entityTypes$
 
     //app level data, meta data , settings etc
+    ,operationsInProgress$
     ,appData$
     ,settings$
 
     //infos about current design
     ,design$
-
     ,assembly$
-    //authData
     ,authData$
   }).shareReplay(1)
-
 
   return state$
 }

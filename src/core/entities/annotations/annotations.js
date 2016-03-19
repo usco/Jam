@@ -7,14 +7,14 @@ import {getEntryExitThickness,
   computeCenterDiaNormalFromThreePoints,
   getDistanceFromStartEnd,
   computeAngleFromThreePoints
-} from '../../components/webgl/utils'
+} from '../../../components/webgl/utils'
 
-import {first,toggleCursor} from '../../utils/otherUtils'
-import {generateUUID} from '../../utils/utils'
-import {exists} from '../../utils/obsUtils'
+import {first,toggleCursor} from '../../../utils/otherUtils'
+import {generateUUID} from '../../../utils/utils'
+import {exists} from '../../../utils/obsUtils'
 
-//import {clearActiveTool$} from 
-import logger from '../../utils/log'
+//import {clearActiveTool$} from
+import logger from '../../../utils/log'
 let log = logger("annotations")
 log.setLevel("error")
 
@@ -22,17 +22,17 @@ log.setLevel("error")
 //utilities
 /*generate note annotation data from input*/
 function generateNoteData(data){
-  
+
   console.log("hey yo, add a note",data)
   let {object, point, normal} = data
-  
+
   let annotation = {
     typeUid:"A1",
     id:generateUUID(),
     cid:1,
-    name:"note", 
+    name:"note",
     target:{
-      point:point.toArray(), 
+      point:point.toArray(),
       normal:normal.toArray(),
       typeUid:undefined,
       id:object.userData.entity.id//here we could toggle, instance vs type
@@ -44,7 +44,7 @@ function generateNoteData(data){
 
 /*generate thickness annotation data from input*/
 function generateThicknessData(data){
-  
+
   console.log("hey yo, add a thickness",data)
 
   let {object, entryPoint, exitPoint, thickness} = data
@@ -57,10 +57,10 @@ function generateThicknessData(data){
     typeUid:"A2",
     id:generateUUID(),
     cid:2,
-    name:"thickness", 
+    name:"thickness",
     value:thickness,
     target:{
-      entryPoint:entryPoint, 
+      entryPoint:entryPoint,
       exitPoint: exitPoint,
       normal:undefined,
       typeUid:undefined,
@@ -73,7 +73,7 @@ function generateThicknessData(data){
 
 /*generate distance annotation data from input*/
 function generateDistanceData(data){
-  
+
   console.log("hey yo, add a distance",data)
   let [start,end] = data
 
@@ -83,16 +83,16 @@ function generateDistanceData(data){
     typeUid:"A4",
     id:generateUUID(),
     cid:3,//categoryId
-    name:"distance", 
+    name:"distance",
     value:distance,
     target:{
       start:{
-        point  : start.point.toArray(), 
+        point  : start.point.toArray(),
         typeUid:undefined,
         id:start.object.userData.entity.id
-      }, 
+      },
       end: {
-        point  : end.point.toArray(), 
+        point  : end.point.toArray(),
         typeUid:undefined,
         id:end.object.userData.entity.id
       }
@@ -103,7 +103,7 @@ function generateDistanceData(data){
 
 /*generate diameter annotation data from input*/
 function generateDiameterData(data){
-  
+
   console.log("hey yo, add a diameter",data)
   let [start,mid,end] = data
   let {center,diameter,normal} = computeCenterDiaNormalFromThreePoints(start.point,mid.point,end.point)
@@ -112,7 +112,7 @@ function generateDiameterData(data){
     typeUid:"A3",
     id:generateUUID(),
     cid:4,//categoryId
-    name:"diameter", 
+    name:"diameter",
     value:diameter,
     target:{
       normal:normal.toArray(),
@@ -127,7 +127,7 @@ function generateDiameterData(data){
 
 /*generate angle annotation data from input*/
 function generateAngleData(data){
-  
+
   console.log("hey yo, add an angle",data)
   let [start,mid,end] = data
   let angle = computeAngleFromThreePoints(start.point,mid.point,end.point)
@@ -137,21 +137,21 @@ function generateAngleData(data){
     typeUid:"A5",
     id:generateUUID(),
     cid:5,//categoryId
-    name:"angle", 
+    name:"angle",
     value:angle,
     target:{
       start:{
-        point  : start.point.toArray(), 
+        point  : start.point.toArray(),
         typeUid:undefined,
         id:start.object.userData.entity.id
-      }, 
+      },
       mid:{
-        point  : mid.point.toArray(), 
+        point  : mid.point.toArray(),
         typeUid:undefined,
         id:mid.object.userData.entity.id
       },
       end: {
-        point  : end.point.toArray(), 
+        point  : end.point.toArray(),
         typeUid:undefined,
         id:end.object.userData.entity.id
       }
@@ -183,7 +183,7 @@ toggleDiameterAnnot$
 
 toggleAngleAnnot$
   .subscribe((toggled)=>toggleCursor(toggled,"crosshair"))*/
-//temporary hack for cursor 
+//temporary hack for cursor
 function handleCursor(input){
   input
     .pluck("activeTool")
@@ -213,7 +213,7 @@ export function addAnnotation(actions, settings$){
     .withLatestFrom(
       activeTool$,
       (data, activeTool)=> { return {data, activeTool} }
-    )  
+    )
 
 
   const noteAnnot$ = baseStream$
