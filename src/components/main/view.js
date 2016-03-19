@@ -261,6 +261,15 @@ function renderUiElements(uiElements){
     .filter(exists)
     .map(widgetMaker=> widgetMaker(state, uiElements) )
 
+  function renderErrors(state){
+    return <div className='errorElem'>
+      <div className="inner">
+      lots of errors
+      </div>
+    </div>
+  }
+  //{renderErrors(state)}
+
 
   return <div className="jam" >
     {progressBar}
@@ -273,6 +282,7 @@ function renderUiElements(uiElements){
     {customWidgets}
 
     {makeTopToolBar(state)}
+
 
   </div>
 }

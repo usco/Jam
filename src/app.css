@@ -36,7 +36,6 @@ body{
   top: 0px;
   left: 0px;
   width: 100%;
-
 }
 
 .jam input[type=text]{
@@ -44,6 +43,37 @@ body{
 }
 .jam input[type=number]{
   background-color: rgba(244, 244, 244, 0.25); /*#fff; #f5f5f5;*/
+}
+
+.errorElem {
+  /*
+  height: 20px;
+  left: 10px;
+  */
+  width:100%;
+  position: absolute;
+  bottom: 32px;
+  color: #f99c49;
+
+  /* Firefox */
+  display:-moz-box;
+  -moz-box-pack:center;
+  -moz-box-align:center;
+
+  /* Safari and Chrome */
+  display:-webkit-box;
+  -webkit-box-pack:center;
+  -webkit-box-align:center;
+
+  /* W3C */
+  display:box;
+  box-pack:center;
+  box-align:center;
+}
+.errorElem .inner{
+  width: 50%;
+  background: #fef9eb;
+  text-align: center;
 }
 
 /*without this we get red outlines in number inputs*/
