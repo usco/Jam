@@ -37,14 +37,19 @@ export default function view (state$) {
           }else{
             sortArrow = <span className="directionArrow"> <span className="desc"/> </span>
           }
+        }else if(direction === undefined || sortFieldName !== name){
+          sortArrow = <span className="directionArrow"> <span className="neut"/> </span>
         }
         //className={Class(`tooltip-bottom`),
+        const thContent = <span className='tooltip-bottom' attributes={{"data-tooltip": toolTip}}>
+          {name} {sortArrow}
+        </span>
         return (
           <th className="headerCell" attributes={{"data-name": name}}>
-          <span className='tooltip-bottom' attributes={{"data-tooltip": toolTip}}>{name}</span> {sortArrow}
+            {thContent}
           </th>
         )
-      })
+      }).concat([])//for "hidden field to add/remove entries"
 
       //add editable row for new entries before all the rest
       const uiEntries = readOnly? entries: prepend(newEntryValues, entries)
@@ -68,7 +73,7 @@ export default function view (state$) {
           cellToolTip = readOnly? undefined: cellToolTip//if the field is disabled do not add any extra toolTip
 
           const disabled  = (isDynamic && (name ==='phys_qty' || name === 'unit' )) || readOnly //if readony or if we have a dynamic entry called phys_qty, disable
-          const dataValue = (isDynamic && name ==='phys_qty')? 'n/a' : row[name]
+          const dataValue = (isDynamic && name ==='phys_qty')? null : row[name]
 
           let value = ''
           switch(fieldTypes[name]){
@@ -178,7 +183,8 @@ export default function view (state$) {
 
       if(toggled){
         content =
-          <table >
+          <div className="container">
+          <table className="scroll">
             <thead>
               <tr>
                 {headers}
@@ -188,6 +194,7 @@ export default function view (state$) {
               {rows}
             </tbody>
           </table>
+        </div>
       }
 
       return (

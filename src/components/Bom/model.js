@@ -68,8 +68,6 @@ export default function model(props$, actions){
     )
     .tap(e=>console.log("removeEntryRequested",e))
 
-  actions.removeEntry$.forEach(e=>console.log("gna gna"))
-
   function makeNewEntryDefaults(){
 
     const newEntryDefaults = {
@@ -85,7 +83,6 @@ export default function model(props$, actions){
       }
       return newEntryDefaults
   }
-
 
   const newEntryValues$ = actions.addEntry$
     .map(e=>(makeNewEntryDefaults()))

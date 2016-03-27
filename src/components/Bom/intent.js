@@ -35,12 +35,11 @@ export default function intent(DOM){
   const removeEntry$ = DOM.select('.bom .removal .confirm').events('click')//DOM.select('.bom .removeBomEntry').events('click')
     .tap(e=>e.stopPropagation())
     .map(function(e){
-      const actualTarget = e.currentTarget.dataset//.dataset
+      const actualTarget = e.currentTarget.dataset
       return {
         id:actualTarget.id
       }
     })
-    .tap(e=>console.log("removeEntry",e))
     .share()
 
   const addEntryTapped$ = DOM.select('.addBomEntry').events('click')
@@ -57,18 +56,17 @@ export default function intent(DOM){
       ,unit$:DOM.select('.bom .adder select[name="unit"]').events('change').map(e=>e.target.value).startWith('EA')
       ,printable$:DOM.select('.bom .adder [name="printable"]').events('change').map(e=>e.target.checked).startWith(false)
     })
-    //.withLatestFrom(addEntryTapped$.map(({name:'', qty:0, phys_qty:0, unit:'EA', printable:false})))
+    .merge(addEntryTapped$.map(({name:'', qty:0, phys_qty:0, unit:'EA', printable:false})).delay(10))//FIXME AWFULL HACK
 
   const addEntry$ = addEntryTapped$//newEntryValues$
     .withLatestFrom(newEntryValues$,((_,data)=>data))
-    .filter(data=>data.name !== undefined)
+    .filter(data=>data.name !== '')
     .map(function(data){//inject extra data
       return mergeData({},data,{id:generateUUID()})
     })
     .share()//VERY important, you don't want duplicate uuid generation etc
     //.tap(e=>console.log("raw addEntry data",e))
     //  const addEntry$ = getFieldValues({name:'', qty:0, phys_qty:0, unit:'EA', printable:false}, DOM, '.bom .adder', addEntryTapped$)
-
 
   DOM.select('.textInput').events('keydown')
     .forEach(e=>console.log("keydown",e))
