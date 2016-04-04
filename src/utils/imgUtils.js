@@ -1,19 +1,19 @@
-export function saveImage(fileName="img",format="png"){
-  let link = document.createElement("a")
-  //var blob = new Blob([data],{type : 'image/'+format})
-  //var url =  window.URL.createObjectURL(blob);
-  //var blobURL = window.webkitURL.createObjectURL(blob);
+export function saveImage (fileName = 'img' , format = 'png') {
+  let link = document.createElement('a')
+  // var blob = new Blob([data],{type : 'image/'+format})
+  // var url =  window.URL.createObjectURL(blob)
+  // var blobURL = window.webkitURL.createObjectURL(blob)
   link.href = data
   link.download = fileName
   link.click()
 }
 
-export function domElementToImage(domElement,mimeType) {
+export function domElementToImage (domElement, mimeType) {
   var srcImg, _aspectResize
   var mimeType = mimeType || 'image/png'
 
   if (!domElement) {
-    throw new Error("Cannot Do screenshot without canvas domElement")
+    throw new Error('Cannot Do screenshot without canvas domElement')
   }
 
   srcImg = domElement.toDataURL(mimeType)
@@ -24,14 +24,12 @@ export function domElementToImage(domElement,mimeType) {
     aspectResize(srcImg, width, height, callback)
   }*/
   return srcImg
-  
 }
 
-
-export function aspectResize(srcUrl, dstW, dstH, callback) {
-  /* 
+export function aspectResize (srcUrl, dstW, dstH, callback) {
+  /*
   resize an image to another resolution while preserving aspect
-       
+
   @param {String} srcUrl the url of the image to resize
   @param {Number} dstWidth the destination width of the image
   @param {Number} dstHeight the destination height of the image
@@ -39,7 +37,7 @@ export function aspectResize(srcUrl, dstW, dstH, callback) {
   */
 
   var cpuScaleAspect, img, onLoad
-  cpuScaleAspect = function(maxW, maxH, curW, curH) {
+  cpuScaleAspect = function (maxW, maxH, curW, curH) {
     var ratio
     ratio = curH / curW
     if (curW >= maxW && ratio <= 1) {
@@ -55,7 +53,7 @@ export function aspectResize(srcUrl, dstW, dstH, callback) {
     }
   }
 
-  onLoad = function() {
+  onLoad = function () {
     var canvas, ctx, mimetype, newDataUrl, offsetX, offsetY, scaled
     canvas = document.createElement('canvas')
     canvas.width = dstW
@@ -65,7 +63,7 @@ export function aspectResize(srcUrl, dstW, dstH, callback) {
     offsetX = (canvas.width - scaled.width) / 2
     offsetY = (canvas.height - scaled.height) / 2
     ctx.drawImage(img, offsetX, offsetY, scaled.width, scaled.height)
-    mimetype = "image/png"
+    mimetype = 'image/png'
     newDataUrl = canvas.toDataURL(mimetype)
     callback(newDataUrl)
   }
