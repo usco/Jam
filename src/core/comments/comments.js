@@ -1,15 +1,12 @@
-import Rx from 'rx'
-const {fromEvent,merge} = Rx.Observable
-
 import logger from '../../utils/log'
-let log = logger("comments")
-log.setLevel("info")
+let log = logger('comments')
+log.setLevel('info')
 
-import {toArray, generateUUID} from '../../utils/utils'
-import {makeModel, mergeData} from '../../utils/modelUtils'
+import { toArray } from '../../utils/utils'
+import { makeModel } from '../../utils/modelUtils'
 
-//"comments" system
-//helper function to get data by key
+// "comments" system
+// helper function to get data by key
 /*
 function bykey(key){
   return comments.data.filter(function(e){
@@ -18,38 +15,38 @@ function bykey(key){
   })
 }*/
 
-function addComments(state, input){
-  log.info("adding comments", input)
+function addComments (state, input) {
+  log.info('adding comments', input)
   let newComments = toArray(input)
 
   const comments = state.data.concat(
-      newComments.map(function(comment){
-        let {id,typeUid} = comment.target
-        let text           = comment.text
-        let author         = "jon doe"  //FIXME: how to deal with authors ?
+    newComments.map(function (comment) {
+      let {id, typeUid} = comment.target
+      let text = comment.text
+      let author = 'jon doe' // FIXME: how to deal with authors ?
 
-        let key = [id,typeUid]
-        let entry = {text, author, key}
-        return entry
-      })
-    )
+      let key = [id, typeUid]
+      let entry = {text, author, key}
+      return entry
+    })
+  )
   const updatedState = {
-    data:comments
+    data: comments
   }
   return updatedState
 }
 
-function comments(actions, source){
-  ///defaults, what else ?
+function comments (actions, source) {
+  // /defaults, what else ?
   const defaults = {
-    data:[
-       /*{text:"bla bla details",author:"foo"},
-       {text:"oh yes cool ",author:"bar"},*/
+    data: [
+      /* {text:"bla bla details",author:"foo"},
+      {text:"oh yes cool ",author:"bar"},*/
     ]
   }
 
-  let updateFns  = {addComments}
-  return makeModel(defaults, updateFns, actions, source, {doApplyTransform:true})
+  let updateFns = {addComments}
+  return makeModel(defaults, updateFns, actions, source, {doApplyTransform: true})
 }
 
 export default comments

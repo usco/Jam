@@ -1,85 +1,86 @@
-import Rx from 'rx'
-import {createComponents,removeComponents,duplicateComponents,makeActionsFromApiFns} from './common'
-import {makeModel, mergeData} from '../../../utils/modelUtils'
+import { createComponents, removeComponents, duplicateComponents, makeActionsFromApiFns } from './common'
+import { makeModel, mergeData } from '../../../utils/modelUtils'
 
-////Transforms//////
+// //Transforms//////
 
-export function makeTransformsSystem(actions){
+export function makeTransformsSystem (actions) {
   const defaults = {}
 
-  const transformDefaults ={
+  const transformDefaults = {
     pos: [ 0, 0, 0 ],
     rot: [ 0, 0, 0 ],
     sca: [ 1, 1, 1 ]
   }
 
-  function updatePosition(state, input){
-    console.log("updatePosition")
-    let id  = input.id
-    let pos = input.value  || [0,0,Math.random()]
+  function updatePosition (state, input) {
+    console.log('updatePosition')
+    let id = input.id
+    let pos = input.value || [0, 0, Math.random()]
     let orig = state[id] || transformDefaults
 
-    state = mergeData({},state)
-    //FIXME big hack, use mutability
-    state[id] = mergeData({},orig,{pos})
+    state = mergeData({}, state)
+    // FIXME big hack, use mutability
+    state[id] = mergeData({}, orig, {pos})
     return state
   }
 
-  function updateRotation(state, input){
-    console.log("updateRotation")
+  function updateRotation (state, input) {
+    console.log('updateRotation')
     let {id} = input
-    let rot = input.value || [0,0,Math.random()]
+    let rot = input.value || [0, 0, Math.random()]
     let orig = state[id] || transformDefaults
 
-    state = mergeData({},state)
-    //FIXME big hack, use mutability
-    state[id] = mergeData({},orig,{rot})
+    state = mergeData({}, state)
+    // FIXME big hack, use mutability
+    state[id] = mergeData({}, orig, {rot})
     return state
   }
 
-  function updateScale(state, input){
-    console.log("updateScale")
+  function updateScale (state, input) {
+    console.log('updateScale')
     let {id} = input
-    let sca = input.value || [1,1,Math.random()]
+    let sca = input.value || [1, 1, Math.random()]
     let orig = state[id] || transformDefaults
 
-    state = mergeData({},state)
-    //FIXME big hack, use mutability
-    state[id] = mergeData({},orig,{sca})
+    state = mergeData({}, state)
+    // FIXME big hack, use mutability
+    state[id] = mergeData({}, orig, {sca})
     return state
   }
 
-  function updateComponents(state, inputs){
-    console.log("updating transforms", inputs)
+  function updateComponents (state, inputs) {
+    console.log('updating transforms', inputs)
 
-    return inputs.reduce(function(state,input){
-      state = mergeData({},state)
+    return inputs.reduce(function (state, input) {
+      state = mergeData({}, state)
 
       let {id} = input
       let transforms = input.value || transformDefaults
-      
-      //FIXME big hack, use mutability
+
+      // FIXME big hack, use mutability
       state[id] = transforms
       return state
-    },state)
-
-    
+    }, state)
   }
 
-  let updateFns = { 
-    updateRotation
-    , updatePosition
-    , updateScale
-    , updateComponents
-    , createComponents: createComponents.bind(null,transformDefaults)
-    , duplicateComponents
-    , removeComponents }
+  let updateFns = {
+    updateRotation,
+    updatePosition,
+    updateScale,
+    updateComponents,
+    createComponents: createComponents.bind(null, transformDefaults),
+    duplicateComponents,
+    removeComponents
+  }
 
-  if(!actions){
-    actions   = makeActionsFromApiFns(updateFns)
+  if (!actions) {
+    actions = makeActionsFromApiFns(updateFns)
   }
 
   let transforms$ = makeModel(defaults, updateFns, actions)
 
-  return {transforms$,transformActions:actions}
+  return {
+    transforms$,
+    transformActions: actions
+  }
 }
