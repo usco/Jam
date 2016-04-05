@@ -14,7 +14,7 @@ import vignetteShader from './deps/post-process/vignetteShader'
 import EdgeShader3 from './deps/post-process/EdgeShader3'
 import AdditiveBlendShader from './deps/post-process/AdditiveBlendShader'
 
-import { planes, grids, annotations, objectEffects, CamViewControls } from 'glView-helpers'
+import { planes, grids, objectEffects, CamViewControls } from 'glView-helpers'
 import LabeledGrid from 'glView-helpers/lib/grids/LabeledGrid'
 let zoomToFit = objectEffects.zoomToFit
 
@@ -25,9 +25,6 @@ let gl = require('gl')() // (width, height, { preserveDrawingBuffer: true })
 // console.log("helpers.grids",helpers,helpers.grids)
 // let LabeledGrid = helpers.grids.LabeledGrid
 let ShadowPlane = planes.ShadowPlane
-
-function makeGlRendering () {
-}
 
 // Helpers for offline Rendering
 
@@ -61,7 +58,7 @@ function setupPostProcess (renderer, camera, scene, params) {
   let outScene = new THREE.Scene()
   let maskScene = new THREE.Scene()
 
-  let renderTarget = new THREE.WebGLRenderTarget(width, height, renderTargetParameters)
+  // let renderTarget = new THREE.WebGLRenderTarget(width, height, renderTargetParameters)
 
   // setup composer
   let composer = new EffectComposer(renderer)
@@ -100,7 +97,6 @@ function setupPostProcess (renderer, camera, scene, params) {
 
   return {composers: [composer], fxaaPass, outScene, maskScene}
 
-
 // return {composer:finalComposer, fxaaPass, outScene, maskScene, composers:[normalComposer,depthComposer,finalComposer]}
 }
 
@@ -108,14 +104,15 @@ function setupPostProcess2 (renderer, camera, scene, params) {
   // FIXME hack
   if (!renderer.context.canvas) {
     renderer.context.canvas = {
-      width: params.width,      height: params.height
+      width: params.width,
+      height: params.height
     }
   }
 
   let ppData = setupPostProcess(renderer, camera, scene, params)
   // composer = ppData.composer
   let composers = ppData.composers
-  /*fxaaPass = ppData.fxaaPass
+  /* fxaaPass = ppData.fxaaPass
   outScene = ppData.outScene
   maskScene = ppData.maskScene*/
   return composers
@@ -145,6 +142,7 @@ function makeCanvas () {
   return makeOfflineCanvas()
 }
 
+/*
 function handleResize (sizeInfos) {
   // log.debug("setting glView size",sizeInfos)
   console.log('setting glView size', sizeInfos)
@@ -164,9 +162,11 @@ function handleResize (sizeInfos) {
       c.setSize(width * pixelRatio, height * pixelRatio)
     })
   }
-}
+}*/
 
-function setupWindowSpecific (container, renderer, camera) {
+/* configure any browser side specific stuff*/
+function setupForBrowserSide (params) {
+  const {container, renderer, camera, config} = params
   console.log('initializing into container', container)
   container.appendChild(renderer.domElement)
 
@@ -180,7 +180,7 @@ function setupWindowSpecific (container, renderer, camera) {
   transformControls.setDomElement(container)
 
   // more init
-  controls.setObservables(actions.filteredInteractions$)
+  // controls.setObservables(actions.filteredInteractions$)
   controls.addObject(camera)
 
   // let pixelRatio = window.devicePixelRatio || 1
@@ -189,10 +189,13 @@ function setupWindowSpecific (container, renderer, camera) {
   }
 }
 
-function setupNodeSpecific (renderer, camera, scene) {
+/* configure any server side specific stuff*/
+function setupForServerSide (params) {
+  const {camera, scene} = params
   camera.lookAt(scene.position)
 }
 
+// hacks
 function monkeyPatchGl (gl) {
   function checkObject (object) {
     return typeof object === 'object' ||
@@ -256,7 +259,7 @@ function render (renderer, composers, camera, scene) {
   composers.forEach(c => c.render())
   // renderer.render(scene, camera)
 
-  /*let width = 640
+  /* let width = 640
   let height = 480
   let rtTexture = new THREE.WebGLRenderTarget(width, height, {
     minFilter: THREE.LinearFilter,
@@ -282,14 +285,15 @@ function setupScene (scene, extras, config) {
 function setupRenderer (canvas, context, config) {
   const pixelRatio = 1
 
-  let renderer = new THREE.WebGLRenderer(
-    {
-      antialias: false,
-      preserveDrawingBuffer: true,
-      // width: 0,
-      // height: 0,
-      canvas,
-    context})
+  let renderer = new THREE.WebGLRenderer({
+    antialias: false,
+    preserveDrawingBuffer: true,
+    // width: 0,
+    // height: 0,
+    canvas,
+    context
+  })
+
   renderer.setClearColor('#fff')
   renderer.setPixelRatio(pixelRatio)
   Object.keys(config.renderer).map(function (key) {
@@ -302,17 +306,23 @@ function setupRenderer (canvas, context, config) {
   return renderer
 }
 
-function getDefaultsWindowSpecific () {
+function getDefaultsBrowserSide () {
   const params = {
-    width: window.innerWidth,    height: window.innerHeight,    pixelRatio: window.devicePixelRatio || 1
+    width: window.innerWidth,
+    height: window.innerHeight,
+    pixelRatio: window.devicePixelRatio || 1
   }
   return params
 }
 
-function makeDefaults (data) {
+function getDefaultsServerSide ({ resolution = {width: 640, height: 480} }) {
   const params = {
-    width: resolution.width,    height: resolution.height,    devicePixelRatio: 1,    renderToScreen: (typeof window !== 'undefined') // FALSE if you want server side renders
+    width: resolution.width,
+    height: resolution.height,
+    devicePixelRatio: 1,
+    renderToScreen: (typeof window !== 'undefined') // FALSE if you want server side renders
   }
+  return params
 }
 
 // ////////////////////////////////////////////////
@@ -322,16 +332,16 @@ export default function view (data) {
 
   let config = presets
   const params = {
-    width: resolution.width,    height: resolution.height,    devicePixelRatio: 1,    renderToScreen: (typeof window !== 'undefined') // FALSE if you want server side renders
+    width: resolution.width,
+    height: resolution.height,
+    devicePixelRatio: 1,
+    renderToScreen: (typeof window !== 'undefined') // FALSE if you want server side renders
   }
 
   gl = monkeyPatchGl(gl)
 
   let renderer = null
-  let composer = null
   let composers = []
-  let outScene = null
-  let maskScene = null
 
   let scene = new THREE.Scene()
   let dynamicInjector = new THREE.Object3D() // all dynamic mapped objects reside here
@@ -343,7 +353,6 @@ export default function view (data) {
   let shadowPlane = new ShadowPlane(2000, 2000, null, config.cameras[0].up)
 
   let material = new THREE.ShaderMaterial()
-
   // material = new THREE.MeshBasicMaterial( { color: 0xf0ff00 } )
   // material = new THREE.MeshPhongMaterial( { color: 0x17a9f5, specular: 0xffffff, shininess: 5, shading: THREE.FlatShading} )//NOT WORKING => black shape
   // material = new THREE.MeshBasicMaterial( { color: 0xffaa00, transparent: true, blending: THREE.AdditiveBlending } ) //NOT WORKING => all white
@@ -364,7 +373,7 @@ export default function view (data) {
   composers = setupPostProcess2(renderer, camera, scene, params)
 
   // do context specific config
-  setupNodeSpecific(renderer, camera, scene)
+  setupForServerSide(renderer, camera, scene)
   // this is too hard coded
   const targetNode = dynamicInjector
   zoomToFit(targetNode, camera, new THREE.Vector3())
@@ -374,5 +383,5 @@ export default function view (data) {
 
   // now we output to file
   let _gl = renderer.getContext()
-  writeContextToFile(_gl, params.width, params.height, 4, uri) // ,4, path)
+  writeContextToFile(_gl, params.width, params.height, 4, uri)
 }

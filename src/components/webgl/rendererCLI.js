@@ -52,7 +52,7 @@ if (args.length > 0) {
   const uri = args[0]
   const [width, height] = args[1].split('x').map(e => parseInt(e, 10))
 
-  const {name, ext} = getNameAndExtension(uri)
+  const {ext} = getNameAndExtension(uri)
   const resolution = {width, height}
   const outputPath = `${uri}.png`
 
@@ -67,25 +67,10 @@ if (args.length > 0) {
   const parseOptions = {}
   const parsedObs$ = parse(data, parseOptions)
 
-  const data$ = parsedObs$
+  parsedObs$
     .filter(e => e.progress === undefined) // seperate out progress data
     .map(postProcessParsedData)
     .forEach(mesh => {
-      view({mesh, uri: outputPath, resolution})
+      view({mesh, uri: outputPath, resolution}) // each time some data is parsed, render it
     })
-
-/* let uris = args
-const requests$ = Rx.Observable.from(uris)
- .map(function(uri){
-    return {
-      url:uri
-      ,method:'get'
-      ,type:'resource'
-    }
-  })
-
-const responses$ = httpDriver(requests$)
-  responses$
-    .forEach(e=>console.log("responses",e))
-//resources()*/
 }
