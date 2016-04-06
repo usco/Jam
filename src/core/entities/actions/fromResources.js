@@ -1,4 +1,6 @@
+import Rx from 'rx'
 import { nameCleanup } from '../../../utils/formatters'
+import { mergeData } from '../../../utils/modelUtils'
 import { head } from 'ramda'
 
 /*
@@ -81,12 +83,12 @@ export default function intentsFromResources (rawParsedData$) {
   const candidates$ = data$ // for these we need to infer type , metadata etc
     .filter(d => d.data.meshOnly === true)
     .map(({meta, data}) => ({data: head(data.typesMeshes).mesh, meta}))
-    // .tap(e=>console.log("entityCandidates",e))
+    .tap(e => console.log('entityCandidates', e))
 
   // these MIGHT become instances, or something else, we just are not 100% sure
   const certains$ = data$ // for these we also have type, metadata etc, so we are CERTAIN of their data
     .filter(d => d.data.meshOnly === false)
-    // .tap(e=>console.log("entityCertains",e))
+    .tap(e => console.log('entityCertains', e))
 
   return {
     candidates$,
@@ -97,15 +99,16 @@ export default function intentsFromResources (rawParsedData$) {
 export default function intents (resources, params) {
   const {certains$, candidates$} = intentsFromResources(resources)
 
-  const addInstanceCandidates$ = candidates$.filter(data => data.meta.flags !== 'noInfer').tap(e => console.log('entityCandidates', e))
+  const addInstanceCandidates$ = candidates$.filter(data => data.meta.flags !== 'noInfer')
+    .tap(e => console.log('entityCandidates', e))
   const addTypeCandidate$ = candidates$.filter(data => data.meta.id === undefined)
 
   // components
   const createMetaComponents$ = certains$.map(data => data.data.instMeta)
     // NOTE :we are doing these to make them compatible with remapMetaActions helpers, not sure this is the best
     .map(function (datas) {
-      return datas.map(function ({instUid, typeUid, name}) {
-        return { id: instUid, value: { id: instUid, typeUid, name } }
+      return datas.map(function ({instUid, typeUid, name, color}) {
+        return { id: instUid, value: { id: instUid, typeUid, name, color } }
       })
     })
   const createTransformComponents$ = certains$.map(data => data.data.instTransforms)
@@ -134,9 +137,18 @@ export default function intents (resources, params) {
             typeMeta.name = typeMeta.name + index
           }
         }
-        return typeMeta
+        let result = mergeData(typeMeta, {meta: typeMeta})
+
+        // extract mesh information
+        let _data = data.data.typesMeshes[index]
+        if (data) {
+          result = mergeData(result, {data: _data.mesh})
+        }
+        return result
       })
     })
+    .tap(e => console.log('going to add type based on', e))
+    .flatMap(items => Rx.Observable.from(items))
 
   //
   const alreadyExistingTypeMeshData$ = resources
@@ -152,7 +164,7 @@ export default function intents (resources, params) {
       }
       return {id: entry.meta.id, data, meta}
     })
-    // .tap(e=>console.log("addEntityTypesFromPostMessage",e))
+    .tap(e => console.log('addEntityTypesFromResource', e))
 
   return {
     addTypes$: addTypes$.merge(addTypeFromTypeAndMeshData$),

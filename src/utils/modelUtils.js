@@ -2,7 +2,8 @@ import Rx from 'rx'
 const {merge, just} = Rx.Observable
 
 // import Immutable from 'seamless-immutable'
-function Immutable (){}
+// hack stand in as we don't really need any immutable lib
+function Immutable () {}
 
 import assign from 'fast.js/object/assign' // faster object.assign
 

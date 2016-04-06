@@ -24,9 +24,15 @@ export function postProcessParsedData (data) {
       idLookup[item.id] = typeUid
 
       let meta = {id: typeUid, name: item.name}
+      // special color handling
+      if (item.colors && item.colors.length > 0) {
+        meta.color = '#FFFFFF'
+        console.log('added color')
+      }
       typesMeta.push(meta)
       typesMetaHash[typeUid] = meta
 
+      // console.log('mesh data', item)
       mesh = geometryFromBuffers(item)
       mesh = postProcessMesh(mesh)
       mesh = centerMesh(mesh)

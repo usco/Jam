@@ -4,7 +4,7 @@ import THREE from 'three'
 export function postProcessMesh (shape) {
   // geometry
   if (!(shape instanceof THREE.Object3D)) {
-    let material = new THREE.MeshPhongMaterial({ color: 0x17a9f5, specular: 0xffffff, shininess: 5, shading: THREE.FlatShading})
+    let material = new THREE.MeshPhongMaterial({ color: 0x17a9f5, specular: 0xffffff, shininess: 5, shading: THREE.FlatShading })
     if ('color' in shape.attributes) {
       material.vertexColors = THREE.VertexColors
       material.color.set(0xffffff)
