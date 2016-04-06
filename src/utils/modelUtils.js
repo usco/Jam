@@ -1,7 +1,9 @@
 import Rx from 'rx'
 const {merge, just} = Rx.Observable
 
-import Immutable from 'seamless-immutable'
+// import Immutable from 'seamless-immutable'
+function Immutable (){}
+
 import assign from 'fast.js/object/assign' // faster object.assign
 
 // TODO: this needs to be an external lib, for re-use
@@ -95,8 +97,7 @@ export function makeModifications (actions, updateFns, options) {
             state = {state, history}
           }
 
-          if (options.doApplyTransform) // if we need to coerce data  to immutable etc
-          {
+          if (options.doApplyTransform) { // if we need to coerce data  to immutable etc
             state = transform(state)
           }
 

@@ -9,7 +9,6 @@ export function postProcessParsedData (data) {
   let mesh
   if ('objects' in data) {
     // for 3mf , etc
-    // console.log("data",data)
     let typesMetaHash = {}
     let typesMeshes = []
     let typesMeta = []
@@ -49,8 +48,9 @@ export function postProcessParsedData (data) {
       }
     })
     // console.log("typesMeta",typesMeta,"typesMeshes",typesMeshes,"instMeta",instMeta,"instTransforms",instTransforms)
-
-    return {meshOnly: false, typesMeshes, typesMeta, instMeta, instTransforms}
+    const result = {meshOnly: false, typesMeshes, typesMeta, instMeta, instTransforms}
+    console.log('data', result)
+    return result
   } else {
     mesh = data
     mesh = geometryFromBuffers(mesh)
