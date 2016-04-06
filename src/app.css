@@ -561,7 +561,8 @@ input[type=color]:focus{
     */
 }
 .bom .directionArrow .neut:after{
-  content: "⬥";
+  content: "⬍";
+  font-size: 12px;
 }
 
 .bom .bomEntry .cell{
