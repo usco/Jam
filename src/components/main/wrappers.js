@@ -10,7 +10,7 @@ import Bom from '../Bom'
 import GLView from '../webgl/GlView'
 import Comments from '../Comments'
 
-import EntityInfos from '../widgets/EntityInfos'
+import EntityInfos from '../EntityInfos'
 import ProgressBar from '../widgets/ProgressBar'
 
 // for settings

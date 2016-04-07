@@ -42,6 +42,7 @@ export default function main (sources) {
     entityInfos: entityInfos.events,
     bom: bom.events,
     comments: comments.events})
+
   const postMsg$ = api(actions, state$).postMsg$
 
   // localStorage

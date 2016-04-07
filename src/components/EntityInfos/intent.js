@@ -1,9 +1,9 @@
 import Rx from 'rx'
 let merge = Rx.Observable.merge
-import { toRadian } from '../../../utils/formatters'
+import { toRadian } from '../../utils/formatters'
 
 export default function intent (DOM) {
-  const addComment$ = DOM.select('.comments').events('addComment$').pluck('detail')
+  // const addComment$ = DOM.select('.comments').events('addComment$').pluck('detail')
 
   const changeName$ = merge(
     DOM.select('.nameInput').events('change')

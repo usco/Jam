@@ -1,11 +1,11 @@
-import { combineLatestObj, exists } from '../../../utils/obsUtils'
+import { combineLatestObj, exists } from '../../utils/obsUtils'
 
 // import Comments from '../Comments'
 import view from './view'
 import intent from './intent'
 
 // //////
-import ColorPicker from '../ColorPicker'
+import ColorPicker from '../widgets/ColorPicker'
 
 export function colorPickerWrapper (state$, DOM) {
   console.log('making colorPicker')

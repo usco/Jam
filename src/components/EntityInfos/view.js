@@ -3,10 +3,10 @@ import Rx from 'rx'
 const {just} = Rx.Observable
 import { hJSX } from '@cycle/dom'
 
-import { formatNumberTo, absSizeFromBBox, toDegree } from '../../../utils/formatters'
-import { isEmpty } from '../../../utils/utils'
+import { formatNumberTo, absSizeFromBBox, toDegree } from '../../utils/formatters'
+import { isEmpty } from '../../utils/utils'
 // //////
-import ColorPicker from '../ColorPicker'
+import ColorPicker from '../widgets/ColorPicker'
 
 export function colorPickerWrapper (state$, DOM) {
   const props$ = just({color: '#FF00FF'})
