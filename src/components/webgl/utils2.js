@@ -6,8 +6,8 @@ import { take } from 'ramda'
 import { pick, getCoordsFromPosSizeRect, findSelectionRoot } from './deps/Selector'
 import assign from 'fast.js/object/assign' // faster object.assign
 
-export function positionFromCoords (coords) {return {position: {x: coords.x,y: coords.y},event: coords}}
-export function targetObject (event) { return event.target.object}
+export function positionFromCoords (coords) { return { position: { x: coords.x, y: coords.y }, event: coords } }
+export function targetObject (event) { return event.target.object }
 export function isTransformTool (input) { return ['translate', 'rotate', 'scale', null, undefined].indexOf(input) > -1 }
 
 export function selectionAt (event, mouseCoords, camera, hiearchyRoot) {
@@ -31,7 +31,7 @@ export function selectionAt (event, mouseCoords, camera, hiearchyRoot) {
 }
 
 export function meshFrom (event) {
-  let mesh = undefined
+  let mesh
   if (event && event.detail && event.detail.pickingInfos) {
     let [intersect] = take(1, event.detail.pickingInfos) // we actually only get the best match => DO NOT MODIFY original object
     if (intersect && intersect.object) {
@@ -44,7 +44,7 @@ export function meshFrom (event) {
 // //////////Various "making" functions , data/config in, (3d object) instances out
 // yup, like factories ! yikes !
 
-/*create a camera instance from the provided data*/
+/* create a camera instance from the provided data*/
 export function makeCamera (cameraData, params) {
   // let cameraData = cameraData//TODO: merge with defaults using object.assign
   const DEFAULTS = {
@@ -53,7 +53,7 @@ export function makeCamera (cameraData, params) {
     lens: {
       fov: 45,
       near: 0.1,
-      far: 20000,
+      far: 20000
     },
     aspect: 320 / 240,
     up: [0, 0, 1],
@@ -75,7 +75,7 @@ export function makeCamera (cameraData, params) {
   return camera
 }
 
-/*setup a controls instance from the provided data*/
+/* setup a controls instance from the provided data*/
 export function makeControls (controlsData) {
   let up = new THREE.Vector3().fromArray(controlsData.up)
 
@@ -93,9 +93,9 @@ export function makeControls (controlsData) {
   return controls
 }
 
-/*create a light instance from the provided data*/
+/* create a light instance from the provided data*/
 export function makeLight (lightData) {
-  let light = undefined
+  let light
   const DEFAULTS = {
     color: '#FFF',
     intensity: 1,
@@ -148,7 +148,6 @@ export function makeLight (lightData) {
       break
     default:
       throw new Error('could not create light')
-      break
   }
 
   light.position.fromArray(lightData.pos)
@@ -161,7 +160,7 @@ function cameraWobble3dHint (camera, time = 1500) {
   let target = camera.position.clone().add(new THREE.Vector3(-5, -10, -5))
 
   let tween = new TWEEN.Tween(camPos)
-    .to(target , time)
+    .to(target, time)
     .repeat(Infinity)
     .delay(500)
     .yoyo(true)
@@ -171,10 +170,10 @@ function cameraWobble3dHint (camera, time = 1500) {
     })
     .start()
 
-  let camRot = camera.rotation.clone()
+  // let camRot = camera.rotation.clone()
   // let rtarget = camera.rotation.clone().add(new THREE.Vector3(50,50,50))
 
-  /*let tween2 = new TWEEN.Tween( camRot )
+  /* let tween2 = new TWEEN.Tween( camRot )
     .to( rtarget , time )
     .repeat( Infinity )
     .delay( 500 )
