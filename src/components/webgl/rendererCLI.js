@@ -6,6 +6,9 @@ import fs from 'fs'
 global.Rx = Rx
 const stlParser = require('imports?Rx=rx!usco-stl-parser')
 const objParser = require('imports?Rx=rx!usco-obj-parser')
+
+// const stlParser = require('usco-stl-parser')
+// const objParser = require('usco-obj-parser')
 // import * as stlParser from 'usco-stl-parser'
 // import * as objParser from 'usco-obj-parser'
 
