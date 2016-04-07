@@ -3,7 +3,7 @@ const Observable = Rx.Observable
 const { merge } = Observable
 
 import { combineLatestObj } from '../../utils/obsUtils'
-import { remapJson } from '../../utils/utils'
+import { remapJson, exists } from '../../utils/utils'
 import { changesFromObservableArrays } from '../../utils/diffPatchUtils'
 import { mergeData } from '../../utils/modelUtils'
 import { jsonToFormData } from '../../utils/httpUtils'
@@ -133,6 +133,7 @@ export default function makeYMDriver (httpDriver, params = {}) {
     }
 
     function dataFromItems (items) {
+      console.log("items",items)
       return Object.keys(items.transforms).reduce(function (list, key) {
         const transforms = items['transforms'][key]
         const metadata = items['metadata'][key]
@@ -377,6 +378,7 @@ export default function makeYMDriver (httpDriver, params = {}) {
         transforms: save$.pluck('eTrans'),
         meshes: save$.pluck('eMeshs')})
         .debounce(dataDebounceRate)
+        .filter(exists)
         .map(dataFromItems)
     )
 
