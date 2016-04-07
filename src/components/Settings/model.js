@@ -1,5 +1,4 @@
-import Rx from 'rx'
-import { combineLatestObj } from '../../../utils/obsUtils'
+import { combineLatestObj } from '../../utils/obsUtils'
 
 export default function model (props$, actions) {
   let settings$ = props$.pluck('settings')
@@ -7,5 +6,5 @@ export default function model (props$, actions) {
 
   const toggled$ = actions.toggle$.startWith(false)
 
-  return combineLatestObj({settings$,toggled$})
+  return combineLatestObj({settings$, toggled$})
 }

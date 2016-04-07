@@ -1,6 +1,6 @@
 import { combineLatestObj, exists } from '../../../utils/obsUtils'
 
-import Comments from '../Comments'
+// import Comments from '../Comments'
 import view from './view'
 import intent from './intent'
 

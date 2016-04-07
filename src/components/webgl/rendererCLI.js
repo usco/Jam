@@ -23,10 +23,6 @@ function postProcessParsedData (data) {
   return mesh
 }
 
-/* import makeHttpDriver     from '../../core/drivers/simpleHttpDriver'
-import {requests,resources} from '../../utils/assetManager'
-let httpDriver   = makeHttpDriver()*/
-
 // see http://stackoverflow.com/questions/8609289/convert-a-binary-nodejs-buffer-to-javascript-arraybuffer
 function toArrayBuffer (buffer) {
   var ab = new ArrayBuffer(buffer.length)

@@ -1,4 +1,4 @@
-import { combineLatestObj } from '../../../utils/obsUtils'
+import { combineLatestObj } from '../../utils/obsUtils'
 
 export default function model (props$, actions) {
   const comments$ = props$.pluck('comments')

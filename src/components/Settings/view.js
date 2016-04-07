@@ -1,7 +1,7 @@
 /** @jsx hJSX */
 import { hJSX } from '@cycle/dom'
 import Class from 'classnames'
-import tooltipIconBtn from '../TooltipIconButton'
+import tooltipIconBtn from '../widgets/TooltipIconButton'
 
 export default function view (state$) {
   return state$.map(function ({settings, toggled}) {

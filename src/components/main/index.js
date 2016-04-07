@@ -4,7 +4,7 @@ const {merge, just} = Rx.Observable
 const of = Rx.Observable.of
 
 // views & wrappers
-import Settings from '../../components/widgets/Settings'
+import Settings from '../../components/Settings'
 import FullScreenToggler from '../../components/widgets/FullScreenToggler/index'
 import Help from '../../components/widgets/Help'
 

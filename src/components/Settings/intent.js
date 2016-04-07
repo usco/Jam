@@ -18,5 +18,6 @@ export default function intent (DOM) {
     .repeat()
 
   return {
-  toggle$}
+    toggle$
+  }
 }

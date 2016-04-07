@@ -2,7 +2,7 @@
 import { hJSX } from '@cycle/dom'
 import { equals } from 'ramda'
 
-import tooltipIconBtn from '../TooltipIconButton'
+import tooltipIconBtn from '../widgets/TooltipIconButton'
 
 function renderCommentsList (comments) {
   const iconSvg = `<svg class='icon' version='1.1' id='Pencil' xmlns='http://www.w3.org/2000/svg' x='0px' y='0px'

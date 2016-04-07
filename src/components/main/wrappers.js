@@ -8,9 +8,9 @@ import { combineLatestObj } from '../../utils/obsUtils'
 // nested dialogues etc
 import Bom from '../Bom'
 import GLView from '../webgl/GlView'
-import EntityInfos from '../widgets/EntityInfos'
-import Comments from '../widgets/Comments'
+import Comments from '../Comments'
 
+import EntityInfos from '../widgets/EntityInfos'
 import ProgressBar from '../widgets/ProgressBar'
 
 // for settings
