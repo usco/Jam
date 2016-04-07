@@ -44,7 +44,7 @@ describe('postMessageDriver', () => {
 
     window.addEventListener('message', resultChecker, false)
 
-    const outgoing$ = Rx.Observable.just({output: 42,somethingElse: 'cool'})
+    const outgoing$ = Rx.Observable.just({output: 42, somethingElse: 'cool'})
     const inputs$ = postMessageDriver(outgoing$)
   })
 })

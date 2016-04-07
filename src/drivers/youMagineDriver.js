@@ -2,11 +2,11 @@ import Rx from 'rx'
 const Observable = Rx.Observable
 const { merge } = Observable
 
-import { combineLatestObj } from '../../utils/obsUtils'
-import { remapJson, exists } from '../../utils/utils'
-import { changesFromObservableArrays } from '../../utils/diffPatchUtils'
-import { mergeData } from '../../utils/modelUtils'
-import { jsonToFormData } from '../../utils/httpUtils'
+import { combineLatestObj } from '../utils/obsUtils'
+import { remapJson, exists } from '../utils/utils'
+import { changesFromObservableArrays } from '../utils/diffPatchUtils'
+import { mergeData } from '../utils/modelUtils'
+import { jsonToFormData } from '../utils/httpUtils'
 
 import assign from 'fast.js/object/assign' // faster object.assign
 import { pick, equals, head, pluck } from 'ramda'

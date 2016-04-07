@@ -2,8 +2,8 @@ import Rx from 'rx'
 const {fromEvent} = Rx.Observable
 import addressbar from 'addressbar'
 
-import { fetchUriParams } from '../../utils/urlUtils'
-import { exists } from '../../utils/utils'
+import { fetchUriParams } from '../utils/urlUtils'
+import { exists } from '../utils/utils'
 
 /* addressbar.addEventListener('change', function (event) {
   event.preventDefault()

@@ -2,7 +2,7 @@ import Rx from 'rx'
 let Observable = Rx.Observable
 let just = Observable.just
 
-import { safeJSONParse, toArray } from '../../utils/utils'
+import { safeJSONParse, toArray } from '../utils/utils'
 
 export default function localStorageDriver (outgoing$) {
   function getItem (item) {
