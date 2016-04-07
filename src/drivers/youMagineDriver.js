@@ -1,6 +1,6 @@
 import Rx from 'rx'
 const Observable = Rx.Observable
-const { merge } = Observable
+const { merge, just } = Observable
 
 import { combineLatestObj } from '../utils/obsUtils'
 import { remapJson, exists } from '../utils/utils'
@@ -34,7 +34,7 @@ function makeApiStream (source$, outputMapper, design$, authData$) {
 }
 
 // spread out requests with TIME amount of time between each of them
-function spreadRequests (time = 300, data$) {
+function spreadRequests (time = 300 , data$) {
   /* return Rx.Observable.zip(
     out$,
     Rx.Observable.timer(0, 2000),
@@ -62,7 +62,7 @@ export default function makeYMDriver (httpDriver, params = {}) {
   let authData = (login !== undefined && password !== undefined) ? (`${login}:${password}@`) : ''
 
   function youMagineStorageDriver (outgoing$) {
-    function toParts (method = 'put', data) {
+    function toParts (method = 'put' , data) {
       const {designId, authToken} = data
       const entries = data._entries || []
 
@@ -98,7 +98,7 @@ export default function makeYMDriver (httpDriver, params = {}) {
       return requests
     }
 
-    function toBom (method = 'put', data) {
+    function toBom (method = 'put' , data) {
       const {designId, authToken} = data
       const entries = data._entries || []
 
@@ -133,7 +133,7 @@ export default function makeYMDriver (httpDriver, params = {}) {
     }
 
     function dataFromItems (items) {
-      console.log("items",items)
+      console.log('items', items)
       return Object.keys(items.transforms).reduce(function (list, key) {
         const transforms = items['transforms'][key]
         const metadata = items['metadata'][key]
@@ -280,12 +280,14 @@ export default function makeYMDriver (httpDriver, params = {}) {
       })
       .pluck('response')
       .map(function (data) {
-        return head(JSON.parse(data))
+        return head(JSON.parse(data)) // 'head' => ie the first assembly we find
       })
+      .filter(exists)
       .withLatestFrom(lDesign$, lAuthData$, (assemblyData, design, authData) => ({
         assemblyData,
         designId: design.id,
-        authToken: authData.token}))
+        authToken: authData.token
+      }))
       .map(function (data) {
         const {designId, authToken, assemblyData} = data
 
@@ -298,7 +300,8 @@ export default function makeYMDriver (httpDriver, params = {}) {
           method: 'get',
           type: 'ymLoad',
           typeDetail: 'assemblyEntries',
-          responseType: 'json'
+          responseType: 'json',
+          assemblyId: assemblyData.uuid// FIXME : temporary, used to know WHICH assembly the further data belongs to
         }
       })
       // .tap(e=>console.log("data",e))
@@ -376,7 +379,8 @@ export default function makeYMDriver (httpDriver, params = {}) {
       combineLatestObj({
         metadata: save$.pluck('eMetas'),
         transforms: save$.pluck('eTrans'),
-        meshes: save$.pluck('eMeshs')})
+        meshes: save$.pluck('eMeshs')
+      })
         .debounce(dataDebounceRate)
         .filter(exists)
         .map(dataFromItems)
@@ -391,7 +395,7 @@ export default function makeYMDriver (httpDriver, params = {}) {
     const allLoadRequests$ = merge(getParts$, getBom$, getAssemblies$)
 
     const outToHttp$ = merge(designExistsRequest$, allSaveRequests$, allLoadRequests$)
-    // .tap(e=>console.log("requests out to http",e))
+      //.tap(e => console.log('requests out to http', e))
 
     const inputs$ = httpDriver(outToHttp$)
 

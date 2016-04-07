@@ -8,7 +8,7 @@
     "test": "npm run mocha",
     "test-browser": "testem",
     "lint":"standard src/**/*.js",
-    "start": "NODE_ENV=dev node server.js",
+    "start": "NODE_ENV=dev MODE=test node server.js",
     "build": "NODE_ENV=production MODE=production webpack -p",
     "build-test": "NODE_ENV=production MODE=test webpack -p",
     "profile": "webpack --profile --json > stats.json",

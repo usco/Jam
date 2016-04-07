@@ -15,13 +15,14 @@ import { makeModel, mergeData } from '../../utils/modelUtils'
 function setAllValues (state, input) {
   // console.log("setting settings")
   // TODO : do validation ?
+  // FIXME: race condition !!! we are not sure this is the first !
   // we coerce appMode to "editor" when setting all values like this
   // same with saveMode
   let output = mergeData(state, mergeData(input, {
     appMode: 'editor',
-    saveMode: false,
     activeTool: undefined
   }))
+
   return output
 }
 
@@ -68,6 +69,7 @@ function setToolsets (state, input) {
 
 function setSaveMode (state, input) {
   let output = mergeData(state, {saveMode: input})
+  console.log('setting save mode', output)
   return output
 }
 

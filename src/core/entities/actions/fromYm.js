@@ -1,8 +1,9 @@
 import Rx from 'rx'
-const {fromArray} = Rx.Observable
+const { fromArray, just } = Rx.Observable
 import { pick } from 'ramda'
 import { remapJson, toArray } from '../../../utils/utils'
 import { mergeData } from '../../../utils/modelUtils'
+import { combineLatestObj } from '../../../utils/obsUtils'
 
 function rawData (ym) {
   const parts = ym
@@ -13,9 +14,21 @@ function rawData (ym) {
 
   const assemblies = ym
     .filter(res => res.request.method === 'get' && res.request.type === 'ymLoad' && res.request.typeDetail === 'assemblyEntries')
-    .mergeAll()
-    .pluck('response')
-    // .tap(e=>console.log("in assemblies: ",e))
+    //.mergeAll()
+    .flatMap(data => {
+      const request$ = just(data.request)
+      const response$ = data.pluck('response')
+
+      return response$.map(function (entries) {
+        return entries.map(function (entry) {
+          return mergeData(entry, {assemblyId: data.request.assemblyId})
+        })
+      })
+      // return combineLatestObj({response$, request$}) // .materialize()//FIXME: still do not get this one
+    })
+    // .tap(e => console.log('in assemblies: pre ', e))
+    // .pluck('response')
+    .tap(e => console.log('in assemblies: ', e))
 
   return {
     parts,
@@ -40,11 +53,12 @@ export default function intent ({ym, resources}, params) {
           'part_uuid': 'typeUid'
         }
         // NOTE :we are doing these to make them compatible with remapMetaActions helpers, not sure this is the best
-        const fieldNames = ['name', 'color', 'id', 'typeUid']
+        const fieldNames = ['name', 'color', 'id', 'typeUid', 'assemblyId']
         const data = pick(fieldNames, remapJson(mapping, entry))
         return {
           id: data.id,
-          value: data }
+          value: data
+        }
       })
     })
     // .tap(e=>console.log("meta",e))
@@ -65,7 +79,8 @@ export default function intent ({ym, resources}, params) {
         // NOTE :we are doing these to make them compatible with remapMetaActions helpers, not sure this is the best
         return {
           id: data.id,
-          value: data }
+          value: data
+        }
       })
     })
     // .tap(e=>console.log("transforms",e))

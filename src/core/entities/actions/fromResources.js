@@ -167,7 +167,7 @@ export default function intents (resources, params) {
     .tap(e => console.log('addEntityTypesFromResource', e))
 
   return {
-    addTypes$: addTypes$.merge(addTypeFromTypeAndMeshData$),
+    addTypes$,// : addTypes$.merge(addTypeFromTypeAndMeshData$),
     addTypeCandidate$,
     addInstanceCandidates$,
     createMetaComponents$,

@@ -1,10 +1,32 @@
 import Rx from 'rx'
 const {merge, just} = Rx.Observable
-import { equals } from 'ramda'
+import { equals, contains } from 'ramda'
 import { combineLatestObj } from '../../utils/obsUtils'
 
 export default function formatDataForYMStorage ({sources, state$}) {
   // this are responses from ym
+  const loadAllDone$ = sources.ym
+    .filter(res$ => res$.request.type === 'ymLoad') // handle errors etc
+    .flatMap(data => {
+      const responseWrapper$ = data.catch(e => {
+        console.log('caught error in saving data', e)
+        return Rx.Observable.empty()
+      })
+      const request$ = just(data.request)
+      const response$ = responseWrapper$.pluck('response')
+      return combineLatestObj({response$, request$}) // .materialize()//FIXME: still do not get this one
+    })
+    .scan(function (acc, data) {
+      acc.push(data.request.typeDetail)
+      return acc
+    }, [])
+    .map(function (data) {
+      // we recieved all 3 types of data, we are gold !
+      return (contains('parts', data) && contains('bom', data) && contains('assemblyEntries', data))
+    })
+    .filter(d => d === true)
+    .tap(e => console.log('loading done, we got it all'))
+
   const designExists$ = sources.ym
     // .tap(e=>console.log("responses from ym",e))
     .filter(res => res.request.method === 'get' && res.request.type === 'ymLoad' && res.request.typeDetail === 'designExists')
@@ -33,7 +55,8 @@ export default function formatDataForYMStorage ({sources, state$}) {
   const saveDesigntoYm$ = state$
     .filter(state => state.settings.saveMode === true) // do not save anything if not in save mode
     .filter(state => state.design.synched && state.authData.token !== undefined) // only try to save anything when the design is in "synch mode" aka has a ur
-    // skipUntil(designLoaded)
+    .skipUntil(loadAllDone$)
+    .tap(e => console.log('we are all done loading so SAVE', e))
     .flatMap(_ => combineLatestObj({
       bom: bomToYm,
       parts,
@@ -52,7 +75,7 @@ export default function formatDataForYMStorage ({sources, state$}) {
   // if the design exists, load data, otherwise...whataver
   const loadDesignFromYm$ = designExists$ // actions.loadDesign
     .withLatestFrom(state$.pluck('settings', 'saveMode'), function (designExists, saveMode) {
-      return designExists && !saveMode
+      return designExists //&& !saveMode
     })
     .filter(e => e === true) // filter out non existing designs (we cannot load those , duh')
     .flatMap(_ => combineLatestObj({design, authData})) // we inject design & authData

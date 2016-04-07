@@ -11,6 +11,7 @@ var srcPath = 'src'
 var production = process.env.NODE_ENV === 'production'
 var dev = process.env.NODE_ENV === 'dev'
 var testMode = (process.env.MODE === undefined || process.env.MODE !== 'production') ? true : false
+console.log('running in production mode', production, 'in test mode', testMode)
 
 var getSymlinkedModules = function () {
   var rootPath = path.join(__dirname, 'node_modules')
@@ -70,13 +71,13 @@ var config = {
       // { test: /-worker*\.js$/, loader: "worker-loader",include : pathsToInclude},//if any module does "require(XXX-worker)" it converts to a web worker
       // 'react-hot',
       { test: /\.js$/, loaders: [ /* WebpackStrip.loader('console.log', 'console.error')*/, 'babel'],
-        include: pathsToInclude, exclude: /(node_modules|bower_components)/ },
+      include: pathsToInclude, exclude: /(node_modules|bower_components)/ },
       { test: /\.css$/, loader: 'style-loader!css-loader' },
       // special string replacements , could be cleaner
       { test: /index.js$/, loader: StringReplacePlugin.replace({
           replacements: [
             {
-              pattern: 'mode = "production"',
+              pattern: `mode = 'production'`,
               replacement: function (match, p1, offset, string) {
                 return 'mode = "' + process.env.NODE_ENV + '"'
               }
