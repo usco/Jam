@@ -9,8 +9,3 @@ export function partSource (addressbar, params) {
   return filterByExtensions(addressbar.get('sourceUrl'), params.get('extensions', 'sources'))
 // .map(data =>  ({src:'http', uri:data})  )
 }
-
-export function authToken (addressbar, params) {
-  return addressbar.get('authToken')
-// .tap(e=>console.log("authToken",e))
-}
