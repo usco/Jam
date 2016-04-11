@@ -69,22 +69,22 @@ var config = {
       { test: /\.json$/, loader: 'json-loader' }, // ?optional[]=runtime&optional=es6.blockScoping
       // { test: /-worker*\.js$/, loader: "worker-loader",include : pathsToInclude},//if any module does "require(XXX-worker)" it converts to a web worker
       // 'react-hot',
-      { test: /\.js$/, loaders: [ /* WebpackStrip.loader('console.log', 'console.error')*/'babel' ],
-      include: pathsToInclude, exclude: /(node_modules|bower_components)/ },
+      { test: /\.js$/, loaders: ['babel'],// /* WebpackStrip.loader('console.log', 'console.error')*/
+        include: pathsToInclude, exclude: /(node_modules|bower_components)/ },
       { test: /\.css$/, loader: 'style-loader!css-loader' },
       // special string replacements , could be cleaner
       { test: /index.js$/, loader: StringReplacePlugin.replace({
-          replacements: [
-            {
-              pattern: `mode = 'production'`,
-              replacement: function (match, p1, offset, string) {
-                return 'mode = "' + process.env.NODE_ENV + '"'
-              }
+        replacements: [
+          {
+            pattern: `mode = 'production'`,
+            replacement: function (match, p1, offset, string) {
+              return 'mode = "' + process.env.NODE_ENV + '"'
             }
+          }
         ]})
       },
       {
-        test: /youMagineDriver.js$/,loader: StringReplacePlugin.replace({
+        test: /youMagineDriver.js$/, loader: StringReplacePlugin.replace({
           replacements: [
             {
               pattern: 'api.',
@@ -96,7 +96,7 @@ var config = {
                 }
               }
             }
-        ]})
+          ]})
       }
     ],
     noParse: /\.min\.js/
@@ -162,7 +162,7 @@ if (production) {
   })*/
   ])
 
-  /*config.module= {
+  /* config.module= {
     loaders: [
       { test: /\.json$/,   loader: "json-loader" },//?optional[]=runtime&optional=es6.blockScoping
       //{ test: /-worker*\.js$/, loader: "worker-loader",include : pathsToInclude},//if any module does "require(XXX-worker)" it converts to a web worker
@@ -181,12 +181,12 @@ if (production) {
 
   config.module.loaders.push(stripLoader)
 } else {
-  /*config.entry = config.entry.concat([
+  /* config.entry = config.entry.concat([
     //'webpack-dev-server/client?',//http://'+host+":"+port,
     //'webpack/hot/only-dev-server',
   ])*/
 
-  /*var ymReplacerLoader = {
+  /* var ymReplacerLoader = {
     test: /youMagineDriver.js$/,loader: StringReplacePlugin.replace({
     replacements: [
         {
