@@ -150,17 +150,18 @@ export default function makeYMDriver (httpDriver, params = {}) {
       const {designId, authToken} = data
       const entries = data._entries || []
 
-      const assemblyId = head(pluck('assemblyId', entries)) // head(entries).assemblyId
-
       const authTokenStr = `/?auth_token=${authToken}`
       const designUri = `${urlBase}://${authData}${apiBaseUri}/designs/${designId}`
-      const assembliesUri = `${designUri}/assemblies/${assemblyId}/entries`
 
       const fieldNames = ['uuid', 'name', 'color', 'pos', 'rot', 'sca', 'part_uuid']
       const mapping = {'id': 'uuid', 'typeUid': 'part_uuid'}
       const requests = entries.map(function (entry) {
         const refined = pick(fieldNames, remapJson(mapping, entry))
         const send = jsonToFormData(refined)
+
+        console.log('assemblies entry', entry)
+        const assemblyId = entry.assemblyId// head(pluck('assemblyId', entries)) // head(entries).assemblyId
+        const assembliesUri = `${designUri}/assemblies/${assemblyId}/entries`
 
         return {
           url: `${assembliesUri}/${refined.uuid}${authTokenStr}`,
@@ -185,6 +186,24 @@ export default function makeYMDriver (httpDriver, params = {}) {
       authData: designInfos$.pluck('authData')
     })
       .map(({design, authData}) => ({designId: design.id, authToken: authData.token}))
+
+      /*.flatMap(function (data) { // FIXME: semi hack
+        const {designId, authToken} = data
+
+        const authTokenStr = `/?auth_token=${authToken}`
+        const designUri = `${urlBase}://${authData}${apiBaseUri}/designs/${designId}`
+
+        const partsUri = `${designUri}/parts${authTokenStr}`
+        const bomUri = `${designUri}/bom${authTokenStr}`
+        const assembliesUri = `${designUri}/assemblies${authTokenStr}`
+
+        let request = Rx.DOM.ajax({
+          url: assembliesUri,
+          crossDomain: true,
+          async: true
+        })
+        return request
+      })*/
       .map(function (data) {
         const {designId, authToken} = data
         const authTokenStr = `/?auth_token=${authToken}`
@@ -282,6 +301,9 @@ export default function makeYMDriver (httpDriver, params = {}) {
       .map(function (data) {
         return head(JSON.parse(data)) // 'head' => ie the first assembly we find
       })
+
+    const getAssemblyEntries$ =
+      getAssemblies$
       .filter(exists)
       .withLatestFrom(lDesign$, lAuthData$, (assemblyData, design, authData) => ({
         assemblyData,
@@ -304,6 +326,17 @@ export default function makeYMDriver (httpDriver, params = {}) {
           assemblyId: assemblyData.uuid// FIXME : temporary, used to know WHICH assembly the further data belongs to
         }
       })
+    const getAssemblyEntriesNoAssemblyFound$ =
+      getAssemblies$
+        .filter(data => data === undefined)
+        .map(function (_) {
+          let result = just({
+            response: []
+          })
+          result.request = {type: 'ymLoad', typeDetail: 'assemblyEntries'}
+          return result
+        })
+
       // .tap(e=>console.log("data",e))
       /* function (data) {
         data.response.forEach(function (product) {
@@ -392,12 +425,13 @@ export default function makeYMDriver (httpDriver, params = {}) {
 
     // Finally put it all together
     const allSaveRequests$ = spreadRequests(500, merge(partsOut$, bomOut$, assemblyOut$))
-    const allLoadRequests$ = merge(getParts$, getBom$, getAssemblies$)
+    const allLoadRequests$ = merge(getParts$, getBom$, getAssemblyEntries$)
 
     const outToHttp$ = merge(designExistsRequest$, allSaveRequests$, allLoadRequests$)
       //.tap(e => console.log('requests out to http', e))
 
     const inputs$ = httpDriver(outToHttp$)
+    .merge(getAssemblyEntriesNoAssemblyFound$)
 
     /* const saveResponses$ = inputs$
       .filter(res$ => res$.request.type === 'ymSave')//handle errors etc

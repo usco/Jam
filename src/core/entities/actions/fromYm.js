@@ -1,9 +1,8 @@
 import Rx from 'rx'
 const { fromArray, just } = Rx.Observable
-import { pick } from 'ramda'
-import { remapJson, toArray } from '../../../utils/utils'
+import { pick, head } from 'ramda'
+import { remapJson, toArray, exists } from '../../../utils/utils'
 import { mergeData } from '../../../utils/modelUtils'
-import { combineLatestObj } from '../../../utils/obsUtils'
 
 function rawData (ym) {
   const parts = ym
@@ -14,7 +13,7 @@ function rawData (ym) {
 
   const assemblies = ym
     .filter(res => res.request.method === 'get' && res.request.type === 'ymLoad' && res.request.typeDetail === 'assemblyEntries')
-    //.mergeAll()
+    // .mergeAll()
     .flatMap(data => {
       const request$ = just(data.request)
       const response$ = data.pluck('response')
@@ -227,11 +226,24 @@ export default function intent ({ym, resources}, params) {
     .filter(req => req.uri !== undefined && req.uri !== '')
     .tap(e => console.log('meshRequests', e))
 
+  // set active assembly
+  const setActiveAssembly$ = assemblyData$
+    .take(1)
+    .map(function (data) {
+      return head(data)
+    })
+    .filter(exists)
+    .pluck('assemblyId')
+    .tap(e => console.log('setActiveAssembly', e))
+
   return {
     addTypes$,
     createMetaComponents$,
     createTransformComponents$,
     createMeshComponents$,
-    requests$: meshRequests$
+
+    requests$: meshRequests$,
+    setActiveAssembly$
+
   }
 }

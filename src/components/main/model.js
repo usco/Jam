@@ -23,6 +23,7 @@ import comments from '../../core/comments/comments'
 import selections from '../../core/selections/selections'
 
 import entityTypes from '../../core/entities/types'
+import assembly from '../../core/entities/assemblies'
 import makeTypeInstanceMapping from '../../core/entities/typeInstanceMapping'
 import entitiesExtra from '../../core/entities/entitiesExtra'
 import bom from '../../core/bom/index'
@@ -36,9 +37,10 @@ export default function model (props$, actions, sources) {
   const settings$ = settings(actions.settingActions)
 
   const types$ = entityTypes(actions.entityActions)
+  const assembly$ = assembly(actions.entityActions).pluck('currentAssembly')
   const comments$ = comments(actions.commentActions)
 
-  const {createMeshComponents$, componentBase$, assembly$} = entitiesExtra(actions, types$)
+  const {createMeshComponents$, componentBase$} = entitiesExtra(actions, types$, assembly$)
   entityActions.createMeshComponents$ = createMeshComponents$
 
   // annotations

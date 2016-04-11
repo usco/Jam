@@ -5,6 +5,9 @@ import { combineLatestObj } from '../../utils/obsUtils'
 
 export default function formatDataForYMStorage ({sources, state$}) {
   // this are responses from ym
+  const waitForLoadNeeded$ = state$.pluck('settings', 'autoLoad') // do we need to wait for data to be loaded?
+    .map(data => !data)
+
   const loadAllDone$ = sources.ym
     .filter(res$ => res$.request.type === 'ymLoad') // handle errors etc
     .flatMap(data => {
@@ -21,11 +24,14 @@ export default function formatDataForYMStorage ({sources, state$}) {
       return acc
     }, [])
     .map(function (data) {
+      // TODO: we need a way to check what the design actually has
       // we recieved all 3 types of data, we are gold !
       return (contains('parts', data) && contains('bom', data) && contains('assemblyEntries', data))
     })
+    .merge(waitForLoadNeeded$)// here we combine with autoLoad/autoSave settings : if autoLoad is false but autoSave is true, just save
     .filter(d => d === true)
     .tap(e => console.log('loading done, we got it all'))
+
 
   const designExists$ = sources.ym
     // .tap(e=>console.log("responses from ym",e))
@@ -47,11 +53,9 @@ export default function formatDataForYMStorage ({sources, state$}) {
 
   // simple query to determine if design already exists
   const queryDesignExists$ = combineLatestObj({design, authData})
-    .tap(e => console.log('queryDesignExists',e))
     .filter(data => data.authData.token !== undefined && data.design.synched) // only try to save anything when the design is in "synch mode" aka has a ur
     .map(data => ({data, query: 'designExists'}))
     .take(1)
-    .tap(e => console.log('queryDesignExists 2'))
 
   // saving should NOT take place before load is complete IFAND ONLY IF , we are reloading a design
   const saveDesigntoYm$ = state$
