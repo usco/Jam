@@ -9,7 +9,6 @@ var port = 3000
 var srcPath = 'src'
 
 var production = process.env.NODE_ENV === 'production'
-var dev = process.env.NODE_ENV === 'dev'
 var testMode = (process.env.MODE === undefined || process.env.MODE !== 'production') ? true : false
 console.log('running in production mode', production, 'in test mode', testMode)
 
@@ -70,7 +69,7 @@ var config = {
       { test: /\.json$/, loader: 'json-loader' }, // ?optional[]=runtime&optional=es6.blockScoping
       // { test: /-worker*\.js$/, loader: "worker-loader",include : pathsToInclude},//if any module does "require(XXX-worker)" it converts to a web worker
       // 'react-hot',
-      { test: /\.js$/, loaders: [ /* WebpackStrip.loader('console.log', 'console.error')*/, 'babel'],
+      { test: /\.js$/, loaders: [ /* WebpackStrip.loader('console.log', 'console.error')*/'babel' ],
       include: pathsToInclude, exclude: /(node_modules|bower_components)/ },
       { test: /\.css$/, loader: 'style-loader!css-loader' },
       // special string replacements , could be cleaner
@@ -105,9 +104,9 @@ var config = {
   resolve: {
     extensions: ['', '.js', '.jsx', 'json'],
     root: [
-      path.join(__dirname, 'node_modules'),
+      path.join(__dirname, 'node_modules')
     ],
-    /*alias: {
+    /* alias: {
         "q$":path.join(__dirname, "node_modules","usco-kernel2/src/kernel.js"),//needed only FOR DEV
     }*/
     alias: {
@@ -132,11 +131,11 @@ if (production) {
   // config.output.filename = "[name].min.js"//"[name].[hash].min.js"
   // config.output.chunkFilename = '[id].js'
   config.plugins = config.plugins.concat([
-    new webpack.DefinePlugin({'process.env': {NODE_ENV: JSON.stringify('production') } }),
+    new webpack.DefinePlugin({ 'process.env': { NODE_ENV: JSON.stringify('production') } }),
     new webpack.optimize.LimitChunkCountPlugin({maxChunks: 1}),
     new webpack.optimize.DedupePlugin(),
     new webpack.NoErrorsPlugin(),
-    new webpack.optimize.UglifyJsPlugin({minimize: true }) // ,drop_console:true})
+    new webpack.optimize.UglifyJsPlugin({ minimize: true }) // ,drop_console:true})
   /*
   new webpack.optimize.UglifyJsPlugin({
     mangle: {
@@ -201,7 +200,8 @@ if (production) {
   config.module.loaders.push(ymReplacerLoader)*/
 
   config.plugins = config.plugins.concat([
-    new webpack.HotModuleReplacementPlugin()
+    new webpack.HotModuleReplacementPlugin(),
+    new webpack.optimize.LimitChunkCountPlugin({maxChunks: 1})
   ])
 }
 
