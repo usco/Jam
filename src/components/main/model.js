@@ -1,230 +1,72 @@
 import Rx from 'rx'
-const {merge,just,fromArray} = Rx.Observable
-import {flatten, find, propEq, head} from 'ramda'
 
-import {nameCleanup} from '../../utils/formatters'
+import { combineLatestObj, replicateStream } from '../../utils/obsUtils'
+import { toArray } from '../../utils/utils'
 
-import {combineLatestObj,replicateStream} from '../../utils/obsUtils'
-import {generateUUID,exists,toArray} from '../../utils/utils'
-import {mergeData} from '../../utils/modelUtils'
+// entity components
+import { makeMetaSystem } from '../../core/entities/components/meta'
+import { makeTransformsSystem } from '../../core/entities/components/transforms'
+import { makeMeshSystem } from '../../core/entities/components/mesh'
+import { makeBoundingSystem } from '../../core/entities/components/bounds'
 
-//entity components
-import {makeMetaSystem} from '../../core/entities/components/meta'
-import {makeTransformsSystem} from '../../core/entities/components/transforms'
-import {makeMeshSystem} from '../../core/entities/components/mesh'
-import {makeBoundingSystem} from '../../core/entities/components/bounds'
+import { addAnnotation } from '../../core/entities/annotations/annotations'
 
-import {addAnnotation} from '../../core/entities/annotations'
-
-import {remapEntityActions,remapMetaActions,
-  remapMeshActions,remapTransformActions,remapBoundsActions} from '../../core/entities/utils'
+import { remapEntityActions, remapMetaActions, remapMeshActions, remapTransformActions, remapBoundsActions } from '../../core/entities/utils'
 
 import selectionsIntents from '../../core/selections/intents'
 
-import design from      '../../core/design/design'
-import settings from    '../../core/settings/settings'
-import comments from    '../../core/comments/comments'
+import design from '../../core/design/design'
+import auth from '../../core/auth/auth.js'
+import settings from '../../core/settings/settings'
 
-import selections from  '../../core/selections/selections'
+import comments from '../../core/comments/comments'
+import selections from '../../core/selections/selections'
+
 import entityTypes from '../../core/entities/types'
-import bom         from '../../core/bom/index'
+import makeTypeInstanceMapping from '../../core/entities/typeInstanceMapping'
+import entitiesExtra from '../../core/entities/entitiesExtra'
+import bom from '../../core/bom/index'
 import bomIntents from '../../core/bom/intents'
 
-import {authToken} from '../../core/sources/addressbar.js'
-
-
-function makeRegistry(instances$, types$){
-  //register type=> instance & vice versa
-  let base = {typeUidFromInstUid:{},instUidFromTypeUid:{}}
-
-  instances$ = instances$.map(function(instances){
-    let res = []
-    Object.keys(instances).map(function(key){
-      res.push( instances[key] )
-    })
-    return res
-  })
-
-  return combineLatestObj({instances$,types$})
-    .map(function({instances, types}){
-
-      let instUidFromTypeUid = instances
-        .reduce(function(prev,instance){
-          if(!prev[instance.typeUid]){
-            prev[instance.typeUid] = []//instance.id
-          }
-
-          prev[instance.typeUid].push( instance.id )
-          return prev
-        },{})
-
-      let typeUidFromInstUid = instances
-        .reduce(function(prev,instance){
-          prev[instance.id] = instance.typeUid
-          return prev
-        },{})
-
-      return {instUidFromTypeUid,typeUidFromInstUid}
-    })
-}
-
-  /*possible sources of instances
-    directly:
-    - addressBar
-    - postMessage
-    - drag & drop
-    Indirectly:
-      - duplicates of other instances
-  */
-
-
-export default function model(props$, actions, sources){
-  const DOM      = sources.DOM
-  const events   = sources.events
-
+export default function model (props$, actions, sources) {
   let entityActions = actions.entityActions
 
   const design$ = design(actions.designActions)
-    .tap(e=>console.log("designData",e))
-  const settings$      = settings( actions.settingActions )
-    .tap(e=>console.log("settings",e))
-  const entityTypes$   = entityTypes( actions.entityActions )
-  const comments$      = comments( actions.commentActions )
+  const authData$ = auth(actions.authActions) // authentification data, if any
+  const settings$ = settings(actions.settingActions)
 
-  /*
-  //addInstanceCandidates => -------------------------
-  //addType               => --T----------------------
-  */
+  const types$ = entityTypes(actions.entityActions)
+  const comments$ = comments(actions.commentActions)
 
-  //we FILTER all candidates/certains by their "presence" in the types list
+  const {createMeshComponents$, componentBase$, assembly$} = entitiesExtra(actions, types$)
+  entityActions.createMeshComponents$ = createMeshComponents$
 
-  //TODO: go back to basics : some candidate have access to already exisiting types, some others not (first time)
-  const addInstancesCandidates$ = entityActions.addInstanceCandidates$
-    //.filter(data=>data.meta.id === undefined)
-    .combineLatest(entityTypes$, function(candidateData, types){
-      const meshName = nameCleanup(candidateData.meta.name)
-      return find(propEq('name', meshName))(types)
-    })
-    .filter(exists)
-    .filter(candidate=>candidate.mesh !== undefined)
-    //.tap(e=>console.log("addInstancesCandidates",e))
-    .map(toArray)
-    .take(1)
-    .repeat()
-
-  //FIXME: just a hack ! ideally all instances should just have an assembly id
-  const assembly$ = just(generateUUID())
-
-  const entityInstancesBase$  = addInstancesCandidates$
-    .combineLatest(assembly$,function(newTypes, assemblyId){
-      return {newTypes, assemblyId}
-    })
-    .map(function({newTypes,assemblyId}){
-      return newTypes.map(function(typeData){
-        let instUid = generateUUID()
-        let typeUid = typeData.id
-        let instName = typeData.name+"_"+instUid
-
-        let instanceData = {
-          id:instUid
-          ,typeUid
-          ,name:instName
-          ,assemblyId
-        }
-        return instanceData
-      })
-    })
-    .shareReplay(1)
-
-  //create various components' baseis
-  let componentBase$ = entityInstancesBase$
-    .withLatestFrom(entityTypes$, function(instances, types){
-
-      let data =  instances.map(function(instance){
-        let instUid = instance.id
-        let typeUid = instance.typeUid
-        let assemblyId = instance.assemblyId
-
-        //is this a hack?
-        let entry = find(propEq('id', typeUid))(types)
-        let mesh = entry.mesh
-        let bbox = mesh.boundingBox
-        let zOffset = bbox.max.clone().sub(bbox.min)
-        zOffset = zOffset.z/2
-        bbox = { min:bbox.min.toArray(), max:bbox.max.toArray() }
-
-        //injecting data like this is the right way ?
-        mesh.material = mesh.material.clone()
-        mesh = mesh.clone()
-
-        return {
-          instUid
-          ,typeUid
-          ,assemblyId
-          ,instance
-          ,mesh
-          ,zOffset
-          ,bbox
-        }
-      })
-
-      return data
-    })
-    .shareReplay(1)
-
-
-  actions.entityActions.createMeshComponents$ = actions.entityActions.createMeshComponents$
-    .combineLatest(entityTypes$, function(meshComponents, types){
-      return meshComponents.map(function(component){
-        if(component.data){
-          return component
-        }else{
-          const {typeUid} = component
-          let entry = find(propEq('id', typeUid))(types)
-          if(entry && entry.mesh){
-            let mesh = entry.mesh
-            //let bbox = mesh.boundingBox
-            //let zOffset = bbox.max.clone().sub(bbox.min)
-            //zOffset = zOffset.z/2
-            //bbox = { min:bbox.min.toArray(), max:bbox.max.toArray() }
-
-            //injecting data like this is the right way ?
-            mesh.material = mesh.material.clone()
-            mesh = mesh.clone()
-            return mergeData({}, component, {value:{mesh}})
-          }else{
-            return component
-          }
-        }
-      }).filter(data=>data.value!==undefined)
-    })
-
-  //annotations
+  // annotations
   let addAnnotations$ = addAnnotation(actions.annotationsActions, settings$)
     .map(toArray)
 
   const proxySelections$ = new Rx.ReplaySubject(1)
 
-  entityActions        = remapEntityActions(entityActions, proxySelections$)
+  entityActions = remapEntityActions(entityActions, proxySelections$)
 
-  let metaActions      = remapMetaActions(entityActions     , componentBase$, proxySelections$, addAnnotations$)
-  let meshActions      = remapMeshActions(entityActions     , componentBase$, proxySelections$)
-  let transformActions = remapTransformActions(entityActions, componentBase$, proxySelections$)
-  let boundActions     = remapBoundsActions(entityActions   , componentBase$, proxySelections$)
+  const metaActions = remapMetaActions(entityActions, componentBase$, proxySelections$, addAnnotations$)
+  const meshActions = remapMeshActions(entityActions, componentBase$, proxySelections$)
+  const transformActions = remapTransformActions(entityActions, componentBase$, proxySelections$)
+  const boundActions = remapBoundsActions(entityActions, componentBase$, proxySelections$)
 
-  let {meta$}          = makeMetaSystem(metaActions)
-  let {meshes$}        = makeMeshSystem(meshActions)
-  let {transforms$}    = makeTransformsSystem(transformActions)
-  let {bounds$}        = makeBoundingSystem(boundActions)
+  const {meta$} = makeMetaSystem(metaActions)
+  const {meshes$} = makeMeshSystem(meshActions)
+  const {transforms$} = makeTransformsSystem(transformActions)
+  const {bounds$} = makeBoundingSystem(boundActions)
 
-  //selections => only for real time view
-  const typesInstancesRegistry$ = makeRegistry(meta$, entityTypes$)
-  const selections$             = selections( selectionsIntents(sources, {idsMapper$:typesInstancesRegistry$}) )
-    .merge(metaActions.removeComponents$.map(a=> ({instIds:[],bomIds:[]}) )) //after an instance is removed, unselect
+  // selections => only for real time view
+  const typesInstancesRegistry$ = makeTypeInstanceMapping(meta$, types$)
+  const selections$ = selections(selectionsIntents(sources, {idsMapper$: typesInstancesRegistry$}))
+    .merge(metaActions.removeComponents$.map(a => ({instIds: [], bomIds: []}))) // after an instance is removed, unselect
 
-  const currentSelections$ = selections$//selections$.pluck("instIds")
-    .withLatestFrom(typesInstancesRegistry$,function(selections,registry){
-      return selections.instIds.map(function(id){
+  const currentSelections$ = selections$
+    .withLatestFrom(typesInstancesRegistry$, function (selections, registry) {
+      return selections.instIds.map(function (id) {
         const typeUid = registry.typeUidFromInstUid[id]
         return {id, typeUid}
       })
@@ -232,51 +74,36 @@ export default function model(props$, actions, sources){
     .distinctUntilChanged()
     .shareReplay(1)
 
-  //close some cycles
+  // close some cycles
   replicateStream(currentSelections$, proxySelections$)
 
-  const bomActions = bomIntents(sources, entityTypes$, metaActions, entityActions)
+  const bomActions = bomIntents(sources, types$, metaActions, entityActions)
   const bom$ = bom(bomActions)
 
-  //not entirely sure, we need a way to observe any fetch/updload etc operation
+  // not entirely sure, we need a way to observe any fetch/updload etc operation
   const operationsInProgress$ = actions.progress.combinedProgress$.startWith(undefined)
 
-  //////other data
+  // ////other data
   const appData$ = sources.appMeta
 
-  //authentification data, if any
-  const authData$ = authToken(sources.addressbar)
-    .flatMap(fromArray)
-    .filter(exists)
-    .map(token => ({token}))
-    .startWith({token:undefined})
-
-  //combine all the above to get our dynamic state
+  // combine all the above to get our dynamic state
   const state$ = combineLatestObj({
-    selections$
-    ,bom$
-    ,comments$
-
-    ,operationsInProgress$
-
-    //entity components
-    ,meta$
-    ,transforms$
-    ,meshes$
-    ,types$:entityTypes$
-
-    //app level data, meta data , settings etc
-    ,appData$
-    ,settings$
-
-    //infos about current design
-    ,design$
-
-    ,assembly$
-    //authData
-    ,authData$
-  }).shareReplay(1)
-
+    selections$,
+    bom$,
+    comments$,
+    // entity components
+    meta$,
+    transforms$,
+    meshes$,
+    types$, // app level data, meta data , settings etc
+    operationsInProgress$,
+    appData$,
+    settings$,
+    // infos about current design etc
+    design$,
+    assembly$,
+    authData$})
+    .shareReplay(1)
 
   return state$
 }

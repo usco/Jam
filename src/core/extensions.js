@@ -1,3 +1,1 @@
-export const meshExtensions = ["stl","amf","obj","ctm","ply"]
-
-
+export const meshExtensions = ['stl', 'amf', 'obj', 'ctm', 'ply']

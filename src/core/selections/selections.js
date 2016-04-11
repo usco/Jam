@@ -1,34 +1,27 @@
-import Rx from 'rx'
-let Observable = Rx.Observable
-let merge = Rx.Observable.merge
+import { toArray } from '../../utils/utils'
+import { makeModel, mergeData } from '../../utils/modelUtils'
 
-import {toArray} from '../../utils/utils'
-import {makeModel, mergeData} from '../../utils/modelUtils'
-
-function selectEntities(state, input){
-  //log.info("selecting entitites",sentities)
-  let entityIds = toArray(input)
-
-  state.instIds = entityIds
-  return state
+function selectEntities (state, input) {
+  // log.info("selecting entitites",sentities)
+  return mergeData(state, {instIds: toArray(input)})
 }
 
-function selectBomEntries(state, input){
-  //log.info("selecting bom entries",sBomIds)
-  let bomIds = toArray(input)
-
-  state.bomIds = bomIds
-  return state
+function selectBomEntries (state, input) {
+  // log.info("selecting types",sBomIds)
+  return mergeData(state, {bomIds: toArray(input)})
 }
 
-function selections(actions, source){
-  ///defaults, what else ?
+function selections (actions, source) {
+  // /defaults, what else ?
   const defaults = {
-    instIds:[]
-    ,bomIds:[]
+    instIds: [],
+    bomIds: []
   }
 
-  let updateFns  = {selectEntities,selectBomEntries}
+  let updateFns = {
+    selectEntities,
+    selectBomEntries
+  }
   return makeModel(defaults, updateFns, actions)
 }
 

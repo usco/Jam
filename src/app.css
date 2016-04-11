@@ -455,6 +455,7 @@ input[type=color]:focus{
   background: white;
 
   cursor: default;
+  height: 90%;
 }
 
 .bom .bomToggler{
@@ -462,29 +463,69 @@ input[type=color]:focus{
   position: fixed;
 }
 
-.bom th{
-  font-weight: normal;
-  text-transform: capitalize;
-  font-size: 0.9em;
+.bom .container{
+  /*overflow-y: auto;
+  height: 200px;
+  max-height:300px;*/
+
+  position: absolute;
+  right: 0px;
+  top: 31px;
+  max-height: 80%;
+  min-height: 100px;
+  overflow-x: hidden;
+  overflow-y: auto;
 }
 
 .bom table{
   font-size: 13px;
   border-collapse: collapse;
   border: 1px solid #F7F6F6 !important;
-
-  position: absolute;
-  right: 0px;
-  top: 31px;
-  display: inline-block;
-
   background: white;
+  width: 100%;
 }
 
 .bom thead tr{
   border-bottom: 1px solid #F7F6F6 !important;
   cursor: pointer;
 }
+
+.bom th{
+  min-width: 75;
+}
+/*
+.scroll {
+  border: 0;
+}
+
+.scroll tr {
+  display: flex;
+}
+
+.scroll td {
+  display: block;
+  flex: 1 auto;
+}
+
+.scroll thead tr:after {
+  content: '';
+  overflow-y: scroll;
+  visibility: hidden;
+  height: 0;
+}
+
+.scroll thead th {
+  flex: 1 auto;
+  display: block;
+}
+
+.scroll tbody {
+  display: block;
+  width: 100%;
+  overflow-y: auto;
+  max-height: 200px;
+}*/
+
 
 .bom tr:hover
 {
@@ -519,16 +560,16 @@ input[type=color]:focus{
      ▼
     */
 }
-
-
-
+.bom .directionArrow .neut:after{
+  content: "⬍";
+  font-size: 12px;
+}
 
 .bom .bomEntry .cell{
   text-align: center;
   vertical-align: middle;
   padding: 5 5 5 5;
 }
-
 
 .bom input[type=text]{
   border: none;
@@ -646,7 +687,21 @@ input[type=color]:focus{
   fill:black !important;
 }
 
+.bom .removal {
+  height: 42px;
+}
 
+.bom .removal span{
+  padding: 5 5 5 5;
+  font-size: 11px;
+
+}
+
+.bom .removal button{
+  color: white;
+  padding: 2 5 2 5;
+  background: #5fc5fb;
+}
 
 
 
