@@ -110,7 +110,7 @@ function settings (actions, source) {
 
     //
     autoSave: false,
-    autoLoad: false
+    autoLoad: true
   }
 
   let updateFns = {setAllValues, toggleShowGrid,

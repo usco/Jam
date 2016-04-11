@@ -153,6 +153,7 @@ export default function intents (resources, params) {
   //
   const alreadyExistingTypeMeshData$ = resources
     .filter(data => data.meta.id !== undefined)
+    .filter(data => data.meta.flags !== 'noInfer')
     .tap(e => console.log('alreadyExistingTypeMeshData', e))
 
   // create new part type from basic type data & mesh data
@@ -160,14 +161,15 @@ export default function intents (resources, params) {
     .map(function (entry) {
       const data = entry.data.typesMeshes[0].mesh
       const meta = {
-        name: entry.meta.name // DO NOT cleanup the name/remove the extension, the entity types model takes care of that        id: entry.meta.id
+        name: entry.meta.name, // DO NOT cleanup the name/remove the extension, the entity types model takes care of that        id: entry.meta.id
+        id: entry.meta.id
       }
       return {id: entry.meta.id, data, meta}
     })
     .tap(e => console.log('addEntityTypesFromResource', e))
 
   return {
-    addTypes$,// : addTypes$.merge(addTypeFromTypeAndMeshData$), //FIXME: is this one needed ? cause empty types/ bom entries when loading data from ym
+    addTypes$: addTypes$.merge(addTypeFromTypeAndMeshData$), // FIXME: is this one needed ? cause empty types/ bom entries when loading data from ym
     addTypeCandidate$,
     addInstanceCandidates$,
     createMetaComponents$,
