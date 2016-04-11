@@ -167,7 +167,7 @@ export default function intents (resources, params) {
     .tap(e => console.log('addEntityTypesFromResource', e))
 
   return {
-    addTypes$,// : addTypes$.merge(addTypeFromTypeAndMeshData$),
+    addTypes$,// : addTypes$.merge(addTypeFromTypeAndMeshData$), //FIXME: is this one needed ? cause empty types/ bom entries when loading data from ym
     addTypeCandidate$,
     addInstanceCandidates$,
     createMetaComponents$,
