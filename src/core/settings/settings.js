@@ -17,7 +17,7 @@ function setAllValues (state, input) {
   // TODO : do validation ?
   // FIXME: race condition !!! we are not sure this is the first !
   // we coerce appMode to "editor" when setting all values like this
-  // same with saveMode
+  // same with autoSave && autoLoad
   let output = mergeData(state, mergeData(input, {
     appMode: 'editor',
     activeTool: undefined
@@ -67,9 +67,15 @@ function setToolsets (state, input) {
   return output
 }
 
-function setSaveMode (state, input) {
-  let output = mergeData(state, {saveMode: input})
-  console.log('setting save mode', output)
+function setAutoSave (state, input) {
+  let output = mergeData(state, {autoSave: input})
+  console.log('setting autoSave mode', output)
+  return output
+}
+
+function setAutoLoad (state, input) {
+  let output = mergeData(state, {autoLoad: input})
+  console.log('setting autoLoad mode', output)
   return output
 }
 
@@ -81,7 +87,7 @@ function settings (actions, source) {
   const defaults = {
     webglEnabled: true,
     appMode: 'editor',
-    saveMode: false,
+
     autoSelectNewEntities: true,
     activeTool: undefined,
     repeatTool: false,
@@ -100,12 +106,16 @@ function settings (actions, source) {
     },
     annotations: {
       show: true
-    }
+    },
+
+    //
+    autoSave: false,
+    autoLoad: false
   }
 
   let updateFns = {setAllValues, toggleShowGrid,
     toggleAutoRotate, setActiveTool, setAppMode, setToolsets,
-  setSaveMode}
+    setAutoSave, setAutoLoad}
   return makeModel(defaults, updateFns, actions, source)
 }
 

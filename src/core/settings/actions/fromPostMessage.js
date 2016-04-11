@@ -5,13 +5,20 @@ export default function intent (postMessage, params) {
     .filter(exists)
     .filter(p => p.hasOwnProperty('data'))
 
-  const setSaveMode$ = postMessage$
-    .filter(p => p.data.hasOwnProperty('setSaveMode'))
-    .map(data => data.data.setSaveMode)
+  const setAutoSave$ = postMessage$
+    .filter(p => p.data.hasOwnProperty('setAutoSave'))
+    .map(data => data.data.setAutoSave)
+    .filter(exists)
+    .map(stringToBoolean)
+
+  const setAutoLoad$ = postMessage$
+    .filter(p => p.data.hasOwnProperty('setAutoLoad'))
+    .map(data => data.data.setAutoLoad)
     .filter(exists)
     .map(stringToBoolean)
 
   return {
-    setSaveMode$
+    setAutoSave$,
+    setAutoLoad$
   }
 }

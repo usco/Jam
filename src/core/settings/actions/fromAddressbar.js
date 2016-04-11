@@ -17,7 +17,12 @@ export default function intent (addressbar, params) {
     })
     .map(toArray)
 
-  const setSaveMode$ = addressbar.get('saveMode')
+  const setAutoSave$ = addressbar.get('autoSave')
+    .map(data => head(data))
+    .filter(exists)
+    .map(stringToBoolean)
+
+  const setAutoLoad$ = addressbar.get('autoLoad')
     .map(data => head(data))
     .filter(exists)
     .map(stringToBoolean)
@@ -25,6 +30,7 @@ export default function intent (addressbar, params) {
   return {
     setAppMode$,
     setToolsets$,
-    setSaveMode$
+    setAutoSave$,
+    setAutoLoad$
   }
 }
