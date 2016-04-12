@@ -7,13 +7,16 @@ export function makeMeshSystem (actions) {
   }
 
   function createComponentsMesh (defaults, state, inputs) {
-    // console.log("createComponents for mesh", inputs)
+    // console.log('createComponents for mesh', inputs)
 
     return inputs.reduce(function (state, input) {
       let inputValue = {}
-      if (input && input.value) inputValue = input.value
+      if (input && input.value) {
+        inputValue = input.value
+      }
 
-      let mesh = inputValue.mesh // {mesh: inputValue.mesh }// mergeData(defaults,inputValue)
+      let mesh = inputValue.mesh.clone()// meh ?//FIXME : make sure there are no multiple clones
+      mesh.material = mesh.material.clone() // {mesh: inputValue.mesh }// mergeData(defaults,inputValue)
       let id = input.id
 
       mesh.userData.entity = {id}
@@ -21,9 +24,9 @@ export function makeMeshSystem (actions) {
 
       state = mergeData({}, state)
       state[id] = mesh
-      // FIXME big hack, use mutability
+      // FIXME big hack, use immutability !!!
 
-      // console.log("done createComponents (mesh)", state)
+      // console.log('done createComponents (mesh)', state)
       return state
     }, state)
   }
