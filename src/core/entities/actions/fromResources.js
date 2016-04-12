@@ -160,18 +160,18 @@ export default function intents (resources, params) {
     .tap(e => console.log('adding type fromResource (certain)', e))
     .flatMap(items => Rx.Observable.from(items))
 
-  //
   const alreadyExistingTypeMeshData$ = resources
     .filter(data => data.meta.id !== undefined)
     .filter(data => data.meta.flags !== 'noInfer')
     .tap(e => console.log('alreadyExistingTypeMeshData', e))
 
+ // DO NOT cleanup the name/remove the extension, the entity types model takes care of that
   // create new part type from basic type data & mesh data
   const addTypeFromTypeAndMeshData$ = alreadyExistingTypeMeshData$
     .map(function (entry) {
       const data = entry.data.typesMeshes[0].mesh
       const meta = {
-        name: entry.meta.name, // DO NOT cleanup the name/remove the extension, the entity types model takes care of that
+        name: nameCleanup(entry.meta.name),
         id: entry.meta.id
       }
       return {id: entry.meta.id, data, meta}
