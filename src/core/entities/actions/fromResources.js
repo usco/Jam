@@ -101,7 +101,6 @@ export default function intents (resources, params) {
 
   const addInstanceCandidates$ = candidates$.filter(data => data.meta.flags !== 'noInfer')
     .tap(e => console.log('entityCandidates', e))
-  const addTypeCandidate$ = candidates$.filter(data => data.meta.id === undefined)
 
   // components
   const createMetaComponents$ = certains$.map(data => data.data.instMeta)
@@ -122,12 +121,23 @@ export default function intents (resources, params) {
       let meshData = head(data.data.typesMeshes.filter(mesh => mesh.typeUid === instMeta.typeUid))
       return {
         id: instMeta.instUid,
-        value: {mesh: meshData.mesh.clone()}
+        value: {mesh: meshData.mesh.clone()}// TODO: check if this is redundant
       }
     })
   })
 
+  // types handling
+
+  // infered 'possible' type: for example when drag & droping an stl file etc
+  const addTypeCandidate$ = candidates$.filter(data => data.meta.id === undefined)
+    .map(function (data) {
+      const name = nameCleanup(data.meta.name)
+      return mergeData(data, { meta: { name } })
+    })
+    .tap(e => console.log('adding type fromResource (candidate)', e))
+
   // TODO : this would need to be filtered based on pre-existing type data
+  // this one is used for example for 3mf files or any other formats where the type is KNOWN
   const addTypes$ = certains$
     .map(function (data) {
       return data.data.typesMeta.map(function (typeMeta, index) {
@@ -147,7 +157,7 @@ export default function intents (resources, params) {
         return result
       })
     })
-    .tap(e => console.log('going to add type based on', e))
+    .tap(e => console.log('adding type fromResource (certain)', e))
     .flatMap(items => Rx.Observable.from(items))
 
   //
@@ -161,7 +171,7 @@ export default function intents (resources, params) {
     .map(function (entry) {
       const data = entry.data.typesMeshes[0].mesh
       const meta = {
-        name: entry.meta.name, // DO NOT cleanup the name/remove the extension, the entity types model takes care of that        id: entry.meta.id
+        name: entry.meta.name, // DO NOT cleanup the name/remove the extension, the entity types model takes care of that
         id: entry.meta.id
       }
       return {id: entry.meta.id, data, meta}
