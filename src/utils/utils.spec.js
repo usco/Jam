@@ -19,7 +19,7 @@ describe('utils', function () {
   describe('getNameAndExtension', () => {
     it('should return the name and the extension from a dotted string', function () {
       const input = 'foo.bar.STL'
-      assert.strictEqual(getNameAndExtension(input), {name: 'foo.bar.STL', ext: 'stl'})
+      assert.deepEqual(getNameAndExtension(input), {name: 'foo.bar.STL', ext: 'stl'})
     })
   })
 })
