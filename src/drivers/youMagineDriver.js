@@ -431,21 +431,7 @@ export default function makeYMDriver (httpDriver, params = {}) {
       //.tap(e => console.log('requests out to http', e))
 
     const inputs$ = httpDriver(outToHttp$)
-    .merge(getAssemblyEntriesNoAssemblyFound$)
-
-    /* const saveResponses$ = inputs$
-      .filter(res$ => res$.request.type === 'ymSave')//handle errors etc
-      .flatMap(data => {
-        const responseWrapper$ = data.catch(e=>{
-          console.log("caught error in saving data",e)
-          return Rx.Observable.empty()
-        })
-        const request$  = just(data.request)
-        const response$ = responseWrapper$.pluck("response")
-
-        return combineLatestObj({response$, request$})//.materialize()//FIXME: still do not get this one
-      })
-      .forEach(e=>console.log("saving done (if all went well)"))*/
+      .merge(getAssemblyEntriesNoAssemblyFound$)
 
     return inputs$
   }
