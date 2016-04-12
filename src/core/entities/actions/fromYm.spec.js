@@ -82,7 +82,7 @@ describe('actionsFromYm', () => {
       method: 'get',
       type: 'ymLoad',
       typeDetail: options.typeDetail,
-      assemblyId: 0
+      assemblyId: 27
     }
     let response$$ = just({response: options.responseData}).delay(1).share()
     response$$.request = partsRequest
@@ -98,7 +98,7 @@ describe('actionsFromYm', () => {
     let assemblyEntries$ = makeFakeReqRes({
       typeDetail: 'assemblyEntries',
       responseData: [{
-        uuid: 0, part_uuid: 1, assemblyId: 0,
+        uuid: 0, part_uuid: 1, assemblyId: 27,
         name: 'test', color: 'red',
         pos: [0, 0.5, 8], rot: [19, 90, -75.5], sca: [1, 1, 1.5]
       }]
@@ -108,8 +108,6 @@ describe('actionsFromYm', () => {
   }
 
   it('should output correct data from its returned actions: (addTypes)', function (done){
-    this.timeout(5000)
-
     const ym = mockYmDriver()
     const resources = never()
     const actions = fromYm({ym, resources})
@@ -129,20 +127,6 @@ describe('actionsFromYm', () => {
         assert.deepEqual(addTypeData, expData)
         done()
       })
-
-    /*actions.createMetaComponents$
-      //.combineLatest(actions.createTransformComponents$, )
-      .forEach(e => console.log('createMetaComponents', e))
-
-    actions.createTransformComponents$
-      .forEach(e => console.log('createTransformComponents', e))
-
-    actions.setActiveAssembly$
-      .forEach(e => console.log('setActiveAssembly', e))
-
-    actions.requests$
-      .forEach(e => console.log('requests', e))*/
-
   })
 
   it('should output correct data from its returned actions: (createMetaComponents)', function (done) {
@@ -150,7 +134,7 @@ describe('actionsFromYm', () => {
     const resources = never()
     const actions = fromYm({ym, resources})
 
-    const expData = [ { id: 0, value: { name: 'test', color: 'red', id: 0, typeUid: 1, assemblyId: 0 } } ]
+    const expData = [ { id: 0, value: { name: 'test', color: 'red', id: 0, typeUid: 1, assemblyId: 27 } } ]
 
     actions.createMetaComponents$
       .forEach(function (data) {
@@ -174,6 +158,40 @@ describe('actionsFromYm', () => {
    }]
 
     actions.createTransformComponents$
+      .forEach(function (data) {
+        assert.deepEqual(data, expData)
+        done()
+      })
+  })
+
+  it('should output correct data from its returned actions: (setActiveAssembly)', function (done) {
+    const ym = mockYmDriver()
+    const resources = never()
+    const actions = fromYm({ym, resources})
+
+    const expData = 27
+
+    actions.setActiveAssembly$
+      .forEach(function (data) {
+        assert.deepEqual(data, expData)
+        done()
+      })
+  })
+
+  it('should output correct data from its returned actions: (requests)', function (done) {
+    const ym = mockYmDriver()
+    const resources = never()
+    const actions = fromYm({ym, resources})
+
+    const expData = { src: 'http',
+      method: 'get',
+      uri: 'some/fake/url',
+      url: 'some/fake/url',
+      id: 9,
+      type: 'resource',
+      flags: 'noInfer' }
+
+    actions.requests$
       .forEach(function (data) {
         assert.deepEqual(data, expData)
         done()
