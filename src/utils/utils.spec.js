@@ -1,5 +1,5 @@
 import assert from 'assert'
-import { isEmpty } from './utils'
+import { isEmpty, getNameAndExtension } from './utils'
 
 describe('utils', function () {
   describe('isEmpty', () => {
@@ -13,6 +13,13 @@ describe('utils', function () {
     it('should not fail with a non string input ', function () {
       const input = {foo: 42}
       assert.strictEqual(isEmpty(input), false)
+    })
+  })
+
+  describe('getNameAndExtension', () => {
+    it('should return the name and the extension from a dotted string', function () {
+      const input = 'foo.bar.STL'
+      assert.strictEqual(getNameAndExtension(input), {name: 'foo.bar.STL', ext: 'stl'})
     })
   })
 })

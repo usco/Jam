@@ -1,5 +1,5 @@
 import Rx from 'rx'
-const { fromArray, just } = Rx.Observable
+const { fromArray } = Rx.Observable
 import { pick, head } from 'ramda'
 import { remapJson, toArray, exists } from '../../../utils/utils'
 import { mergeData } from '../../../utils/modelUtils'
@@ -15,19 +15,14 @@ function rawData (ym) {
     .filter(res => res.request.method === 'get' && res.request.type === 'ymLoad' && res.request.typeDetail === 'assemblyEntries')
     // .mergeAll()
     .flatMap(data => {
-      const request$ = just(data.request)
       const response$ = data.pluck('response')
-
       return response$.map(function (entries) {
         return entries.map(function (entry) {
           return mergeData(entry, {assemblyId: data.request.assemblyId})
         })
       })
-      // return combineLatestObj({response$, request$}) // .materialize()//FIXME: still do not get this one
     })
-    // .tap(e => console.log('in assemblies: pre ', e))
-    // .pluck('response')
-    .tap(e => console.log('in assemblies: ', e))
+    //.tap(e => console.log('in assemblies: ', e))
 
   return {
     parts,
@@ -60,7 +55,7 @@ export default function intent ({ym, resources}, params) {
         }
       })
     })
-    // .tap(e=>console.log("meta",e))
+     .tap(e => console.log('createMetaComponents (fromYm)', e))
 
   const createTransformComponents$ = assemblyData$
     .map(function (datas) {
@@ -108,7 +103,6 @@ export default function intent ({ym, resources}, params) {
             obs.onNext(result) // ONLY emit data when we have a match
             dones.push(data.id)
           }
-
         }
       })
     }
@@ -184,12 +178,11 @@ export default function intent ({ym, resources}, params) {
   // set active assembly
   const setActiveAssembly$ = assemblyData$
     .take(1)
-    .map(function (data) {
-      return head(data)
-    })
+    .map(data => head(data))
     .filter(exists)
     .pluck('assemblyId')
-    .tap(e => console.log('setActiveAssembly', e))
+    .distinctUntilChanged()
+    // .tap(e => console.log('setActiveAssembly', e))
 
   return {
     addTypes$,
