@@ -57,5 +57,6 @@ export default function intent (postMessage, params) {
     deleteInstances$,
 
     // UGH
-    desktopRequests$}
+    desktopRequests$
+  }
 }

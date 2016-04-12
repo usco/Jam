@@ -1,7 +1,6 @@
 // detect node for conditional import for jsonToFormData
 const isNode = typeof process !== 'undefined' && process.versions && !!process.versions.node
 if (isNode) {
-  console.log(' import formData')
 // TODO : deal with node.js side  for example using https://www.npmjs.com/package/form-data: fake one for now
 }
 

@@ -133,7 +133,7 @@ export default function makeYMDriver (httpDriver, params = {}) {
     }
 
     function dataFromItems (items) {
-      console.log('items', items)
+      // console.log('items', items)
       return Object.keys(items.transforms).reduce(function (list, key) {
         const transforms = items['transforms'][key]
         const metadata = items['metadata'][key]
@@ -159,7 +159,7 @@ export default function makeYMDriver (httpDriver, params = {}) {
         const refined = pick(fieldNames, remapJson(mapping, entry))
         const send = jsonToFormData(refined)
 
-        console.log('assemblies entry', entry)
+        //console.log('assemblies entry', entry)
         const assemblyId = entry.assemblyId// head(pluck('assemblyId', entries)) // head(entries).assemblyId
         const assembliesUri = `${designUri}/assemblies/${assemblyId}/entries`
 

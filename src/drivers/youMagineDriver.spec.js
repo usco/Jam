@@ -3,7 +3,6 @@ import Rx from 'rx'
 const {just, never} = Rx.Observable
 import makeYMDriver from './youMagineDriver'
 
-// TODO: implement
 describe('youMagineDriver', () => {
   it('should handle data saving', function (done) {
     this.timeout(5000)
@@ -30,7 +29,7 @@ describe('youMagineDriver', () => {
         .take(1)
         .forEach(data => {
           // TODO: flesh these out
-          console.log('output message', data)
+          // console.log('output message', data)
           assert.deepEqual(data[0].url, 'https://api.youmagine.com/v1/designs/1/parts/0/?auth_token=42')
           assert.deepEqual(data[0].method, 'put')
           assert.deepEqual(data[0].type, 'ymSave')

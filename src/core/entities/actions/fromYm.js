@@ -199,6 +199,5 @@ export default function intent ({ym, resources}, params) {
 
     requests$: meshRequests$,
     setActiveAssembly$
-
   }
 }
