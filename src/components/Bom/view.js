@@ -15,28 +15,37 @@ export default function view (state$) {
       newEntryValues, toggled, removeEntryRequested, readOnly}) {
       let direction = sortablesDirection
       // generate headers
-      let headers = fieldNames.map(function (name) {
-        let sortArrow
-        const editable = editableFields.indexOf(name) > -1
-        const toolTip = editable ? '(editable) ' + fieldDescriptions[name] : fieldDescriptions[name]
+      let headerRows = [''].map(function () {// need some help with this!! TODO
+        let headers = fieldNames.map(function (name) {
+          let sortArrow
+          const editable = editableFields.indexOf(name) > -1
+          const toolTip = editable ? '(editable) ' + fieldDescriptions[name] : fieldDescriptions[name]
+          const columnName = 'column' + fieldNames.indexOf(name)
 
-        if (direction !== undefined && sortFieldName === name) {
-          if (direction) {
-            sortArrow = <span className='directionArrow'><span className='asc'/></span>
-          } else {
-            sortArrow = <span className='directionArrow'><span className='desc'/></span>
+          if (direction !== undefined && sortFieldName === name) {
+            if (direction) {
+              sortArrow = <span className='directionArrow'><span className='asc'/></span>
+            } else {
+              sortArrow = <span className='directionArrow'><span className='desc'/></span>
+            }
+          }else if (direction === undefined || sortFieldName !== name) {
+            sortArrow = <span className='directionArrow'><span className='neut'/></span>
           }
-        }else if (direction === undefined || sortFieldName !== name) {
-          sortArrow = <span className='directionArrow'><span className='neut'/></span>
-        }
-        // className={Class(`tooltip-bottom`),
-        const thContent = <span className='tooltip-bottom' attributes={{'data-tooltip': toolTip}}>{name} {sortArrow}</span>
+          // className={Class(`tooltip-bottom`),
+          const lastInRow = fieldNames.indexOf(name) === (fieldNames.length - 1)
+          const thContent = <span className='tooltip-bottom' attributes={{'data-tooltip': toolTip}}>{name} {sortArrow}</span>
+          return (
+            <th className={`headerCell ${columnName}`}attributes={{'data-name': name, 'colspan': lastInRow ? '2' : '1'}}>
+              {thContent}
+            </th>
+          )
+        }).concat([]) // for 'hidden field to add/remove entries'
         return (
-        <th className='headerCell' attributes={{'data-name': name}}>
-          {thContent}
-        </th>
+          <tr>
+            {headers}
+          </tr>
         )
-      }).concat([]) // for 'hidden field to add/remove entries'
+      })
 
       // add editable row for new entries before all the rest
       const uiEntries = readOnly ? entries : prepend(newEntryValues, entries)
@@ -47,6 +56,7 @@ export default function view (state$) {
         const baseClassName = 'bomEntry cell'
 
         let cells = fieldNames.map(function (name) {
+          const columnName = 'column' + fieldNames.indexOf(name)
           let cellToolTip
 
           // special case for quantities
@@ -111,13 +121,13 @@ export default function view (state$) {
               break
           }
 
-          return (<td className={`${baseClassName} ${name}`} attributes={{'data-name': name, 'data-id': row.id}}>
+          return (<td className={`${baseClassName} ${columnName} ${name}`} attributes={{'data-name': name, 'data-id': row.id}}>
                     {value}
                   </td>)
         })
 
         if (isAdder) {
-          cells.push(<td className={baseClassName}>
+          cells.push(<td className={`${baseClassName} ${'column' + fieldNames.length}`}>
                        <button type='button' className='addBomEntry'>
                          Add
                        </button>
@@ -133,7 +143,7 @@ export default function view (state$) {
             c0.248,0.301,2.111,2.522,2.111,2.522H12.07z'/>
           </svg>`
 
-          const removerCell = <td className={baseClassName}>
+          const removerCell = <td className={`${baseClassName} ${'column' + fieldNames.length}`}>
                                 <button type='button' className='removeBomEntry' attributes={{'data-name': '', 'data-id': row.id}}>
                                   <span innerHTML={deleteIconSvg} />
                                 </button>
@@ -143,19 +153,25 @@ export default function view (state$) {
 
         const selected = selectedEntries.indexOf(row.id) > -1
 
-        if (removeEntryRequested !== undefined && removeEntryRequested.id === row.id) {
-          return <tr className={Class('bomEntry removal', {normal: !isAdder})} attributes={{'data-name': row.name, 'data-id': row.id}} key={index}>
+        if (removeEntryRequested !== undefined && removeEntryRequested.id === row.id) { // row that shows when the user wants to delete it
+          return <tr className='bomEntry removal' attributes={{'data-name': row.name, 'data-id': row.id}} key={index}>
                    <td className='cell' attributes={{colspan: '100%'}}>
-                     <span>This will delete this part type (and copies), are you sure ?</span>
+                     <span>This will delete this part (and its copies), are you sure ?</span>
                      <span><button className='confirm' attributes={{'data-name': row.name, 'data-id': row.id}}> Yes </button> <button className='cancel'> No </button></span>
                    </td>
                  </tr>
+        } else if (isAdder) { // adder row
+          const adder =
+            <tr className='adder' attributes={{'data-name': row.name, 'data-id': row.id}} key={index}>
+              {cells}
+            </tr>
+          headerRows.push(adder)
+          return
         } else { // normal row
           return (
-            <tr className={Class('bomEntry', {selected, adder: isAdder, normal: !isAdder})}
-              attributes={{'data-name': row.name, 'data-id': row.id}} key={index}>
+            <tr className={Class('bomEntry', {selected, normal: !isAdder})} attributes={{'data-name': row.name, 'data-id': row.id}} key={index}>
              {cells}
-           </tr>
+            </tr>
           )
         }
       })
@@ -188,15 +204,11 @@ export default function view (state$) {
       if (toggled) {
         content =
           <div className='container'>
-            <table className='scroll'>
-              <thead>
-                <tr>
-                  {headers}
-                </tr>
-              </thead>
-              <tbody>
-                {rows}
-              </tbody>
+            <table id='tableheader'>
+                {headerRows}
+            </table>
+            <table id='tablebody'>
+              {rows}
             </table>
           </div>
       }
