@@ -14,9 +14,9 @@ import vignetteShader from './deps/post-process/vignetteShader'
 import EdgeShader3 from './deps/post-process/EdgeShader3'
 import AdditiveBlendShader from './deps/post-process/AdditiveBlendShader'
 
-import { planes, grids, objectEffects, CamViewControls } from 'glView-helpers'
+import { planes, grids, objectEffects, CamViewControls, cameraEffects } from 'glView-helpers'
 import LabeledGrid from 'glView-helpers/lib/grids/LabeledGrid'
-let zoomToFit = objectEffects.zoomToFit
+let {zoomToFit} = cameraEffects
 
 import bufferToPng from './bufferToPng'
 
@@ -24,7 +24,7 @@ let gl = require('gl')() // (width, height, { preserveDrawingBuffer: true })
 
 // console.log("helpers.grids",helpers,helpers.grids)
 // let LabeledGrid = helpers.grids.LabeledGrid
-let ShadowPlane = planes.ShadowPlane
+let ShadowPlane = planes.ShadowPlane.default // ugh FIXME: bloody babel6
 
 // Helpers for offline Rendering
 
@@ -373,7 +373,7 @@ export default function view (data) {
   composers = setupPostProcess2(renderer, camera, scene, params)
 
   // do context specific config
-  setupForServerSide(renderer, camera, scene)
+  setupForServerSide({renderer, camera, scene})
   // this is too hard coded
   const targetNode = dynamicInjector
   zoomToFit(targetNode, camera, new THREE.Vector3())

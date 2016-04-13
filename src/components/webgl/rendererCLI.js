@@ -3,19 +3,19 @@ import Rx from 'rx'
 import fs from 'fs'
 
 // BIG hack, because parsers are browserified modules ...
-global.Rx = Rx
-const stlParser = require('imports?Rx=rx!usco-stl-parser')
-const objParser = require('imports?Rx=rx!usco-obj-parser')
+// global.Rx = Rx
+// const stlParser = require('imports?Rx=rx!usco-stl-parser')
+// const objParser = require('imports?Rx=rx!usco-obj-parser')
 
-// const stlParser = require('usco-stl-parser')
-// const objParser = require('usco-obj-parser')
+const stlParser = require('usco-stl-parser')
+const objParser = require('usco-obj-parser')
 // import * as stlParser from 'usco-stl-parser'
 // import * as objParser from 'usco-obj-parser'
 
 import { getNameAndExtension } from '../../utils/utils'
 import { postProcessMesh, geometryFromBuffers } from '../../utils/meshUtils'
 import { meshTools } from 'glView-helpers'
-const centerMesh = meshTools.centerMesh
+const {centerMesh} = meshTools
 
 // TODO: refactor ,same as assetManager
 function postProcessParsedData (data) {
@@ -38,6 +38,7 @@ function toArrayBuffer (buffer) {
 
 // ///////deal with command line args etc
 let args = process.argv.slice(2)
+console.log('args', args)
 
 if (args.length > 0) {
   // more advanced params handling , for later
