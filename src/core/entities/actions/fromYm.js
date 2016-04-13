@@ -156,7 +156,7 @@ export default function intent ({ym, resources}, params) {
       })
     })
     .flatMap(fromArray)
-    // .forEach(e=>console.log("addEntityTypes",e))
+    // .forEach(e=>console.log("addEntityTypes", e))
 
   // send out requests to fetch data for meshes
   const meshRequests$ = partsData$
@@ -173,7 +173,7 @@ export default function intent ({ym, resources}, params) {
     })
     .flatMap(fromArray)
     .filter(req => req.uri !== undefined && req.uri !== '')
-    .tap(e => console.log('meshRequests', e))
+    // .tap(e => console.log('meshRequests', e))
 
   // set active assembly
   const setActiveAssembly$ = assemblyData$

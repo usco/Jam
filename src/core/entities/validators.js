@@ -1,6 +1,10 @@
 import {required, validate} from 'o-validator'
 import {is, allPass} from 'ramda'
 
+export function validate() {
+
+}
+
 export function makeValidators () {
   /* this validates any "addPartData" action
   obs: observable action to validate
