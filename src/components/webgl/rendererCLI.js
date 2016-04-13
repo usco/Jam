@@ -1,16 +1,10 @@
 import view from './view'
-import Rx from 'rx'
 import fs from 'fs'
+import THREE from 'three'
 
-// BIG hack, because parsers are browserified modules ...
-// global.Rx = Rx
-// const stlParser = require('imports?Rx=rx!usco-stl-parser')
-// const objParser = require('imports?Rx=rx!usco-obj-parser')
-
-const stlParser = require('usco-stl-parser')
-const objParser = require('usco-obj-parser')
-// import * as stlParser from 'usco-stl-parser'
-// import * as objParser from 'usco-obj-parser'
+import stlParser from 'usco-stl-parser'
+import objParser from 'usco-obj-parser'
+import threeMfParser from 'usco-3mf-parser'
 
 import { getNameAndExtension } from '../../utils/utils'
 import { postProcessMesh, geometryFromBuffers } from '../../utils/meshUtils'
@@ -19,11 +13,84 @@ const {centerMesh} = meshTools
 
 // TODO: refactor ,same as assetManager
 function postProcessParsedData (data) {
-  let mesh = data
-  mesh = geometryFromBuffers(mesh)
-  mesh = postProcessMesh(mesh)
-  mesh = centerMesh(mesh)
-  return mesh
+  console.log('bla', data)
+  if ('objects' in data) {
+    let wrapper = new THREE.Object3D()
+    wrapper.castShadow= false
+    wrapper.receiveShadow= false
+
+    let mesh
+    // for 3mf , etc
+    let typesMetaHash = {}
+    let typesMeshes = []
+    let typesMeta = []
+
+    let mainGeometry = new THREE.Geometry()
+    //
+    // we need to make ids unique
+    let idLookup = {}
+
+    for (let objectId in data.objects) {
+      // console.log("objectId",objectId, data.objects[objectId])
+      let item = data.objects[objectId]
+
+      /*let meta = {id: item.id, name: item.name}
+      // special color handling
+      if (item.colors && item.colors.length > 0) {
+        meta.color = '#FFFFFF'
+      }
+      typesMeta.push(meta)
+      typesMetaHash[typeUid] = meta*/
+
+      /*mesh = geometryFromBuffers(item)
+      mesh = postProcessMesh(mesh)
+      mesh = centerMesh(mesh)
+      if (item.colors && item.colors.length > 0) {
+        mesh.material.color = '#FFFFFF'
+      }
+      idLookup[item.id] = mesh*/
+        //typesMeshes.push({typeUid, mesh})
+
+      mesh = geometryFromBuffers(item)
+      mesh = postProcessMesh(mesh)
+      idLookup[item.id] = mesh
+
+    }
+
+    data.build.map(function (item) {
+      let tgtMesh = idLookup[item.objectid].clone()
+
+
+      tgtMesh.updateMatrix()
+      let geom = new THREE.Geometry().fromBufferGeometry( tgtMesh.geometry )
+      mainGeometry.merge(geom, tgtMesh.matrix)
+
+      //wrapper.add(tgtMesh)
+
+      /*instMeta.push({instUid, typeUid: id}) // TODO : auto generate name
+      if ('transforms' in item) {
+        instTransforms.push({instUid, transforms: item.transforms})
+      } else {
+        instTransforms.push({instUid, transforms: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]})
+      }*/
+    })
+
+    //mesh = postProcessMesh(mainGeometry)
+    let material = new THREE.MeshPhongMaterial({ color: 0x17a9f5, specular: 0xffffff, shininess: 5, shading: THREE.FlatShading })
+
+    mesh = new THREE.Mesh(mainGeometry, material)
+    mesh = centerMesh(mesh)
+    mesh.geometry.computeFaceNormals()
+    mesh.geometry.computeVertexNormals() // n
+    return mesh// wrapper // .children[0]
+
+  }else{
+    let mesh = data
+    mesh = geometryFromBuffers(mesh)
+    mesh = postProcessMesh(mesh)
+    mesh = centerMesh(mesh)
+    return mesh
+  }
 }
 
 // see http://stackoverflow.com/questions/8609289/convert-a-binary-nodejs-buffer-to-javascript-arraybuffer
@@ -38,7 +105,6 @@ function toArrayBuffer (buffer) {
 
 // ///////deal with command line args etc
 let args = process.argv.slice(2)
-console.log('args', args)
 
 if (args.length > 0) {
   // more advanced params handling , for later
@@ -51,16 +117,20 @@ if (args.length > 0) {
 
   const uri = args[0]
   const [width, height] = args[1].split('x').map(e => parseInt(e, 10))
+  const outputPath = args[2] ? args[2] : `${uri}.png`
 
   const {ext} = getNameAndExtension(uri)
   const resolution = {width, height}
-  const outputPath = `${uri}.png`
+
+  console.log('outputPath', outputPath, 'ext', ext)
 
   console.log('Running renderer with params', uri, resolution, outputPath)
 
-  let parsers = {}
-  parsers['stl'] = stlParser.default
-  parsers['obj'] = objParser.default
+  const parsers = {
+    'stl': stlParser,
+    'obj': objParser,
+    '3mf': threeMfParser
+  }
 
   const data = toArrayBuffer(fs.readFileSync(uri))
   const parse = parsers[ext]
