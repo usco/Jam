@@ -1,5 +1,3 @@
-import Rx from 'rx'
-
 import { exists, combineLatestObj } from '../../utils/obsUtils'
 import { equals } from 'ramda'
 
@@ -48,20 +46,15 @@ function getVisual (components) {
     let mesh = components.meshes[key]
 
     // TODO: refactor this horror
-    if (meta.typeUid === 'A1') // typeUid:"A1"=> notes
-    {
+    if (meta.typeUid === 'A1') {// typeUid:"A1"=> notes
       return makeNoteVisual(meta, components.meshes)
-    }
-    else if (meta.typeUid === 'A2') {
+    }else if (meta.typeUid === 'A2') {
       return makeThicknessVisual(meta, components.meshes)
-    }
-    else if (meta.typeUid === 'A3') {
+    }else if (meta.typeUid === 'A3') {
       return makeDiameterVisual(meta, components.meshes)
-    }
-    else if (meta.typeUid === 'A4') {
+    }else if (meta.typeUid === 'A4') {
       return makeDistanceVisual(meta, components.meshes)
-    }
-    else if (meta.typeUid === 'A5') {
+    }else if (meta.typeUid === 'A5') {
       return makeAngleVisual(meta, components.meshes)
     } else {
       return makeRemoteMeshVisual(meta, transform, mesh)
@@ -90,7 +83,7 @@ export default function model (props$, actions) {
     .map(getVisual)
     // .sample(0, requestAnimationFrameScheduler)
     // .distinctUntilChanged()
-    // .do(e=>console.log("DONE with items in GLView",e))
+    // .tap(e => console.log('DONE with items in GLView', e))
 
   // "external" selected meshes
   const selectedMeshesFromSelections$ = selections$

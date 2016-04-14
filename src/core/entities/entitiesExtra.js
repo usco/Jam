@@ -6,14 +6,11 @@ import { nameCleanup } from '../../utils/formatters'
 import { generateUUID, exists, toArray } from '../../utils/utils'
 import { mergeData } from '../../utils/modelUtils'
 
-export default function (actions, entityTypes$) {
+export default function (actions, entityTypes$, assembly$) {
   /*
   //addInstanceCandidates => -------------------------
   //addType               => --T----------------------
   */
-
-  // FIXME: just a hack ! ideally all instances should just have an assembly id
-  const assembly$ = just(generateUUID())
 
   const addInstancesCandidates$ = actions.entityActions.addInstanceCandidates$
     // .filter(data=>data.meta.id === undefined)

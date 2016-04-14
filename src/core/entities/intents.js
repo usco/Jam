@@ -19,6 +19,8 @@ export default function intents (sources) {
   ]
 
   return mergeActionsByName(actionsSources)
+  // returns the original actions, validate PLUS 
+  // return validate(mergeActionsByName(actionsSources))
 }
 
 /* const entityActionNames = [

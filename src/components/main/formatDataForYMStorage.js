@@ -5,6 +5,9 @@ import { combineLatestObj } from '../../utils/obsUtils'
 
 export default function formatDataForYMStorage ({sources, state$}) {
   // this are responses from ym
+  const waitForLoadNeeded$ = state$.pluck('settings', 'autoLoad') // do we need to wait for data to be loaded?
+    .map(data => !data)
+
   const loadAllDone$ = sources.ym
     .filter(res$ => res$.request.type === 'ymLoad') // handle errors etc
     .flatMap(data => {
@@ -21,11 +24,14 @@ export default function formatDataForYMStorage ({sources, state$}) {
       return acc
     }, [])
     .map(function (data) {
+      // TODO: we need a way to check what the design actually has
       // we recieved all 3 types of data, we are gold !
       return (contains('parts', data) && contains('bom', data) && contains('assemblyEntries', data))
     })
+    .merge(waitForLoadNeeded$)// here we combine with autoLoad/autoSave settings : if autoLoad is false but autoSave is true, just save
     .filter(d => d === true)
     .tap(e => console.log('loading done, we got it all'))
+
 
   const designExists$ = sources.ym
     // .tap(e=>console.log("responses from ym",e))
@@ -53,7 +59,7 @@ export default function formatDataForYMStorage ({sources, state$}) {
 
   // saving should NOT take place before load is complete IFAND ONLY IF , we are reloading a design
   const saveDesigntoYm$ = state$
-    .filter(state => state.settings.saveMode === true) // do not save anything if not in save mode
+    .filter(state => state.settings.autoSave === true) // do not save anything if not in save mode
     .filter(state => state.design.synched && state.authData.token !== undefined) // only try to save anything when the design is in "synch mode" aka has a ur
     .skipUntil(loadAllDone$)
     .tap(e => console.log('we are all done loading so SAVE', e))
@@ -74,8 +80,8 @@ export default function formatDataForYMStorage ({sources, state$}) {
 
   // if the design exists, load data, otherwise...whataver
   const loadDesignFromYm$ = designExists$ // actions.loadDesign
-    .withLatestFrom(state$.pluck('settings', 'saveMode'), function (designExists, saveMode) {
-      return designExists //&& !saveMode
+    .withLatestFrom(state$.pluck('settings', 'autoLoad'), function (designExists, autoLoad) {
+      return designExists && autoLoad
     })
     .filter(e => e === true) // filter out non existing designs (we cannot load those , duh')
     .flatMap(_ => combineLatestObj({design, authData})) // we inject design & authData

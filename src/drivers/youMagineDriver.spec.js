@@ -1,9 +1,8 @@
 import assert from 'assert'
 import Rx from 'rx'
-const {just} = Rx.Observable
+const {just, never} = Rx.Observable
 import makeYMDriver from './youMagineDriver'
 
-// TODO: implement
 describe('youMagineDriver', () => {
   it('should handle data saving', function (done) {
     this.timeout(5000)
@@ -27,6 +26,7 @@ describe('youMagineDriver', () => {
     const fakeHttpDriver = function (outRequests$) {
       outRequests$
         .toArray()
+        .take(1)
         .forEach(data => {
           // TODO: flesh these out
           // console.log('output message', data)
@@ -46,6 +46,7 @@ describe('youMagineDriver', () => {
           assert.deepEqual(data[2].typeDetail, 'assemblies')
           done()
         })
+      return never()
     }
 
     const outgoing$ = saveQuery$

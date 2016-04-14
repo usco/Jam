@@ -327,7 +327,7 @@ function GLView ({drivers, props$}) {
     .map(function (typeData) {
       let {cur, prev} = typeData
       let changes = extractChanges(prev, cur)
-      // console.log('changes',changes)
+      // console.log('changes', changes)
       return changes
     })
 
@@ -422,6 +422,7 @@ function GLView ({drivers, props$}) {
   // react based on diffs
   itemChanges$
     .do(function (changes) {
+      // console.log('reacting to changes', changes)
       changes.added.map(function (mesh) {
         addToScene(mesh)
         meshAddedToScene$.onNext(mesh)

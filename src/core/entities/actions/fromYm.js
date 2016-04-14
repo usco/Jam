@@ -1,9 +1,8 @@
 import Rx from 'rx'
-const { fromArray, just } = Rx.Observable
-import { pick } from 'ramda'
-import { remapJson, toArray } from '../../../utils/utils'
+const { fromArray } = Rx.Observable
+import { pick, head } from 'ramda'
+import { remapJson, toArray, exists } from '../../../utils/utils'
 import { mergeData } from '../../../utils/modelUtils'
-import { combineLatestObj } from '../../../utils/obsUtils'
 
 function rawData (ym) {
   const parts = ym
@@ -14,21 +13,16 @@ function rawData (ym) {
 
   const assemblies = ym
     .filter(res => res.request.method === 'get' && res.request.type === 'ymLoad' && res.request.typeDetail === 'assemblyEntries')
-    //.mergeAll()
+    // .mergeAll()
     .flatMap(data => {
-      const request$ = just(data.request)
       const response$ = data.pluck('response')
-
       return response$.map(function (entries) {
         return entries.map(function (entry) {
           return mergeData(entry, {assemblyId: data.request.assemblyId})
         })
       })
-      // return combineLatestObj({response$, request$}) // .materialize()//FIXME: still do not get this one
     })
-    // .tap(e => console.log('in assemblies: pre ', e))
-    // .pluck('response')
-    .tap(e => console.log('in assemblies: ', e))
+    //.tap(e => console.log('in assemblies: ', e))
 
   return {
     parts,
@@ -61,7 +55,7 @@ export default function intent ({ym, resources}, params) {
         }
       })
     })
-    // .tap(e=>console.log("meta",e))
+     .tap(e => console.log('createMetaComponents (fromYm)', e))
 
   const createTransformComponents$ = assemblyData$
     .map(function (datas) {
@@ -97,16 +91,18 @@ export default function intent ({ym, resources}, params) {
 
     let metas = []
     let meshes = {}
+    let dones = []
 
     function matchAttempt (id) {
       metas.forEach(function (data) {
-        const mesh = meshes[data.typeUid]
+        let mesh = meshes[data.typeUid]
         if (mesh !== undefined) {
-          // mesh = mesh.clone()//meh ?
-          // mesh.material = mesh.material.clone()
           // mesh.userData = {}
-          const result = mergeData(data, {value: {mesh}})
-          obs.onNext(result) // ONLY emit data when we have a match
+          if (dones.indexOf(data.id) === -1) {
+            const result = mergeData(data, {value: {mesh}})
+            obs.onNext(result) // ONLY emit data when we have a match
+            dones.push(data.id)
+          }
         }
       })
     }
@@ -137,7 +133,7 @@ export default function intent ({ym, resources}, params) {
           'uuid': 'id',
           'part_uuid': 'typeUid'
         }
-        const fieldNames = ['id', 'typeUid']
+        const fieldNames = ['id', 'typeUid', 'assemblyId']
         let data = pick(fieldNames, remapJson(mapping, entry))
         return { id: data.id, typeUid: data.typeUid, value: undefined }
       })
@@ -145,55 +141,7 @@ export default function intent ({ym, resources}, params) {
 
   const createMeshComponents$ = combineAndWaitUntil(meshComponentMeshes$, meshComponentAssemblyData$)
     .map(toArray)
-
-  /* const createMeshComponents$ = meshComponentMeshes$
-    .combineLatest(meshComponentAssemblyData$,function(meshData, datas){
-
-      return datas.map(function(data){
-        let mesh = meshData.data.typesMeshes[0].mesh.clone()//meh ?
-        mesh.material = mesh.material.clone()
-        mesh.userData = {}
-
-        const validCombo = (data.typeUid === meshData.meta.id)
-        const result = validCombo? mergeData(data, {value:{mesh}}): undefined
-        //console.log("createMeshComponents",result)
-        return result
-      }).filter(exists)
-
-    })
-    .map(toArray)*/
-
-  // .tap(e=>console.log("meshComponent",e))
-
-  /* const createMeshComponents$      = assemblyData$
-    .map(function(datas){
-      console.log("meshDatas",datas)
-      return datas.map(function(entry){
-        const mapping = {
-          'uuid':'id'
-          ,'part_uuid':'typeUid'
-        }
-        const fieldNames = ['id','typeUid']
-        let data = pick( fieldNames, remapJson(mapping, entry) )
-        return { id:data.id, typeUid:data.typeUid, value:undefined }
-      })
-    })
-    .flatMap(fromArray)
-    .combineLatest(meshComponentMeshes$,function(data, meshData){
-      //console.log("data", data, "meshData",meshData)
-      let mesh = meshData.data.typesMeshes[0].mesh.clone()//meh ?
-      mesh.material = mesh.material.clone()
-      mesh.userData = {}
-
-      const validCombo = (data.typeUid === meshData.meta.id)
-      const result = validCombo? mergeData(data, {value:{mesh}}): undefined
-
-      console.log("createMeshComponents",result)
-      return result
-    })
-    .filter(exists)
-    .map(toArray)*/
-    // .tap(e=>console.log("meshComponent",e))
+    .tap(e => console.log('createMeshComponents', e))
 
   // TODO : this would need to be filtered based on pre-existing type data ?
   const addTypes$ = partsData$
@@ -208,7 +156,7 @@ export default function intent ({ym, resources}, params) {
       })
     })
     .flatMap(fromArray)
-    // .forEach(e=>console.log("addEntityTypes",e))
+    // .forEach(e=>console.log("addEntityTypes", e))
 
   // send out requests to fetch data for meshes
   const meshRequests$ = partsData$
@@ -225,13 +173,24 @@ export default function intent ({ym, resources}, params) {
     })
     .flatMap(fromArray)
     .filter(req => req.uri !== undefined && req.uri !== '')
-    .tap(e => console.log('meshRequests', e))
+    // .tap(e => console.log('meshRequests', e))
+
+  // set active assembly
+  const setActiveAssembly$ = assemblyData$
+    .take(1)
+    .map(data => head(data))
+    .filter(exists)
+    .pluck('assemblyId')
+    .distinctUntilChanged()
+    // .tap(e => console.log('setActiveAssembly', e))
 
   return {
     addTypes$,
     createMetaComponents$,
     createTransformComponents$,
     createMeshComponents$,
-    requests$: meshRequests$
+
+    requests$: meshRequests$,
+    setActiveAssembly$
   }
 }

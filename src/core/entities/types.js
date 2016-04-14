@@ -18,10 +18,9 @@ import { makeModel, mergeData } from '../../utils/modelUtils'
 
 // actual api functions
 function upsertTypes (state, input, index) {
-  let {id, name} = input.meta
+  let {id, name} = input.meta // names are expected to be already 'cleaned up' ie without extension
   let mesh = input.data
 
-  name = nameCleanup(name)
   if (index === -1) { // if we have a mesh that is not yet registered
     if (mesh) {
       computeBoundingSphere(mesh)
