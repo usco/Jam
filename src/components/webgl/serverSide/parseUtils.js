@@ -1,23 +1,28 @@
-import view from './view'
-import fs from 'fs'
 import THREE from 'three'
-
-import stlParser from 'usco-stl-parser'
-import objParser from 'usco-obj-parser'
-import threeMfParser from 'usco-3mf-parser'
-
-import { getNameAndExtension } from '../../utils/utils'
-import { postProcessMesh, geometryFromBuffers } from '../../utils/meshUtils'
-import { meshTools } from 'glView-helpers'
 const {centerMesh} = meshTools
+import { postProcessMesh, geometryFromBuffers } from '../../../utils/meshUtils'
+import { meshTools } from 'glView-helpers'
 
-// TODO: refactor ,same as assetManager
-function postProcessParsedData (data) {
+
+// see http://stackoverflow.com/questions/8609289/convert-a-binary-nodejs-buffer-to-javascript-arraybuffer
+export function toArrayBuffer (buffer) {
+  var ab = new ArrayBuffer(buffer.length)
+  var view = new Uint8Array(ab)
+  for (var i = 0; i < buffer.length; ++i) {
+    view[i] = buffer[i]
+  }
+  return ab
+}
+
+// TODO: refactor ,same as assetManager/utils
+export function postProcessParsedData (data) {
   console.log('bla', data)
   if ('objects' in data) {
+
+    /* this renderers all objects in black ??
     let wrapper = new THREE.Object3D()
     wrapper.castShadow= false
-    wrapper.receiveShadow= false
+    wrapper.receiveShadow= false*/
 
     let mesh
     // for 3mf , etc
@@ -91,56 +96,4 @@ function postProcessParsedData (data) {
     mesh = centerMesh(mesh)
     return mesh
   }
-}
-
-// see http://stackoverflow.com/questions/8609289/convert-a-binary-nodejs-buffer-to-javascript-arraybuffer
-function toArrayBuffer (buffer) {
-  var ab = new ArrayBuffer(buffer.length)
-  var view = new Uint8Array(ab)
-  for (var i = 0; i < buffer.length; ++i) {
-    view[i] = buffer[i]
-  }
-  return ab
-}
-
-// ///////deal with command line args etc
-let args = process.argv.slice(2)
-
-if (args.length > 0) {
-  // more advanced params handling , for later
-  /*
-    console.log("params",args)
-    let params = args.reduce(function(cur,combo){
-    let [name,val]= cur.split("=")
-    combo[name] = val
-  },{})*/
-
-  const uri = args[0]
-  const [width, height] = args[1].split('x').map(e => parseInt(e, 10))
-  const outputPath = args[2] ? args[2] : `${uri}.png`
-
-  const {ext} = getNameAndExtension(uri)
-  const resolution = {width, height}
-
-  console.log('outputPath', outputPath, 'ext', ext)
-
-  console.log('Running renderer with params', uri, resolution, outputPath)
-
-  const parsers = {
-    'stl': stlParser,
-    'obj': objParser,
-    '3mf': threeMfParser
-  }
-
-  const data = toArrayBuffer(fs.readFileSync(uri))
-  const parse = parsers[ext]
-  const parseOptions = {}
-  const parsedObs$ = parse(data, parseOptions)
-
-  parsedObs$
-    .filter(e => e.progress === undefined) // seperate out progress data
-    .map(postProcessParsedData)
-    .forEach(mesh => {
-      view({mesh, uri: outputPath, resolution}) // each time some data is parsed, render it
-    })
 }
