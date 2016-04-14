@@ -7,12 +7,12 @@ import ShaderPass from './deps/post-process/ShaderPass'
 import RenderPass from './deps/post-process/RenderPass'
 import { ClearMaskPass, MaskPass } from './deps/post-process/MaskPass'
 
-import CopyShader from './deps/post-process/CopyShader'
+/* import CopyShader from './deps/post-process/CopyShader'
 import FXAAShader from './deps/post-process/FXAAShader'
 import vignetteShader from './deps/post-process/vignetteShader'
 
 import EdgeShader3 from './deps/post-process/EdgeShader3'
-import AdditiveBlendShader from './deps/post-process/AdditiveBlendShader'
+import AdditiveBlendShader from './deps/post-process/AdditiveBlendShader'*/
 
 import { planes, grids, objectEffects, CamViewControls, cameraEffects } from 'glView-helpers'
 import LabeledGrid from 'glView-helpers/lib/grids/LabeledGrid'
