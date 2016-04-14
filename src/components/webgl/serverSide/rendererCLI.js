@@ -3,6 +3,7 @@ import fs from 'fs'
 
 import stlParser from 'usco-stl-parser'
 import objParser from 'usco-obj-parser'
+import ctmParser from 'usco-ctm-parser'
 import threeMfParser from 'usco-3mf-parser'
 
 import {getNameAndExtension} from '../../../utils/utils'
@@ -34,6 +35,7 @@ if (args.length > 0) {
   const parsers = {
     'stl': stlParser,
     'obj': objParser,
+    'ctm': ctmParser,
     '3mf': threeMfParser
   }
 
