@@ -16,7 +16,6 @@ export function toArrayBuffer (buffer) {
 
 // TODO: refactor ,same as assetManager/utils
 export function postProcessParsedData (data) {
-  console.log('bla', data)
   if ('objects' in data) {
 
     /* this renderers all objects in black ??
