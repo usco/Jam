@@ -1,7 +1,7 @@
 import assert from 'assert'
 import path from 'path'
 import fs from 'fs'
-import Jimp from 'Jimp'
+import Jimp from 'jimp'
 import Rx from 'rx'
 const {from} = Rx
 
