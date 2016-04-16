@@ -1,4 +1,5 @@
 import { makeModel, mergeData } from '../../utils/modelUtils'
+import { omit } from 'ramda'
 
 /* shortcuts:[
   {keys:'⌘+z,ctrl+z', "command":'undo'},
@@ -18,6 +19,8 @@ function setAllValues (state, input) {
   // FIXME: race condition !!! we are not sure this is the first !
   // we coerce appMode to "editor" when setting all values like this
   // same with autoSave && autoLoad
+  input = omit(['autoSave', 'autoLoad', 'toolSets'], input) // we do not want to reload any of these
+
   let output = mergeData(state, mergeData(input, {
     appMode: 'editor',
     activeTool: undefined
