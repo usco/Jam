@@ -39,7 +39,7 @@ if (args.length > 0) {
     '3mf': threeMfParser
   }
 
-  const data = toArrayBuffer(fs.readFileSync(uri))
+  let data = fs.readFileSync(uri, 'binary')
   const parse = parsers[ext]
   const parseOptions = {}
   const parsedObs$ = parse(data, parseOptions)

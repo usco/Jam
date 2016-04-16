@@ -56,7 +56,40 @@ describe('server side renderer', function () {
       })
   })
 
-  /*it('can take a path to a file as input, generate a render of that 3d file as ouput(obj)', function () {
+  it('can take a path to a file as input, generate a render of that 3d file as ouput(3mf)', function () {
+    this.timeout(15000)
+    let jamPath = './rendererCLI.js'
+    let inputPath = './testData/cube_gears.3mf'// cube_gears.3mf'// dodeca_chain_loop_color.3mf'// pyramid_vertexcolor.3mf'
+    let outputPath = './test.png'
+    let resolution = '160x120'
+
+    let expImagePath = './testData/exp.cube_gears.3mf.png'
+
+    jamPath = path.resolve(__dirname, jamPath)
+    inputPath = path.resolve(__dirname, inputPath)
+    outputPath = path.resolve(__dirname, outputPath)
+    outputPath = path.resolve(outputPath)
+    expImagePath = path.resolve(__dirname, expImagePath)
+
+    const cmd = `babel-node ${jamPath} ${inputPath} ${resolution} ${outputPath} `
+    require('child_process').execSync(cmd, {stdio: [0, 1, 2]})
+    assert.equal(true, existsSync(outputPath))
+
+    return Promise.all([Jimp.read(expImagePath), Jimp.read(outputPath)])
+      .then(function (values) {
+        let [exp, obs] = values
+        let diff = Jimp.diff(exp, obs)
+        let dist = Jimp.distance(exp, obs)
+        const identical = (dist < 0.15 && diff.percent < 0.15)
+        assert.equal(true, identical)
+        rmSync(outputPath)
+      }).catch(function () {
+        rmSync(outputPath)
+        assert.fail('Files are not identical', expImagePath, outputPath)
+      })
+  })
+
+  it('can take a path to a file as input, generate a render of that 3d file as ouput(obj)', function () {
     this.timeout(5000)
     let jamPath = './rendererCLI.js'
     let inputPath = './testData/cube.obj'
@@ -83,12 +116,12 @@ describe('server side renderer', function () {
         let dist = Jimp.distance(exp, obs)
         const identical = (dist < 0.15 && diff.percent < 0.15)
         assert.equal(true, identical)
-        //rmSync(outputPath)
+        rmSync(outputPath)
       }).catch(function () {
-        //rmSync(outputPath)
+        rmSync(outputPath)
         assert.fail('Files are not identical', expImagePath, outputPath)
       })
-  })*/
+  })
 
   it('can take a path to a file as input, generate a render of that 3d file as ouput(ctm)', function () {
     this.timeout(5000)
@@ -97,7 +130,7 @@ describe('server side renderer', function () {
     let outputPath = './test.png'
     let resolution = '160x120'
 
-    let expImagePath = './testData/exp.cube.ctm.png'
+    let expImagePath = './testData/exp.LeePerry.ctm.png'
 
     jamPath = path.resolve(__dirname, jamPath)
     inputPath = path.resolve(__dirname, inputPath)
@@ -108,39 +141,6 @@ describe('server side renderer', function () {
     const cmd = `babel-node ${jamPath} ${inputPath} ${resolution} ${outputPath} `
     require('child_process').execSync(cmd, {stdio: [0, 1, 2]})
 
-    assert.equal(true, existsSync(outputPath))
-
-    return Promise.all([Jimp.read(expImagePath), Jimp.read(outputPath)])
-      .then(function (values) {
-        let [exp, obs] = values
-        let diff = Jimp.diff(exp, obs)
-        let dist = Jimp.distance(exp, obs)
-        const identical = (dist < 0.15 && diff.percent < 0.15)
-        assert.equal(true, identical)
-        //rmSync(outputPath)
-      }).catch(function () {
-        //rmSync(outputPath)
-        assert.fail('Files are not identical', expImagePath, outputPath)
-      })
-  })
-
-  it('can take a path to a file as input, generate a render of that 3d file as ouput(3mf)', function () {
-    this.timeout(15000)
-    let jamPath = './rendererCLI.js'
-    let inputPath = './testData/cube_gears.3mf'// cube_gears.3mf'// dodeca_chain_loop_color.3mf'// pyramid_vertexcolor.3mf'
-    let outputPath = './test.png'
-    let resolution = '160x120'
-
-    let expImagePath = './testData/exp.cube_gears.3mf.png'
-
-    jamPath = path.resolve(__dirname, jamPath)
-    inputPath = path.resolve(__dirname, inputPath)
-    outputPath = path.resolve(__dirname, outputPath)
-    outputPath = path.resolve(outputPath)
-    expImagePath = path.resolve(__dirname, expImagePath)
-
-    const cmd = `babel-node ${jamPath} ${inputPath} ${resolution} ${outputPath} `
-    require('child_process').execSync(cmd, {stdio: [0, 1, 2]})
     assert.equal(true, existsSync(outputPath))
 
     return Promise.all([Jimp.read(expImagePath), Jimp.read(outputPath)])
