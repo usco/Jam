@@ -53,67 +53,44 @@
 
 	'use strict';
 
-	var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; })();
+	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
 
 	var _view = __webpack_require__(2);
 
 	var _view2 = _interopRequireDefault(_view);
 
-	var _rx = __webpack_require__(26);
-
-	var _rx2 = _interopRequireDefault(_rx);
-
-	var _fs = __webpack_require__(23);
+	var _fs = __webpack_require__(24);
 
 	var _fs2 = _interopRequireDefault(_fs);
 
-	var _utils = __webpack_require__(27);
+	var _uscoStlParser = __webpack_require__(27);
 
-	var _meshUtils = __webpack_require__(28);
+	var _uscoStlParser2 = _interopRequireDefault(_uscoStlParser);
 
-	var _glViewHelpers = __webpack_require__(20);
+	var _uscoObjParser = __webpack_require__(28);
+
+	var _uscoObjParser2 = _interopRequireDefault(_uscoObjParser);
+
+	var _uscoCtmParser = __webpack_require__(29);
+
+	var _uscoCtmParser2 = _interopRequireDefault(_uscoCtmParser);
+
+	var _usco3mfParser = __webpack_require__(30);
+
+	var _usco3mfParser2 = _interopRequireDefault(_usco3mfParser);
+
+	var _utils = __webpack_require__(31);
+
+	var _parseUtils = __webpack_require__(32);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	//BIG hack, because parsers are browserified modules ...
-	global.Rx = _rx2.default;
-	var stlParser = __webpack_require__(29);
-	var objParser = __webpack_require__(30);
-	//import * as stlParser from 'usco-stl-parser'
-	//import * as objParser from 'usco-obj-parser'
-
-	var centerMesh = _glViewHelpers.meshTools.centerMesh;
-
-	//TODO: refactor ,same as assetManager
-	function postProcessParsedData(data) {
-	  var mesh = data;
-	  mesh = (0, _meshUtils.geometryFromBuffers)(mesh);
-	  mesh = (0, _meshUtils.postProcessMesh)(mesh);
-	  mesh = centerMesh(mesh);
-	  return mesh;
-	}
-
-	/*import makeHttpDriver     from '../../core/drivers/simpleHttpDriver'
-	import {requests,resources} from '../../utils/assetManager'
-	let httpDriver   = makeHttpDriver()*/
-
-	//see http://stackoverflow.com/questions/8609289/convert-a-binary-nodejs-buffer-to-javascript-arraybuffer
-	function toArrayBuffer(buffer) {
-	  var ab = new ArrayBuffer(buffer.length);
-	  var view = new Uint8Array(ab);
-	  for (var i = 0; i < buffer.length; ++i) {
-	    view[i] = buffer[i];
-	  }
-	  return ab;
-	}
-
-	/////////deal with command line args etc
+	// ///////deal with command line args etc
 	var args = process.argv.slice(2);
 
 	if (args.length > 0) {
 	  (function () {
-
-	    //more advanced params handling , for later
+	    // more advanced params handling , for later
 	    /*
 	      console.log("params",args)
 	      let params = args.reduce(function(cur,combo){
@@ -123,8 +100,8 @@
 
 	    var uri = args[0];
 
-	    var _args$1$split$map = args[1].split("x").map(function (e) {
-	      return parseInt(e);
+	    var _args$1$split$map = args[1].split('x').map(function (e) {
+	      return parseInt(e, 10);
 	    });
 
 	    var _args$1$split$map2 = _slicedToArray(_args$1$split$map, 2);
@@ -132,45 +109,36 @@
 	    var width = _args$1$split$map2[0];
 	    var height = _args$1$split$map2[1];
 
+	    var outputPath = args[2] ? args[2] : uri + '.png';
+
 	    var _getNameAndExtension = (0, _utils.getNameAndExtension)(uri);
 
-	    var name = _getNameAndExtension.name;
 	    var ext = _getNameAndExtension.ext;
 
 	    var resolution = { width: width, height: height };
-	    var outputPath = uri + '.png';
 
-	    console.log("Running renderer with params", uri, resolution, outputPath);
+	    console.log('outputPath', outputPath, 'ext', ext);
 
-	    var parsers = {};
-	    parsers["stl"] = stlParser.default;
-	    parsers["obj"] = objParser.default;
+	    console.log('Running renderer with params', uri, resolution, outputPath);
 
-	    var data = toArrayBuffer(_fs2.default.readFileSync(uri));
+	    var parsers = {
+	      'stl': _uscoStlParser2.default,
+	      'obj': _uscoObjParser2.default,
+	      'ctm': _uscoCtmParser2.default,
+	      '3mf': _usco3mfParser2.default
+	    };
+
+	    var data = _fs2.default.readFileSync(uri, 'binary');
 	    var parse = parsers[ext];
 	    var parseOptions = {};
 	    var parsedObs$ = parse(data, parseOptions);
 
-	    var data$ = parsedObs$.filter(function (e) {
+	    parsedObs$.filter(function (e) {
 	      return e.progress === undefined;
-	    }) //seperate out progress data
-	    .map(postProcessParsedData).forEach(function (mesh) {
-	      (0, _view2.default)({ mesh: mesh, uri: outputPath, resolution: resolution });
+	    }) // seperate out progress data
+	    .map(_parseUtils.postProcessParsedData).forEach(function (mesh) {
+	      (0, _view2.default)({ mesh: mesh, uri: outputPath, resolution: resolution }); // each time some data is parsed, render it
 	    });
-
-	    /*let uris = args
-	    const requests$ = Rx.Observable.from(uris)
-	     .map(function(uri){
-	        return {
-	          url:uri
-	          ,method:'get'
-	          ,type:'resource'
-	        }
-	      })
-	     const responses$ = httpDriver(requests$)
-	      responses$
-	        .forEach(e=>console.log("responses",e))
-	    //resources()*/
 	  })();
 	}
 
@@ -183,6 +151,9 @@
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
+
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; }; // default configuration for lighting, cameras etc
+
 	exports.default = view;
 
 	var _three = __webpack_require__(3);
@@ -191,67 +162,64 @@
 
 	var _utils = __webpack_require__(4);
 
-	var _presets = __webpack_require__(10);
+	var _presets = __webpack_require__(11);
 
-	var _EffectComposer = __webpack_require__(11);
+	var _EffectComposer = __webpack_require__(12);
 
 	var _EffectComposer2 = _interopRequireDefault(_EffectComposer);
 
-	var _ShaderPass = __webpack_require__(12);
+	var _ShaderPass = __webpack_require__(13);
 
 	var _ShaderPass2 = _interopRequireDefault(_ShaderPass);
 
-	var _RenderPass = __webpack_require__(13);
+	var _RenderPass = __webpack_require__(14);
 
 	var _RenderPass2 = _interopRequireDefault(_RenderPass);
 
-	var _MaskPass = __webpack_require__(14);
+	var _MaskPass = __webpack_require__(15);
 
-	var _CopyShader = __webpack_require__(15);
+	var _CopyShader = __webpack_require__(16);
 
 	var _CopyShader2 = _interopRequireDefault(_CopyShader);
 
-	var _FXAAShader = __webpack_require__(16);
+	var _FXAAShader = __webpack_require__(17);
 
 	var _FXAAShader2 = _interopRequireDefault(_FXAAShader);
 
-	var _vignetteShader = __webpack_require__(17);
+	var _vignetteShader = __webpack_require__(18);
 
 	var _vignetteShader2 = _interopRequireDefault(_vignetteShader);
 
-	var _EdgeShader = __webpack_require__(18);
+	var _EdgeShader = __webpack_require__(19);
 
 	var _EdgeShader2 = _interopRequireDefault(_EdgeShader);
 
-	var _AdditiveBlendShader = __webpack_require__(19);
+	var _AdditiveBlendShader = __webpack_require__(20);
 
 	var _AdditiveBlendShader2 = _interopRequireDefault(_AdditiveBlendShader);
 
-	var _glViewHelpers = __webpack_require__(20);
+	var _glViewHelpers = __webpack_require__(21);
 
-	var _LabeledGrid = __webpack_require__(21);
+	var _LabeledGrid = __webpack_require__(22);
 
 	var _LabeledGrid2 = _interopRequireDefault(_LabeledGrid);
 
-	var _bufferToPng = __webpack_require__(22);
+	var _bufferToPng = __webpack_require__(23);
 
 	var _bufferToPng2 = _interopRequireDefault(_bufferToPng);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	function _typeof(obj) { return obj && typeof Symbol !== "undefined" && obj.constructor === Symbol ? "symbol" : typeof obj; } //default configuration for lighting, cameras etc
+	var zoomToFit = _glViewHelpers.cameraEffects.zoomToFit;
 
-	var zoomToFit = _glViewHelpers.objectEffects.zoomToFit;
 
-	var gl = __webpack_require__(25)(); //(width, height, { preserveDrawingBuffer: true })
+	var gl = __webpack_require__(26)(); // (width, height, { preserveDrawingBuffer: true })
 
-	//console.log("helpers.grids",helpers,helpers.grids)
-	//let LabeledGrid = helpers.grids.LabeledGrid
-	var ShadowPlane = _glViewHelpers.planes.ShadowPlane;
+	// console.log("helpers.grids",helpers,helpers.grids)
+	// let LabeledGrid = helpers.grids.LabeledGrid
+	var ShadowPlane = _glViewHelpers.planes.ShadowPlane.default; // ugh FIXME: bloody babel6
 
-	function makeGlRendering() {}
-
-	//Helpers for offline Rendering
+	// Helpers for offline Rendering
 
 	function contextToBuffer(gl, width, height) {
 	  var depth = arguments.length <= 3 || arguments[3] === undefined ? 4 : arguments[3];
@@ -266,20 +234,20 @@
 	}
 
 	function writeContextToFile(context, width, height, depth) {
-	  var path = arguments.length <= 4 || arguments[4] === undefined ? "./test.png" : arguments[4];
+	  var path = arguments.length <= 4 || arguments[4] === undefined ? './test.png' : arguments[4];
 
 	  var buffer = contextToBuffer(context, width, height, depth);
 	  writeBufferToFile(buffer, width, height, path);
 	}
 
-	//////////////////////////////////////////////////
+	// ////////////////////////////////////////////////
 
 	function setupPostProcess(renderer, camera, scene, params) {
 	  var width = params.width;
 	  var height = params.height;
 	  var devicePixelRatio = params.devicePixelRatio;
 	  var renderToScreen = params.renderToScreen;
-	  ////////post processing
+	  // //////post processing
 
 	  var renderTargetParameters = {
 	    minFilter: _three2.default.LinearFilter,
@@ -291,9 +259,9 @@
 	  var outScene = new _three2.default.Scene();
 	  var maskScene = new _three2.default.Scene();
 
-	  var renderTarget = new _three2.default.WebGLRenderTarget(width, height, renderTargetParameters);
+	  // let renderTarget = new THREE.WebGLRenderTarget(width, height, renderTargetParameters)
 
-	  //setup composer
+	  // setup composer
 	  var composer = new _EffectComposer2.default(renderer);
 	  composer.renderTarget1.stencilBuffer = true;
 	  composer.renderTarget2.stencilBuffer = true;
@@ -308,21 +276,21 @@
 	  var vignettePass = new _three2.default.ShaderPass(_three2.default.VignetteShader);
 
 	  fxaaPass.uniforms['resolution'].value.set(1 / width * devicePixelRatio, 1 / height * devicePixelRatio);
-	  vignettePass.uniforms["offset"].value = 0.95;
-	  vignettePass.uniforms["darkness"].value = 0.9;
+	  vignettePass.uniforms['offset'].value = 0.95;
+	  vignettePass.uniforms['darkness'].value = 0.9;
 
 	  renderer.autoClear = false;
-	  //renderer.autoClearStencil = false   
+	  // renderer.autoClearStencil = false
 	  outline.clear = false;
-	  //normal.clear = false   
+	  // normal.clear = false
 
 	  composer.addPass(normal);
 	  composer.addPass(maskPass);
 	  composer.addPass(outline);
 
 	  composer.addPass(clearMask);
-	  //composer.addPass(vignettePass)
-	  //composer.addPass(fxaaPass)
+	  // composer.addPass(vignettePass)
+	  // composer.addPass(fxaaPass)
 	  composer.addPass(copyPass);
 
 	  var lastPass = composer.passes[composer.passes.length - 1];
@@ -330,12 +298,11 @@
 
 	  return { composers: [composer], fxaaPass: fxaaPass, outScene: outScene, maskScene: maskScene };
 
-	  //return {composer:finalComposer, fxaaPass, outScene, maskScene, composers:[normalComposer,depthComposer,finalComposer]}
+	  // return {composer:finalComposer, fxaaPass, outScene, maskScene, composers:[normalComposer,depthComposer,finalComposer]}
 	}
 
 	function setupPostProcess2(renderer, camera, scene, params) {
-
-	  //FIXME hack
+	  // FIXME hack
 	  if (!renderer.context.canvas) {
 	    renderer.context.canvas = {
 	      width: params.width,
@@ -344,22 +311,22 @@
 	  }
 
 	  var ppData = setupPostProcess(renderer, camera, scene, params);
-	  //composer = ppData.composer
+	  // composer = ppData.composer
 	  var composers = ppData.composers;
-	  /*fxaaPass = ppData.fxaaPass
+	  /* fxaaPass = ppData.fxaaPass
 	  outScene = ppData.outScene
 	  maskScene = ppData.maskScene*/
 	  return composers;
 	}
 
-	///various helpers
+	// /various helpers
 
 	function makeOfflineCanvas() {
 	  // mock object, not used in our test case, might be problematic for some workflow
-	  var canvas = new Object();
+	  var canvas = {};
 	  canvas.addEventListener = function (e, b) {
-	    //only for contextLost
-	    //console.log("canvas addEventListener",e,b)
+	    // only for contextLost
+	    // console.log("canvas addEventListener",e,b)
 	  };
 	  return canvas;
 	}
@@ -376,65 +343,72 @@
 	  return makeOfflineCanvas();
 	}
 
-	function handleResize(sizeInfos) {
-	  //log.debug("setting glView size",sizeInfos)
-	  console.log("setting glView size", sizeInfos);
-	  var width = sizeInfos.width;
-	  var height = sizeInfos.height;
-	  var aspect = sizeInfos.aspect;
+	/*
+	function handleResize (sizeInfos) {
+	  // log.debug("setting glView size",sizeInfos)
+	  console.log('setting glView size', sizeInfos)
+	  let {width, height, aspect} = sizeInfos
 
 	  if (width > 0 && height > 0 && camera && renderer) {
-	    (function () {
-	      renderer.setSize(width, height);
-	      camera.aspect = aspect;
-	      camera.setSize(width, height);
-	      camera.updateProjectionMatrix();
+	    renderer.setSize(width, height)
+	    camera.aspect = aspect
+	    camera.setSize(width, height)
+	    camera.updateProjectionMatrix()
 
-	      var pixelRatio = window.devicePixelRatio || 1;
-	      fxaaPass.uniforms['resolution'].value.set(1 / (width * pixelRatio), 1 / (height * pixelRatio));
+	    let pixelRatio = window.devicePixelRatio || 1
+	    fxaaPass.uniforms[ 'resolution' ].value.set(1 / (width * pixelRatio), 1 / (height * pixelRatio))
 
-	      composers.forEach(function (c) {
-	        c.reset();
-	        c.setSize(width * pixelRatio, height * pixelRatio);
-	      });
-	    })();
+	    composers.forEach(c => {
+	      c.reset()
+	      c.setSize(width * pixelRatio, height * pixelRatio)
+	    })
 	  }
-	}
+	}*/
 
-	function setupWindowSpecific(container, renderer, camera) {
-	  console.log("initializing into container", container);
+	/* configure any browser side specific stuff*/
+	function setupForBrowserSide(params) {
+	  var container = params.container;
+	  var renderer = params.renderer;
+	  var camera = params.camera;
+	  var config = params.config;
+
+	  console.log('initializing into container', container);
 	  container.appendChild(renderer.domElement);
 
-	  //controls are only needed for live aka browser mode
+	  // controls are only needed for live aka browser mode
 	  var controls = (0, _utils.makeControls)(config.controls[0]);
 	  var transformControls = new TransformControls(camera);
-	  //controls, transformControls
+	  // controls, transformControls
 
-	  //prevents zooming the 3d view from scrolling the window
+	  // prevents zooming the 3d view from scrolling the window
 	  preventScroll(container);
 	  transformControls.setDomElement(container);
 
-	  //more init
-	  controls.setObservables(actions.filteredInteractions$);
+	  // more init
+	  // controls.setObservables(actions.filteredInteractions$)
 	  controls.addObject(camera);
 
-	  //let pixelRatio = window.devicePixelRatio || 1
+	  // let pixelRatio = window.devicePixelRatio || 1
 	  return {
 	    updateables: [controls, transformControls]
 	  };
 	}
 
-	function setupNodeSpecific(renderer, camera, scene) {
+	/* configure any server side specific stuff*/
+	function setupForServerSide(params) {
+	  var camera = params.camera;
+	  var scene = params.scene;
+
 	  camera.lookAt(scene.position);
 	}
 
+	// hacks
 	function monkeyPatchGl(gl) {
-
 	  function checkObject(object) {
 	    return (typeof object === 'undefined' ? 'undefined' : _typeof(object)) === 'object' || object === void 0;
 	  }
 
-	  //Don't allow: ", $, `, @, \, ', \0
+	  // Don't allow: ", $, `, @, \, ', \0
 	  function isValidString(str) {
 	    return !/[\"\$\`\@\\\'\0]/.test(str);
 	  }
@@ -463,18 +437,16 @@
 	      setError(this, gl.INVALID_VALUE);
 	      return;
 	    } else if (checkWrapper(this, shader, WebGLShader)) {
-
-	      //patch
+	      // patch
 	      if (source.indexOf('precision') >= 0) {
-
-	        //'#ifdef GL_ES',
+	        // '#ifdef GL_ES',
 	        var sourceChunks = source.split('\n');
 
 	        sourceChunks.map(function (chunk) {
-	          console.log("chunk", chunk);
+	          console.log('chunk', chunk);
 	        });
 
-	        //sourceChunks = sourceChunks.concat(['#endif'])
+	        // sourceChunks = sourceChunks.concat(['#endif'])
 	        source = sourceChunks.concat('\n');
 	      }
 
@@ -482,10 +454,10 @@
 	      shader._source = source;
 	    }
 	  }
-	  //gl.shaderSource = shaderSource.bind(gl)
+	  // gl.shaderSource = shaderSource.bind(gl)
 	  return gl;
 
-	  //gl.shaderSource()
+	  // gl.shaderSource()
 	  //
 	}
 
@@ -493,9 +465,9 @@
 	  composers.forEach(function (c) {
 	    return c.render();
 	  });
-	  //renderer.render(scene, camera)
+	  // renderer.render(scene, camera)
 
-	  /*let width = 640
+	  /* let width = 640
 	  let height = 480
 	  let rtTexture = new THREE.WebGLRenderTarget(width, height, {
 	    minFilter: THREE.LinearFilter,
@@ -504,13 +476,13 @@
 	  })
 	   renderer.render(scene, camera, rtTexture, true)*/
 
-	  //composer.passes[composer.passes.length-1].uniforms[ 'tDiffuse2' ].value = composers[0].renderTarget2
-	  //composer.passes[composer.passes.length-1].uniforms[ 'tDiffuse3' ].value = composers[1].renderTarget2
+	  // composer.passes[composer.passes.length-1].uniforms[ 'tDiffuse2' ].value = composers[0].renderTarget2
+	  // composer.passes[composer.passes.length-1].uniforms[ 'tDiffuse3' ].value = composers[1].renderTarget2
 	}
 
 	function setupScene(scene, extras, config) {
-	  config.scenes["main"]
-	  //TODO , update to be more generic
+	  config.scenes['main']
+	  // TODO , update to be more generic
 	  .map(function (light) {
 	    return (0, _utils.makeLight)(light);
 	  }).forEach(function (light) {
@@ -526,24 +498,25 @@
 	  var renderer = new _three2.default.WebGLRenderer({
 	    antialias: false,
 	    preserveDrawingBuffer: true,
-	    //width: 0,
-	    //height: 0,
+	    // width: 0,
+	    // height: 0,
 	    canvas: canvas,
 	    context: context
 	  });
-	  renderer.setClearColor("#fff");
+
+	  renderer.setClearColor('#fff');
 	  renderer.setPixelRatio(pixelRatio);
 	  Object.keys(config.renderer).map(function (key) {
-	    //TODO add hasOwnProp check
+	    // TODO add hasOwnProp check
 	    renderer[key] = config.renderer[key];
 	  });
 
-	  console.log("renderer setup DONE");
+	  console.log('renderer setup DONE');
 
 	  return renderer;
 	}
 
-	function getDefaultsWindowSpecific() {
+	function getDefaultsBrowserSide() {
 	  var params = {
 	    width: window.innerWidth,
 	    height: window.innerHeight,
@@ -552,58 +525,59 @@
 	  return params;
 	}
 
-	function makeDefaults(data) {
+	function getDefaultsServerSide(_ref) {
+	  var _ref$resolution = _ref.resolution;
+	  var resolution = _ref$resolution === undefined ? { width: 640, height: 480 } : _ref$resolution;
+
 	  var params = {
 	    width: resolution.width,
 	    height: resolution.height,
 	    devicePixelRatio: 1,
-	    renderToScreen: typeof window !== 'undefined' //FALSE if you want server side renders
+	    renderToScreen: typeof window !== 'undefined' // FALSE if you want server side renders
 	  };
+	  return params;
 	}
 
-	//////////////////////////////////////////////////
+	// ////////////////////////////////////////////////
 
 	function view(data) {
 	  var mesh = data.mesh;
 	  var uri = data.uri;
 	  var resolution = data.resolution;
 
+
 	  var config = _presets.presets;
 	  var params = {
 	    width: resolution.width,
 	    height: resolution.height,
 	    devicePixelRatio: 1,
-	    renderToScreen: typeof window !== 'undefined' //FALSE if you want server side renders
+	    renderToScreen: typeof window !== 'undefined' // FALSE if you want server side renders
 	  };
 
 	  gl = monkeyPatchGl(gl);
 
 	  var renderer = null;
-	  var composer = null;
 	  var composers = [];
-	  var outScene = null;
-	  var maskScene = null;
 
 	  var scene = new _three2.default.Scene();
-	  var dynamicInjector = new _three2.default.Object3D(); //all dynamic mapped objects reside here
+	  var dynamicInjector = new _three2.default.Object3D(); // all dynamic mapped objects reside here
 	  scene.dynamicInjector = dynamicInjector;
 	  scene.add(dynamicInjector);
 
 	  var camera = (0, _utils.makeCamera)(config.cameras[0], params);
-	  //let grid        = new LabeledGrid(200, 200, 10, config.cameras[0].up) //needs CANVAS....
+	  // let grid        = new LabeledGrid(200, 200, 10, config.cameras[0].up) //needs CANVAS....
 	  var shadowPlane = new ShadowPlane(2000, 2000, null, config.cameras[0].up);
 
 	  var material = new _three2.default.ShaderMaterial();
+	  // material = new THREE.MeshBasicMaterial( { color: 0xf0ff00 } )
+	  // material = new THREE.MeshPhongMaterial( { color: 0x17a9f5, specular: 0xffffff, shininess: 5, shading: THREE.FlatShading} )//NOT WORKING => black shape
+	  // material = new THREE.MeshBasicMaterial( { color: 0xffaa00, transparent: true, blending: THREE.AdditiveBlending } ) //NOT WORKING => all white
+	  // material = new THREE.MeshLambertMaterial( { color: 0xdddddd, shading: THREE.SmoothShading } )  //NOT WORKING => black shape
+	  material = new _three2.default.MeshNormalMaterial({ shading: _three2.default.SmoothShading }); // THIS WORKS
+	  // material = new THREE.MeshBasicMaterial( { color: 0xffaa00, wireframe: true } )//THIS WORKS
+	  // material = new THREE.MeshDepthMaterial() //NOT WORKING => all white
 
-	  //material = new THREE.MeshBasicMaterial( { color: 0xf0ff00 } )
-	  //material = new THREE.MeshPhongMaterial( { color: 0x17a9f5, specular: 0xffffff, shininess: 5, shading: THREE.FlatShading} )//NOT WORKING => black shape
-	  //material = new THREE.MeshBasicMaterial( { color: 0xffaa00, transparent: true, blending: THREE.AdditiveBlending } ) //NOT WORKING => all white
-	  //material = new THREE.MeshLambertMaterial( { color: 0xdddddd, shading: THREE.SmoothShading } )  //NOT WORKING => black shape
-	  material = new _three2.default.MeshNormalMaterial({ shading: _three2.default.SmoothShading }); //THIS WORKS
-	  //material = new THREE.MeshBasicMaterial( { color: 0xffaa00, wireframe: true } )//THIS WORKS
-	  //material = new THREE.MeshDepthMaterial() //NOT WORKING => all white
-
-	  //hack
+	  // hack
 	  mesh.material = material;
 	  dynamicInjector.add(mesh);
 
@@ -614,18 +588,18 @@
 	  scene = setupScene(scene, sceneExtras, config);
 	  composers = setupPostProcess2(renderer, camera, scene, params);
 
-	  //do context specific config
-	  setupNodeSpecific(renderer, camera, scene);
-	  //this is too hard coded
+	  // do context specific config
+	  setupForServerSide({ renderer: renderer, camera: camera, scene: scene });
+	  // this is too hard coded
 	  var targetNode = dynamicInjector;
 	  zoomToFit(targetNode, camera, new _three2.default.Vector3());
 
-	  ///do the actual rendering
+	  // /do the actual rendering
 	  render(renderer, composers, camera, scene);
 
-	  //now we output to file
+	  // now we output to file
 	  var _gl = renderer.getContext();
-	  writeContextToFile(_gl, params.width, params.height, 4, uri); //,4, path)
+	  writeContextToFile(_gl, params.width, params.height, 4, uri);
 	}
 
 /***/ },
@@ -640,11 +614,12 @@
 
 	'use strict';
 
-	var _slicedToArray = (function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; })();
-
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
+
+	var _slicedToArray = function () { function sliceIterator(arr, i) { var _arr = []; var _n = true; var _d = false; var _e = undefined; try { for (var _i = arr[Symbol.iterator](), _s; !(_n = (_s = _i.next()).done); _n = true) { _arr.push(_s.value); if (i && _arr.length === i) break; } } catch (err) { _d = true; _e = err; } finally { try { if (!_n && _i["return"]) _i["return"](); } finally { if (_d) throw _e; } } return _arr; } return function (arr, i) { if (Array.isArray(arr)) { return arr; } else if (Symbol.iterator in Object(arr)) { return sliceIterator(arr, i); } else { throw new TypeError("Invalid attempt to destructure non-iterable instance"); } }; }();
+
 	exports.positionFromCoords = positionFromCoords;
 	exports.targetObject = targetObject;
 	exports.isTransformTool = isTransformTool;
@@ -662,15 +637,21 @@
 
 	var _OrbitControls2 = _interopRequireDefault(_OrbitControls);
 
-	var _CombinedCamera = __webpack_require__(6);
+	var _CombinedCamera = __webpack_require__(7);
 
 	var _CombinedCamera2 = _interopRequireDefault(_CombinedCamera);
 
-	var _ramda = __webpack_require__(7);
+	var _ramda = __webpack_require__(8);
 
-	var _Selector = __webpack_require__(8);
+	var _Selector = __webpack_require__(9);
+
+	var _assign = __webpack_require__(6);
+
+	var _assign2 = _interopRequireDefault(_assign);
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	// faster object.assign
 
 	function positionFromCoords(coords) {
 	  return { position: { x: coords.x, y: coords.y }, event: coords };
@@ -679,15 +660,15 @@
 	  return event.target.object;
 	}
 	function isTransformTool(input) {
-	  return ["translate", "rotate", "scale", null, undefined].indexOf(input) > -1;
+	  return ['translate', 'rotate', 'scale', null, undefined].indexOf(input) > -1;
 	}
 
 	function selectionAt(event, mouseCoords, camera, hiearchyRoot) {
-	  //log.debug("selection at",event)
-	  //, container, selector, width, height, rootObject
+	  // log.debug("selection at",event)
+	  // , container, selector, width, height, rootObject
 
-	  //let intersects = selector.pickAlt({x:event.clientX,y:event.clientY}, rect, width, height, rootObject)
-	  var intersects = (0, _Selector.pick)(mouseCoords, camera, hiearchyRoot); //, ortho = false, precision=10)
+	  // let intersects = selector.pickAlt({x:event.clientX,y:event.clientY}, rect, width, height, rootObject)
+	  var intersects = (0, _Selector.pick)(mouseCoords, camera, hiearchyRoot); // , ortho = false, precision=10)
 
 	  var outEvent = {};
 	  outEvent.clientX = event.clientX;
@@ -703,27 +684,27 @@
 	}
 
 	function meshFrom(event) {
-	  var mesh = undefined;
+	  var mesh = void 0;
 	  if (event && event.detail && event.detail.pickingInfos) {
 	    var _take = (0, _ramda.take)(1, event.detail.pickingInfos);
 
 	    var _take2 = _slicedToArray(_take, 1);
 
-	    var intersect = _take2[0]; //we actually only get the best match => DO NOT MODIFY original object
+	    var intersect = _take2[0]; // we actually only get the best match => DO NOT MODIFY original object
 
 	    if (intersect && intersect.object) {
-	      mesh = (0, _Selector.findSelectionRoot)(intersect.object); //now we make sure that what we have is actually selectable
+	      mesh = (0, _Selector.findSelectionRoot)(intersect.object); // now we make sure that what we have is actually selectable
 	    }
 	  }
 	  return mesh;
 	}
 
-	////////////Various "making" functions , data/config in, (3d object) instances out
-	//yup, like factories ! yikes !
+	// //////////Various "making" functions , data/config in, (3d object) instances out
+	// yup, like factories ! yikes !
 
-	/*create a camera instance from the provided data*/
+	/* create a camera instance from the provided data*/
 	function makeCamera(cameraData, params) {
-	  //let cameraData = cameraData//TODO: merge with defaults using object.assign
+	  // let cameraData = cameraData//TODO: merge with defaults using object.assign
 	  var DEFAULTS = {
 	    width: 320,
 	    height: 240,
@@ -736,7 +717,7 @@
 	    up: [0, 0, 1],
 	    pos: [0, 0, 0]
 	  };
-	  cameraData = Object.assign({}, DEFAULTS, cameraData);
+	  cameraData = (0, _assign2.default)({}, DEFAULTS, cameraData);
 
 	  var camera = new _CombinedCamera2.default(cameraData.width, cameraData.height, cameraData.lens.fov, cameraData.lens.near, cameraData.lens.far, cameraData.lens.near, cameraData.lens.far);
 
@@ -745,11 +726,11 @@
 	  return camera;
 	}
 
-	/*setup a controls instance from the provided data*/
+	/* setup a controls instance from the provided data*/
 	function makeControls(controlsData) {
 	  var up = new _three2.default.Vector3().fromArray(controlsData.up);
 
-	  //controlsData = controlsData//TODO: merge with defaults using object.assign
+	  // controlsData = controlsData//TODO: merge with defaults using object.assign
 	  var controls = new _OrbitControls2.default(undefined, undefined, up);
 	  controls.upVector = up;
 
@@ -763,25 +744,25 @@
 	  return controls;
 	}
 
-	/*create a light instance from the provided data*/
+	/* create a light instance from the provided data*/
 	function makeLight(lightData) {
-	  var light = undefined;
+	  var light = void 0;
 	  var DEFAULTS = {
-	    color: "#FFF",
+	    color: '#FFF',
 	    intensity: 1,
 	    pos: [0, 0, 0]
 	  };
-	  lightData = Object.assign({}, DEFAULTS, lightData);
+	  lightData = (0, _assign2.default)({}, DEFAULTS, lightData);
 
 	  switch (lightData.type) {
-	    case "light":
+	    case 'light':
 	      light = new _three2.default.Light(lightData.color);
 	      light.intensity = lightData.intensity;
 	      break;
-	    case "hemisphereLight":
+	    case 'hemisphereLight':
 	      light = new _three2.default.HemisphereLight(lightData.color, lightData.gndColor, lightData.intensity);
 	      break;
-	    case "ambientLight":
+	    case 'ambientLight':
 	      // ambient light does not have intensity, only color
 	      var newColor = new _three2.default.Color(lightData.color);
 	      newColor.r *= lightData.intensity;
@@ -789,7 +770,7 @@
 	      newColor.b *= lightData.intensity;
 	      light = new _three2.default.AmbientLight(newColor);
 	      break;
-	    case "directionalLight":
+	    case 'directionalLight':
 	      var dirLightDefaults = {
 	        castShadow: false,
 	        onlyShadow: false,
@@ -807,7 +788,7 @@
 	        shadowDarkness: 0.3,
 	        shadowCameraVisible: false
 	      };
-	      lightData = Object.assign({}, dirLightDefaults, lightData);
+	      lightData = (0, _assign2.default)({}, dirLightDefaults, lightData);
 	      light = new _three2.default.DirectionalLight(lightData.color, lightData.intensity);
 	      for (var key in lightData) {
 	        if (light.hasOwnProperty(key)) {
@@ -817,8 +798,7 @@
 
 	      break;
 	    default:
-	      throw new Error("could not create light");
-	      break;
+	      throw new Error('could not create light');
 	  }
 
 	  light.position.fromArray(lightData.pos);
@@ -836,10 +816,10 @@
 	    camera.position.copy(camPos);
 	  }).start();
 
-	  var camRot = camera.rotation.clone();
-	  //let rtarget = camera.rotation.clone().add(new THREE.Vector3(50,50,50))
+	  // let camRot = camera.rotation.clone()
+	  // let rtarget = camera.rotation.clone().add(new THREE.Vector3(50,50,50))
 
-	  /*let tween2 = new TWEEN.Tween( camRot )
+	  /* let tween2 = new TWEEN.Tween( camRot )
 	    .to( rtarget , time )
 	    .repeat( Infinity )
 	    .delay( 500 )
@@ -866,8 +846,13 @@
 
 	var _three2 = _interopRequireDefault(_three);
 
+	var _assign = __webpack_require__(6);
+
+	var _assign2 = _interopRequireDefault(_assign);
+
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
+	//faster object.assign
 	/**
 	 * @author kaosat-dev
 	 * @author qiao / https://github.com/qiao
@@ -907,7 +892,7 @@
 	  this.maxPolarAngle = Math.PI; // radians
 
 	  this.minDistance = 0.2;
-	  this.maxDistance = 600;
+	  this.maxDistance = 1400;
 
 	  this.active = false;
 	  this.mainPointerPressed = false;
@@ -928,10 +913,12 @@
 	  var origScale = scale;
 
 	  //to add control of multiple cameras
-	  this.addObject = function (object, options) {
+	  this.addObject = function (object) {
+	    var options = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
+
 	    if (this.objects.indexOf(object) != -1) return;
 	    var DEFAULTS = { userZoom: true, userPan: true, userRotate: true };
-	    options = Object.assign({}, DEFAULTS, options);
+	    options = (0, _assign2.default)({}, DEFAULTS, options);
 
 	    this.objects.push(object);
 	    this.objectOptions.push(options);
@@ -1060,11 +1047,12 @@
 	    var dragMoves$ = observables.dragMoves$;
 	    var zooms$ = observables.zooms$;
 
+
 	    var self = this;
 
 	    /* are these useful ?
 	    scope.userZoomSpeed = 0.6
-	     onPinch
+	    onPinch
 	    */
 	    function zoom(zoomDir, zoomScale, cameras) {
 
@@ -1148,6 +1136,46 @@
 
 /***/ },
 /* 6 */
+/***/ function(module, exports) {
+
+	'use strict';
+
+	/**
+	 * Analogue of Object.assign().
+	 * Copies properties from one or more source objects to
+	 * a target object. Existing keys on the target object will be overwritten.
+	 *
+	 * > Note: This differs from spec in some important ways:
+	 * > 1. Will throw if passed non-objects, including `undefined` or `null` values.
+	 * > 2. Does not support the curious Exception handling behavior, exceptions are thrown immediately.
+	 * > For more details, see:
+	 * > https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
+	 *
+	 *
+	 *
+	 * @param  {Object} target      The target object to copy properties to.
+	 * @param  {Object} source, ... The source(s) to copy properties from.
+	 * @return {Object}             The updated target object.
+	 */
+	module.exports = function fastAssign (target) {
+	  var totalArgs = arguments.length,
+	      source, i, totalKeys, keys, key, j;
+
+	  for (i = 1; i < totalArgs; i++) {
+	    source = arguments[i];
+	    keys = Object.keys(source);
+	    totalKeys = keys.length;
+	    for (j = 0; j < totalKeys; j++) {
+	      key = keys[j];
+	      target[key] = source[key];
+	    }
+	  }
+	  return target;
+	};
+
+
+/***/ },
+/* 7 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -1265,7 +1293,7 @@
 
 	CombinedCamera.prototype = Object.create(_three2.default.Camera.prototype);
 
-	CombinedCamera.prototype.lookAt = (function () {
+	CombinedCamera.prototype.lookAt = function () {
 
 	    // This routine does not support cameras with rotated and/or translated parent(s)
 
@@ -1281,7 +1309,7 @@
 
 	        this.quaternion.setFromRotationMatrix(m1);
 	    };
-	})();
+	}();
 
 	CombinedCamera.prototype.toPerspective = function () {
 
@@ -1538,22 +1566,23 @@
 	module.exports = CombinedCamera;
 
 /***/ },
-/* 7 */
+/* 8 */
 /***/ function(module, exports) {
 
 	module.exports = require("ramda");
 
 /***/ },
-/* 8 */
+/* 9 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
-
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
 	});
+
+	var _createClass = function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ("value" in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; }();
+
 	exports.findSelectionRoot = findSelectionRoot;
 	exports.getCoordsFromPosSizeRect = getCoordsFromPosSizeRect;
 	exports.pick = pick;
@@ -1562,7 +1591,7 @@
 
 	var _three2 = _interopRequireDefault(_three);
 
-	var _Projector = __webpack_require__(9);
+	var _Projector = __webpack_require__(10);
 
 	var _Projector2 = _interopRequireDefault(_Projector);
 
@@ -1632,10 +1661,10 @@
 	      return this.transformDirection(camera.matrixWorld);
 	    };
 
-	    var raycaster = new _three2.default.Raycaster();
+	    var _raycaster = new _three2.default.Raycaster();
 	    v.pickingRay(camera);
-	    raycaster.set(camera.position, v);
-	    intersects = raycaster.intersectObjects(hiearchyRoot, true);
+	    _raycaster.set(camera.position, v);
+	    intersects = _raycaster.intersectObjects(hiearchyRoot, true);
 	  }
 
 	  //remove invisibles, dedupe ??
@@ -1651,7 +1680,7 @@
 	  return intersects;
 	}
 
-	var Selector = (function () {
+	var Selector = function () {
 	  function Selector() {
 	    _classCallCheck(this, Selector);
 
@@ -1713,10 +1742,10 @@
 	          return this.transformDirection(camera.matrixWorld);
 	        };
 
-	        var raycaster = new _three2.default.Raycaster();
+	        var _raycaster2 = new _three2.default.Raycaster();
 	        v.pickingRay(this.camera);
-	        raycaster.set(this.camera.position, v);
-	        intersects = raycaster.intersectObjects(this.hiearchyRoot, true);
+	        _raycaster2.set(this.camera.position, v);
+	        intersects = _raycaster2.intersectObjects(this.hiearchyRoot, true);
 	      }
 
 	      //remove invisibles, dedupe
@@ -1743,12 +1772,12 @@
 	  }]);
 
 	  return Selector;
-	})();
+	}();
 
 	exports.default = Selector;
 
 /***/ },
-/* 9 */
+/* 10 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2545,7 +2574,7 @@
 
 			var alpha1 = 0,
 			    alpha2 = 1,
-			   
+
 
 			// Calculate the boundary coordinate of each vertex for the near and far clip planes,
 			// Z = -1 and Z = +1, respectively.
@@ -2608,10 +2637,10 @@
 	exports.default = _three2.default.Projector;
 
 /***/ },
-/* 10 */
+/* 11 */
 /***/ function(module, exports) {
 
-	"use strict";
+	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
@@ -2621,16 +2650,16 @@
 	    shadowMapEnabled: true,
 	    shadowMapAutoUpdate: true,
 	    shadowMapSoft: true,
-	    shadowMapType: undefined, //THREE.PCFSoftShadowMap,//THREE.PCFSoftShadowMap,//PCFShadowMap
-	    autoUpdateScene: true, //Default ?
-	    physicallyBasedShading: false, //Default ?
-	    autoClear: true, //Default ?
+	    shadowMapType: undefined, // THREE.PCFSoftShadowMap,//THREE.PCFSoftShadowMap,//PCFShadowMap
+	    autoUpdateScene: true, // Default ?
+	    physicallyBasedShading: false, // Default ?
+	    autoClear: true, // Default ?
 	    gammaInput: false,
 	    gammaOutput: false
 	  },
 	  cameras: [{
-	    name: "mainCamera",
-	    pos: [75, 75, 145], //[100,-100,100]
+	    name: 'mainCamera',
+	    pos: [75, 75, 145], // [100,-100,100]
 	    up: [0, 0, 1],
 	    lens: {
 	      fov: 45,
@@ -2651,17 +2680,17 @@
 	    _active: true
 	  }],
 	  scenes: {
-	    "main": [
-	    //{ type:"hemisphereLight", color:"#FFFF33", gndColor:"#FF9480", pos:[0, 0, 500], intensity:0.6 },
-	    { type: "hemisphereLight", color: "#FFEEEE", gndColor: "#FFFFEE", pos: [0, 1200, 1500], intensity: 0.8 }, { type: "ambientLight", color: "#0x252525", intensity: 0.03 }, { type: "directionalLight", color: "#262525", intensity: 0.2, pos: [150, 150, 1500], castShadow: true, onlyShadow: true }
-	    //{ type:"directionalLight", color:"#FFFFFF", intensity:0.2 , pos:[150,150,1500], castShadow:true, onlyShadow:true}
+	    'main': [
+	    // { type:"hemisphereLight", color:"#FFFF33", gndColor:"#FF9480", pos:[0, 0, 500], intensity:0.6 },
+	    { type: 'hemisphereLight', color: '#FFEEEE', gndColor: '#FFFFEE', pos: [0, 1200, 1500], intensity: 0.8 }, { type: 'ambientLight', color: '#0x252525', intensity: 0.03 }, { type: 'directionalLight', color: '#262525', intensity: 0.2, pos: [150, 150, 1500], castShadow: true, onlyShadow: true }
+	    // { type:"directionalLight", color:"#FFFFFF", intensity:0.2 , pos:[150,150,1500], castShadow:true, onlyShadow:true}
 	    ],
-	    "helpers": [{ type: "LabeledGrid" }]
+	    'helpers': [{ type: 'LabeledGrid' }]
 	  }
 	};
 
 /***/ },
-/* 11 */
+/* 12 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -2805,7 +2834,7 @@
 	exports.default = _three2.default.EffectComposer;
 
 /***/ },
-/* 12 */
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -2877,7 +2906,7 @@
 	exports.default = _three2.default.ShaderPass;
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -2943,7 +2972,7 @@
 	exports.default = _three2.default.RenderPass;
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3045,7 +3074,7 @@
 	exports.ClearMaskPass = ClearMaskPass;
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -3084,7 +3113,7 @@
 	exports.default = _three2.default.CopyShader;
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -3127,7 +3156,7 @@
 	exports.default = _three2.default.FXAAShader;
 
 /***/ },
-/* 17 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -3184,7 +3213,7 @@
 	exports.default = _three2.default.VignetteShader;
 
 /***/ },
-/* 18 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -3231,7 +3260,7 @@
 	exports.default = EdgeShader3;
 
 /***/ },
-/* 19 */
+/* 20 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -3276,13 +3305,13 @@
 	exports.default = AdditiveBlendShader;
 
 /***/ },
-/* 20 */
+/* 21 */
 /***/ function(module, exports) {
 
 	module.exports = require("glView-helpers");
 
 /***/ },
-/* 21 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -3733,7 +3762,7 @@
 	exports.default = LabeledGrid;
 
 /***/ },
-/* 22 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3742,12 +3771,12 @@
 	  value: true
 	});
 	exports.default = bufferToPng;
-	var fs = __webpack_require__(23);
+	var fs = __webpack_require__(24);
 
 	function bufferToPng(buffer, width, height, fileName) {
 
 	  function genOutput(inBuf, width, height) {
-	    var PNG = __webpack_require__(24).PNG;
+	    var PNG = __webpack_require__(25).PNG;
 	    var png = new PNG({ width: width, height: height });
 
 	    /*for (let i = 0; i < inBuf.length; ++i) {
@@ -3794,34 +3823,52 @@
 	}
 
 /***/ },
-/* 23 */
+/* 24 */
 /***/ function(module, exports) {
 
 	module.exports = require("fs");
 
 /***/ },
-/* 24 */
+/* 25 */
 /***/ function(module, exports) {
 
 	module.exports = require("pngjs");
 
 /***/ },
-/* 25 */
+/* 26 */
 /***/ function(module, exports) {
 
 	module.exports = require("gl");
 
 /***/ },
-/* 26 */
-/***/ function(module, exports) {
-
-	module.exports = require("rx");
-
-/***/ },
 /* 27 */
 /***/ function(module, exports) {
 
-	"use strict";
+	module.exports = require("usco-stl-parser");
+
+/***/ },
+/* 28 */
+/***/ function(module, exports) {
+
+	module.exports = require("usco-obj-parser");
+
+/***/ },
+/* 29 */
+/***/ function(module, exports) {
+
+	module.exports = require("usco-ctm-parser");
+
+/***/ },
+/* 30 */
+/***/ function(module, exports) {
+
+	module.exports = require("usco-3mf-parser");
+
+/***/ },
+/* 31 */
+/***/ function(module, exports) {
+
+	'use strict';
 
 	Object.defineProperty(exports, "__esModule", {
 	  value: true
@@ -3835,7 +3882,11 @@
 	exports.getExtension = getExtension;
 	exports.getNameAndExtension = getNameAndExtension;
 	exports.isValidFile = isValidFile;
+	exports.isValidUrl = isValidUrl;
 	exports.generateUUID = generateUUID;
+	exports.stringToBoolean = stringToBoolean;
+	exports.remapJson = remapJson;
+	exports.coerceTypes = coerceTypes;
 	function trim(string) {
 	  return String(string).replace(/^\s+|\s+$/g, '');
 	}
@@ -3844,21 +3895,21 @@
 	  return input !== null && input !== undefined;
 	}
 
-	//utiity to determine if a string is empty, null, or full of whitespaces
+	// utiity to determine if a string is empty, null, or full of whitespaces
 	function isEmpty(str) {
-	  if (!(typeof str === "string")) return false; //UUUGH bad way of checking not a string
+	  if (!(typeof str === 'string')) return false; // UUUGH bad way of checking not a string
 	  return !str || /^\s*$/.test(str) || str.length === 0 || !str.trim();
 	}
 
 	function itemsEqual(a, b) {
-	  //perhaps an immutable library would not require such horrors?
+	  // perhaps an immutable library would not require such horrors?
 	  if (JSON.stringify(a) === JSON.stringify(b)) {
 	    return true;
 	  }
 	  return false;
 	}
 
-	/*converts input data to array if it is not already an array*/
+	/* converts input data to array if it is not already an array*/
 	function toArray(data) {
 	  if (!data) return [];
 	  if (data.constructor !== Array) return [data];
@@ -3868,62 +3919,246 @@
 	/* JSON parse that always returns an object*/
 	function safeJSONParse(str) {
 	  try {
-	    return JSON.parse(str) || {}; //from cycle.js
+	    return JSON.parse(str) || {}; // from cycle.js
 	  } catch (error) {
-	    throw new Error("Error parsing data", JSON.stringify(str));
+	    throw new Error('Error parsing data', JSON.stringify(str));
 	  }
 	}
 
-	//file utils ??
+	// file utils ??
 	function getExtension(fname) {
-	  return fname.substr((~ -fname.lastIndexOf(".") >>> 0) + 2).toLowerCase();
+	  return fname.substr((~ -fname.lastIndexOf('.') >>> 0) + 2).toLowerCase();
 	}
 
 	function getNameAndExtension(uri) {
-	  var _uriElems = uri.split("?");
-	  var name = _uriElems.shift().split("/").pop();
+	  var _uriElems = uri.split('?');
+	  var name = _uriElems.shift().split('/').pop();
 	  var ext = getExtension(uri);
 	  return { name: name, ext: ext };
 	}
 
 	function isValidFile(file) {
-	  return typeof file !== "undefined" && file !== null && file instanceof File;
+	  return typeof file !== 'undefined' && file !== null && file instanceof File;
 	}
 
-	//TODO: taken from three.js ,do correct attribution
-	function generateUUID() {
+	// from http://stackoverflow.com/questions/1701898/how-to-detect-whether-a-string-is-in-url-format-using-javascript
+	function isValidUrl(url) {
+	  /* var strRegex = "^((https|http|ftp|rtsp|mms)?://)"
+	      + "?(([0-9a-z_!~*'().&=+$%-]+: )?[0-9a-z_!~*'().&=+$%-]+@)?" //ftp的user@
+	      + "(([0-9]{1,3}\.){3}[0-9]{1,3}" // IP形式的URL- 199.194.52.184
+	      + "|" // 允许IP和DOMAIN（域名）
+	      + "([0-9a-z_!~*'()-]+\.)*" // 域名- www.
+	      + "([0-9a-z][0-9a-z-]{0,61})?[0-9a-z]\." // 二级域名
+	      + "[a-z]{2,6})" // first level domain- .com or .museum
+	      + "(:[0-9]{1,4})?" // 端口- :80
+	      + "((/?)|" // a slash isn't required if there is no file name
+	      + "(/[0-9a-z_!~*'().;?:@&=+$,%#-]+)+/?)$"
+	   var re=new RegExp(strRegex)
+	   return re.test(url)*/
+	  var regexp = /(ftp|http|https|localhost):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/;
+	  return regexp.test(url);
+	}
 
+	// TODO: taken from three.js ,do correct attribution
+	function generateUUID() {
 	  // http://www.broofa.com/Tools/Math.uuid.htm
 
 	  var chars = '0123456789ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz'.split('');
 	  var uuid = new Array(36);
-	  var rnd = 0,
-	      r = undefined;
+	  var rnd = 0;
+	  var r = void 0;
 
-	  return (function () {
-
+	  return function () {
 	    for (var i = 0; i < 36; i++) {
-
-	      if (i == 8 || i == 13 || i == 18 || i == 23) {
-
+	      if (i === 8 || i === 13 || i === 18 || i === 23) {
 	        uuid[i] = '-';
-	      } else if (i == 14) {
-
+	      } else if (i === 14) {
 	        uuid[i] = '4';
 	      } else {
-
 	        if (rnd <= 0x02) rnd = 0x2000000 + Math.random() * 0x1000000 | 0;
 	        r = rnd & 0xf;
 	        rnd = rnd >> 4;
-	        uuid[i] = chars[i == 19 ? r & 0x3 | 0x8 : r];
+	        uuid[i] = chars[i === 19 ? r & 0x3 | 0x8 : r];
 	      }
 	    }
 	    return uuid.join('');
-	  })();
+	  }();
+	}
+
+	// convert a string to a boolean
+	function stringToBoolean(string) {
+	  switch (string.toLowerCase().trim()) {
+	    case 'true':case 'yes':case '1':
+	      return true;
+	    case 'false':case 'no':case '0':case null:
+	      return false;
+	    default:
+	      return Boolean(string);
+	  }
+	}
+
+	/*
+	Remap the field from the input object using the
+	provided mapping object (key=>outkey) ie:
+	input = {foo:42}
+	remapJson({foo:baz},input) => {baz:42}
+	*/
+	function remapJson(mapping, input) {
+	  var result = Object.keys(input).reduce(function (obj, key) {
+	    if (key in mapping) {
+	      obj[mapping[key]] = input[key];
+	    } else {
+	      obj[key] = input[key];
+	    }
+	    return obj;
+	  }, {});
+	  return result;
+	}
+
+	/*
+	convert the field from the input object using the
+	provided mapping object (key=>outkey) ie:
+	input = {foo:"42"}
+	remapJson({foo:parseFloat},input) => {baz:42}
+	*/
+	function coerceTypes(mapping, input) {
+	  var result = Object.keys(input).reduce(function (obj, key) {
+	    if (key in mapping && input[key] !== null && input[key] !== undefined) {
+	      obj[key] = mapping[key](input[key]);
+	    } else {
+	      obj[key] = input[key];
+	    }
+	    return obj;
+	  }, {});
+	  return result;
 	}
 
 /***/ },
-/* 28 */
+/* 32 */
+/***/ function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, "__esModule", {
+	  value: true
+	});
+
+	var _typeof = typeof Symbol === "function" && typeof Symbol.iterator === "symbol" ? function (obj) { return typeof obj; } : function (obj) { return obj && typeof Symbol === "function" && obj.constructor === Symbol ? "symbol" : typeof obj; };
+
+	exports.toArrayBuffer = toArrayBuffer;
+	exports.postProcessParsedData = postProcessParsedData;
+
+	var _three = __webpack_require__(3);
+
+	var _three2 = _interopRequireDefault(_three);
+
+	var _meshUtils = __webpack_require__(33);
+
+	var _glViewHelpers = __webpack_require__(21);
+
+	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
+
+	var centerMesh = _glViewHelpers.meshTools.centerMesh;
+
+
+	// see http://stackoverflow.com/questions/8609289/convert-a-binary-nodejs-buffer-to-javascript-arraybuffer
+	function toArrayBuffer(buffer) {
+	  var ab = new ArrayBuffer(buffer.length);
+	  var view = new Uint8Array(ab);
+	  for (var i = 0; i < buffer.length; ++i) {
+	    view[i] = buffer[i];
+	  }
+	  return ab;
+	}
+
+	// TODO: refactor ,same as assetManager/utils
+	function postProcessParsedData(data) {
+	  if ('objects' in data) {
+	    var _ret = function () {
+
+	      /* this renderers all objects in black ??
+	      let wrapper = new THREE.Object3D()
+	      wrapper.castShadow= false
+	      wrapper.receiveShadow= false*/
+
+	      var mesh = void 0;
+	      // for 3mf , etc
+	      var typesMetaHash = {};
+	      var typesMeshes = [];
+	      var typesMeta = [];
+
+	      var mainGeometry = new _three2.default.Geometry();
+	      //
+	      // we need to make ids unique
+	      var idLookup = {};
+
+	      for (var objectId in data.objects) {
+	        // console.log("objectId",objectId, data.objects[objectId])
+	        var item = data.objects[objectId];
+
+	        /*let meta = {id: item.id, name: item.name}
+	        // special color handling
+	        if (item.colors && item.colors.length > 0) {
+	          meta.color = '#FFFFFF'
+	        }
+	        typesMeta.push(meta)
+	        typesMetaHash[typeUid] = meta*/
+
+	        /*mesh = geometryFromBuffers(item)
+	        mesh = postProcessMesh(mesh)
+	        mesh = centerMesh(mesh)
+	        if (item.colors && item.colors.length > 0) {
+	          mesh.material.color = '#FFFFFF'
+	        }
+	        idLookup[item.id] = mesh*/
+	        //typesMeshes.push({typeUid, mesh})
+
+	        mesh = (0, _meshUtils.geometryFromBuffers)(item);
+	        mesh = (0, _meshUtils.postProcessMesh)(mesh);
+	        idLookup[item.id] = mesh;
+	      }
+
+	      data.build.map(function (item) {
+	        var tgtMesh = idLookup[item.objectid].clone();
+
+	        tgtMesh.updateMatrix();
+	        var geom = new _three2.default.Geometry().fromBufferGeometry(tgtMesh.geometry);
+	        mainGeometry.merge(geom, tgtMesh.matrix);
+
+	        //wrapper.add(tgtMesh)
+
+	        /*instMeta.push({instUid, typeUid: id}) // TODO : auto generate name
+	        if ('transforms' in item) {
+	          instTransforms.push({instUid, transforms: item.transforms})
+	        } else {
+	          instTransforms.push({instUid, transforms: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]})
+	        }*/
+	      });
+
+	      //mesh = postProcessMesh(mainGeometry)
+	      var material = new _three2.default.MeshPhongMaterial({ color: 0x17a9f5, specular: 0xffffff, shininess: 5, shading: _three2.default.FlatShading });
+
+	      mesh = new _three2.default.Mesh(mainGeometry, material);
+	      mesh = centerMesh(mesh);
+	      mesh.geometry.computeFaceNormals();
+	      mesh.geometry.computeVertexNormals(); // n
+	      return {
+	        v: mesh
+	      }; // wrapper // .children[0]
+	    }();
+
+	    if ((typeof _ret === 'undefined' ? 'undefined' : _typeof(_ret)) === "object") return _ret.v;
+	  } else {
+	      var _mesh = data;
+	      _mesh = (0, _meshUtils.geometryFromBuffers)(_mesh);
+	      _mesh = (0, _meshUtils.postProcessMesh)(_mesh);
+	      _mesh = centerMesh(_mesh);
+	      return _mesh;
+	    }
+	}
+
+/***/ },
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -3941,26 +4176,30 @@
 
 	function _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }
 
-	//TODO: UNIFY api for parsers, this is redundant
+	// TODO: UNIFY api for parsers, this is redundant
 	function postProcessMesh(shape) {
-
-	  //geometry
+	  // geometry
 	  if (!(shape instanceof _three2.default.Object3D)) {
 	    var material = new _three2.default.MeshPhongMaterial({ color: 0x17a9f5, specular: 0xffffff, shininess: 5, shading: _three2.default.FlatShading });
+	    if ('color' in shape.attributes) {
+	      material.vertexColors = _three2.default.VertexColors;
+	      material.color.set(0xffffff);
+	      material.specular.set(0xffffff);
+	    }
 	    shape = new _three2.default.Mesh(shape, material);
 	  }
 
-	  //FIXME  should this be handled by the asset manager or the parsers ?
-	  //ie , this won't work for loaded hierarchies etc
+	  // FIXME  should this be handled by the asset manager or the parsers ?
+	  // ie , this won't work for loaded hierarchies etc
 	  var geometry = shape.geometry;
 	  if (geometry) {
-	    geometry.computeVertexNormals(); //needed at least for .ply files
 	    geometry.computeFaceNormals();
+	    geometry.computeVertexNormals(); // needed at least for .ply files
 	  }
 
-	  /* OLD STUFF, needs to be sorted out 
-	    var vs = require('./vertShader.vert')();
-	    var fs = require('./fragShader.frag')();
+	  /* OLD STUFF, needs to be sorted out
+	    var vs = require('./vertShader.vert')()
+	    var fs = require('./fragShader.frag')()
 	     var material = new THREE.RawShaderMaterial( {
 	            uniforms: {
 	              time: { type: "f", value: 1.0 }
@@ -3969,11 +4208,11 @@
 	            fragmentShader: fs,
 	            side: THREE.DoubleSide,
 	            transparent: true
-	           } );
+	           } )
 	    var material = new this.defaultMaterialType({color:color, specular: 0xffffff, shininess: 2, shading: THREE.FlatShading});//,vertexColors: THREE.VertexColors
 	  */
 
-	  //Additional hack, only for buffer geometry
+	  // Additional hack, only for buffer geometry
 	  if (!geometry.morphTargets) geometry.morphTargets = [];
 	  if (!geometry.morphNormals) geometry.morphNormals = [];
 	  return shape;
@@ -3988,1112 +4227,28 @@
 	  var geometry = new _three2.default.BufferGeometry();
 
 	  geometry.addAttribute('position', new _three2.default.BufferAttribute(positions, 3));
-	  geometry.addAttribute('normal', new _three2.default.BufferAttribute(normals, 3));
 
-	  if (indices) {
-	    geometry.addAttribute('index', new _three2.default.BufferAttribute(indices, 1));
+	  if (normals && normals.length > 0) {
+	    geometry.addAttribute('normal', new _three2.default.BufferAttribute(normals, 3));
 	  }
-	  if (colors) {
-	    geometry.addAttribute('color', new _three2.default.BufferAttribute(colors, 1));
+	  if (indices && indices.length > 0) {
+	    geometry.addAttribute('index', new _three2.default.BufferAttribute(indices, 3));
+	  }
+	  if (colors && colors.length > 0) {
+	    geometry.addAttribute('color', new _three2.default.BufferAttribute(colors, 4));
 	  }
 
 	  return geometry;
 	}
 
-	//import Hashes from 'jshashes'
+	// import Hashes from 'jshashes'
 	function meshTohash(mesh) {
-	  //let SHA512 = new Hashes.SHA512
-	  //geometry.vertices
-	  /*for obj in meshLoader.loadMeshes(arg):
-	    for mesh in obj._meshList:
-	      hash.update(mesh.vertexes.tostring())*/
-
+	  // let SHA512 = new Hashes.SHA512
+	  // geometry.vertices
+	  // for each mesh , compute /update hash based on vertices
 	  var modelHash = hash.hex();
 	  return modelHash;
 	}
-
-/***/ },
-/* 29 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var require;var require;/*** IMPORTS FROM imports-loader ***/
-	var Rx = __webpack_require__(26);
-
-	(function(f){if(true){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.stlParser = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return require(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-	// shim for using process in browser
-
-	var process = module.exports = {};
-	var queue = [];
-	var draining = false;
-	var currentQueue;
-	var queueIndex = -1;
-
-	function cleanUpNextTick() {
-	    draining = false;
-	    if (currentQueue.length) {
-	        queue = currentQueue.concat(queue);
-	    } else {
-	        queueIndex = -1;
-	    }
-	    if (queue.length) {
-	        drainQueue();
-	    }
-	}
-
-	function drainQueue() {
-	    if (draining) {
-	        return;
-	    }
-	    var timeout = setTimeout(cleanUpNextTick);
-	    draining = true;
-
-	    var len = queue.length;
-	    while(len) {
-	        currentQueue = queue;
-	        queue = [];
-	        while (++queueIndex < len) {
-	            if (currentQueue) {
-	                currentQueue[queueIndex].run();
-	            }
-	        }
-	        queueIndex = -1;
-	        len = queue.length;
-	    }
-	    currentQueue = null;
-	    draining = false;
-	    clearTimeout(timeout);
-	}
-
-	process.nextTick = function (fun) {
-	    var args = new Array(arguments.length - 1);
-	    if (arguments.length > 1) {
-	        for (var i = 1; i < arguments.length; i++) {
-	            args[i - 1] = arguments[i];
-	        }
-	    }
-	    queue.push(new Item(fun, args));
-	    if (queue.length === 1 && !draining) {
-	        setTimeout(drainQueue, 0);
-	    }
-	};
-
-	// v8 likes predictible objects
-	function Item(fun, array) {
-	    this.fun = fun;
-	    this.array = array;
-	}
-	Item.prototype.run = function () {
-	    this.fun.apply(null, this.array);
-	};
-	process.title = 'browser';
-	process.browser = true;
-	process.env = {};
-	process.argv = [];
-	process.version = ''; // empty string to avoid regexp issues
-	process.versions = {};
-
-	function noop() {}
-
-	process.on = noop;
-	process.addListener = noop;
-	process.once = noop;
-	process.off = noop;
-	process.removeListener = noop;
-	process.removeAllListeners = noop;
-	process.emit = noop;
-
-	process.binding = function (name) {
-	    throw new Error('process.binding is not supported');
-	};
-
-	process.cwd = function () { return '/' };
-	process.chdir = function (dir) {
-	    throw new Error('process.chdir is not supported');
-	};
-	process.umask = function() { return 0; };
-
-	},{}],2:[function(require,module,exports){
-	(function (process){
-	(function () {
-	  // Hueristics.
-	  var isNode = typeof process !== 'undefined' && process.versions && !!process.versions.node;
-	  var isBrowser = typeof window !== 'undefined';
-	  var isModule = typeof module !== 'undefined' && !!module.exports;
-
-	  // Export.
-	  var detect = (isModule ? exports : (this.detect = {}));
-	  detect.isNode = isNode;
-	  detect.isBrowser = isBrowser;
-	  detect.isModule = isModule;
-	}).call(this);
-	}).call(this,require('_process'))
-	},{"_process":1}],3:[function(require,module,exports){
-	'use strict';
-
-	/**
-	 * Analogue of Object.assign().
-	 * Copies properties from one or more source objects to
-	 * a target object. Existing keys on the target object will be overwritten.
-	 *
-	 * > Note: This differs from spec in some important ways:
-	 * > 1. Will throw if passed non-objects, including `undefined` or `null` values.
-	 * > 2. Does not support the curious Exception handling behavior, exceptions are thrown immediately.
-	 * > For more details, see:
-	 * > https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
-	 *
-	 *
-	 *
-	 * @param  {Object} target      The target object to copy properties to.
-	 * @param  {Object} source, ... The source(s) to copy properties from.
-	 * @return {Object}             The updated target object.
-	 */
-	module.exports = function fastAssign (target) {
-	  var totalArgs = arguments.length,
-	      source, i, totalKeys, keys, key, j;
-
-	  for (i = 1; i < totalArgs; i++) {
-	    source = arguments[i];
-	    keys = Object.keys(source);
-	    totalKeys = keys.length;
-	    for (j = 0; j < totalKeys; j++) {
-	      key = keys[j];
-	      target[key] = source[key];
-	    }
-	  }
-	  return target;
-	};
-
-	},{}],4:[function(require,module,exports){
-	(function (global){
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.outputs = undefined;
-	exports.default = parse;
-
-	var _compositeDetect = require('composite-detect');
-
-	var _compositeDetect2 = _interopRequireDefault(_compositeDetect);
-
-	var _assign = require('fast.js/object/assign');
-
-	var _assign2 = _interopRequireDefault(_assign);
-
-	var _rx = typeof window !== "undefined" ? window['Rx'] : typeof global !== "undefined" ? global['Rx'] : null;
-
-	var _rx2 = _interopRequireDefault(_rx);
-
-	var _parseHelpers = require('./parseHelpers');
-
-	function _interopRequireDefault(obj) {
-	  return obj && obj.__esModule ? obj : { default: obj };
-	}
-
-	/**
-	 * @author aleeper / http://adamleeper.com/
-	 * @author mrdoob / http://mrdoob.com/
-	 * @author gero3 / https://github.com/gero3
-	 * @author kaosat-dev / https://github.com/kaosat-dev
-	 *
-	 * Description: A THREE parser for STL ASCII files & BINARY, as created by Solidworks and other CAD programs.
-	 *
-	 * Supports both binary and ASCII encoded files, with automatic detection of type.
-	 *
-	 * Limitations:
-	 *  Binary decoding ignores header. There doesn't seem to be much of a use for it.
-	 *  There is perhaps some question as to how valid it is to always assume little-endian-ness.
-	 *  ASCII decoding assumes file is UTF-8. Seems to work for the examples...
-	 *
-	 * Usage:
-	 *  var parser = new STLParser();
-	 *  var loader = new THREE.XHRLoader( parser );
-	 *  loader.addEventListener( 'load', function ( event ) {
-	 *
-	 *    var geometry = event.content;
-	 *    scene.add( new THREE.Mesh( geometry ) );
-	 *
-	 *  } );
-	 *  loader.load( './models/stl/slotted_disk.stl' );
-	 */
-
-	//var detectEnv = require("composite-detect");
-	var outputs = exports.outputs = ["geometry"]; //to be able to auto determine data type(s) fetched by parser
-
-	function parse(data) {
-	  var parameters = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-
-	  var defaults = {
-	    useWorker: _compositeDetect2.default.isBrowser === true
-	  };
-	  parameters = (0, _assign2.default)({}, defaults, parameters);
-	  var _parameters = parameters;
-	  var useWorker = _parameters.useWorker;
-
-	  var obs = new _rx2.default.ReplaySubject(1);
-
-	  if (useWorker) {
-	    (function () {
-	      //var Worker = require("./worker.js")//Webpack worker!
-	      //var worker = new Worker
-
-	      var worker = new Worker((window.URL || window.webkitURL || window.mozURL).createObjectURL(new Blob(['(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module \'"+o+"\'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){\n\'use strict\';\n\nObject.defineProperty(exports, "__esModule", {\n  value: true\n});\nexports.parseSteps = parseSteps;\nexports.parseBinary = parseBinary;\nexports.parseASCII = parseASCII;\n\nvar _utils = require(\'./utils\');\n\nfunction parseSteps(data) {\n  data = (0, _utils.ensureBinary)(data);\n  var isBinary = (0, _utils.isDataBinary)(data);\n\n  var result = null;\n  if (isBinary) {\n    result = parseBinary(data);\n  } else {\n    result = parseASCII((0, _utils.ensureString)(data));\n  }\n  return result;\n}\n\nfunction parseBinary(data) {\n  var reader = new DataView(data);\n  var faces = reader.getUint32(80, true);\n  var dataOffset = 84;\n  var faceLength = 12 * 4 + 2;\n  var offset = 0;\n\n  var positions = new Float32Array(faces * 3 * 3);\n  var normals = new Float32Array(faces * 3 * 3);\n\n  for (var face = 0; face < faces; face++) {\n\n    var start = dataOffset + face * faceLength;\n\n    for (var i = 1; i <= 3; i++) {\n\n      var vertexstart = start + i * 12;\n\n      positions[offset] = reader.getFloat32(vertexstart, true);\n      positions[offset + 1] = reader.getFloat32(vertexstart + 4, true);\n      positions[offset + 2] = reader.getFloat32(vertexstart + 8, true);\n\n      normals[offset] = reader.getFloat32(start, true);\n      normals[offset + 1] = reader.getFloat32(start + 4, true);\n      normals[offset + 2] = reader.getFloat32(start + 8, true);\n      offset += 3;\n    }\n  }\n  return { positions: positions, normals: normals };\n}\n\n//ASCII stl parsing\nfunction parseASCII(data) {\n\n  var normal, patternFace, patternNormal, patternVertex, result, text;\n  patternFace = /facet([\\s\\S]*?)endfacet/g;\n\n  var posArray = [];\n  var normArray = [];\n  var indicesArray = [];\n  var faces = 0;\n\n  while ((result = patternFace.exec(data)) !== null) {\n    var length = 0;\n\n    text = result[0];\n    patternNormal = /normal[\\s]+([\\-+]?[0-9]+\\.?[0-9]*([eE][\\-+]?[0-9]+)?)+[\\s]+([\\-+]?[0-9]*\\.?[0-9]+([eE][\\-+]?[0-9]+)?)+[\\s]+([\\-+]?[0-9]*\\.?[0-9]+([eE][\\-+]?[0-9]+)?)+/g;\n\n    while ((result = patternNormal.exec(text)) !== null) {\n      normArray.push(parseFloat(result[1]), parseFloat(result[3]), parseFloat(result[5]));\n      normArray.push(parseFloat(result[1]), parseFloat(result[3]), parseFloat(result[5]));\n      normArray.push(parseFloat(result[1]), parseFloat(result[3]), parseFloat(result[5]));\n    }\n\n    patternVertex = /vertex[\\s]+([\\-+]?[0-9]+\\.?[0-9]*([eE][\\-+]?[0-9]+)?)+[\\s]+([\\-+]?[0-9]*\\.?[0-9]+([eE][\\-+]?[0-9]+)?)+[\\s]+([\\-+]?[0-9]*\\.?[0-9]+([eE][\\-+]?[0-9]+)?)+/g;\n\n    while ((result = patternVertex.exec(text)) !== null) {\n\n      posArray.push(parseFloat(result[1]), parseFloat(result[3]), parseFloat(result[5]));\n      length += 1;\n    }\n    faces += 1;\n  }\n\n  var positions = new Float32Array(faces * 3 * 3);\n  var normals = new Float32Array(faces * 3 * 3);\n\n  positions.set(posArray);\n  normals.set(normArray);\n\n  return { positions: positions, normals: normals };\n}\n\n},{"./utils":2}],2:[function(require,module,exports){\n"use strict";\n\nObject.defineProperty(exports, "__esModule", {\n  value: true\n});\nexports.ensureString = ensureString;\nexports.ensureBinary = ensureBinary;\nexports.isDataBinary = isDataBinary;\nfunction ensureString(buf) {\n\n  if (typeof buf !== "string") {\n    var array_buffer = new Uint8Array(buf);\n    var str = \'\';\n    for (var i = 0; i < buf.byteLength; i++) {\n      str += String.fromCharCode(array_buffer[i]); // implicitly assumes little-endian\n    }\n    return str;\n  } else {\n    return buf;\n  }\n}\n\nfunction ensureBinary(buf) {\n\n  if (typeof buf === "string") {\n    var array_buffer = new Uint8Array(buf.length);\n    for (var i = 0; i < buf.length; i++) {\n      array_buffer[i] = buf.charCodeAt(i) & 0xff; // implicitly assumes little-endian\n    }\n    return array_buffer.buffer || array_buffer;\n  } else {\n    return buf;\n  }\n}\n\nfunction isDataBinary(data) {\n  var expect, face_size, n_faces, reader;\n  reader = new DataView(data);\n  face_size = 32 / 8 * 3 + 32 / 8 * 3 * 3 + 16 / 8;\n\n  n_faces = reader.getUint32(80, true);\n  expect = 80 + 32 / 8 + n_faces * face_size;\n  return expect === reader.byteLength;\n}\n\n},{}],3:[function(require,module,exports){\n\'use strict\';\n\nvar _parseHelpers = require(\'./parseHelpers\');\n\nself.onmessage = function (event) {\n  var result = (0, _parseHelpers.parseSteps)(event.data.data);\n\n  var positions = result.positions.buffer;\n  var normals = result.normals.buffer;\n  self.postMessage({ positions: positions, normals: normals }, [positions, normals]);\n  self.close();\n}; //importScripts(\'./stl-utils.js\');\n\n},{"./parseHelpers":1}]},{},[3])'], { type: "text/javascript" }))); //browserify
-	      worker.onmessage = function (event) {
-	        var positions = new Float32Array(event.data.positions);
-	        var normals = new Float32Array(event.data.normals);
-	        var geometry = { positions: positions, normals: normals };
-
-	        obs.onNext({ progress: 1, total: positions.length });
-	        obs.onNext(geometry);
-	        obs.onCompleted();
-	      };
-	      worker.onerror = function (event) {
-	        obs.onError('filename:' + event.filename + ' lineno: ' + event.lineno + ' error: ' + event.message);
-	      };
-
-	      worker.postMessage({ data: data });
-	      obs.catch(function (e) {
-	        return worker.terminate();
-	      });
-	    })();
-	  } else {
-	    try {
-	      var result = (0, _parseHelpers.parseSteps)(data);
-	      obs.onNext({ progress: 1, total: result.positions.length });
-	      obs.onNext(result);
-	      obs.onCompleted();
-	    } catch (error) {
-	      obs.onError(error);
-	    }
-	  }
-
-	  return obs;
-	}
-
-	}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-	},{"./parseHelpers":5,"composite-detect":2,"fast.js/object/assign":3}],5:[function(require,module,exports){
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.parseSteps = parseSteps;
-	exports.parseBinary = parseBinary;
-	exports.parseASCII = parseASCII;
-
-	var _utils = require('./utils');
-
-	function parseSteps(data) {
-	  data = (0, _utils.ensureBinary)(data);
-	  var isBinary = (0, _utils.isDataBinary)(data);
-
-	  var result = null;
-	  if (isBinary) {
-	    result = parseBinary(data);
-	  } else {
-	    result = parseASCII((0, _utils.ensureString)(data));
-	  }
-	  return result;
-	}
-
-	function parseBinary(data) {
-	  var reader = new DataView(data);
-	  var faces = reader.getUint32(80, true);
-	  var dataOffset = 84;
-	  var faceLength = 12 * 4 + 2;
-	  var offset = 0;
-
-	  var positions = new Float32Array(faces * 3 * 3);
-	  var normals = new Float32Array(faces * 3 * 3);
-
-	  for (var face = 0; face < faces; face++) {
-
-	    var start = dataOffset + face * faceLength;
-
-	    for (var i = 1; i <= 3; i++) {
-
-	      var vertexstart = start + i * 12;
-
-	      positions[offset] = reader.getFloat32(vertexstart, true);
-	      positions[offset + 1] = reader.getFloat32(vertexstart + 4, true);
-	      positions[offset + 2] = reader.getFloat32(vertexstart + 8, true);
-
-	      normals[offset] = reader.getFloat32(start, true);
-	      normals[offset + 1] = reader.getFloat32(start + 4, true);
-	      normals[offset + 2] = reader.getFloat32(start + 8, true);
-	      offset += 3;
-	    }
-	  }
-	  return { positions: positions, normals: normals };
-	}
-
-	//ASCII stl parsing
-	function parseASCII(data) {
-
-	  var normal, patternFace, patternNormal, patternVertex, result, text;
-	  patternFace = /facet([\s\S]*?)endfacet/g;
-
-	  var posArray = [];
-	  var normArray = [];
-	  var indicesArray = [];
-	  var faces = 0;
-
-	  while ((result = patternFace.exec(data)) !== null) {
-	    var length = 0;
-
-	    text = result[0];
-	    patternNormal = /normal[\s]+([\-+]?[0-9]+\.?[0-9]*([eE][\-+]?[0-9]+)?)+[\s]+([\-+]?[0-9]*\.?[0-9]+([eE][\-+]?[0-9]+)?)+[\s]+([\-+]?[0-9]*\.?[0-9]+([eE][\-+]?[0-9]+)?)+/g;
-
-	    while ((result = patternNormal.exec(text)) !== null) {
-	      normArray.push(parseFloat(result[1]), parseFloat(result[3]), parseFloat(result[5]));
-	      normArray.push(parseFloat(result[1]), parseFloat(result[3]), parseFloat(result[5]));
-	      normArray.push(parseFloat(result[1]), parseFloat(result[3]), parseFloat(result[5]));
-	    }
-
-	    patternVertex = /vertex[\s]+([\-+]?[0-9]+\.?[0-9]*([eE][\-+]?[0-9]+)?)+[\s]+([\-+]?[0-9]*\.?[0-9]+([eE][\-+]?[0-9]+)?)+[\s]+([\-+]?[0-9]*\.?[0-9]+([eE][\-+]?[0-9]+)?)+/g;
-
-	    while ((result = patternVertex.exec(text)) !== null) {
-
-	      posArray.push(parseFloat(result[1]), parseFloat(result[3]), parseFloat(result[5]));
-	      length += 1;
-	    }
-	    faces += 1;
-	  }
-
-	  var positions = new Float32Array(faces * 3 * 3);
-	  var normals = new Float32Array(faces * 3 * 3);
-
-	  positions.set(posArray);
-	  normals.set(normArray);
-
-	  return { positions: positions, normals: normals };
-	}
-
-	},{"./utils":6}],6:[function(require,module,exports){
-	"use strict";
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.ensureString = ensureString;
-	exports.ensureBinary = ensureBinary;
-	exports.isDataBinary = isDataBinary;
-	function ensureString(buf) {
-
-	  if (typeof buf !== "string") {
-	    var array_buffer = new Uint8Array(buf);
-	    var str = '';
-	    for (var i = 0; i < buf.byteLength; i++) {
-	      str += String.fromCharCode(array_buffer[i]); // implicitly assumes little-endian
-	    }
-	    return str;
-	  } else {
-	    return buf;
-	  }
-	}
-
-	function ensureBinary(buf) {
-
-	  if (typeof buf === "string") {
-	    var array_buffer = new Uint8Array(buf.length);
-	    for (var i = 0; i < buf.length; i++) {
-	      array_buffer[i] = buf.charCodeAt(i) & 0xff; // implicitly assumes little-endian
-	    }
-	    return array_buffer.buffer || array_buffer;
-	  } else {
-	    return buf;
-	  }
-	}
-
-	function isDataBinary(data) {
-	  var expect, face_size, n_faces, reader;
-	  reader = new DataView(data);
-	  face_size = 32 / 8 * 3 + 32 / 8 * 3 * 3 + 16 / 8;
-
-	  n_faces = reader.getUint32(80, true);
-	  expect = 80 + 32 / 8 + n_faces * face_size;
-	  return expect === reader.byteLength;
-	}
-
-	},{}]},{},[4])(4)
-	});
-
-
-/***/ },
-/* 30 */
-/***/ function(module, exports, __webpack_require__) {
-
-	var require;var require;/*** IMPORTS FROM imports-loader ***/
-	var Rx = __webpack_require__(26);
-
-	(function(f){if(true){module.exports=f()}else if(typeof define==="function"&&define.amd){define([],f)}else{var g;if(typeof window!=="undefined"){g=window}else if(typeof global!=="undefined"){g=global}else if(typeof self!=="undefined"){g=self}else{g=this}g.objParser = f()}})(function(){var define,module,exports;return (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return require(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
-	// shim for using process in browser
-
-	var process = module.exports = {};
-	var queue = [];
-	var draining = false;
-	var currentQueue;
-	var queueIndex = -1;
-
-	function cleanUpNextTick() {
-	    draining = false;
-	    if (currentQueue.length) {
-	        queue = currentQueue.concat(queue);
-	    } else {
-	        queueIndex = -1;
-	    }
-	    if (queue.length) {
-	        drainQueue();
-	    }
-	}
-
-	function drainQueue() {
-	    if (draining) {
-	        return;
-	    }
-	    var timeout = setTimeout(cleanUpNextTick);
-	    draining = true;
-
-	    var len = queue.length;
-	    while(len) {
-	        currentQueue = queue;
-	        queue = [];
-	        while (++queueIndex < len) {
-	            if (currentQueue) {
-	                currentQueue[queueIndex].run();
-	            }
-	        }
-	        queueIndex = -1;
-	        len = queue.length;
-	    }
-	    currentQueue = null;
-	    draining = false;
-	    clearTimeout(timeout);
-	}
-
-	process.nextTick = function (fun) {
-	    var args = new Array(arguments.length - 1);
-	    if (arguments.length > 1) {
-	        for (var i = 1; i < arguments.length; i++) {
-	            args[i - 1] = arguments[i];
-	        }
-	    }
-	    queue.push(new Item(fun, args));
-	    if (queue.length === 1 && !draining) {
-	        setTimeout(drainQueue, 0);
-	    }
-	};
-
-	// v8 likes predictible objects
-	function Item(fun, array) {
-	    this.fun = fun;
-	    this.array = array;
-	}
-	Item.prototype.run = function () {
-	    this.fun.apply(null, this.array);
-	};
-	process.title = 'browser';
-	process.browser = true;
-	process.env = {};
-	process.argv = [];
-	process.version = ''; // empty string to avoid regexp issues
-	process.versions = {};
-
-	function noop() {}
-
-	process.on = noop;
-	process.addListener = noop;
-	process.once = noop;
-	process.off = noop;
-	process.removeListener = noop;
-	process.removeAllListeners = noop;
-	process.emit = noop;
-
-	process.binding = function (name) {
-	    throw new Error('process.binding is not supported');
-	};
-
-	process.cwd = function () { return '/' };
-	process.chdir = function (dir) {
-	    throw new Error('process.chdir is not supported');
-	};
-	process.umask = function() { return 0; };
-
-	},{}],2:[function(require,module,exports){
-	(function (process){
-	(function () {
-	  // Hueristics.
-	  var isNode = typeof process !== 'undefined' && process.versions && !!process.versions.node;
-	  var isBrowser = typeof window !== 'undefined';
-	  var isModule = typeof module !== 'undefined' && !!module.exports;
-
-	  // Export.
-	  var detect = (isModule ? exports : (this.detect = {}));
-	  detect.isNode = isNode;
-	  detect.isBrowser = isBrowser;
-	  detect.isModule = isModule;
-	}).call(this);
-	}).call(this,require('_process'))
-	},{"_process":1}],3:[function(require,module,exports){
-	'use strict';
-
-	/**
-	 * Analogue of Object.assign().
-	 * Copies properties from one or more source objects to
-	 * a target object. Existing keys on the target object will be overwritten.
-	 *
-	 * > Note: This differs from spec in some important ways:
-	 * > 1. Will throw if passed non-objects, including `undefined` or `null` values.
-	 * > 2. Does not support the curious Exception handling behavior, exceptions are thrown immediately.
-	 * > For more details, see:
-	 * > https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
-	 *
-	 *
-	 *
-	 * @param  {Object} target      The target object to copy properties to.
-	 * @param  {Object} source, ... The source(s) to copy properties from.
-	 * @return {Object}             The updated target object.
-	 */
-	module.exports = function fastAssign (target) {
-	  var totalArgs = arguments.length,
-	      source, i, totalKeys, keys, key, j;
-
-	  for (i = 1; i < totalArgs; i++) {
-	    source = arguments[i];
-	    keys = Object.keys(source);
-	    totalKeys = keys.length;
-	    for (j = 0; j < totalKeys; j++) {
-	      key = keys[j];
-	      target[key] = source[key];
-	    }
-	  }
-	  return target;
-	};
-
-	},{}],4:[function(require,module,exports){
-	(function (global){
-	'use strict';
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.inputDataType = exports.outputs = undefined;
-	exports.default = parse;
-
-	var _compositeDetect = require('composite-detect');
-
-	var _compositeDetect2 = _interopRequireDefault(_compositeDetect);
-
-	var _assign = require('fast.js/object/assign');
-
-	var _assign2 = _interopRequireDefault(_assign);
-
-	var _rx = typeof window !== "undefined" ? window['Rx'] : typeof global !== "undefined" ? global['Rx'] : null;
-
-	var _rx2 = _interopRequireDefault(_rx);
-
-	var _obj = require('./obj');
-
-	var _obj2 = _interopRequireDefault(_obj);
-
-	var _parseHelpers = require('./parseHelpers');
-
-	function _interopRequireDefault(obj) {
-	  return obj && obj.__esModule ? obj : { default: obj };
-	}
-
-	var outputs = exports.outputs = ["geometry"]; //to be able to auto determine data type(s) fetched by parser
-	/**
-	 * @author mrdoob / http://mrdoob.com/
-	 * @author kaosat-dev
-	 */
-
-	var inputDataType = exports.inputDataType = "arrayBuffer"; //to be able to set required input data type
-
-	function parse(data) {
-	  var parameters = arguments.length <= 1 || arguments[1] === undefined ? {} : arguments[1];
-
-	  var defaults = {
-	    useWorker: _compositeDetect2.default.isBrowser === true,
-	    offsets: [0]
-	  };
-	  parameters = (0, _assign2.default)({}, defaults, parameters);
-
-	  var _parameters = parameters;
-	  var useWorker = _parameters.useWorker;
-	  var offsets = _parameters.offsets;
-
-	  var obs = new _rx2.default.ReplaySubject(1);
-
-	  if (useWorker) {
-	    (function () {
-	      var worker = new Worker(window.URL.createObjectURL(new Blob(['(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);throw new Error("Cannot find module \'"+o+"\'")}var f=n[o]={exports:{}};t[o][0].call(f.exports,function(e){var n=t[o][1][e];return s(n?n:e)},f,f.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){\n"use strict";\n\nObject.defineProperty(exports, "__esModule", {\n\tvalue: true\n});\nvar OBJ = function OBJ() {};\n\nOBJ.prototype = {\n\tconstructor: OBJ\n};\n\nOBJ.prototype.parseIndex = function (index, type) {\n\n\tindex = parseInt(index);\n\tvar dataArray = this.currentObject._attributes[type];\n\n\treturn index >= 0 ? index - 1 : index + dataArray.length;\n};\n\nOBJ.prototype._handle_face_line = function (rawData, rIndices, indices, type) {\n\tvar data = [];\n\n\tvar tmpIdx = [];\n\tfor (var i = 0; i < rIndices.length; i++) {\n\t\tvar idx = rIndices[i];\n\t\t//console.log(data[ idx ]);\n\t\t//data.push( parseInt( rawData[ idx] ) );\n\t\tdata.push(this.parseIndex(rawData[idx], type));\n\t}\n\n\tif (isNaN(data[3])) {\n\t\tindices.push(data[0], data[1], data[2]);\n\t\t//indices.push( this.parseIndex( data[ 0 ], type) , this.parseIndex( data[ 1 ], type) , this.parseIndex( data[ 2 ], type) );\n\t} else {\n\t\t\tindices.push(data[0], data[1], data[3], data[1], data[2], data[3]);\n\t\t}\n};\n\nOBJ.prototype._newObject = function () {\n\tvar currentObject = {};\n\tcurrentObject._attributes = {};\n\tcurrentObject._attributes["position"] = [];\n\tcurrentObject._attributes["normal"] = [];\n\tcurrentObject._attributes["uv"] = [];\n\tcurrentObject._attributes["indices"] = [];\n\tcurrentObject.faceCount = 0;\n\treturn currentObject;\n};\n\nOBJ.prototype.getData = function (text) {\n\tvar vertex_pattern = /v( +[\\d|\\.|\\+|\\-|e]+)( +[\\d|\\.|\\+|\\-|e]+)( +[\\d|\\.|\\+|\\-|e]+)/;\n\t// vn float float float\n\tvar normal_pattern = /vn( +[\\d|\\.|\\+|\\-|e]+)( +[\\d|\\.|\\+|\\-|e]+)( +[\\d|\\.|\\+|\\-|e]+)/;\n\t// vt float float\n\tvar uv_pattern = /vt( +[\\d|\\.|\\+|\\-|e]+)( +[\\d|\\.|\\+|\\-|e]+)/;\n\t// f vertex vertex vertex ...\n\tvar face_pattern1 = /f( +\\d+)( +\\d+)( +\\d+)( +\\d+)?/;\n\t// f vertex/uv vertex/uv vertex/uv ...\n\tvar face_pattern2 = /f( +(\\d+)\\/(\\d+))( +(\\d+)\\/(\\d+))( +(\\d+)\\/(\\d+))( +(\\d+)\\/(\\d+))?/;\n\t// f vertex/uv/normal vertex/uv/normal vertex/uv/normal ...\n\tvar face_pattern3 = /f( +(\\d+)\\/(\\d+)\\/(\\d+))( +(\\d+)\\/(\\d+)\\/(\\d+))( +(\\d+)\\/(\\d+)\\/(\\d+))( +(\\d+)\\/(\\d+)\\/(\\d+))?/;\n\t// f vertex//normal vertex//normal vertex//normal ...\n\tvar face_pattern4 = /f( +(\\d+)\\/\\/(\\d+))( +(\\d+)\\/\\/(\\d+))( +(\\d+)\\/\\/(\\d+))( +(\\d+)\\/\\/(\\d+))?/;\n\n\ttext = text.replace(/\\\\\\r\\n/g, \'\'); // handles line continuations\n\tvar lines = text.split(\'\\n\');\n\n\tvar vertices = [];\n\tvar normals = [];\n\tvar uvs = [];\n\tvar indices = [];\n\tvar normIndices = [];\n\tvar uvIndices = [];\n\n\tvar faceCount = 0;\n\tvar face_offset = 0;\n\n\tvar defaultNormal = [1, 1, 1];\n\tvar defaultUv = [0, 0];\n\n\tvar objects = [];\n\tvar textures = {};\n\tvar materials = {};\n\n\tvar currentObject = this._newObject();\n\tthis.currentObject = currentObject;\n\tvar currentMaterial = {};\n\n\tvertices = currentObject._attributes["position"];\n\tnormals = currentObject._attributes["normal"];\n\tuvs = currentObject._attributes["uv"];\n\tindices = currentObject._attributes["indices"];\n\n\tfor (var i = 0; i < lines.length; i++) {\n\t\tvar line = lines[i];\n\t\tline = line.trim().toLowerCase(); //needed because of some "exponent" values in upper case\n\t\tvar result;\n\n\t\t//console.log(line);\n\n\t\tif (line.length === 0 || line.charAt(0) === \'#\') {\n\t\t\tcontinue;\n\t\t} else if ((result = vertex_pattern.exec(line)) !== null) {\n\t\t\t// ["v 1.0 2.0 3.0", "1.0", "2.0", "3.0"]\n\t\t\tvertices.push(parseFloat(result[1]), parseFloat(result[2]), parseFloat(result[3]));\n\t\t} else if ((result = normal_pattern.exec(line)) !== null) {\n\t\t\t// ["vn 1.0 2.0 3.0", "1.0", "2.0", "3.0"]\n\t\t\tnormals.push(parseFloat(result[1]), parseFloat(result[2]), parseFloat(result[3]));\n\t\t} else if ((result = uv_pattern.exec(line)) !== null) {\n\t\t\t// ["vt 0.1 0.2", "0.1", "0.2"]\n\t\t\tuvs.push(parseFloat(result[1]), parseFloat(result[2]));\n\t\t} else if ((result = face_pattern1.exec(line)) !== null) {\n\t\t\t// ["f 1 2 3", "1", "2", "3", undefined]\n\t\t\t//console.log("result v1");\n\t\t\tthis._handle_face_line(result, [1, 2, 3, 4], indices, "position");\n\t\t\t//faces, uvs, normals_inds, geometry,face_offset, normals, uvs\n\t\t} else if ((result = face_pattern2.exec(line)) !== null) {\n\t\t\t\t// ["f 1/1 2/2 3/3", " 1/1", "1", "1", " 2/2", "2", "2", " 3/3", "3", "3", undefined, undefined, undefined]\n\t\t\t\t//console.log("result v2");\n\t\t\t\tthis._handle_face_line(result, [2, 5, 8, 11], indices, "position"); //2,5,8,11//possible winding order change of for some stuff11,8,5,2\n\t\t\t\tthis._handle_face_line(result, [3, 6, 9, 12], uvIndices, "uv");\n\t\t\t} else if ((result = face_pattern3.exec(line)) !== null) {\n\t\t\t\t// ["f 1/1/1 2/2/2 3/3/3", " 1/1/1", "1", "1", "1", " 2/2/2", "2", "2", "2", " 3/3/3", "3", "3", "3", undefined, undefined, undefined, undefined]\n\t\t\t\t//console.log("result v3");\n\t\t\t\t//result[ 2 ], result[ 6 ], result[ 10 ], result[ 14 ]\n\t\t\t\tthis._handle_face_line(result, [2, 6, 10, 14], indices, "position"); //2,6,10,14\n\t\t\t\tthis._handle_face_line(result, [4, 8, 12, 16], normIndices, "normal");\n\t\t\t\tthis._handle_face_line(result, [3, 7, 11, 15], uvIndices, "uv");\n\t\t\t} else if ((result = face_pattern4.exec(line)) !== null) {\n\t\t\t\t//console.log("result v4");\n\t\t\t\t// ["f 1//1 2//2 3//3", " 1//1", "1", "1", " 2//2", "2", "2", " 3//3", "3", "3", undefined, undefined, undefined]\n\t\t\t\tthis._handle_face_line(result, [2, 5, 8, 11], indices, "position");\n\t\t\t\tthis._handle_face_line(result, [3, 6, 9, 12], normIndices, "normal");\n\t\t\t} else if (/^o /.test(line)) {\n\t\t\t\t// object\n\t\t\t\t//console.log("object")\n\t\t\t\tif (currentObject) {\n\t\t\t\t\t//if (!(geometry === undefined)) {\n\t\t\t\t\tface_offset = face_offset + vertices.length;\n\n\t\t\t\t\t//console.log("oldobject")\n\t\t\t\t\t//console.log( currentObject)\n\t\t\t\t\tcurrentObject.faceCount = indices.length;\n\n\t\t\t\t\t//reset all for next object\n\t\t\t\t\tcurrentObject = this._newObject();\n\t\t\t\t\tcurrentObject.name = line.substring(2).trim();\n\t\t\t\t\tvertices = currentObject._attributes["position"];\n\t\t\t\t\tnormals = currentObject._attributes["normal"];\n\t\t\t\t\tuvs = currentObject._attributes["uv"];\n\t\t\t\t\tindices = currentObject._attributes["indices"];\n\t\t\t\t\tnormIndices = currentObject._attributes["normIndices"];\n\t\t\t\t\tuvIndices = currentObject._attributes["uvIndices"];\n\n\t\t\t\t\tobjects.push(currentObject);\n\t\t\t\t}\n\t\t\t} else if (/^g /.test(line)) {\n\t\t\t\t// group\n\t\t\t\t//console.log("group");\n\t\t\t} else if (/^usemtl /.test(line)) {\n\t\t\t\t\t// material\n\t\t\t\t\tcurrentMaterial.name = line.substring(7).trim();\n\t\t\t\t} else if (/^mtllib /.test(line)) {\n\t\t\t\t\t// mtl file\n\t\t\t\t\tcurrentMaterial = {};\n\t\t\t\t} else if (/^s /.test(line)) {\n\t\t\t\t\t// smooth shading\n\t\t\t\t} else {\n\t\t\t\t\t\t// console.log( "OBJParser: Unhandled line " + line );\n\t\t\t\t\t}\n\t}\n\n\tif (objects.indexOf(currentObject) == -1) {\n\t\tobjects.push(currentObject);\n\t}\n\tcurrentObject.faceCount = indices.length / 3;\n\n\treturn {\n\t\tobjects: objects\n\t};\n};\n\n/*\n  extracts data based on indices since obj has different indices for normals, uvs etc, while webgl does not\n*/\nOBJ.prototype._unindexData = function (object) {\n\tvar resultPositions = [];\n\tvar resultNormals = [];\n\tvar resultUv = [];\n\n\tvar vertices = object._attributes["position"];\n\tvar normals = object._attributes["normal"];\n\tvar uvs = object._attributes["uv"];\n\n\tfor (var i = 0; i < object.indices.length; i++) {\n\t\t//resultPositions.push( data. );\n\t}\n};\nexports.default = OBJ;\n\n},{}],2:[function(require,module,exports){\n\'use strict\';\n\nvar _obj = require(\'./obj\');\n\nvar _obj2 = _interopRequireDefault(_obj);\n\nfunction _interopRequireDefault(obj) { return obj && obj.__esModule ? obj : { default: obj }; }\n\nself.onmessage = function (event) {\n\n  var data = event.data;\n  data = data.data;\n\n  var result = new _obj2.default().getData(data);\n\n  self.postMessage({ data: result });\n  self.close();\n};\n\n},{"./obj":1}]},{},[2])'], { type: "text/javascript" }))); //browserify
-
-	      worker.onmessage = function (event) {
-	        if ("data" in event.data) {
-	          var data = event.data.data;
-	          data.objects.forEach(function (modelData, index) {
-	            obs.onNext({ progress: (index + 1) / Object.keys(data.objects).length, total: undefined });
-	            obs.onNext((0, _parseHelpers.createModelBuffers)(modelData));
-	          });
-	          obs.onNext({ progress: 1, total: undefined });
-	          obs.onCompleted();
-	        } else if ("progress" in event.data) {
-	          //console.log("got progress", event.data.progress);
-	          obs.onNext({ progress: event.data.progress, total: Math.NaN });
-	        }
-	      };
-	      worker.onerror = function (event) {
-	        obs.onError('filename:' + event.filename + ' lineno: ' + event.lineno + ' error: ' + event.message);
-	      };
-	      worker.postMessage({ data: data });
-	      obs.catch(function (e) {
-	        return worker.terminate();
-	      });
-	    })();
-	  } else {
-	    data = new _obj2.default().getData(data);
-
-	    data.objects.forEach(function (modelData, index) {
-	      obs.onNext({ progress: (index + 1) / Object.keys(data.objects).length, total: undefined });
-	      obs.onNext((0, _parseHelpers.createModelBuffers)(modelData));
-	    });
-
-	    obs.onNext({ progress: 1, total: undefined });
-	    obs.onCompleted();
-	  }
-	  return obs;
-	}
-
-	}).call(this,typeof global !== "undefined" ? global : typeof self !== "undefined" ? self : typeof window !== "undefined" ? window : {})
-	},{"./obj":5,"./parseHelpers":6,"composite-detect":2,"fast.js/object/assign":3}],5:[function(require,module,exports){
-	"use strict";
-
-	Object.defineProperty(exports, "__esModule", {
-		value: true
-	});
-	var OBJ = function OBJ() {};
-
-	OBJ.prototype = {
-		constructor: OBJ
-	};
-
-	OBJ.prototype.parseIndex = function (index, type) {
-
-		index = parseInt(index);
-		var dataArray = this.currentObject._attributes[type];
-
-		return index >= 0 ? index - 1 : index + dataArray.length;
-	};
-
-	OBJ.prototype._handle_face_line = function (rawData, rIndices, indices, type) {
-		var data = [];
-
-		var tmpIdx = [];
-		for (var i = 0; i < rIndices.length; i++) {
-			var idx = rIndices[i];
-			//console.log(data[ idx ]);
-			//data.push( parseInt( rawData[ idx] ) );
-			data.push(this.parseIndex(rawData[idx], type));
-		}
-
-		if (isNaN(data[3])) {
-			indices.push(data[0], data[1], data[2]);
-			//indices.push( this.parseIndex( data[ 0 ], type) , this.parseIndex( data[ 1 ], type) , this.parseIndex( data[ 2 ], type) );
-		} else {
-				indices.push(data[0], data[1], data[3], data[1], data[2], data[3]);
-			}
-	};
-
-	OBJ.prototype._newObject = function () {
-		var currentObject = {};
-		currentObject._attributes = {};
-		currentObject._attributes["position"] = [];
-		currentObject._attributes["normal"] = [];
-		currentObject._attributes["uv"] = [];
-		currentObject._attributes["indices"] = [];
-		currentObject.faceCount = 0;
-		return currentObject;
-	};
-
-	OBJ.prototype.getData = function (text) {
-		var vertex_pattern = /v( +[\d|\.|\+|\-|e]+)( +[\d|\.|\+|\-|e]+)( +[\d|\.|\+|\-|e]+)/;
-		// vn float float float
-		var normal_pattern = /vn( +[\d|\.|\+|\-|e]+)( +[\d|\.|\+|\-|e]+)( +[\d|\.|\+|\-|e]+)/;
-		// vt float float
-		var uv_pattern = /vt( +[\d|\.|\+|\-|e]+)( +[\d|\.|\+|\-|e]+)/;
-		// f vertex vertex vertex ...
-		var face_pattern1 = /f( +\d+)( +\d+)( +\d+)( +\d+)?/;
-		// f vertex/uv vertex/uv vertex/uv ...
-		var face_pattern2 = /f( +(\d+)\/(\d+))( +(\d+)\/(\d+))( +(\d+)\/(\d+))( +(\d+)\/(\d+))?/;
-		// f vertex/uv/normal vertex/uv/normal vertex/uv/normal ...
-		var face_pattern3 = /f( +(\d+)\/(\d+)\/(\d+))( +(\d+)\/(\d+)\/(\d+))( +(\d+)\/(\d+)\/(\d+))( +(\d+)\/(\d+)\/(\d+))?/;
-		// f vertex//normal vertex//normal vertex//normal ...
-		var face_pattern4 = /f( +(\d+)\/\/(\d+))( +(\d+)\/\/(\d+))( +(\d+)\/\/(\d+))( +(\d+)\/\/(\d+))?/;
-
-		text = text.replace(/\\\r\n/g, ''); // handles line continuations
-		var lines = text.split('\n');
-
-		var vertices = [];
-		var normals = [];
-		var uvs = [];
-		var indices = [];
-		var normIndices = [];
-		var uvIndices = [];
-
-		var faceCount = 0;
-		var face_offset = 0;
-
-		var defaultNormal = [1, 1, 1];
-		var defaultUv = [0, 0];
-
-		var objects = [];
-		var textures = {};
-		var materials = {};
-
-		var currentObject = this._newObject();
-		this.currentObject = currentObject;
-		var currentMaterial = {};
-
-		vertices = currentObject._attributes["position"];
-		normals = currentObject._attributes["normal"];
-		uvs = currentObject._attributes["uv"];
-		indices = currentObject._attributes["indices"];
-
-		for (var i = 0; i < lines.length; i++) {
-			var line = lines[i];
-			line = line.trim().toLowerCase(); //needed because of some "exponent" values in upper case
-			var result;
-
-			//console.log(line);
-
-			if (line.length === 0 || line.charAt(0) === '#') {
-				continue;
-			} else if ((result = vertex_pattern.exec(line)) !== null) {
-				// ["v 1.0 2.0 3.0", "1.0", "2.0", "3.0"]
-				vertices.push(parseFloat(result[1]), parseFloat(result[2]), parseFloat(result[3]));
-			} else if ((result = normal_pattern.exec(line)) !== null) {
-				// ["vn 1.0 2.0 3.0", "1.0", "2.0", "3.0"]
-				normals.push(parseFloat(result[1]), parseFloat(result[2]), parseFloat(result[3]));
-			} else if ((result = uv_pattern.exec(line)) !== null) {
-				// ["vt 0.1 0.2", "0.1", "0.2"]
-				uvs.push(parseFloat(result[1]), parseFloat(result[2]));
-			} else if ((result = face_pattern1.exec(line)) !== null) {
-				// ["f 1 2 3", "1", "2", "3", undefined]
-				//console.log("result v1");
-				this._handle_face_line(result, [1, 2, 3, 4], indices, "position");
-				//faces, uvs, normals_inds, geometry,face_offset, normals, uvs
-			} else if ((result = face_pattern2.exec(line)) !== null) {
-					// ["f 1/1 2/2 3/3", " 1/1", "1", "1", " 2/2", "2", "2", " 3/3", "3", "3", undefined, undefined, undefined]
-					//console.log("result v2");
-					this._handle_face_line(result, [2, 5, 8, 11], indices, "position"); //2,5,8,11//possible winding order change of for some stuff11,8,5,2
-					this._handle_face_line(result, [3, 6, 9, 12], uvIndices, "uv");
-				} else if ((result = face_pattern3.exec(line)) !== null) {
-					// ["f 1/1/1 2/2/2 3/3/3", " 1/1/1", "1", "1", "1", " 2/2/2", "2", "2", "2", " 3/3/3", "3", "3", "3", undefined, undefined, undefined, undefined]
-					//console.log("result v3");
-					//result[ 2 ], result[ 6 ], result[ 10 ], result[ 14 ]
-					this._handle_face_line(result, [2, 6, 10, 14], indices, "position"); //2,6,10,14
-					this._handle_face_line(result, [4, 8, 12, 16], normIndices, "normal");
-					this._handle_face_line(result, [3, 7, 11, 15], uvIndices, "uv");
-				} else if ((result = face_pattern4.exec(line)) !== null) {
-					//console.log("result v4");
-					// ["f 1//1 2//2 3//3", " 1//1", "1", "1", " 2//2", "2", "2", " 3//3", "3", "3", undefined, undefined, undefined]
-					this._handle_face_line(result, [2, 5, 8, 11], indices, "position");
-					this._handle_face_line(result, [3, 6, 9, 12], normIndices, "normal");
-				} else if (/^o /.test(line)) {
-					// object
-					//console.log("object")
-					if (currentObject) {
-						//if (!(geometry === undefined)) {
-						face_offset = face_offset + vertices.length;
-
-						//console.log("oldobject")
-						//console.log( currentObject)
-						currentObject.faceCount = indices.length;
-
-						//reset all for next object
-						currentObject = this._newObject();
-						currentObject.name = line.substring(2).trim();
-						vertices = currentObject._attributes["position"];
-						normals = currentObject._attributes["normal"];
-						uvs = currentObject._attributes["uv"];
-						indices = currentObject._attributes["indices"];
-						normIndices = currentObject._attributes["normIndices"];
-						uvIndices = currentObject._attributes["uvIndices"];
-
-						objects.push(currentObject);
-					}
-				} else if (/^g /.test(line)) {
-					// group
-					//console.log("group");
-				} else if (/^usemtl /.test(line)) {
-						// material
-						currentMaterial.name = line.substring(7).trim();
-					} else if (/^mtllib /.test(line)) {
-						// mtl file
-						currentMaterial = {};
-					} else if (/^s /.test(line)) {
-						// smooth shading
-					} else {
-							// console.log( "OBJParser: Unhandled line " + line );
-						}
-		}
-
-		if (objects.indexOf(currentObject) == -1) {
-			objects.push(currentObject);
-		}
-		currentObject.faceCount = indices.length / 3;
-
-		return {
-			objects: objects
-		};
-	};
-
-	/*
-	  extracts data based on indices since obj has different indices for normals, uvs etc, while webgl does not
-	*/
-	OBJ.prototype._unindexData = function (object) {
-		var resultPositions = [];
-		var resultNormals = [];
-		var resultUv = [];
-
-		var vertices = object._attributes["position"];
-		var normals = object._attributes["normal"];
-		var uvs = object._attributes["uv"];
-
-		for (var i = 0; i < object.indices.length; i++) {
-			//resultPositions.push( data. );
-		}
-	};
-	exports.default = OBJ;
-
-	},{}],6:[function(require,module,exports){
-	"use strict";
-
-	Object.defineProperty(exports, "__esModule", {
-	  value: true
-	});
-	exports.createModelBuffers = createModelBuffers;
-	//TODO: potential candidate for re-use across parsers with a few changes
-	function createModelBuffers(modelData) {
-	  //console.log("creating model buffers",modelData, modelData._attributes)
-
-	  var faces = modelData.faceCount;
-	  var colorSize = 3;
-
-	  var positions = new Float32Array(faces * 3 * 3);
-	  var normals = new Float32Array(faces * 3 * 3);
-	  //let colors  = new Float32Array( faces *3 * colorSize )
-	  var indices = new Uint32Array(faces * 3);
-
-	  //vertices.set( modelData.position );
-	  //normals.set( modelData.normal );
-	  //indices.set( modelData.indices );
-
-	  positions.set(modelData._attributes.position);
-	  normals.set(modelData._attributes.normal);
-	  indices.set(modelData._attributes.indices);
-
-	  //materials = []
-	  return { positions: positions, indices: indices, normals: normals };
-	}
-
-	/*
-	OBJParser.prototype._parse = function( text )
-	{
-	  var object = new THREE.Object3D();
-	  var geometry, material, mesh;
-	  var face_offset = 0;
-
-	  // create mesh if no objects in text
-	  if ( /^o /gm.test( text ) === false ) {
-
-	    geometry = new THREE.Geometry();
-	    material = new THREE.MeshLambertMaterial();
-	    mesh = new THREE.Mesh( geometry, material );
-	    object.add( mesh );
-
-	  }
-
-	    var vertices = [];
-	    var verticesCount = 0;
-	    var normals = [];
-	    var uvs = [];
-	    // v float float float
-	    var vertex_pattern = /v( +[\d|\.|\+|\-|e]+)( +[\d|\.|\+|\-|e]+)( +[\d|\.|\+|\-|e]+)/;
-	    // vn float float float
-	    var normal_pattern = /vn( +[\d|\.|\+|\-|e]+)( +[\d|\.|\+|\-|e]+)( +[\d|\.|\+|\-|e]+)/;
-	    // vt float float
-	    var uv_pattern = /vt( +[\d|\.|\+|\-|e]+)( +[\d|\.|\+|\-|e]+)/;
-	    // f vertex vertex vertex ...
-	    var face_pattern1 = /f( +\d+)( +\d+)( +\d+)( +\d+)?/;
-	    // f vertex/uv vertex/uv vertex/uv ...
-	    var face_pattern2 = /f( +(\d+)\/(\d+))( +(\d+)\/(\d+))( +(\d+)\/(\d+))( +(\d+)\/(\d+))?/;
-	    // f vertex/uv/normal vertex/uv/normal vertex/uv/normal ...
-	    var face_pattern3 = /f( +(\d+)\/(\d+)\/(\d+))( +(\d+)\/(\d+)\/(\d+))( +(\d+)\/(\d+)\/(\d+))( +(\d+)\/(\d+)\/(\d+))?/;
-	    // f vertex//normal vertex//normal vertex//normal ...
-	    var face_pattern4 = /f( +(\d+)\/\/(\d+))( +(\d+)\/\/(\d+))( +(\d+)\/\/(\d+))( +(\d+)\/\/(\d+))?/
-
-	    var lines = text.split( '\n' );
-
-	    for ( var i = 0; i < lines.length; i ++ ) {
-	      var line = lines[ i ];
-	      line = line.trim();
-	      var result;
-
-	      if ( line.length === 0 || line.charAt( 0 ) === '#' ) {
-	        continue;
-	      } else if ( ( result = vertex_pattern.exec( line ) ) !== null ) {
-	        // ["v 1.0 2.0 3.0", "1.0", "2.0", "3.0"]
-	        geometry.vertices.push( vector(
-	          parseFloat( result[ 1 ] ),
-	          parseFloat( result[ 2 ] ),
-	          parseFloat( result[ 3 ] )
-	        ) );
-	      } else if ( ( result = normal_pattern.exec( line ) ) !== null ) {
-	        // ["vn 1.0 2.0 3.0", "1.0", "2.0", "3.0"]
-	        normals.push( vector(
-	          parseFloat( result[ 1 ] ),
-	          parseFloat( result[ 2 ] ),
-	          parseFloat( result[ 3 ] )
-	        ) );
-	      } else if ( ( result = uv_pattern.exec( line ) ) !== null ) {
-	        // ["vt 0.1 0.2", "0.1", "0.2"]
-	        uvs.push( uv(
-	          parseFloat( result[ 1 ] ),
-	          parseFloat( result[ 2 ] )
-	        ) );
-	      } else if ( ( result = face_pattern1.exec( line ) ) !== null ) {
-	        // ["f 1 2 3", "1", "2", "3", undefined]
-	        handle_face_line([ result[ 1 ], result[ 2 ], result[ 3 ], result[ 4 ] ], geometry,face_offset, normals, uvs);
-	      } else if ( ( result = face_pattern2.exec( line ) ) !== null ) {
-	        // ["f 1/1 2/2 3/3", " 1/1", "1", "1", " 2/2", "2", "2", " 3/3", "3", "3", undefined, undefined, undefined]
-	        handle_face_line(
-	          [ result[ 2 ], result[ 5 ], result[ 8 ], result[ 11 ] ], //faces
-	          [ result[ 3 ], result[ 6 ], result[ 9 ], result[ 12 ] ] //uv
-	          , geometry, face_offset, normals, uvs
-	        );
-	      } else if ( ( result = face_pattern3.exec( line ) ) !== null ) {
-	        // ["f 1/1/1 2/2/2 3/3/3", " 1/1/1", "1", "1", "1", " 2/2/2", "2", "2", "2", " 3/3/3", "3", "3", "3", undefined, undefined, undefined, undefined]
-	        handle_face_line(
-	          [ result[ 2 ], result[ 6 ], result[ 10 ], result[ 14 ] ], //faces
-	          [ result[ 3 ], result[ 7 ], result[ 11 ], result[ 15 ] ], //uv
-	          [ result[ 4 ], result[ 8 ], result[ 12 ], result[ 16 ] ] //normal
-	          , geometry, face_offset, normals, uvs
-	        );
-	      } else if ( ( result = face_pattern4.exec( line ) ) !== null ) {
-	        // ["f 1//1 2//2 3//3", " 1//1", "1", "1", " 2//2", "2", "2", " 3//3", "3", "3", undefined, undefined, undefined]
-	        handle_face_line(
-	          [ result[ 2 ], result[ 5 ], result[ 8 ], result[ 11 ] ], //faces
-	          [ ], //uv
-	          [ result[ 3 ], result[ 6 ], result[ 9 ], result[ 12 ] ] //normal
-	          , geometry, face_offset, normals, uvs
-	        );
-
-	      } else if ( /^o /.test( line ) ) {
-	        // object
-	        if (!(geometry === undefined)) {
-	          face_offset = face_offset + geometry.vertices.length;
-	        }
-
-	        geometry = new THREE.Geometry();
-	        material = new THREE.MeshLambertMaterial();
-
-	        mesh = new THREE.Mesh( geometry, material );
-	        mesh.name = line.substring( 2 ).trim();
-	        object.add( mesh );
-
-	        verticesCount = 0;
-
-	      } else if ( /^g /.test( line ) ) {
-	        // group
-	      } else if ( /^usemtl /.test( line ) ) {
-	        // material
-	        material.name = line.substring( 7 ).trim();
-	      } else if ( /^mtllib /.test( line ) ) {
-	        // mtl file
-	      } else if ( /^s /.test( line ) ) {
-	        // smooth shading
-	      } else {
-	        // console.log( "OBJParser: Unhandled line " + line );
-	      }
-	    }
-
-	    for ( var i = 0, l = object.children.length; i < l; i ++ ) {
-	      var geometry = object.children[ i ].geometry;
-	    }
-
-	    return object;
-	}
-
-
-	    function vector( x, y, z ) {
-	      return new THREE.Vector3( x, y, z );
-	    }
-
-	    function uv( u, v ) {
-	      return new THREE.Vector2( u, v );
-	    }
-
-	    function face3( a, b, c, normals ) {
-	      return new THREE.Face3( a, b, c, normals );
-	    }
-
-
-	    function add_face( a, b, c, normals_inds, geometry ,face_offset, normals) {
-	      if ( normals_inds === undefined ) {
-	        geometry.faces.push( face3(
-	          parseInt( a ) - (face_offset + 1),
-	          parseInt( b ) - (face_offset + 1),
-	          parseInt( c ) - (face_offset + 1)
-	        ) );
-	      } else {
-	        geometry.faces.push( face3(
-	          parseInt( a ) - (face_offset + 1),
-	          parseInt( b ) - (face_offset + 1),
-	          parseInt( c ) - (face_offset + 1),
-	          [
-	            normals[ parseInt( normals_inds[ 0 ] ) - 1 ].clone(),
-	            normals[ parseInt( normals_inds[ 1 ] ) - 1 ].clone(),
-	            normals[ parseInt( normals_inds[ 2 ] ) - 1 ].clone()
-	          ]
-	        ) );
-	      }
-	    }
-
-	    function add_uvs( a, b, c, geometry , uvs) {
-	      geometry.faceVertexUvs[ 0 ].push( [
-	        uvs[ parseInt( a ) - 1 ].clone(),
-	        uvs[ parseInt( b ) - 1 ].clone(),
-	        uvs[ parseInt( c ) - 1 ].clone()
-	      ] );
-	    }
-
-	    function handle_face_line(faces, uvs, normals_inds, geometry,face_offset, normals, uvs) {
-	      if ( faces[ 3 ] === undefined ) {
-	        add_face( faces[ 0 ], faces[ 1 ], faces[ 2 ], normals_inds, geometry,face_offset, normals );
-	        if (!(uvs === undefined) && uvs.length > 0) {
-	          add_uvs( uvs[ 0 ], uvs[ 1 ], uvs[ 2 ] , geometry , uvs);
-	        }
-	      } else {
-	        if (!(normals_inds === undefined) && normals_inds.length > 0) {
-	          add_face( faces[ 0 ], faces[ 1 ], faces[ 3 ], [ normals_inds[ 0 ], normals_inds[ 1 ], normals_inds[ 3 ] ], geometry,face_offset, normals);
-	          add_face( faces[ 1 ], faces[ 2 ], faces[ 3 ], [ normals_inds[ 1 ], normals_inds[ 2 ], normals_inds[ 3 ] ], geometry,face_offset, normals);
-	        } else {
-	          add_face( faces[ 0 ], faces[ 1 ], faces[ 3 ], geometry,face_offset, normals);
-	          add_face( faces[ 1 ], faces[ 2 ], faces[ 3 ], geometry,face_offset, normals);
-	        }
-	        if (!(uvs === undefined) && uvs.length > 0) {
-	          add_uvs( uvs[ 0 ], uvs[ 1 ], uvs[ 3 ] , geometry,face_offset, normals);
-	          add_uvs( uvs[ 1 ], uvs[ 2 ], uvs[ 3 ] , geometry,face_offset, normals);
-	        }
-	      }
-	    }*/
-
-	},{}]},{},[4])(4)
-	});
-
 
 /***/ }
 /******/ ]);
