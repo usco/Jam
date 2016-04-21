@@ -8,7 +8,9 @@ describe('actionsFromYm (entities)', () => {
     this.timeout(5000)
 
     function mockYmDriver () {
-      return never()
+      return {
+        data: never()
+      }
     }
 
     const ym = mockYmDriver()
@@ -54,7 +56,9 @@ describe('actionsFromYm (entities)', () => {
       }]
     })
 
-    return Rx.Observable.from([parts$, assemblyEntries$])
+    return {
+      data: Rx.Observable.from([parts$, assemblyEntries$])
+    }
   }
 
   it('should output correct data from its returned actions: (addTypes)', function (done){

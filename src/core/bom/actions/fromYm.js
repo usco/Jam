@@ -2,7 +2,7 @@ import { remapJson, coerceTypes } from '../../../utils/utils'
 import { pick } from 'ramda'
 
 export default function intent (ym, params) {
-  const bom$ = ym
+  const bom$ = ym.data
     .filter(res => res.request.method === 'get' && res.request.type === 'ymLoad' && res.request.typeDetail === 'bom')
     .mergeAll()
     .pluck('response')
