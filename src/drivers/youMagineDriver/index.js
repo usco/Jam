@@ -151,9 +151,8 @@ export default function makeYMDriver (httpDriver, params = {}) {
       return confirmation$
     }
 
-    function computeSaveProgress(outObs$, what){
-      return outObs$
-        .map(_ => true)
+    function computeSaveProgress (outObs$, what) {
+      return outObs$.map(_ => true)
         .merge(confirmSaveDone(what).map(_ => false))
     }
 
@@ -161,9 +160,13 @@ export default function makeYMDriver (httpDriver, params = {}) {
     const saveInProgressBom$ = computeSaveProgress(bomOut$, 'bom')
     const saveInProgressAssembly$ = computeSaveProgress(assemblyOut$, 'assemblies')
     const saveInProgress$ = merge(saveInProgressParts$, saveInProgressBom$, saveInProgressAssembly$)
+      .tap(e=>console.log('saveInProgress', e))
       .map(data => ({saveInProgress: data}))
 
-    return inputs$.merge(saveInProgress$)
+    return {
+      data: inputs$,
+      progress: saveInProgress$
+    }
   }
 
   return youMagineStorageDriver

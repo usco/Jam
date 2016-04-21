@@ -80,7 +80,7 @@ describe('youMagineDriver', () => {
       .share()
 
     const ymDriver = makeYMDriver(fakeHttpDriver)
-    const driverOutputs$ = ymDriver(loadDataQuery$)
+    const driverOutputs$ = ymDriver(loadDataQuery$).data
 
     driverOutputs$
       .scan(function (acc, data) {

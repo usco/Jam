@@ -5,13 +5,13 @@ import { remapJson, toArray, exists } from '../../../utils/utils'
 import { mergeData } from '../../../utils/modelUtils'
 
 function rawData (ym) {
-  const parts = ym
+  const parts = ym.data
     .filter(res => res.request.method === 'get' && res.request.type === 'ymLoad' && res.request.typeDetail === 'parts')
     .mergeAll()
     .pluck('response')
     // .tap(e=>console.log("in parts: ",e))
 
-  const assemblies = ym
+  const assemblies = ym.data
     .filter(res => res.request.method === 'get' && res.request.type === 'ymLoad' && res.request.typeDetail === 'assemblyEntries')
     // .mergeAll()
     .flatMap(data => {

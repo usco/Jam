@@ -6,7 +6,7 @@ import fromYm from './fromYm'
 describe('actionsFromYm (BOM)', () => {
   it('should return the correct hash of actions', function () {
     function mockYmDriver () {
-      return never()
+      return {data: never()}
     }
 
     const ym = mockYmDriver()
@@ -37,7 +37,7 @@ describe('actionsFromYm (BOM)', () => {
       typeDetail: 'bom',
       responseData: [{part_uuid: 'xx9_9', part_version: '0.0.1', part_parameters: '', qty: 19, phys_qty: 27.6, unit: 'L'}]
     })
-    return Rx.Observable.from([bom$])
+    return {data: Rx.Observable.from([bom$])}
   }
 
   it('should output correct data from its returned actions: (upsertBomEntries)', function (done) {

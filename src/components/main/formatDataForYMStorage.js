@@ -14,7 +14,7 @@ export default function formatDataForYMStorage ({sources, state$}) {
   const waitForLoadNeeded$ = state$.pluck('settings', 'autoLoad') // do we need to wait for data to be loaded?
     .map(data => !data)
 
-  const loadAllDone$ = sources.ym
+  const loadAllDone$ = sources.ym.data
     .filter(res$ => res$.request.type === 'ymLoad') // handle errors etc
     .flatMap(data => {
       const responseWrapper$ = data.catch(e => {
@@ -38,7 +38,7 @@ export default function formatDataForYMStorage ({sources, state$}) {
     .filter(d => d === true)
     .tap(e => console.log('loading done, we got it all'))
 
-  const designExists$ = sources.ym
+  const designExists$ = sources.ym.data
     .tap(e => console.log('responses from ym', e))
     .filter(res => res.request.method === 'get' && res.request.type === 'ymLoad' && res.request.typeDetail === 'designExists')
     .flatMap(data => data.catch(_ => just({error: true}))) // flag errors
