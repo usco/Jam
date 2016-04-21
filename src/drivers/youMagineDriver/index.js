@@ -14,7 +14,6 @@ import {toParts, toBom, toAssemblies, dataFromItems} from './saveHelpers'
 import {getParts, getBom, getAssemblyEntries, makeApiStreamGets, makeGetStreamForAssemblies,
  getAssemblyEntriesNoAssemblyFound, otherHelper} from './loadHelpers'
 
-////////////////
 // actual driver stuff
 // storage driver for YouMagine designs & data etc
 export default function makeYMDriver (httpDriver, params = {}) {
@@ -34,30 +33,27 @@ export default function makeYMDriver (httpDriver, params = {}) {
       .pluck('data')
       .share()
 
-    const apiEndpoint$ = outgoing$.pluck('data','apiEndpoint')
+    const apiEndpoint$ = outgoing$.pluck('data', 'apiEndpoint')
         .startWith(apiEndpoint)
         .filter(exists)
         .shareReplay(1)
 
-    const designExistsRequest$ = combineLatestObj({
-      design: designInfos$.pluck('design'),
-      authData: designInfos$.pluck('authData'),
-      apiEndpoint$
-    })
-    .distinctUntilChanged()
-    .map(({design, authData, apiEndpoint}) => ({designId: design.id, authToken: authData.token, apiEndpoint}))
-    .map(function (data) {
-      const {designId, authToken} = data
-      const authTokenStr = `/?auth_token=${authToken}`
-      const designUri = `${apiEndpoint}/designs/${designId}${authTokenStr}`
-      return {
-        url: designUri,
-        method: 'get',
-        type: 'ymLoad',
-        typeDetail: 'designExists'
-      }
-    })
-    .tap(e=>console.log('designExistsRequest',e))
+    const designExistsRequest$ = outgoing$
+      .filter(data => data.query === 'designExists')
+      .distinctUntilChanged()
+      .pluck('data')
+      .map(({design, authData, apiEndpoint}) => ({designId: design.id, authToken: authData.token, apiEndpoint}))
+      .map(function (data) {
+        const {designId, authToken} = data
+        const authTokenStr = `/?auth_token=${authToken}`
+        const designUri = `${apiEndpoint}/designs/${designId}${authTokenStr}`
+        return {
+          url: designUri,
+          method: 'get',
+          type: 'ymLoad',
+          typeDetail: 'designExists'
+        }
+      })
 
     // all that is needed for save & load
     // deal with saving
@@ -129,7 +125,6 @@ export default function makeYMDriver (httpDriver, params = {}) {
 
     //and send them on their way
     const outToHttp$ = merge(designExistsRequest$, allSaveRequests$, allLoadRequests$)
-      //.tap(e => console.log('requests out to http', e))
 
     const inputs$ = httpDriver(outToHttp$)
       .merge(getAssemblyEntriesNoAssemblyFound(assembliesIn$))

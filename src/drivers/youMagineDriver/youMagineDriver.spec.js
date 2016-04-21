@@ -6,7 +6,7 @@ import {contains} from 'ramda'
 import makeYMDriver from './index'
 
 describe('youMagineDriver', () => {
-  /*it('should handle data saving', function (done) {
+  it('should handle data saving', function (done) {
     this.timeout(5000)
     const saveData = {
       design: {id: 1, synched: true},
@@ -27,12 +27,13 @@ describe('youMagineDriver', () => {
 
     const fakeHttpDriver = function (outRequests$) {
       outRequests$
-        .tap(e => console.log('outRequests', e))
-        .toArray()
-        .take(1)
+        .scan(function (acc, data) {
+          acc.push(data)
+          return acc
+        }, [])
+        .filter(d => d.length >= 3)
         .forEach(data => {
-          // TODO: flesh these out
-           console.log('output message', data)
+          // TODO: flesh these out ?
           assert.deepEqual(data[0].url, 'https://api.youmagine.com/v1/designs/1/parts/0/?auth_token=42')
           assert.deepEqual(data[0].method, 'put')
           assert.deepEqual(data[0].type, 'ymSave')
@@ -48,14 +49,14 @@ describe('youMagineDriver', () => {
           assert.deepEqual(data[2].type, 'ymSave')
           assert.deepEqual(data[2].typeDetail, 'assemblies')
           done()
-        })
+      })
       return never()
     }
 
     const outgoing$ = saveQuery$
     const ymDriver = makeYMDriver(fakeHttpDriver)
-    const driverOutputs$ = ymDriver(outgoing$)
-  })*/
+    ymDriver(outgoing$)
+  })
 
   it('should handle data loading', function (done) {
     const fakeHttpDriver = function (outRequests$) {
