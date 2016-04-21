@@ -12,7 +12,7 @@ import {equals} from 'ramda'
 import {makeApiStream, spreadRequests} from './helpers'
 import {toParts, toBom, toAssemblies, dataFromItems} from './saveHelpers'
 import {getParts, getBom, getAssemblyEntries, makeApiStreamGets, makeGetStreamForAssemblies,
- getAssemblyEntriesNoAssemblyFound} from './loadHelpers'
+ getAssemblyEntriesNoAssemblyFound, otherHelper} from './loadHelpers'
 
 ////////////////
 // actual driver stuff
@@ -119,7 +119,7 @@ export default function makeYMDriver (httpDriver, params = {}) {
     const partsIn$ = makeApiStreamGets(load$, getParts, lDesign$, lAuthData$, apiEndpoint$)
     const bomIn$ = makeApiStreamGets(load$, getBom, lDesign$, lAuthData$, apiEndpoint$)
     const assembliesIn$ = makeGetStreamForAssemblies(load$, null, lDesign$, lAuthData$, apiEndpoint$)
-    const assemblyEntriesIn$ = makeApiStreamGets(assembliesIn$, getAssemblyEntries, lDesign$, lAuthData$, apiEndpoint$)
+    const assemblyEntriesIn$ = makeApiStreamGets(otherHelper(httpDriver(assembliesIn$)), getAssemblyEntries, lDesign$, lAuthData$, apiEndpoint$)
 
     // Finally put it all together
     const allSaveRequests$ = spreadRequests(requestDebounceRate, merge(partsOut$, bomOut$, assemblyOut$))
@@ -132,23 +132,10 @@ export default function makeYMDriver (httpDriver, params = {}) {
     const inputs$ = httpDriver(outToHttp$)
       .merge(getAssemblyEntriesNoAssemblyFound(assembliesIn$))
 
-    /*const saveResponses$ = inputs$
-      .filter(res$ => res$.request.type === 'ymSave')//handle errors etc
-      .flatMap(data => {
-        const responseWrapper$ = data.catch(e=>{
-          console.log("caught error in saving data",e)
-          return Rx.Observable.empty()
-        })
-        const request$  = just(data.request)
-        const response$ = responseWrapper$.pluck("response")
-
-        return combineLatestObj({response$, request$})//.materialize()//FIXME: still do not get this one
-      })
-      .forEach(e=>console.log("saving done (if all went well)"))*/
-
     // starts when outputing data, done when confirmation recieved
     function confirmSaveDone(what){
       const confirmation$ = inputs$
+        .filter(r => r.request)
         .filter(res$ => res$.request.type === 'ymSave') // handle errors etc
         .flatMap(data => {
           const responseWrapper$ = data.catch(e => {
@@ -170,13 +157,13 @@ export default function makeYMDriver (httpDriver, params = {}) {
         .merge(confirmSaveDone(what).map(_ => false))
     }
 
-    /*const saveInProgressParts$ = computeSaveProgress(partsOut$, 'parts')
+    const saveInProgressParts$ = computeSaveProgress(partsOut$, 'parts')
     const saveInProgressBom$ = computeSaveProgress(bomOut$, 'bom')
     const saveInProgressAssembly$ = computeSaveProgress(assemblyOut$, 'assemblies')
     const saveInProgress$ = merge(saveInProgressParts$, saveInProgressBom$, saveInProgressAssembly$)
-      .map(data => ({saveInProgress: data}))*/
+      .map(data => ({saveInProgress: data}))
 
-    return inputs$//.merge(saveInProgress$)
+    return inputs$.merge(saveInProgress$)
   }
 
   return youMagineStorageDriver
