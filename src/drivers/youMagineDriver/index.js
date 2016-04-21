@@ -44,18 +44,20 @@ export default function makeYMDriver (httpDriver, params = {}) {
       authData: designInfos$.pluck('authData'),
       apiEndpoint$
     })
-      .map(({design, authData, apiEndpoint}) => ({designId: design.id, authToken: authData.token, apiEndpoint}))
-      .map(function (data) {
-        const {designId, authToken} = data
-        const authTokenStr = `/?auth_token=${authToken}`
-        const designUri = `${apiEndpoint}/designs/${designId}${authTokenStr}`
-        return {
-          url: designUri,
-          method: 'get',
-          type: 'ymLoad',
-          typeDetail: 'designExists'
-        }
-      })
+    .distinctUntilChanged()
+    .map(({design, authData, apiEndpoint}) => ({designId: design.id, authToken: authData.token, apiEndpoint}))
+    .map(function (data) {
+      const {designId, authToken} = data
+      const authTokenStr = `/?auth_token=${authToken}`
+      const designUri = `${apiEndpoint}/designs/${designId}${authTokenStr}`
+      return {
+        url: designUri,
+        method: 'get',
+        type: 'ymLoad',
+        typeDetail: 'designExists'
+      }
+    })
+    .tap(e=>console.log('designExistsRequest',e))
 
     // all that is needed for save & load
     // deal with saving
@@ -84,7 +86,7 @@ export default function makeYMDriver (httpDriver, params = {}) {
       .pluck('authData')
 
     // saving stuff
-    const dataDebounceRate = 20 // debounce rate (in ms) for the input RAW data , affects the rate of request GENERATION, not of outbound requests
+    const dataDebounceRate = 1000 // debounce rate (in ms) for the input RAW data , affects the rate of request GENERATION, not of outbound requests
     const requestDebounceRate = 500 // time in ms between each emited http request : ie don't spam the api !
 
     const bom$ = changesFromObservableArrays(
