@@ -87,7 +87,7 @@ export default function model (props$, actions, sources) {
     .pluck('saveInProgress')
     .filter(d => d === true)
     .flatMap(function(data){
-      return Rx.Observable.just(data).merge(Rx.Observable.timer(500).map(false))
+      return Rx.Observable.just(data).merge(Rx.Observable.timer(300).map(false))
     })
 
   // not entirely sure, we need a way to observe any fetch/updload etc operation
