@@ -84,6 +84,10 @@ export default function model (props$, actions, sources) {
 
   // not entirely sure, we need a way to observe any fetch/updload etc operation
   const operationsInProgress$ = actions.progress.combinedProgress$.startWith(undefined)
+  const notifications$ = sources.ym.progress
+    .map(data => data.saveInProgress ? 'saving data' : undefined)
+    .startWith(undefined)
+    .distinctUntilChanged()
 
   // ////other data
   const appData$ = sources.appMeta
@@ -97,8 +101,10 @@ export default function model (props$, actions, sources) {
     meta$,
     transforms$,
     meshes$,
-    types$, // app level data, meta data , settings etc
+    types$,
+    // app level data, meta data , settings etc
     operationsInProgress$,
+    notifications$,
     appData$,
     settings$,
     // infos about current design etc

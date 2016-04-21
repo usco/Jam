@@ -75,7 +75,6 @@ function renderWebglError(){
   )
 }*/
 
-
 const translateIconSvg = `<svg xmlns="http://www.w3.org/2000/svg" version="1.1"
   width="16" height="16" data-icon="move" viewBox="0 0 16 16" class="icon">
   <path d="M8 0l-3 3h2v4h-4v-2l-3 3 3 3v-2h4v4h-2l2 2 1 1 1-1 2-2h-2v-4h4v2l3-3-3-3v2h-4v-4h2l-3-3z" />
@@ -139,7 +138,6 @@ const measureThicknessIconSvg = `<svg version="1.1" id="Vertical_align_middle" x
   C2.048,9,2,9.447,2,10c0,0.551,0.048,1,0.6,1h14.8C17.952,11,18,10.551,18,10z"/>
 </svg>`
 
-
 const measureDiameterIconSvg = `<svg version="1.1"   xmlns="http://www.w3.org/2000/svg"
   width="22px" height="22px" viewBox="0 0 22 22" class="icon">
     <title>Untitled</title>
@@ -153,7 +151,6 @@ const measureDiameterIconSvg = `<svg version="1.1"   xmlns="http://www.w3.org/20
     </g>
 </svg>`
 
-
 const measureAngleIconSvg = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg"
   width="18px" height="18px" viewBox="0 0 18 18" class="icon">
     <title>Untitled</title>
@@ -164,25 +161,20 @@ const measureAngleIconSvg = `<svg version="1.1" xmlns="http://www.w3.org/2000/sv
     </g>
 </svg>`
 
-
-
-/*          <button className="reset"> Reset (debug) </button>
-          <button className="clearAll"> Delete all </button>
-*/
-
 function makeTopToolBar(state){
   const selections = state.selections
   const activeTool = state.settings.activeTool
   const toggleControls  = (selections && selections.instIds.length>0)
 
   const translateModeToggled = activeTool === 'translate'
-  const rotateModeToggled    = activeTool === 'rotate'
-  const scaleModeToggled     = activeTool === 'scale'
+  const rotateModeToggled = activeTool === 'rotate'
+  const scaleModeToggled = activeTool === 'scale'
 
-  const measureDistanceModeToggled    = activeTool === 'rotate'
-  const measureThicknessModeToggled   = activeTool === 'scale'
+  const measureDistanceModeToggled = activeTool === 'rotate'
+  const measureThicknessModeToggled = activeTool === 'scale'
 
-  //console.log("FOOO",state)
+  const notifications = state.notifications
+
   const viewIcons = []
 
   const editIcons =   [
@@ -242,6 +234,9 @@ function makeTopToolBar(state){
 
   return <div className="topToolbar titlebar">
     {icons}
+    <section className="notifications">
+      {notifications}
+    </section>
   </div>
 }
 
@@ -250,10 +245,10 @@ function renderUiElements(uiElements){
   const {state, settings, fsToggler, bom, gl, entityInfos, progressBar, help} = uiElements
 
   const widgets = {
-    'view':renderViewWidgets
-    ,'edit':renderEditWidgets
-    ,'annotate':renderAnnotWidgets
-    ,'bom':renderBomWidgets
+    'view': renderViewWidgets,
+    'edit': renderEditWidgets,
+    'annotate': renderAnnotWidgets,
+    'bom': renderBomWidgets
   }
 
   const customWidgets = state.settings.toolSets
@@ -297,9 +292,8 @@ function renderViewWidgets(state, uiElements){
   return []
 }
 
-
 export default function view(state$, settings$, fsToggler$, bom$
-  , gl$, entityInfos$, comment$, progressBar$, help$){
+  , gl$, entityInfos$, comment$, progressBar$, help$) {
 
   return combineLatestObj({state$, settings$, fsToggler$, bom$
   , gl$, entityInfos$, comment$, progressBar$, help$})
