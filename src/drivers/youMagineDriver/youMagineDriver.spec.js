@@ -1,7 +1,7 @@
 import assert from 'assert'
 import Rx from 'rx'
 const {just, never} = Rx.Observable
-import makeYMDriver from './youMagineDriver'
+import makeYMDriver from './index'
 
 describe('youMagineDriver', () => {
   it('should handle data saving', function (done) {
@@ -54,6 +54,9 @@ describe('youMagineDriver', () => {
     const driverOutputs$ = ymDriver(outgoing$)
   })
 
+  it('should handle data loading', function (done) {
+    done()
+  })
 /* it('should handle initiating loading',function(done){
   this.timeout(5000)
 
