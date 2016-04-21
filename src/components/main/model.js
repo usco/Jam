@@ -82,10 +82,21 @@ export default function model (props$, actions, sources) {
   const bomActions = bomIntents(sources, types$, metaActions, entityActions)
   const bom$ = bom(bomActions)
 
+  //saveNotifications
+  const saveNotifications$ = sources.ym.progress
+    .pluck('saveInProgress')
+    .filter(d => d === true)
+    .flatMap(function(data){
+      return Rx.Observable.just(data).merge(Rx.Observable.timer(500).map(false))
+    })
+
   // not entirely sure, we need a way to observe any fetch/updload etc operation
-  const operationsInProgress$ = actions.progress.combinedProgress$.startWith(undefined)
-  const notifications$ = sources.ym.progress
-    .map(data => data.saveInProgress ? 'saving data' : undefined)
+  const operationsInProgress$ = actions.progress.combinedProgress$
+    .merge( saveNotifications$.map(data => data ? 0.99999 : 1) )
+    .startWith(undefined)
+  const notifications$ = saveNotifications$
+    .map(data => data ? 'All changes have been saved' : undefined)
+    //.map(data => undefined)
     .startWith(undefined)
     .distinctUntilChanged()
 

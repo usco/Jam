@@ -147,7 +147,6 @@ export default function makeYMDriver (httpDriver, params = {}) {
         })
         .map(data => data.request.typeDetail)
         .filter(data => data === what)
-        .tap(e => console.log('saving done'))
       return confirmation$
     }
 
@@ -160,7 +159,6 @@ export default function makeYMDriver (httpDriver, params = {}) {
     const saveInProgressBom$ = computeSaveProgress(bomOut$, 'bom')
     const saveInProgressAssembly$ = computeSaveProgress(assemblyOut$, 'assemblies')
     const saveInProgress$ = merge(saveInProgressParts$, saveInProgressBom$, saveInProgressAssembly$)
-      .tap(e=>console.log('saveInProgress', e))
       .map(data => ({saveInProgress: data}))
 
     return {
