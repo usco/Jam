@@ -56,6 +56,11 @@ function lazyLoad (moduleNamePath) {
     case '3mf':
       require('bundle?lazy!usco-3mf-parser')(module => obs.onNext(module))
       break
+    /*case 'gcode':
+      require('bundle?lazy!usco-3mf-parser')(module => obs.onNext(module))
+      break*/
+    default:
+      obs.onError(`No parser for "${moduleNamePath}" format`)
   }
   return obs
 }
@@ -96,9 +101,11 @@ function parse (fetched$) {
       const {uri, id, flags} = data.request // extract uri & id if any
       const {name, ext} = getNameAndExtension(uri)
 
+      console.log('here')
       // pack up the data, the parser etc nicely
       const data$ = of({uri, id, rawData: data.response, ext, name, flags})
       const parser$ = getParser(ext).pluck('default') // FIXME: for now workaround for es6 modules & babel
+        .tap(e=>console.log('parser',e))
       return combineLatestObj({data$, parser$})
     })
     // actual parsing part
@@ -121,8 +128,6 @@ function parse (fetched$) {
         .startWith(0)
 
       const meta$ = of({uri, ext, name, id, flags})
-
-      // throw new Error("eeeelkj")
 
       return combineLatestObj({meta$, data: parsedData$, progress$})
     })
@@ -176,7 +181,7 @@ function computeCombinedProgress (fetched$, parsed$) {
 }
 
 export function resources (sources) {
-  const fetched$ = fetch(sources)
+  const fetched$ = fetch(sources)//.tap(e=>console.log('fetched',e))
   const parsed$ = parse(fetched$)
   const combinedProgress$ = computeCombinedProgress(fetched$, parsed$)
 
