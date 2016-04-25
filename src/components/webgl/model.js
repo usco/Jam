@@ -77,17 +77,41 @@ export default function model (props$, actions) {
   })
   //this is for any NON composite data , so pure mesh /visuals withouth any metadata, transformsetc
   const rawVisuals$ = props$.pluck('rawVisuals').startWith(undefined)
+    .distinctUntilChanged()
+    .tap(e => console.log('rawVisuals', e))
 
+  //FIXME: items is emiting WAAY too much values, look into why it does so
   // combine All needed components to apply any "transforms" to their visuals
-  const items$ = combineLatestObj({meta$, transforms$, meshes$})
+  const items0$ = combineLatestObj({meta$, transforms$, meshes$})
     .debounce(1) // ignore if we have too fast changes in any of the 3 components
     // .distinctUntilChanged()
     .map(getVisual)
     // .sample(0, requestAnimationFrameScheduler)
     // .distinctUntilChanged()
     // .tap(e => console.log('DONE with items in GLView', e))
-    .merge(rawVisuals$)
+    .combineLatest(rawVisuals$,function(composites, raw){
+      //console.log('composites', composites,'raw',raw)
+      return composites
+    })
     .filter(exists)
+    .tap(e => console.log('items', e))
+    .shareReplay(1)
+
+  const items$ = props$
+    .debounce(1)
+    .map(function(props){
+
+    const meta = props.meta
+    const transforms = props.transforms
+    const meshes = props.meshes
+    let  visual = getVisual({meta, transforms, meshes})
+    console.log('visual',visual,'rawVisuals',props.rawVisuals)
+    return visual.concat(props.rawVisuals)
+  })
+  .startWith(undefined)
+  .filter(exists)
+  .tap(e => console.log('items2', e))
+  .shareReplay(1)
 
   // "external" selected meshes
   const selectedMeshesFromSelections$ = selections$
