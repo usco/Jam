@@ -75,6 +75,8 @@ export default function model (props$, actions) {
   const meshes$ = props$.pluck('meshes').filter(exists).distinctUntilChanged(function (m) {
     return Object.keys(m)
   })
+  //this is for any NON composite data , so pure mesh /visuals withouth any metadata, transformsetc
+  const rawVisuals$ = props$.pluck('rawVisuals').startWith(undefined)
 
   // combine All needed components to apply any "transforms" to their visuals
   const items$ = combineLatestObj({meta$, transforms$, meshes$})
@@ -84,6 +86,8 @@ export default function model (props$, actions) {
     // .sample(0, requestAnimationFrameScheduler)
     // .distinctUntilChanged()
     // .tap(e => console.log('DONE with items in GLView', e))
+    .merge(rawVisuals$)
+    .filter(exists)
 
   // "external" selected meshes
   const selectedMeshesFromSelections$ = selections$
