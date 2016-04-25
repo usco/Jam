@@ -12,6 +12,9 @@ import assign from 'fast.js/object/assign' // faster object.assign
 
 import { postProcessParsedData } from './parseUtils'
 
+//FIXME : hack !
+import gcodeParser from './gcodeUtils'
+
 function getParser (extension) {
   return lazyLoad(extension)
 }
@@ -56,9 +59,9 @@ function lazyLoad (moduleNamePath) {
     case '3mf':
       require('bundle?lazy!usco-3mf-parser')(module => obs.onNext(module))
       break
-    /*case 'gcode':
-      require('bundle?lazy!usco-3mf-parser')(module => obs.onNext(module))
-      break*/
+    case 'gcode':
+      obs.onNext({default:gcodeParser})
+      break
     default:
       obs.onError(`No parser for "${moduleNamePath}" format`)
   }
@@ -101,11 +104,9 @@ function parse (fetched$) {
       const {uri, id, flags} = data.request // extract uri & id if any
       const {name, ext} = getNameAndExtension(uri)
 
-      console.log('here')
       // pack up the data, the parser etc nicely
       const data$ = of({uri, id, rawData: data.response, ext, name, flags})
       const parser$ = getParser(ext).pluck('default') // FIXME: for now workaround for es6 modules & babel
-        .tap(e=>console.log('parser',e))
       return combineLatestObj({data$, parser$})
     })
     // actual parsing part
@@ -116,9 +117,14 @@ function parse (fetched$) {
       const parsedObs$ = parser(rawData, parseOptions)
         .doOnError(e => console.log('error in parse', e))
 
-      const parsedData$ = parsedObs$
+      let parsedData$ = parsedObs$
         .filter(e => e.progress === undefined) // seperate out progress data
-        .map(postProcessParsedData)
+
+      // FIXME : hack !
+      if(ext !== 'gcode')
+      {
+        parsedData$ = parsedData$.map(postProcessParsedData)
+      }
         // .tap(e=>console.log("parsedData",e))
 
       const progress$ = parsedObs$
