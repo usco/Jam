@@ -104,7 +104,7 @@ export default function model (props$, actions, sources) {
   const appData$ = sources.appMeta
 
   //
-  const visualResources$ = actions.visualResources.startWith(undefined)
+  const visualResources$ = actions.visualResources.startWith([])
     //.forEach(e=>console.log('visualResources',e))
 
   // combine all the above to get our dynamic state
