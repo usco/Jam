@@ -28,3 +28,16 @@ export function partSource (DOM, params) {
   return filterByExtensions(merge(dndSourceFiles$, dndSourceUris$), params.get('extensions', 'sources'))
 // .map(data => ( {src:'desktop', uri:data.name} ) )
 }
+
+export function other (DOM, params) {
+  const dragOvers$ = DOM.select(':root').events('dragover')
+  const drops$ = DOM.select(':root').events('drop')
+  const dnd$ = observableDragAndDrop(dragOvers$, drops$)
+
+  // drag & drop sources
+  let dndOtherFiles$ = dnd$.filter(e => e.type === 'file').pluck('data')
+  let dndOtherUris$ = dnd$.filter(e => (e.type === 'url')).pluck('data')
+
+  return filterByExtensions(merge(dndOtherFiles$, dndOtherUris$), params.get('extensions', 'other'))
+// .map(data => ( {src:'desktop', uri:data.name} ) )
+}

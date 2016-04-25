@@ -70,7 +70,7 @@ export function extractDataFromRawSources (sources, basePath) {
 
       const sourceData = sources[sourceName] // the raw source of data (ususually a driver)
       const extractorNames = Object.keys(extractorImport) // all the exports from the module
-      // console.log("extractorNames",extractorNames)
+      console.log("extractorNames",extractorNames)
 
       // TODO , find a better way to do this
       const paramsHelper = {
@@ -78,7 +78,8 @@ export function extractDataFromRawSources (sources, basePath) {
           const data = {
             'extensions': {
               meshes: ['stl', '3mf', 'amf', 'obj', 'ctm', 'ply'],
-              sources: ['scad', 'jscad']
+              sources: ['scad', 'jscad'],
+              other: ['gcode']
             }
           }
           return data[category][params]
