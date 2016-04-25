@@ -122,7 +122,8 @@ export function GLWrapper (state$, drivers) {
     selections$,
     meta: state$.pluck('meta'),
     meshes: state$.pluck('meshes'),
-    transforms: state$.pluck('transforms')
+    transforms: state$.pluck('transforms'),
+    rawVisuals: state$.pluck('visualResources')
   })
 
   let glUi = GLView({drivers, props$: glProps$})

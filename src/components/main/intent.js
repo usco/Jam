@@ -25,6 +25,11 @@ export default function intent (sources) {
 
   // const actions            = actionsFromSources(sources, path.resolve(__dirname,'./actions')+'/' )
   let _resources = resources(sources)
+  // special case for gcode etc
+  let visualResources$ = _resources.parsed$
+    .filter(e => e.progress === 1)
+    .pluck('data')
+
   // we also require resources as a source
   sources = mergeData(sources, {resources: _resources})
 
@@ -59,6 +64,8 @@ export default function intent (sources) {
     annotationsActions: {creationStep$: Rx.Observable.never()},
     apiActions,
     progress: _resources,
-    requests
+    requests,
+
+    visualResources: visualResources$
   }
 }

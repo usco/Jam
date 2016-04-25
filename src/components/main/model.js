@@ -103,6 +103,10 @@ export default function model (props$, actions, sources) {
   // ////other data
   const appData$ = sources.appMeta
 
+  //
+  const visualResources$ = actions.visualResources.startWith(undefined)
+    //.forEach(e=>console.log('visualResources',e))
+
   // combine all the above to get our dynamic state
   const state$ = combineLatestObj({
     selections$,
@@ -121,7 +125,11 @@ export default function model (props$, actions, sources) {
     // infos about current design etc
     design$,
     assembly$,
-    authData$})
+    authData$,
+
+    // FIXME  temporary
+    visualResources$
+  })
     .shareReplay(1)
 
   return state$
