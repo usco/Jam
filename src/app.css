@@ -450,98 +450,82 @@ input[type=color]:focus{
 
 .bom{
   position: absolute;
-  right: 20px;
-  top: 10px;
-  background: white;
-
+  padding: 10px 20px;
+  min-width: 550px;
+  top: 0px;
+  right: 0px;
+  bottom: 54px;
+  height: auto;
   cursor: default;
-  height: 90%;
 }
 
 .bom .bomToggler{
-  right: 10px;
-  position: fixed;
+  float: right;
+  margin: 0;
 }
 
 .bom .container{
-  /*overflow-y: auto;
-  height: 200px;
-  max-height:300px;*/
-
-  position: absolute;
-  right: 0px;
-  top: 31px;
-  max-height: 80%;
-  min-height: 100px;
-  overflow-x: hidden;
-  overflow-y: auto;
+  height: 100%;
 }
 
 .bom table{
   font-size: 13px;
   border-collapse: collapse;
-  border: 1px solid #F7F6F6 !important;
   background: white;
   width: 100%;
 }
 
-.bom thead tr{
-  border-bottom: 1px solid #F7F6F6 !important;
+.bom .column0{ width: 40% }
+.bom .column1{ width: 10% }
+.bom .column2{ width: 15% }
+.bom .column3{ width: 10% }
+.bom .column4{ width: 15% }
+.bom .column5{ width: 10% }
+
+.bom #tableheader{
   cursor: pointer;
+  border: 1px solid #F7F6F6;
 }
 
-.bom th{
-  min-width: 75;
-}
-/*
-.scroll {
-  border: 0;
-}
-
-.scroll tr {
-  display: flex;
-}
-
-.scroll td {
+.bom #tablebody{
   display: block;
-  flex: 1 auto;
-}
-
-.scroll thead tr:after {
-  content: '';
-  overflow-y: scroll;
-  visibility: hidden;
-  height: 0;
-}
-
-.scroll thead th {
-  flex: 1 auto;
-  display: block;
-}
-
-.scroll tbody {
-  display: block;
-  width: 100%;
+  max-height: 80%;
+  overflow-x: hidden;
   overflow-y: auto;
-  max-height: 200px;
-}*/
+  border: 1px solid #F7F6F6;
+  border-top: 0px;
+}
 
+.bom{
+  font-weight: 600;
+  font-size: .9em;
+}
 
-.bom tr:hover
-{
+.bom tr:hover{
    background-color: #F4F4F4;
    color: black;
-   /*font-weight: bold;*/
-}
-
-.bom tr.selected
-{
-   /*background-color: #F4F4F4;
-   color:#F99305;*/
-   background-color: #484848;
-   color:white;
    font-weight: bold;
 }
+
+.bom tr.selected{
+   background-color: #484848;
+   color:white;
+}
+
+.bom .adderRow td{
+  border: 1px solid #F7F6F6;
+}
+
+.bom td.column0, .bom th.column4 {
+  text-align: left;
+}.readOnly th.column4 { text-align: center; }
+
+.bom .cell{
+  vertical-align: middle;
+  text-align: center;
+  padding: 5 5 5 5;
+}
+
 
 .bom .directionArrow{
   font-size: 0.6em;
@@ -565,17 +549,12 @@ input[type=color]:focus{
   font-size: 12px;
 }
 
-.bom .bomEntry .cell{
-  text-align: center;
-  vertical-align: middle;
-  padding: 5 5 5 5;
-}
-
 .bom input[type=text]{
   border: none;
   background: none;
   color: #555555;
   font-family: 'Open Sans', sans-serif;
+  padding-left: 3px;
 }
 
 .bom tr.selected input[type=text]{
@@ -584,11 +563,14 @@ input[type=color]:focus{
   color: white;
 }
 
-.bom .bomEntry .name input[type=text]{
+.bom tr.selected input[type=checkbox]{
+}
+
+.bom .name input[type=text]{
   min-width: 150px;
   text-overflow: ellipsis;
 }
-.bom .bomEntry .qty input[type=number]{
+.bom .qty input[type=number]{
   width: 50px;
   box-sizing: border-box;
   -moz-box-sizing: border-box;
@@ -606,7 +588,7 @@ input[type=color]:focus{
   color:white;
 }
 
-.bom .bomEntry .phys_qty input[type=number]{
+.bom .phys_qty input[type=number]{
   width: 50px;
   box-sizing: border-box;
   -moz-box-sizing: border-box;
@@ -620,14 +602,9 @@ input[type=color]:focus{
   font-family: inherit;
 }
 
-/*.bom .headerCell{
-  padding: 2px 10px 2px 10px;
-}*/
-
 .bom .adder{
   font-style: italic;
   color: #827D7D;
-  background: white;
 }
 
 .bom .adder td {
@@ -667,8 +644,9 @@ input[type=color]:focus{
   margin: 0;
 }
 
-
-
+.bom .bomEntry button{
+  margin: 0;
+}
 
 .bom .bomEntry button .icon{
   background: white;
@@ -702,8 +680,6 @@ input[type=color]:focus{
   padding: 2 5 2 5;
   background: #5fc5fb;
 }
-
-
 
 .foo{
   position: absolute;
