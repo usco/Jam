@@ -99,7 +99,9 @@ var config = {
           ]})
       }
     ],
-    noParse: /\.min\.js/
+    noParse: [
+      /\.min\.js/
+    ]
   },
   resolve: {
     extensions: ['', '.js', '.jsx', 'json'],
@@ -110,8 +112,9 @@ var config = {
         "q$":path.join(__dirname, "node_modules","usco-kernel2/src/kernel.js"),//needed only FOR DEV
     }*/
     alias: {
-      'three$': path.join(__dirname, 'node_modules', 'three/three.min.js')
+      'three$': path.join(__dirname, 'node_modules', 'three/three.min.js'),
     }
+
   },
   resolveLoader: {
     root: path.join(__dirname, 'node_modules')
