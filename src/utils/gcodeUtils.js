@@ -25,10 +25,10 @@ export default function parse(str){
 
   const defaultColor = new THREE.Color(0xFF0000)
   const motionColor = {
-    'G0': [255,0,0,255],//new THREE.Color(0xFF0000),//0x07a9ff
-    'G1': [7, 169, 255, 255],//new THREE.Color(0x17a9f5),//0x17a9f5
-    'G2': [125, 255, 255, 255],//new THREE.Color(0xF0FF00),
-    'G3': [125, 255, 125, 255]//new THREE.Color(0xF0FF0F)
+    'G0': [255, 158, 2, 255], // new THREE.Color(0xFF0000),//0x07a9ff
+    'G1': [7, 169, 255, 255], // new THREE.Color(0x17a9f5),//0x17a9f5
+    'G2': [125, 255, 255, 255], // new THREE.Color(0xF0FF00),
+    'G3': [125, 255, 125, 255]// new THREE.Color(0xF0FF0F)
   }
 
   let group = new THREE.Object3D()
@@ -42,15 +42,8 @@ export default function parse(str){
     const { motion } = modalState
 
     posArray.push(v1.x, v1.y, v1.z, v2.x, v2.y, v2.z)
-
     let color = (motionColor[motion] || defaultColor).map(e => (e/255))
     colArray.push(color[0], color[1], color[2], color[3], color[0], color[1], color[2], color[3])
-    //colArray = colArray.concat(color, color)
-
-    /*geometry.vertices.push(new THREE.Vector3(v1.x, v1.y, v1.z))
-    geometry.vertices.push(new THREE.Vector3(v2.x, v2.y, v2.z))
-    geometry.colors.push(new THREE.Color(color))
-    geometry.colors.push(new THREE.Color(color))*/
   }
 
   const toolpath = new GCodeToolpath({

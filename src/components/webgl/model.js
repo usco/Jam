@@ -100,17 +100,15 @@ export default function model (props$, actions) {
   const items$ = props$
     .debounce(1)
     .map(function(props){
-
-    const meta = props.meta
-    const transforms = props.transforms
-    const meshes = props.meshes
-    let  visual = getVisual({meta, transforms, meshes})
-    console.log('visual',visual,'rawVisuals',props.rawVisuals)
-    return visual.concat(props.rawVisuals)
+      const meta = props.meta
+      const transforms = props.transforms
+      const meshes = props.meshes
+      let visual = getVisual({meta, transforms, meshes})
+      return visual.concat(props.rawVisuals)
   })
   .startWith(undefined)
   .filter(exists)
-  .tap(e => console.log('items2', e))
+  //.tap(e => console.log('items2', e))
   .shareReplay(1)
 
   // "external" selected meshes
