@@ -451,7 +451,7 @@ input[type=color]:focus{
 .bom{
   position: absolute;
   padding: 10px 20px;
-  min-width: 450px;
+  min-width: 550px;
   top: 0px;
   right: 0px;
   bottom: 54px;
@@ -471,53 +471,61 @@ input[type=color]:focus{
 .bom table{
   font-size: 13px;
   border-collapse: collapse;
-  border: 1px solid #F7F6F6 !important;
   background: white;
   width: 100%;
-  padding-left: 3px;
 }
 
-.bom .column0{ width: 50% }
+.bom .column0{ width: 40% }
 .bom .column1{ width: 10% }
-.bom .column2{ width: 10% }
+.bom .column2{ width: 15% }
 .bom .column3{ width: 10% }
-.bom .column4{ width: 10% }
+.bom .column4{ width: 15% }
 .bom .column5{ width: 10% }
 
-.bom #tablehead{
-  border-bottom: 0px solid #F7F6F6 !important;
+.bom #tableheader{
   cursor: pointer;
+  border: 1px solid #F7F6F6;
 }
 
 .bom #tablebody{
   display: block;
-  min-height: 100px;
   max-height: 80%;
   overflow-x: hidden;
   overflow-y: auto;
+  border: 1px solid #F7F6F6;
+  border-top: 0px;
 }
 
-.bom th{
-  font-weight: 400;
-  text-transform: capitalize;
+.bom{
+  font-weight: 600;
   font-size: .9em;
 }
 
-.bom tr:hover
-{
+.bom tr:hover{
    background-color: #F4F4F4;
    color: black;
-   /*font-weight: bold;*/
-}
-
-.bom tr.selected
-{
-   /*background-color: #F4F4F4;
-   color:#F99305;*/
-   background-color: #484848;
-   color:white;
    font-weight: bold;
 }
+
+.bom tr.selected{
+   background-color: #484848;
+   color:white;
+}
+
+.bom .adderRow td{
+  border: 1px solid #F7F6F6;
+}
+
+.bom td.column0, .bom th.column4 {
+  text-align: left;
+}.readOnly th.column4 { text-align: center; }
+
+.bom .cell{
+  vertical-align: middle;
+  text-align: center;
+  padding: 5 5 5 5;
+}
+
 
 .bom .directionArrow{
   font-size: 0.6em;
@@ -541,17 +549,12 @@ input[type=color]:focus{
   font-size: 12px;
 }
 
-.bom .cell{
-  vertical-align: middle;
-  padding: 5 5 5 5;
-}
-
 .bom input[type=text]{
   border: none;
   background: none;
   color: #555555;
   font-family: 'Open Sans', sans-serif;
-  padding-left: 3px; 
+  padding-left: 3px;
 }
 
 .bom tr.selected input[type=text]{
@@ -561,7 +564,6 @@ input[type=color]:focus{
 }
 
 .bom tr.selected input[type=checkbox]{
-  text-align: center;
 }
 
 .bom .name input[type=text]{
@@ -603,7 +605,6 @@ input[type=color]:focus{
 .bom .adder{
   font-style: italic;
   color: #827D7D;
-  background: white;
 }
 
 .bom .adder td {
@@ -640,6 +641,7 @@ input[type=color]:focus{
   color: white;
   padding: 2 5 2 5;
   background: #5fc5fb;
+  margin: 0;
 }
 
 .bom .bomEntry button{
