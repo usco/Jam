@@ -97,10 +97,12 @@ function settings (actions, source) {
 
     toolSets: ['view', 'edit', 'annotate'], // what categories of tools do we want on screen
 
-    selections: undefined,
+    selections: undefined, //FIXME : not entirely sure this should even be here
 
     // these are "domain specific", there should be a way for sub systems
     // to "hook up" to the main data storage
+    viewMode: 'default',
+
     camera: {
       autoRotate: false
     },
@@ -111,7 +113,7 @@ function settings (actions, source) {
       show: true
     },
 
-    //
+    //persistence
     autoSave: false,
     autoLoad: true
   }
