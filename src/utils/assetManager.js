@@ -13,7 +13,8 @@ import assign from 'fast.js/object/assign' // faster object.assign
 import { postProcessParsedData } from './parseUtils'
 
 //FIXME : hack !
-import gcodeParser from './gcodeUtils'
+//import gcodeParser from './gcodeUtils'
+import {convert} from './gcodeUtils'
 
 function getParser (extension) {
   return lazyLoad(extension)
@@ -60,7 +61,8 @@ function lazyLoad (moduleNamePath) {
       require('bundle?lazy!usco-3mf-parser')(module => obs.onNext(module))
       break
     case 'gcode':
-      obs.onNext({default:gcodeParser})
+      require('bundle?lazy!usco-gcode-parser')(module => obs.onNext(module))
+      //obs.onNext({default:gcodeParser})
       break
     default:
       obs.onError(`No parser for "${moduleNamePath}" format`)
@@ -124,6 +126,25 @@ function parse (fetched$) {
       if(ext !== 'gcode')
       {
         parsedData$ = parsedData$.map(postProcessParsedData)
+      }else{
+        console.log('here, gcode')
+        parsedData$ = parsedData$
+          .map(d=> d[0])
+          .map(convert)
+          .map(function(data){
+            console.log('ad',data)
+            return data
+          })
+
+          /*.map(postProcessParsedData)
+          .map(e=>e.typesMeshes[0].mesh)
+          .map(function(data){
+
+            return [data]
+            obs.onNext([group])
+            obs.onNext({progress: 1, total: 1})
+          })*/
+
       }
         // .tap(e=>console.log("parsedData",e))
 
