@@ -127,7 +127,7 @@ export default function makeYMDriver (httpDriver, params = {}) {
     const outToHttp$ = merge(designExistsRequest$, allSaveRequests$, allLoadRequests$)
 
     const inputs$ = httpDriver(outToHttp$)
-      .merge(getAssemblyEntriesNoAssemblyFound(assembliesIn$))
+      .merge(getAssemblyEntriesNoAssemblyFound(otherHelper(httpDriver(assembliesIn$))))
 
     // starts when outputing data, done when confirmation recieved
     function confirmSaveDone(what){

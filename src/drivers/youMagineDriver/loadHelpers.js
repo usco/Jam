@@ -3,6 +3,7 @@ const Observable = Rx.Observable
 const { just } = Observable
 import { head } from 'ramda'
 import { combineLatestObj } from '../../utils/obsUtils'
+import { exists } from '../../utils/utils'
 
 
 
@@ -10,6 +11,7 @@ export function makeApiStreamGets (source$, outputMapper, design$, authData$, ap
   const get$ = source$
     .withLatestFrom(design$, authData$, apiEndpoint$, (sourceData, design, authData, apiEndpoint) => ({sourceData, designId: design.id, authToken: authData.token, apiEndpoint}))
     .map(outputMapper)
+    .filter(exists)
 
   return get$
 }
@@ -74,30 +76,33 @@ export function getAssemblies (data) { // FIXME: semi hack
 export function getAssemblyEntries (data) {
   const {designId, authToken, sourceData, apiEndpoint} = data
 
-  const authTokenStr = `/?auth_token=${authToken}`
-  const designUri = `${apiEndpoint}/designs/${designId}`
-  const assembliesUri = `${designUri}/assemblies/${sourceData.uuid}/entries${authTokenStr}`
+  //FIXME : UGH pre filter this
+  if(sourceData && sourceData.uuid){
 
-  return {
-    url: assembliesUri,
-    method: 'get',
-    type: 'ymLoad',
-    typeDetail: 'assemblyEntries',
-    responseType: 'json',
-    assemblyId: sourceData.uuid// FIXME : temporary, used to know WHICH assembly the further data belongs to
+    const authTokenStr = `/?auth_token=${authToken}`
+    const designUri = `${apiEndpoint}/designs/${designId}`
+    const assembliesUri = `${designUri}/assemblies/${sourceData.uuid}/entries${authTokenStr}`
+
+    return {
+      url: assembliesUri,
+      method: 'get',
+      type: 'ymLoad',
+      typeDetail: 'assemblyEntries',
+      responseType: 'json',
+      assemblyId: sourceData.uuid// FIXME : temporary, used to know WHICH assembly the further data belongs to
+    }
+  }else{
+    return undefined
   }
 }
 
-export function makeGetStreamForAssemblies (source$, outputMapper, design$, authData$, apiEndpoint$){
+export function makeGetStreamForAssemblies (source$, outputMapper, design$, authData$, apiEndpoint$) {
   return source$
     .withLatestFrom(design$, authData$, apiEndpoint$, (_, design, authData, apiEndpoint) => ({designId: design.id, authToken: authData.token, apiEndpoint}))
     .map(getAssemblies)
-    /*.flatMap(getAssemblies)
-    .pluck('response')
-    .map(data => head(JSON.parse(data))) // 'head' => ie the first assembly we find*/
 }
 
-export function getAssemblyEntriesNoAssemblyFound(getAssemblies$){
+export function getAssemblyEntriesNoAssemblyFound (getAssemblies$) {
   return getAssemblies$
     .filter(data => data === undefined)
     .map(function (_) {
