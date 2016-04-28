@@ -13,9 +13,9 @@
     "build-test": "NODE_ENV=production MODE=test webpack -p",
     "profile": "webpack --profile --json > stats.json",
     "release": "npm run release-patch",
-    "release-patch": "git checkout master && npm run build; git commit -a -m 'chore(dist): built dist/'; npm version patch && git push origin master --tags ",
-    "release-minor": "git checkout master && npm run build; git commit -a -m 'chore(dist): built dist/'; npm version minor && git push origin master --tags ",
-    "release-major": "git checkout master && npm run build; git commit -a -m 'chore(dist): built dist/'; npm version major && git push origin master --tags ",
+    "release-patch": "git checkout master; npm version patch && npm run build; git commit -a -m 'chore(dist): built dist/'; git push origin master --tags ",
+    "release-minor": "git checkout master; npm version minor && npm run build; git commit -a -m 'chore(dist): built dist/'; git push origin master --tags ",
+    "release-major": "git checkout master; npm version major && npm run build; git commit -a -m 'chore(dist): built dist/'; git push origin master --tags ",
     "make-offline_simple": "babel src/components/webgl/view.js --out-file dist/jam-headless.js",
     "make-offline-webpack": "webpack --config webpack.config.headless.js"
   },
