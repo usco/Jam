@@ -1,7 +1,9 @@
 import Rx from 'rx'
 let merge = Rx.Observable.merge
 import { toRadian } from '../../utils/formatters'
-function isNumber(obj) { return !isNaN(parseFloat(obj)) }
+import { exists } from '../../utils/utils'
+
+function isNumber (obj) { return !isNaN(parseFloat(obj)) }
 
 export default function intent (DOM) {
   // const addComment$ = DOM.select('.comments').events('addComment$').pluck('detail')
@@ -24,8 +26,8 @@ export default function intent (DOM) {
 
   const changeTransforms$ = merge(
     DOM.select('.transformsInput').events('change'),
-  // DOM.select(".transformsInput").events('input'),
     DOM.select('.transformsInput').events('blur')
+    // DOM.select(".transformsInput").events('input'),
   )
     .map(function (e) {
       let val = parseFloat(e.target.value)
@@ -36,6 +38,7 @@ export default function intent (DOM) {
       }
       return {val, trans, idx: parseInt(idx, 10)}
     })
+    .filter(exists)
     .filter(data => isNumber(data.val))
     .distinctUntilChanged()
     // .debounce(20)

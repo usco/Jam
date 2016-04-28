@@ -42,6 +42,7 @@ function refineActions (props$, actions) {
   const transforms$ = props$.pluck('transforms')
     .filter(exists)
     .map(e => e[0])
+    .filter(exists)
 
   const changeTransforms$ = actions.changeTransforms$
     .withLatestFrom(transforms$, function (changed, transforms) {
