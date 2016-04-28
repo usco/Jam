@@ -59,9 +59,8 @@ function refineActions (props$, actions) {
 }
 
 function EntityInfos ({DOM, props$}, name = '') {
-  const state$ = model(props$)
-
   const {changeMeta$, changeTransforms$} = refineActions(props$, intent(DOM))
+  const state$ = model(props$)
   // const colorPicker = colorPickerWrapper(state$, DOM)
   const vtree$ = view(state$) // , colorPicker.DOM)
 
