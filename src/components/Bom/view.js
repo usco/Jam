@@ -214,8 +214,10 @@ export default function view (state$) {
       let adder = !readOnly ? getAdderRow(getFieldsArray('_adder')) : null
       let body = getTableBody(getFieldsArray('_adder', false))
       if (toggled) {
+        //console.log('entries', entries, entries.length)
+        //style={`height: ${(entries.length)*42+60}px`}
         content =
-          <div className='container'>
+          <div className={Class('tableContainer', {toggled})}>
             <table id='tableheader'>
               {header}
               {adder}

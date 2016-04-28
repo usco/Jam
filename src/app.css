@@ -492,6 +492,7 @@ input[type=color]:focus{
 .bom #tableheader{
   cursor: pointer;
   border: 1px solid #F7F6F6;
+  pointer-events: auto;
 }
 
 .bom #tablebody{
@@ -501,6 +502,7 @@ input[type=color]:focus{
   overflow-y: auto;
   border: 1px solid #F7F6F6;
   border-top: 0px;
+  pointer-events: auto;
 }
 
 .bom{
