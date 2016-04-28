@@ -1,7 +1,7 @@
 {
   "name": "jam",
   "version": "0.7.0",
-  "description": "jam! experimental version",
+  "description": "jam! View , annotate , measure 3d designs & more !",
   "main": "index.js",
   "scripts": {
     "mocha": "mocha --compilers js:babel-core/register './src/**/*.spec.js' --recursive ",
