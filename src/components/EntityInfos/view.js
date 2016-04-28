@@ -157,6 +157,7 @@ function transformInputs (transforms, fieldName, displayName, controlsStep, numb
         inputs.push(
           <input
             type='number'
+            lang='en'
             value={value}
             step={controlsStep}
             className={`transformsInput`}
