@@ -449,12 +449,12 @@ input[type=color]:focus{
 /*bom view*/
 
 .bom{
-  position: absolute;
+  /*position: absolute;
   padding: 10px 20px;
   min-width: 550px;
   top: 0px;
   right: 0px;
-  bottom: 54px;
+  bottom: 54px;*/
   height: auto;
   cursor: default;
 }
@@ -462,10 +462,17 @@ input[type=color]:focus{
 .bom .bomToggler{
   float: right;
   margin: 0;
+  top: 10px;
+  right: 20px;
+  position: absolute;
 }
 
-.bom .container{
-  height: 100%;
+.bom .tableContainer{
+  position: absolute;
+  top: 42px;
+  right: 20px;
+  height: calc(100% - 132px);
+  pointer-events: none;
 }
 
 .bom table{
