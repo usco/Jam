@@ -1,5 +1,42 @@
 import THREE from 'three'
 
+/*
+  un-indexes raw geometry data hash with indices
+  @geomData: hash containing arraybuffers, by attributes : ie
+  {
+      position: [....],
+      normal: [....],
+      indices: [...]
+  }
+*/
+export function unIndexGeometryData (geomData) {
+  if (!('indices' in geomData)) {
+    return geomData
+  }
+  const bufferTypes = ['positions', 'normals', 'colors', 'uvs']
+  const bufferTypeSizes = { positions: 3, normals: 3, colors: 4, uvs: 3 }
+  let output = {}
+  geomData.indices.forEach(function (inputIndex, outIndex) {
+    bufferTypes.forEach(function (bufferType) {
+      if (geomData[bufferType] && geomData[bufferType].length > 0) {
+        const size = bufferTypeSizes[bufferType]
+
+        if (!(output[bufferType])) {
+          output[bufferType] = new Float32Array(geomData.indices.length * size)
+        }
+
+        for (let i = 0; i < size; i++) {
+          output[bufferType][outIndex * size + i] = geomData[bufferType][inputIndex * size + i]
+        }
+        // output[bufferType][outIndex * size] = geomData[bufferType][inputIndex * size]
+        // output[bufferType][outIndex * size + 1] = geomData[bufferType][inputIndex * size + 1]
+        // output[bufferType][outIndex * size + 2] = geomData[bufferType][inputIndex * size + 2]
+      }
+    })
+  })
+  return output
+}
+
 // TODO: UNIFY api for parsers, this is redundant
 export function postProcessMesh (shape) {
   // geometry
