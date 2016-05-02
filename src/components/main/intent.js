@@ -1,4 +1,5 @@
 import Rx from 'rx'
+import {has} from 'ramda'
 
 import { mergeData } from '../../utils/modelUtils'
 import { preventBackNavigation } from '../../interactions/keyboard'
@@ -25,6 +26,12 @@ export default function intent (sources) {
 
   // const actions            = actionsFromSources(sources, path.resolve(__dirname,'./actions')+'/' )
   let _resources = resources(sources)
+  // special case for gcode etc
+  let visualResources$ = _resources.parsed$
+    .filter(e => e.progress === 1)
+    .pluck('data')
+    .filter(data => !has('meshOnly',data))
+
   // we also require resources as a source
   sources = mergeData(sources, {resources: _resources})
 
@@ -59,6 +66,8 @@ export default function intent (sources) {
     annotationsActions: {creationStep$: Rx.Observable.never()},
     apiActions,
     progress: _resources,
-    requests
+    requests,
+
+    visualResources: visualResources$
   }
 }

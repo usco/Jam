@@ -1,5 +1,5 @@
 import { generateUUID } from './utils'
-import { postProcessMesh, geometryFromBuffers } from './meshUtils'
+import { postProcessMesh, geometryFromBuffers, unIndexGeometryData } from './meshUtils'
 import { meshTools } from 'glView-helpers'
 const {centerMesh} = meshTools
 
@@ -59,6 +59,8 @@ export function postProcessParsedData (data) {
     return result
   } else {
     mesh = data
+    // FIXME: just a test , in case we need to un-index geometric data
+    // mesh = unIndexGeometryData(mesh)
     mesh = geometryFromBuffers(mesh)
     mesh = postProcessMesh(mesh)
     mesh = centerMesh(mesh)

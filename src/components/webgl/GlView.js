@@ -9,16 +9,13 @@ import { hJSX } from '@cycle/dom'
 let fromEvent = Rx.Observable.fromEvent
 let merge = Rx.Observable.merge
 
-import { pointerInteractions, interactionsFromCEvents, preventScroll } from '../../interactions/pointers'
+import { preventScroll } from '../../interactions/pointers'
 import { windowResizes } from '../../interactions/sizing'
 
 import { exists, combineLatestObj } from '../../utils/obsUtils'
-import { itemsEqual } from '../../utils/utils'
 
-import { extractChanges, transformEquals, entityVisualComparer } from '../../utils/diffPatchUtils'
+import { extractChanges } from '../../utils/diffPatchUtils'
 
-import OrbitControls from './deps/OrbitControls'
-import CombinedCamera from './deps/CombinedCamera'
 import TransformControls from './transforms/TransformControls'
 
 import { planes, grids, annotations, cameraEffects, CamViewControls } from 'glView-helpers'
@@ -127,7 +124,6 @@ function setupPostProcess (camera, renderer, scene) {
   return {composers: [composer], fxaaPass, outScene, maskScene}
 
   // return {composer:finalComposer, fxaaPass, outScene, maskScene, composers:[normalComposer,depthComposer,finalComposer]}
-
 }
 
 import intent from './intent'
@@ -312,7 +308,6 @@ function GLView ({drivers, props$}) {
   // combine All needed components to apply any 'transforms' to their visuals
   let items$ = state$.pluck('items') // .distinctUntilChanged()
   // TODO : we DO  want distinctUntilChanged() to prevent spamming here at any state change
-
   // TODO we want to zoomToFit only when mode is viewer && we just recieved the FIRST model ??
   /* settings$
     .filter(s=> s.mode === 'viewer')
@@ -333,7 +328,8 @@ function GLView ({drivers, props$}) {
 
   // experimenting with selections effects
   outlineSelections$
-    .pluck('selectedMeshes').distinctUntilChanged()
+    .pluck('selectedMeshes')
+    .distinctUntilChanged()
     .forEach(function (selectedMeshes) {
       if (outScene) {
         outScene.children = selectedMeshes

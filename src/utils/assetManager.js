@@ -12,6 +12,10 @@ import assign from 'fast.js/object/assign' // faster object.assign
 
 import { postProcessParsedData } from './parseUtils'
 
+//FIXME : hack !
+//import gcodeParser from './gcodeUtils'
+import {convert} from './gcodeUtils'
+
 function getParser (extension) {
   return lazyLoad(extension)
 }
@@ -56,6 +60,12 @@ function lazyLoad (moduleNamePath) {
     case '3mf':
       require('bundle?lazy!usco-3mf-parser')(module => obs.onNext(module))
       break
+    case 'gcode':
+      require('bundle?lazy!usco-gcode-parser')(module => obs.onNext(module))
+      //obs.onNext({default:gcodeParser})
+      break
+    default:
+      obs.onError(`No parser for "${moduleNamePath}" format`)
   }
   return obs
 }
@@ -109,9 +119,33 @@ function parse (fetched$) {
       const parsedObs$ = parser(rawData, parseOptions)
         .doOnError(e => console.log('error in parse', e))
 
-      const parsedData$ = parsedObs$
+      let parsedData$ = parsedObs$
         .filter(e => e.progress === undefined) // seperate out progress data
-        .map(postProcessParsedData)
+
+      // FIXME : hack !
+      if(ext !== 'gcode')
+      {
+        parsedData$ = parsedData$.map(postProcessParsedData)
+      }else{
+        console.log('here, gcode')
+        parsedData$ = parsedData$
+          .map(d=> d[0])
+          .map(convert)
+          .map(function(data){
+            console.log('ad',data)
+            return data
+          })
+
+          /*.map(postProcessParsedData)
+          .map(e=>e.typesMeshes[0].mesh)
+          .map(function(data){
+
+            return [data]
+            obs.onNext([group])
+            obs.onNext({progress: 1, total: 1})
+          })*/
+
+      }
         // .tap(e=>console.log("parsedData",e))
 
       const progress$ = parsedObs$
@@ -121,8 +155,6 @@ function parse (fetched$) {
         .startWith(0)
 
       const meta$ = of({uri, ext, name, id, flags})
-
-      // throw new Error("eeeelkj")
 
       return combineLatestObj({meta$, data: parsedData$, progress$})
     })
@@ -176,7 +208,7 @@ function computeCombinedProgress (fetched$, parsed$) {
 }
 
 export function resources (sources) {
-  const fetched$ = fetch(sources)
+  const fetched$ = fetch(sources)//.tap(e=>console.log('fetched',e))
   const parsed$ = parse(fetched$)
   const combinedProgress$ = computeCombinedProgress(fetched$, parsed$)
 
