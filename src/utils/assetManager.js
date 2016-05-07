@@ -11,6 +11,9 @@ import { mergeData } from './modelUtils'
 import assign from 'fast.js/object/assign' // faster object.assign
 
 import { postProcessParsedData } from './parseUtils'
+import * as convertStream from 'stream-conversions'
+import most from 'most'
+window.most = most // FIXME : horrible hack
 
 //FIXME : hack !
 //import gcodeParser from './gcodeUtils'
@@ -116,11 +119,13 @@ function parse (fetched$) {
       const {rawData, uri, ext, name, id, flags} = data
       const parseOptions = {useWorker: true}
 
-      const parsedObs$ = parser(rawData, parseOptions)
+
+      const parsedObs$ = convertStream.default.most.to.rx(parser(rawData, parseOptions))
         .doOnError(e => console.log('error in parse', e))
 
       let parsedData$ = parsedObs$
-        .filter(e => e.progress === undefined) // seperate out progress data
+        .filter(e => e.data !== undefined) // seperate out progress data
+        .pluck('data')
 
       // FIXME : hack !
       if(ext !== 'gcode')
@@ -158,12 +163,12 @@ function parse (fetched$) {
 
       return combineLatestObj({meta$, data: parsedData$, progress$})
     })
-    .shareReplay(1)
+    //.shareReplay(1)
 
   return parsed$
 }
 
-// helper function to output combine fetch & parse data
+// helper function to output combine fetch & parse progress
 function computeCombinedProgress (fetched$, parsed$) {
   const fetchToParseRatio = 0.95
 
