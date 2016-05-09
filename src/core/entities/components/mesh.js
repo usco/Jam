@@ -1,5 +1,6 @@
 import { removeComponents, duplicateComponents, makeActionsFromApiFns } from './common'
 import { makeModel, mergeData } from '../../../utils/modelUtils'
+import THREE from 'three'
 
 // //Mesh//////
 export function makeMeshSystem (actions) {
@@ -31,9 +32,57 @@ export function makeMeshSystem (actions) {
     }, state)
   }
 
+  function mirrorComponents (defaults, state, inputs) {
+    return inputs.reduce(function (state, input) {
+      let original = {}
+      original = state[input.id]
+
+
+      let mesh = original.clone()// meh ?//FIXME : make sure there are no multiple clones
+      mesh.material = mesh.material.clone() // {mesh: inputValue.mesh }// mergeData(defaults,inputValue)
+      let id = input.id
+
+      mesh.userData.entity = {id}
+      mesh.pickable = true
+
+      //mesh.scale(-1, 1, 1)
+      var mS = (new THREE.Matrix4()).identity()
+      //set -1 to the corresponding axis
+      //mS.elements[0] = -1
+      //mS.elements[5] = -1;
+      mS.elements[10] = -1
+      mesh.geometry.applyMatrix(mS)
+      //flip things
+      mesh.geometry.dynamic =true
+      mesh.geometry.attributes.position.needsUpdate = true
+
+      var p = mesh.geometry.attributes.normal.array
+      for(var i =0; i<p.length;i++){
+        p[i] = -p[i]
+      }
+      if(mesh.material.side === 0){
+        mesh.material.side = THREE.BackSide
+      }else{
+        mesh.material.side = 0
+      }
+
+
+
+
+      console.log('mirrorComponents', state, input)
+
+      state = mergeData({}, state)
+      state[id] = mesh
+      // FIXME big hack, use immutability !!!
+
+      return state
+    }, state)
+  }
+
   // TODO: should defaults be something like a stand in cube ?
   let updateFns = {
     createComponents: createComponentsMesh.bind(null, undefined),
+    mirrorComponents: mirrorComponents.bind(null, undefined),
     duplicateComponents,
     removeComponents
   }
