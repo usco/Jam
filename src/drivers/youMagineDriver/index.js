@@ -17,13 +17,6 @@ import {getParts, getBom, getAssemblyEntries, makeApiStreamGets, makeGetStreamFo
 // actual driver stuff
 // storage driver for YouMagine designs & data etc
 export default function makeYMDriver (httpDriver, params = {}) {
-  const defaults = {
-    apiBaseUri: 'api.youmagine.com/v1',
-    urlBase: 'https'
-  }
-  params = assign({}, defaults, params)
-  let { apiBaseUri, urlBase } = params
-  const apiEndpoint = `${urlBase}://${apiBaseUri}`
 
   function youMagineStorageDriver (outgoing$) {
     // ////////////////////////
@@ -34,7 +27,6 @@ export default function makeYMDriver (httpDriver, params = {}) {
       .share()
 
     const apiEndpoint$ = outgoing$.pluck('data', 'apiEndpoint')
-        .startWith(apiEndpoint)
         .filter(exists)
         .shareReplay(1)
 
@@ -44,7 +36,7 @@ export default function makeYMDriver (httpDriver, params = {}) {
       .pluck('data')
       .map(({design, authData, apiEndpoint}) => ({designId: design.id, authToken: authData.token, apiEndpoint}))
       .map(function (data) {
-        const {designId, authToken} = data
+        const {designId, authToken, apiEndpoint} = data
         const authTokenStr = `/?auth_token=${authToken}`
         const designUri = `${apiEndpoint}/designs/${designId}${authTokenStr}`
         return {

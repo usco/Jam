@@ -9,6 +9,7 @@ describe('youMagineDriver', () => {
   it('should handle data saving', function (done) {
     this.timeout(5000)
     const saveData = {
+      apiEndpoint: 'https://api.youmagine.com/v1',
       design: {id: 1, synched: true},
       authData: {token: '42'}, // bom & parts
       bom: [{id: 0, qty: 2, phys_qty: 1}], // assemblies data
