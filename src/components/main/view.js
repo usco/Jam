@@ -105,6 +105,20 @@ const duplicateIconSvg = `<svg version="1.1" id="Copy" xmlns="http://www.w3.org/
   C18,6.448,17.553,6,17,6z M16,20h1c0.553,0,1-0.448,1-1v-1h-2V20z M16,12h2v-2h-2V12z M16,16h2v-2h-2V16z"/>
 </svg>`
 
+const mirrorIconSvg = `<svg width="21px" height="27px" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
+  width="16" height="16" x="0px" y="0px" data-icon="duplicate" viewBox="0 0 20 20" class="icon">
+    <!-- Generator: Sketch 3.7.2 (28276) - http://www.bohemiancoding.com/sketch -->
+    <title>mirror</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <g id="mirror" fill="#000000">
+            <path d="M16.8156962,11.8582247 C16.4220849,10.8314033 16.4214299,9.16863818 16.8222627,8.12339644 L18.0677373,4.87560356 C18.4649751,3.83973632 17.8982954,3 16.780103,3 L4.69089704,3 C3.58251841,3 3.00231129,3.83036182 3.40299476,4.87560356 L4.64800524,8.12339644 C5.04509508,9.15926368 5.04734243,10.8328971 4.65430384,11.8582247 L0.712696162,22.1407753 C0.319084941,23.1675967 0.89520474,24 2.00056562,24 L19.4694344,24 C20.5743163,24 21.1503424,23.1661029 20.7573038,22.1407753 L16.8156962,11.8582247 Z M5.76196669,10.9349279 C5.94864385,10.4185815 5.95499335,9.5684948 5.78054213,9.04928216 L4.40345787,4.95071784 C4.22703964,4.42565087 4.5224337,4 5.09065483,4 L10.1800244,4 L10.1800244,23 L2.40720205,23 C1.8509532,23 1.55107707,22.5821904 1.73803331,22.0650721 L5.76196669,10.9349279 Z" id="Combined-Shape"></path>
+            <rect id="Rectangle-380" x="10" y="0" width="1" height="27" rx="1"></rect>
+        </g>
+    </g>
+</svg>`
+
 const deleteIconSvg = `<svg version="1.1" id="Trash" xmlns="http://www.w3.org/2000/svg"
   width="16" height="16" x="0px" y="0px" data-icon="duplicate" viewBox="0 0 20 20" class="icon">
   <path d="M3.389,7.113L4.49,18.021C4.551,18.482,6.777,19.998,10,20c3.225-0.002,5.451-1.518,5.511-1.979l1.102-10.908
@@ -187,6 +201,9 @@ function makeTopToolBar(state){
 
       {tooltipIconBtn(scaleModeToggled
         , scaleIconSvg, "toScaleMode", "scale", "bottom", false,  'snapScaling')}
+
+      {tooltipIconBtn(false
+        , mirrorIconSvg, "mirror", "mirror", "bottom")}
     </section>,
 
     <section>
