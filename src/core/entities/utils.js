@@ -26,9 +26,8 @@ export function remapEntityActions (entityActions, currentSelections$) {
     .share()
 
   const mirrorInstances$ = entityActions.mirrorInstances$
-    .withLatestFrom(currentSelections$, function (_, selections) {
-       console.log("selections to mirror",selections)
-      return selections
+    .withLatestFrom(currentSelections$, function (mirrorInfos, selections) {
+      return selections.map(s => mergeData(s, mirrorInfos))
     })
     .share()
 

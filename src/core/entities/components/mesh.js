@@ -46,28 +46,30 @@ export function makeMeshSystem (actions) {
       mesh.pickable = true
 
       //mesh.scale(-1, 1, 1)
-      var mS = (new THREE.Matrix4()).identity()
+      let mS = (new THREE.Matrix4()).identity()
+
+      const conv =[0, 5, 10]
       //set -1 to the corresponding axis
-      //mS.elements[0] = -1
-      //mS.elements[5] = -1;
-      mS.elements[10] = -1
+      mS.elements[conv[input.axis]] = -1
+      //mS.elements[0] = -1 // x
+      //mS.elements[5] = -1; // y
+      //mS.elements[10] = -1 // z
+
       mesh.geometry.applyMatrix(mS)
       //flip things
-      mesh.geometry.dynamic =true
+      mesh.geometry.dynamic = true
       mesh.geometry.attributes.position.needsUpdate = true
 
       var p = mesh.geometry.attributes.normal.array
-      for(var i =0; i<p.length;i++){
+      for(var i =0; i<p.length; i++){
         p[i] = -p[i]
       }
-      if(mesh.material.side === 0){
+      if (mesh.material.side === 0) {
         mesh.material.side = THREE.BackSide
-      }else{
+      }
+      else {
         mesh.material.side = 0
       }
-
-
-
 
       console.log('mirrorComponents', state, input)
 
