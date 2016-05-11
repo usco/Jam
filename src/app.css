@@ -1193,7 +1193,7 @@ Chrome, Safari, Opera */
 }
 .popOver .notch {
     position: absolute;
-    top: -12px;
+    top: -10px;
     left: 20px;
     margin: 0;
     border-top: 0;
