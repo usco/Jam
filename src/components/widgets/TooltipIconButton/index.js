@@ -1,5 +1,4 @@
 /** @jsx hJSX */
-import Cycle from '@cycle/core'
 import {hJSX} from '@cycle/dom'
 import Class from 'classnames'
 
