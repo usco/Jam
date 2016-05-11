@@ -1,5 +1,4 @@
 /** @jsx hJSX */
-import Cycle from '@cycle/core'
 import Rx from 'rx'
 import {hJSX} from '@cycle/dom'
 import Class from "classnames"
@@ -9,6 +8,7 @@ import {combineLatestObj} from '../../utils/obsUtils'
 import {exists} from '../../utils/utils'
 
 import tooltipIconBtn from '../widgets/TooltipIconButton'
+import ToggleButton from '../widgets/ToggleButton'
 //spinner /loader
 /*
 
@@ -184,6 +184,8 @@ function makeTopToolBar(state){
   const rotateModeToggled = activeTool === 'rotate'
   const scaleModeToggled = activeTool === 'scale'
 
+  const mirrorModeToggled = true
+
   const measureDistanceModeToggled = activeTool === 'rotate'
   const measureThicknessModeToggled = activeTool === 'scale'
 
@@ -191,7 +193,12 @@ function makeTopToolBar(state){
 
   const viewIcons = []
 
-  const editIcons =   [
+  const mirrorSubItems = ['foo', 'bar', 'baz']
+    .map(function (name) {
+      return <button>{name}</button>
+    })
+
+  const editIcons = [
     <section>
       {tooltipIconBtn(translateModeToggled
         , translateIconSvg, "toTranslateMode", "move", "bottom")}
@@ -202,8 +209,10 @@ function makeTopToolBar(state){
       {tooltipIconBtn(scaleModeToggled
         , scaleIconSvg, "toScaleMode", "scale", "bottom")}
 
-      {tooltipIconBtn(false
+      {tooltipIconBtn(true
         , mirrorIconSvg, "mirror", "mirror", "bottom")}
+
+      { ToggleButton(true, mirrorIconSvg, "mirror", "mirror", "bottom", mirrorSubItems)}
     </section>,
 
     <section>
