@@ -71,6 +71,8 @@
     "usco-gcode-parser": "github:usco/usco-gcode-parser",
     "usco-obj-parser": "usco/usco-obj-parser",
     "usco-stl-parser": "usco/usco-stl-parser",
+    "usco-utils": "github:usco/usco-utils",
+    "usco-ym-storage": "github:usco/usco-ym-storage",
     "viewport-size": "0.0.1"
   }
 }

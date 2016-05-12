@@ -11,9 +11,10 @@ import eventDriver from './drivers/eventDriver'
 import makeHttpDriver from 'cycle-simple-http-driver'
 import localStorageDriver from './drivers/localStorageDriver'
 import makeDesktopDriver from './drivers/desktopStoreDriver'
-import makeYMDriver from './drivers/youMagineDriver'
+import makeYMDriver from 'usco-ym-storage'
 
 import main from './components/main/index'
+
 
 // ////////setup drivers
 let domDriver = makeDOMDriver('#jamRoot')
