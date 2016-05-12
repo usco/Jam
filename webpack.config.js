@@ -34,7 +34,7 @@ var getSymlinkedModules = function () {
 }
 
 // add any extra folders we want to apply loaders to
-var pathsToInclude = path.join(__dirname, srcPath) // getSymlinkedModules().concat( path.join(__dirname, srcPath) )
+var pathsToInclude = [path.join(__dirname, srcPath)] // getSymlinkedModules().concat( path.join(__dirname, srcPath) )
 
 // FIXME !! temporary hack: add any paths where loaders should be apllied
 // pathsToInclude.push( path.join(__dirname, "node_modules", "glView-helpers") )
@@ -43,6 +43,9 @@ var pathsToInclude = path.join(__dirname, srcPath) // getSymlinkedModules().conc
 // pathsToInclude.push( path.join(__dirname, "node_modules", "usco-stl-parser")   )
 // pathsToInclude.push( path.join(__dirname, "node_modules", "usco-ctm-parser")   )
 // pathsToInclude.push( path.join(__dirname, "node_modules", "usco-ply-parser")   )
+
+console.log('pathsToInclude', pathsToInclude)
+pathsToInclude.push(path.join(__dirname, 'node_modules', 'usco-ym-storage'))
 
 // console.log("will user loaders on",pathsToInclude)
 
@@ -66,37 +69,21 @@ var config = {
   ],
   module: {
     loaders: [
-      { test: /\.json$/, loader: 'json-loader' }, // ?optional[]=runtime&optional=es6.blockScoping
+      { test: /\.json$/, loader: 'json-loader' },
       // { test: /-worker*\.js$/, loader: "worker-loader",include : pathsToInclude},//if any module does "require(XXX-worker)" it converts to a web worker
-      // 'react-hot',
-      { test: /\.js$/, loaders: ['babel'],// /* WebpackStrip.loader('console.log', 'console.error')*/
-        include: pathsToInclude, exclude: /(node_modules|bower_components)/ },
+      { test: /\.js$/, loaders: ['babel'], // /* WebpackStrip.loader('console.log', 'console.error')*/
+      include: pathsToInclude},//, exclude: /(node_modules|bower_components)/ 
       { test: /\.css$/, loader: 'style-loader!css-loader' },
       // special string replacements , could be cleaner
       { test: /index.js$/, loader: StringReplacePlugin.replace({
-        replacements: [
-          {
-            pattern: `mode = 'production'`,
-            replacement: function (match, p1, offset, string) {
-              return 'mode = "' + process.env.NODE_ENV + '"'
-            }
-          }
-        ]})
-      },
-      {
-        test: /youMagineDriver.js$/, loader: StringReplacePlugin.replace({
           replacements: [
             {
-              pattern: 'api.',
+              pattern: `mode = 'production'`,
               replacement: function (match, p1, offset, string) {
-                if (testMode) {
-                  return 'api-test.'
-                } else {
-                  return 'api.'
-                }
+                return 'mode = "' + process.env.NODE_ENV + '"'
               }
             }
-          ]})
+        ]})
       }
     ],
     noParse: [
