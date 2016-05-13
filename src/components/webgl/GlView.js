@@ -330,10 +330,12 @@ function GLView ({drivers, props$}) {
   outlineSelections$
     .pluck('selectedMeshes')
     .distinctUntilChanged()
+    .filter(exists)
     .forEach(function (selectedMeshes) {
       if (outScene) {
-        outScene.children = selectedMeshes
-        maskScene.children = selectedMeshes
+        const sceneItems = selectedMeshes.filter(exists)
+        outScene.children = sceneItems
+        maskScene.children = sceneItems
       }
     })
 
