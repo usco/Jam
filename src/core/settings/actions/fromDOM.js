@@ -26,6 +26,7 @@ export default function intent (DOM, params) {
     DOM.select('.toTranslateMode').events('click').map('translate'),
     DOM.select('.toRotateMode').events('click').map('rotate'),
     DOM.select('.toScaleMode').events('click').map('scale'),
+    DOM.select('.toMirrorMode').events('click').map('mirror'),
 
     DOM.select('.addNote').events('click').map('addNote'),
     DOM.select('.measureDistance').events('click').map('measureDistance'),

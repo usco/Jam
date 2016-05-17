@@ -1185,7 +1185,6 @@ Chrome, Safari, Opera */
 .popOver.active{
   text-align: center;
 
-
   display: block;
   -webkit-animation-name: dropInEffect; /* Chrome, Safari, Opera */
   -webkit-animation-duration: 0.2s; /* Chrome, Safari, Opera */
@@ -1218,6 +1217,11 @@ Chrome, Safari, Opera */
 .popOver input[type=checkbox]{
   margin-right: 10px;
 }
+
+.popOver button{
+  padding: 10px
+}
+
 .label{
   font-size: 1.1em;
 }
@@ -1452,5 +1456,5 @@ Chrome, Safari, Opera */
 }
 
 .toggleButton section button{
-  
+
 }

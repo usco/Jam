@@ -8,7 +8,7 @@ import {combineLatestObj} from '../../utils/obsUtils'
 import {exists} from '../../utils/utils'
 
 import tooltipIconBtn from '../widgets/TooltipIconButton'
-import ToggleButton from '../widgets/ToggleButton'
+//import ToggleButton from '../widgets/ToggleButton'
 //spinner /loader
 /*
 
@@ -184,7 +184,7 @@ function makeTopToolBar(state){
   const rotateModeToggled = activeTool === 'rotate'
   const scaleModeToggled = activeTool === 'scale'
 
-  const mirrorModeToggled = true
+  const mirrorModeToggled = activeTool === 'mirror'
 
   const measureDistanceModeToggled = activeTool === 'rotate'
   const measureThicknessModeToggled = activeTool === 'scale'
@@ -195,8 +195,34 @@ function makeTopToolBar(state){
 
   const mirrorSubItems = ['foo', 'bar', 'baz']
     .map(function (name) {
-      return <button>{name}</button>
+      return <button className={name}>{name}</button>
     })
+
+  /*{ tooltipIconBtn(true,
+      mirrorIconSvg, "mirror", "mirror", "bottom", mirrorSubItems)}*/
+
+    function getPopOverContent (popOverType) {
+      switch (popOverType) {
+        case 'snapScaling':
+          return <span>
+            <input type='checkbox' className={Class('checkbox', popOverType)} checked='checked' />
+            <label className={Class('label', popOverType)}>Snap scaling</label>
+          </span>
+        case 'snapRotation':
+          return <span>
+            <input type='checkbox' className={Class('checkbox', popOverType)} checked='checked' />
+            <label className={Class('label', popOverType)}> Snap rotation</label>
+          </span>
+        case 'mirrorSubTools':
+        return <span>
+          <button className='mirror-x' value='mirror-x'>X</button>
+          <button className='mirror-y' value='mirror-y'>Y</button>
+          <button className='mirror-z' value='mirror-z'>Z</button>
+        </span>
+        default:
+          return popOverType
+      }
+    }
 
   const editIcons = [
     <section>
@@ -204,15 +230,14 @@ function makeTopToolBar(state){
         , translateIconSvg, "toTranslateMode", "move", "bottom")}
 
       {tooltipIconBtn(rotateModeToggled
-        , rotateIconSvg, "toRotateMode", "rotate", "bottom", false, 'snapRotation')}
+        , rotateIconSvg, "toRotateMode", "rotate", "bottom", false, getPopOverContent('snapRotation'))}
 
       {tooltipIconBtn(scaleModeToggled
-        , scaleIconSvg, "toScaleMode", "scale", "bottom", false,  'snapScaling')}
+        , scaleIconSvg, "toScaleMode", "scale", "bottom", false,  getPopOverContent('snapScaling'))}
 
-      {tooltipIconBtn(true
-        , mirrorIconSvg, "mirror", "mirror", "bottom")}
+      {tooltipIconBtn(mirrorModeToggled
+        , mirrorIconSvg, "toMirrorMode", "mirror", "bottom", false, getPopOverContent('mirrorSubTools'))}
 
-      { ToggleButton(true, mirrorIconSvg, "mirror", "mirror", "bottom", mirrorSubItems)}
     </section>,
 
     <section>
