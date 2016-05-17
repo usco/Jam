@@ -71,8 +71,8 @@ var config = {
     loaders: [
       { test: /\.json$/, loader: 'json-loader' },
       // { test: /-worker*\.js$/, loader: "worker-loader",include : pathsToInclude},//if any module does "require(XXX-worker)" it converts to a web worker
-      { test: /\.js$/, loaders: ['babel'], // /* WebpackStrip.loader('console.log', 'console.error')*/
-      include: pathsToInclude},//, exclude: /(node_modules|bower_components)/ 
+      { test: /\.js$/, loaders: ['babel']}, // /* WebpackStrip.loader('console.log', 'console.error')*/
+    //  include: pathsToInclude},//, exclude: /(node_modules|bower_components)/
       { test: /\.css$/, loader: 'style-loader!css-loader' },
       // special string replacements , could be cleaner
       { test: /index.js$/, loader: StringReplacePlugin.replace({
