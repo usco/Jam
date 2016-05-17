@@ -183,10 +183,10 @@ function makeTopToolBar(state){
         , translateIconSvg, "toTranslateMode", "move", "bottom")}
 
       {tooltipIconBtn(rotateModeToggled
-        , rotateIconSvg, "toRotateMode", "rotate", "bottom")}
+        , rotateIconSvg, "toRotateMode", "rotate", "bottom", false, 'snapRotation')}
 
       {tooltipIconBtn(scaleModeToggled
-        , scaleIconSvg, "toScaleMode", "scale", "bottom")}
+        , scaleIconSvg, "toScaleMode", "scale", "bottom", false,  'snapScaling')}
     </section>,
 
     <section>

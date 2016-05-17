@@ -466,6 +466,9 @@ input[type=color]:focus{
   right: 20px;
   position: absolute;
 }
+.bom .toolTipButtonContainer{
+  position: inherit;
+}
 
 .bom .tableContainer{
   position: absolute;
@@ -1100,7 +1103,7 @@ div.largeIcon{
 }
 
 
-
+/* this doesn't do anyting?
 a.tooltips {
   position: relative;
   display: inline;
@@ -1135,10 +1138,86 @@ a:hover.tooltips span {
   margin-left: -76px;
   z-index: 999;
 }
+*/
 
 /*other tooltips from:
 http://cbracco.me/a-simple-css-tooltip/
 */
+
+/* Chrome, Safari, Opera */
+@-webkit-keyframes dropInEffect {
+    0%   {opacity: 0; height: 0; margin-top: -20px;}
+    90% {margin-top: 2px;}
+    100% {opacity: 1; height: auto; margin-top: 0px;}
+}
+@keyframes dropInEffect {
+  0%   {opacity: 0; height: 0; margin-top: -20px;}
+  90% {margin-top: 2px;}
+  100% {opacity: 1; height: auto; margin-top: 0px;}
+}
+/*
+Chrome, Safari, Opera */
+@-webkit-keyframes dropOutEffect {
+    0% {opacity: 1; height: auto; margin-top: 0px;}
+    100%   {opacity: 0; height: 0; margin-top: -20px;}
+}
+@keyframes dropOutEffect {
+  0% {opacity: 1; height: auto; margin-top: 0px;}
+  100%   {opacity: 0; height: 0; margin-top: -20px;}
+}
+
+.toolTipButtonContainer{
+  position: relative;
+}
+
+.popOver {
+    display: none;
+    position: absolute;
+    width: 150px;
+    z-index: 999;
+    top: 25px;
+    left: -10px;
+    background-color: white;
+    border: 1px solid #dddddd;
+    padding: 18px 20px;
+    font-size: 0.8em;
+}
+.popOver.active{
+  display: block;
+  -webkit-animation-name: dropInEffect; /* Chrome, Safari, Opera */
+  -webkit-animation-duration: 0.2s; /* Chrome, Safari, Opera */
+  -webkit-animation-timing-function: ease-in-out; /* Chrome, Safari, Opera */
+  animation-name: dropInEffect;
+  animation-duration: 0.2s;
+  animation-timing-function: ease-in-out;
+}
+.popOver .notch {
+    position: absolute;
+    top: -10px;
+    left: 17px;
+    margin: 0;
+    border-top: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 10px solid white;
+    padding: 0;
+    width: 0;
+    height: 0;
+    /* ie6 height fix */
+    font-size: 0;
+    line-height: 0;
+     /* ie6 transparent fix */
+    _border-right-color: pink;
+    _border-left-color: pink;
+    _filter: chroma(color=pink);
+}.popOver .border-notch { border-bottom-color: #dddddd; top: -11px}
+
+.popOver input[type=checkbox]{
+  margin-right: 10px;
+}
+.label{
+  font-size: 1.1em;
+}
 
 /* Base styles for the element that has a tooltip */
 [data-tooltip],
