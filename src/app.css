@@ -1175,14 +1175,17 @@ Chrome, Safari, Opera */
     position: absolute;
     width: 150px;
     z-index: 999;
-    top: 25px;
+    top: 28px;
     left: -10px;
     background-color: white;
     border: 1px solid #dddddd;
-    padding: 18px 20px;
+    padding: 10px 0px;
     font-size: 0.8em;
 }
 .popOver.active{
+  text-align: center;
+
+
   display: block;
   -webkit-animation-name: dropInEffect; /* Chrome, Safari, Opera */
   -webkit-animation-duration: 0.2s; /* Chrome, Safari, Opera */
