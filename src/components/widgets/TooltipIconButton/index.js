@@ -1,24 +1,6 @@
 /** @jsx hJSX */
-import Cycle from '@cycle/core'
 import {hJSX} from '@cycle/dom'
 import Class from 'classnames'
-
-function getPopOverContent (popOverType) {
-  switch (popOverType) {
-    case 'snapScaling':
-      return <span>
-        <input type='checkbox' className={Class('checkbox', popOverType)} checked='checked' />
-        <label className={Class('label', popOverType)}>Snap scaling</label>
-      </span>
-    case 'snapRotation':
-      return <span>
-        <input type='checkbox' className={Class('checkbox', popOverType)} checked='checked' />
-        <label className={Class('label', popOverType)}> Snap rotation</label>
-      </span>
-    default:
-      return popOverType
-  }
-}
 
 function getToolTip (tooltip, toggleCondition) {
   if (!toggleCondition) {
@@ -29,7 +11,7 @@ function getToolTip (tooltip, toggleCondition) {
 }
 
 export default function tooltipIconBtn (toggleCondition, iconSvg, mainClass, tooltip,
-  tooltipPos = 'bottom', disabledCondition = false, popOverType = undefined) {
+  tooltipPos = 'bottom', disabledCondition = false, popOverContent = undefined) {
   const button = <button
       disabled = {disabledCondition}
       className={Class(mainClass, `tooltip-${tooltipPos}`, {active: toggleCondition})}
@@ -38,10 +20,10 @@ export default function tooltipIconBtn (toggleCondition, iconSvg, mainClass, too
     </button>
 
   let popOver
-  if (popOverType !== undefined && toggleCondition) {
+  if (popOverContent !== undefined && toggleCondition) {
     popOver = <div
       className={Class('popOver', {active: toggleCondition})}>
-        {getPopOverContent(popOverType)}
+        {popOverContent}
         <b className='border-notch notch'></b>
         <b className='notch'></b>
       </div>

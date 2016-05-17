@@ -25,10 +25,17 @@ export function remapEntityActions (entityActions, currentSelections$) {
     .tap(e => console.log('I am going to delete instances', e))
     .share()
 
+  const mirrorInstances$ = entityActions.mirrorInstances$
+    .withLatestFrom(currentSelections$, function (mirrorInfos, selections) {
+      return selections.map(s => mergeData(s, mirrorInfos))
+    })
+    .share()
+
   return mergeData(entityActions,
     {
       duplicateInstances$,
-      deleteInstances$
+      deleteInstances$,
+      mirrorInstances$
     })
 }
 
@@ -98,8 +105,11 @@ export function remapMeshActions (entityActions, componentBase$, currentSelectio
   const removeComponents$ = entityActions.deleteInstances$
   const duplicateComponents$ = entityActions.duplicateInstances$
 
+  entityActions.mirrorInstances$.forEach(e=> console.log('mirrorInstances',e))
+
   return {
     createComponents$,
+    mirrorComponents$: entityActions.mirrorInstances$,
     duplicateComponents$,
     removeComponents$,
     clearDesign$: entityActions.clearDesign$
