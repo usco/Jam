@@ -1,6 +1,6 @@
 {
   "name": "jam",
-  "version": "0.10.1",
+  "version": "0.10.2",
   "description": "jam! View , annotate , measure 3d designs & more !",
   "main": "index.js",
   "scripts": {
