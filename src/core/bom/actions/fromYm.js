@@ -18,7 +18,7 @@ export default function intent (ym, params) {
           'qty': parseFloat,
           'phys_qty': parseFloat
         }
-        const fieldNames = ['id', 'part_parameters', 'qty', 'phys_qty', 'unit']
+        const fieldNames = ['id', 'part_parameters', 'qty', 'phys_qty', 'unit', 'printable']
         let data = pick(fieldNames, coerceTypes(typeMapping, remapJson(mapping, entry)))
         // FIXME: coerceTypes should be doing this !!
 
