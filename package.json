@@ -51,7 +51,6 @@
     "@cycle/dom": "^9.1.0",
     "addressbar": "^0.4.3",
     "classnames": "^2.2.1",
-    "cycle-simple-http-driver": "kaosat-dev/cycle-simple-http-driver",
     "fast.js": "^0.1.1",
     "gl": "^2.1.5",
     "glView-helpers": "usco/glView-helpers",
@@ -73,6 +72,7 @@
     "usco-stl-parser": "usco/usco-stl-parser",
     "usco-utils": "github:usco/usco-utils",
     "usco-ym-storage": "github:usco/usco-ym-storage",
+    "cycle-simple-http-driver": "kaosat-dev/cycle-simple-http-driver",
     "viewport-size": "0.0.1"
   }
 }
