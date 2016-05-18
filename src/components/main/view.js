@@ -215,15 +215,21 @@ function makeTopToolBar(state){
             <label className={Class('label', popOverType)}> Snap rotation</label>
           </span>
         case 'mirrorSubTools':
-        return <span>
-          <button className='mirror-x' value='mirror-x'>X</button>
-          <button className='mirror-y' value='mirror-y'>Y</button>
-          <button className='mirror-z' value='mirror-z'>Z</button>
-        </span>
+          return <span>
+            <button className='mirror-x' value='mirror-x'>X</button>
+            <button className='mirror-y' value='mirror-y'>Y</button>
+            <button className='mirror-z' value='mirror-z'>Z</button>
+          </span>
         default:
           return popOverType
       }
     }
+
+  /*
+        {tooltipIconBtn(mirrorModeToggled
+          , mirrorIconSvg, "toMirrorMode", "mirror", "bottom", false, getPopOverContent('mirrorSubTools'))}
+
+  */
 
   const editIcons = [
     <section>
@@ -235,9 +241,6 @@ function makeTopToolBar(state){
 
       {tooltipIconBtn(scaleModeToggled
         , scaleIconSvg, "toScaleMode", "scale", "bottom", false,  getPopOverContent('snapScaling'))}
-
-      {tooltipIconBtn(mirrorModeToggled
-        , mirrorIconSvg, "toMirrorMode", "mirror", "bottom", false, getPopOverContent('mirrorSubTools'))}
 
     </section>,
 
