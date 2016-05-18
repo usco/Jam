@@ -144,6 +144,7 @@ export function remapTransformActions (entityActions, componentBase$, currentSel
   return {
     createComponents$,
     updateComponents$,
+    mirrorComponents$: entityActions.mirrorInstances$,
     duplicateComponents$,
     removeComponents$,
     clearDesign$: entityActions.clearDesign$

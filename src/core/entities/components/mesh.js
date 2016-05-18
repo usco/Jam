@@ -55,15 +55,15 @@ export function makeMeshSystem (actions) {
       //mS.elements[5] = -1; // y
       //mS.elements[10] = -1 // z
 
-      mesh.geometry.applyMatrix(mS)
+      //mesh.geometry.applyMatrix(mS)
       //flip things
-      mesh.geometry.dynamic = true
+      /*mesh.geometry.dynamic = true
       mesh.geometry.attributes.position.needsUpdate = true
 
       var p = mesh.geometry.attributes.normal.array
       for(var i =0; i<p.length; i++){
         p[i] = -p[i]
-      }
+      }*/
       if (mesh.material.side === 0) {
         mesh.material.side = THREE.BackSide
       }

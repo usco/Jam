@@ -48,6 +48,28 @@ export function makeTransformsSystem (actions) {
     return state
   }
 
+  function mirrorComponents (state, inputs) {
+    console.log('mirroring transforms', inputs)
+
+    return inputs.reduce(function (state, input) {
+      console.log('mirrorComponents (transforms)')
+      let {id} = input
+
+      let sca  = state[id].sca
+      //const conv =[1, 1, 1]
+      //set -1 to the corresponding axis
+      sca[input.axis] *= -1
+
+      //let sca = input.value || [1, 1, Math.random()]
+      let orig = state[id] || transformDefaults
+
+      state = mergeData({}, state)
+      // FIXME big hack, use mutability
+      state[id] = mergeData({}, orig, {sca})
+      return state
+    }, state)
+  }
+
   function updateComponents (state, inputs) {
     console.log('updating transforms', inputs)
 
@@ -67,6 +89,7 @@ export function makeTransformsSystem (actions) {
     updateRotation,
     updatePosition,
     updateScale,
+    mirrorComponents,
     updateComponents,
     createComponents: createComponents.bind(null, transformDefaults),
     duplicateComponents,
