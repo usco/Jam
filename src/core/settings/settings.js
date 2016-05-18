@@ -82,6 +82,12 @@ function setAutoLoad (state, input) {
   return output
 }
 
+function setCameraPosition(state, input){
+  console.log('setCameraPosition', input)
+  let output = mergeData(state, {camera: {position: input}})
+  return output
+}
+
 function settings (actions, source) {
   // source = source || Rx.Observable.never()
   // source = source.map(src => mergeData( src, {appMode:"editor"}) )//default appMode to editor, disregard saved settings
@@ -104,7 +110,8 @@ function settings (actions, source) {
     viewMode: 'default',
 
     camera: {
-      autoRotate: false
+      autoRotate: false,
+      position: [0, 10, 20]
     },
     grid: {
       show: true
@@ -120,7 +127,7 @@ function settings (actions, source) {
 
   let updateFns = {setAllValues, toggleShowGrid,
     toggleAutoRotate, setActiveTool, setAppMode, setToolsets,
-    setAutoSave, setAutoLoad}
+    setAutoSave, setAutoLoad, setCameraPosition}
   return makeModel(defaults, updateFns, actions, source)
 }
 

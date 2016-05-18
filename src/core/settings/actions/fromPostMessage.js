@@ -17,8 +17,15 @@ export default function intent (postMessage, params) {
     .filter(exists)
     .map(stringToBoolean)
 
+  const setCameraPosition$ = postMessage$
+    .filter(p => p.data.hasOwnProperty('setCameraPosition'))
+    .do(e=>console.log('setCameraPosition',e))
+    .map(data => data.data.setCameraPosition)
+    .filter(exists)
+
   return {
     setAutoSave$,
-    setAutoLoad$
+    setAutoLoad$,
+    setCameraPosition$
   }
 }

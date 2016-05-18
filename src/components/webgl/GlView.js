@@ -131,7 +131,7 @@ import model from './model'
 
 // //////////
 function GLView ({drivers, props$}) {
-  const {DOM, postMessage} = drivers
+  const {DOM} = drivers
 
   let config = presets
 
@@ -197,6 +197,14 @@ function GLView ({drivers, props$}) {
     .forEach((oAndP) => zoomInOn(oAndP.object, camera, {position: oAndP.point}))
   zoomToFit$
     .forEach((meshes) => zoomToFit(meshes[meshes.length - 1], camera, new THREE.Vector3()))
+
+
+  settings$.pluck('camera').pluck('position')
+    .distinctUntilChanged()
+    .filter(exists)
+    .forEach(function(cameraPosition){
+      camera.position.fromArray(cameraPosition)
+    })
 
   let windowResizes$ = windowResizes(1) // get from intents/interactions ?
 
