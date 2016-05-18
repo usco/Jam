@@ -203,11 +203,13 @@ function makeTopToolBar(state){
     function getPopOverContent (popOverType) {
       switch (popOverType) {
         case 'snapScaling':
+          return undefined
           return <span>
             <input type='checkbox' className={Class('checkbox', popOverType)} checked='checked' />
             <label className={Class('label', popOverType)}>Snap scaling</label>
           </span>
         case 'snapRotation':
+          return undefined
           return <span>
             <input type='checkbox' className={Class('checkbox', popOverType)} checked='checked' />
             <label className={Class('label', popOverType)}> Snap rotation</label>
