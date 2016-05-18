@@ -121,7 +121,7 @@ export default function intent (DOM) {
   const toggle$ = DOM.select('.bomToggler')
     .events('click') // toggle should be scoped?
     .map(true)
-    .scan((acc, val) => !acc, true) // intitial value of scan needs to match the one of "startWith" in "toggled" model
+    .scan((acc, val) => !acc, false) // intitial value of scan needs to match the one of "startWith" in "toggled" model
 
   // FIMXE: pressing enter in the name edit, add multiple copies
   return {

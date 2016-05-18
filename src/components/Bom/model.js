@@ -56,7 +56,7 @@ export default function model (props$, actions) {
 
   // //////
   const toggled$ = actions.toggle$
-    .startWith(true)
+    .startWith(false)
 
   const removeEntryRequested$ = actions.removeEntryRequest$
     .startWith(undefined)
