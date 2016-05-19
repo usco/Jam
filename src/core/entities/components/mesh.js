@@ -37,16 +37,15 @@ export function makeMeshSystem (actions) {
       let original = {}
       original = state[input.id]
 
-
-      let mesh = original.clone()// meh ?//FIXME : make sure there are no multiple clones
-      mesh.material = mesh.material.clone() // {mesh: inputValue.mesh }// mergeData(defaults,inputValue)
       let id = input.id
+      let mesh = original/*original.clone()// meh ?//FIXME : make sure there are no multiple clones
+      mesh.material = mesh.material.clone() // {mesh: inputValue.mesh }// mergeData(defaults,inputValue)
+
 
       mesh.userData.entity = {id}
-      mesh.pickable = true
+      mesh.pickable = true*/
 
-      //mesh.scale(-1, 1, 1)
-      let mS = (new THREE.Matrix4()).identity()
+      /*let mS = (new THREE.Matrix4()).identity()
 
       const conv =[0, 5, 10]
       //set -1 to the corresponding axis
@@ -55,21 +54,21 @@ export function makeMeshSystem (actions) {
       //mS.elements[5] = -1; // y
       //mS.elements[10] = -1 // z
 
-      //mesh.geometry.applyMatrix(mS)
+      mesh.geometry.applyMatrix(mS)
       //flip things
-      /*mesh.geometry.dynamic = true
+      mesh.geometry.dynamic = true
       mesh.geometry.attributes.position.needsUpdate = true
 
       var p = mesh.geometry.attributes.normal.array
       for(var i =0; i<p.length; i++){
         p[i] = -p[i]
-      }*/
+      }
       if (mesh.material.side === 0) {
         mesh.material.side = THREE.BackSide
       }
       else {
         mesh.material.side = 0
-      }
+      }*/
 
       console.log('mirrorComponents', state, input)
 

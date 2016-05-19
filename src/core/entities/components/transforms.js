@@ -1,6 +1,5 @@
 import { createComponents, removeComponents, duplicateComponents, makeActionsFromApiFns } from './common'
 import { makeModel, mergeData } from '../../../utils/modelUtils'
-
 // //Transforms//////
 
 export function makeTransformsSystem (actions) {

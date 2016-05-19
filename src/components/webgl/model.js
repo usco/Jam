@@ -2,6 +2,7 @@ import { exists, combineLatestObj } from '../../utils/obsUtils'
 import { equals } from 'ramda'
 
 import { makeNoteVisual, makeDistanceVisual, makeThicknessVisual, makeDiameterVisual, makeAngleVisual } from './visualMakers'
+import THREE from 'three'
 
 // let requestAnimationFrameScheduler = Rx.Scheduler.requestAnimationFrame
 // problem : this fires BEFORE the rest is ready
@@ -27,10 +28,33 @@ function makeRemoteMeshVisual (meta, transform, mesh) {
       mesh.rotation.fromArray(transform.rot)
     }
     if (!equals(mesh.scale.toArray(), transform.sca)) {
-      mesh.scale.fromArray(transform.sca)
+      mesh.scale.fromArray(transform.sca.map(Math.abs))
     }
     // color is stored in meta component
     mesh.material.color.set(meta.color)
+
+    //this is for mirroring
+    if(transform.sca[0] >0 && mesh.flipped && mesh.material.side === THREE.BackSide){
+      let mS = (new THREE.Matrix4()).identity()
+      const conv =[0, 5, 10]
+      mS.elements[conv[0]] = -1
+      mesh.geometry.applyMatrix(mS)
+      mesh.material.side = 0
+      mesh.flipped = false
+    }
+    if(transform.sca[0] <0 && !mesh.flipped){
+      //mesh.scale.x = Math.abs(mesh.scale.x)
+      let mS = (new THREE.Matrix4()).identity()
+      const conv =[0, 5, 10]
+      //set -1 to the corresponding axis
+      mS.elements[conv[0]] = -1
+
+      mesh.geometry.applyMatrix(mS)
+      mesh.material.side = THREE.BackSide
+      mesh.flipped = true
+    }
+
+
     return setFlags(mesh)
   }
 }
