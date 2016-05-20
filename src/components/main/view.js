@@ -225,12 +225,6 @@ function makeTopToolBar(state){
       }
     }
 
-  /*
-        {tooltipIconBtn(mirrorModeToggled
-          , mirrorIconSvg, "toMirrorMode", "mirror", "bottom", false, getPopOverContent('mirrorSubTools'))}
-
-  */
-
   const editIcons = [
     <section>
       {tooltipIconBtn(translateModeToggled
@@ -241,6 +235,9 @@ function makeTopToolBar(state){
 
       {tooltipIconBtn(scaleModeToggled
         , scaleIconSvg, "toScaleMode", "scale", "bottom", false,  getPopOverContent('snapScaling'))}
+
+      {tooltipIconBtn(mirrorModeToggled
+        , mirrorIconSvg, "toMirrorMode", "mirror", "bottom", false, getPopOverContent('mirrorSubTools'))}
 
     </section>,
 
