@@ -105,11 +105,8 @@ export function remapMeshActions (entityActions, componentBase$, currentSelectio
   const removeComponents$ = entityActions.deleteInstances$
   const duplicateComponents$ = entityActions.duplicateInstances$
 
-  entityActions.mirrorInstances$.forEach(e=> console.log('mirrorInstances',e))
-
   return {
     createComponents$,
-    mirrorComponents$: entityActions.mirrorInstances$,
     duplicateComponents$,
     removeComponents$,
     clearDesign$: entityActions.clearDesign$
@@ -144,6 +141,7 @@ export function remapTransformActions (entityActions, componentBase$, currentSel
   return {
     createComponents$,
     updateComponents$,
+    mirrorComponents$: entityActions.mirrorInstances$,
     duplicateComponents$,
     removeComponents$,
     clearDesign$: entityActions.clearDesign$

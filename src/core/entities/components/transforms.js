@@ -1,6 +1,5 @@
 import { createComponents, removeComponents, duplicateComponents, makeActionsFromApiFns } from './common'
 import { makeModel, mergeData } from '../../../utils/modelUtils'
-
 // //Transforms//////
 
 export function makeTransformsSystem (actions) {
@@ -48,6 +47,25 @@ export function makeTransformsSystem (actions) {
     return state
   }
 
+  function mirrorComponents (state, inputs) {
+    console.log('mirroring transforms', inputs)
+
+    return inputs.reduce(function (state, input) {
+      let {id} = input
+
+      let sca = state[id].sca.map(d=>d)// DO NOT REMOVE ! a lot of code relies on diffing, and if you mutate the original scale, it breaks !
+      sca[input.axis] *= -1
+
+      let orig = state[id] || transformDefaults
+
+      state = mergeData({}, state)
+      // FIXME big hack, use mutability
+      state[id] = mergeData({}, orig, {sca})
+
+      return state
+    }, state)
+  }
+
   function updateComponents (state, inputs) {
     console.log('updating transforms', inputs)
 
@@ -67,6 +85,7 @@ export function makeTransformsSystem (actions) {
     updateRotation,
     updatePosition,
     updateScale,
+    mirrorComponents,
     updateComponents,
     createComponents: createComponents.bind(null, transformDefaults),
     duplicateComponents,

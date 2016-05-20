@@ -370,7 +370,7 @@ function GLView ({drivers, props$}) {
           transformControls.attach(mesh)
           transformControls.setMode(tool)
         }
-        else if (!tool && mesh)
+        else if ((!tool && mesh) || ['translate', 'rotate', 'scale'].indexOf(tool) === -1)
         { // tool is undefined, but we still had selections
           transformControls.detach(mesh)
         }

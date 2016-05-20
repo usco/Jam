@@ -2,6 +2,7 @@ import { exists, combineLatestObj } from '../../utils/obsUtils'
 import { equals } from 'ramda'
 
 import { makeNoteVisual, makeDistanceVisual, makeThicknessVisual, makeDiameterVisual, makeAngleVisual } from './visualMakers'
+import THREE from 'three'
 
 // let requestAnimationFrameScheduler = Rx.Scheduler.requestAnimationFrame
 // problem : this fires BEFORE the rest is ready
@@ -27,10 +28,39 @@ function makeRemoteMeshVisual (meta, transform, mesh) {
       mesh.rotation.fromArray(transform.rot)
     }
     if (!equals(mesh.scale.toArray(), transform.sca)) {
-      mesh.scale.fromArray(transform.sca)
+      mesh.scale.fromArray(transform.sca.map(Math.abs))
     }
     // color is stored in meta component
     mesh.material.color.set(meta.color)
+
+    // this is for mirroring
+    function isOdd (num) { return num % 2 }
+
+    function handleMirroring(){
+      let flipped = mesh.flipped || [0, 0, 0]
+      let mS = (new THREE.Matrix4()).identity()
+      const conv = [0, 5, 10]
+
+      transform.sca
+        .map(val => val <0)
+        .forEach(function (val, index) {
+          if(val && flipped[index] === 0) {
+            mS.elements[conv[index]] = -1
+            flipped[index]=1
+          }
+          //flip back
+          if(!val && flipped[index] === 1) {
+            mS.elements[conv[index]] = -1
+            flipped[index] = 0
+          }
+        })
+      mesh.geometry.applyMatrix(mS)
+      mesh.flipped = flipped
+      const inversions = flipped.reduce((prev, curr) => prev + curr)
+      mesh.material.side = isOdd(inversions) ? THREE.BackSide : 0
+    }
+    handleMirroring()
+
     return setFlags(mesh)
   }
 }
