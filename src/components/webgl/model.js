@@ -33,26 +33,144 @@ function makeRemoteMeshVisual (meta, transform, mesh) {
     // color is stored in meta component
     mesh.material.color.set(meta.color)
 
+
+    console.log('transforms scale',transform.sca)
+    function mirroredAxis(t){
+      return t
+        .map(val => (val >= 0)? 0: 1 )
+    }
+    const mirrored = t =>t.map(val => val <0).reduce( (prev, curr) => prev || curr )
+
+    function isOdd(num) { return num % 2}
+
     //this is for mirroring
-    if(transform.sca[0] >0 && mesh.flipped && mesh.material.side === THREE.BackSide){
-      let mS = (new THREE.Matrix4()).identity()
+    if(!mirrored(transform.sca) && mesh.flipped && mesh.material.side === THREE.BackSide){
+      //reset mirroring
+      /*let mS = (new THREE.Matrix4()).identity()
       const conv =[0, 5, 10]
       mS.elements[conv[0]] = -1
       mesh.geometry.applyMatrix(mS)
       mesh.material.side = 0
-      mesh.flipped = false
+      mesh.flipped = false*/
     }
-    if(transform.sca[0] <0 && !mesh.flipped){
+    console.log('mirrored',mirrored(transform.sca))
+    /*if(mirrored(transform.sca) ){
+
+      const flipped = mesh.flipped || [0,0,0]
+
+      let mS = (new THREE.Matrix4()).identity()
+      let inversions = 0
+
+
+      const conv =[0, 5, 10]
+      transform.sca
+        .map(val => val <0)
+        .forEach(function(val, index){
+          if(val && flipped[index]===0){
+            console.log('val',val, index)
+            mS.elements[conv[index]] = -1
+            inversions += 1
+          }
+        })
+      //set -1 to the corresponding axis
+      mesh.geometry.applyMatrix(mS)
+
+      console.log('inversions', inversions, 'mirroredAxis', mirroredAxis(transform.sca))
+      if(mesh.material.side != THREE.BackSide && (inversions === 1 || inversions ==3) )
+      {
+        console.log('flipping material')
+        mesh.material.side = THREE.BackSide
+      }
+
+      mesh.flipped = mirroredAxis(transform.sca)
+    }*/
+
+
+    function foo(){
+      let flipped = mesh.flipped || [0,0,0]
+
+      let mS = (new THREE.Matrix4()).identity()
+      let inversions = 0
+
+
+      const conv =[0, 5, 10]
+      transform.sca
+        .map(val => val <0)
+        .forEach(function(val, index){
+          if(val && flipped[index]===0){
+            mS.elements[conv[index]] = -1
+            inversions += 1
+            flipped[index]=1
+          }
+          //flip back
+          if(!val && flipped[index]===1){
+            mS.elements[conv[index]] = -1
+            inversions += 1
+            flipped[index] = 0
+          }
+        })
+      mesh.geometry.applyMatrix(mS)
+      mesh.flipped = flipped
+      inversions = flipped.reduce( (prev, curr) => prev || curr )
+
+      console.log('inversions', inversions ,flipped)
+      if(!isOdd(inversions)){
+        /*if(mesh.material.side !== THREE.BackSide){
+          mesh.material.side = THREE.BackSide
+        }else{
+          mesh.material.side = 0
+        }*/
+        mesh.material.side = 0
+      }else{
+        /*if(mesh.material.side !== THREE.BackSide){
+          mesh.material.side = THREE.BackSide
+        }else{
+          mesh.material.side = 0
+        }*/
+        mesh.material.side = THREE.BackSide
+      }
+    }
+
+    foo()
+
+    /*if(transform.sca[0] <0 && (!mesh.flipped || ( mesh.flipped && !mesh.flipped[0])) ){
       //mesh.scale.x = Math.abs(mesh.scale.x)
       let mS = (new THREE.Matrix4()).identity()
       const conv =[0, 5, 10]
-      //set -1 to the corresponding axis
       mS.elements[conv[0]] = -1
-
+      //set -1 to the corresponding axis
       mesh.geometry.applyMatrix(mS)
-      mesh.material.side = THREE.BackSide
-      mesh.flipped = true
-    }
+
+      //only do this once ?
+      if(mesh.material.side != THREE.BackSide)
+      {
+        mesh.material.side = THREE.BackSide
+      }
+
+      if(!mesh.flipped){
+        mesh.flipped = [1,0,0]
+      }
+    }*/
+
+    /*if(transform.sca[1] <0 && (!mesh.flipped || ( mesh.flipped && !mesh.flipped[1])) ){
+      //mesh.scale.x = Math.abs(mesh.scale.x)
+      let mS = (new THREE.Matrix4()).identity()
+      const conv =[0, 5, 10]
+      mS.elements[conv[1]] = -1
+      mS.elements[conv[0]] = -1
+      mS.elements[conv[2]] = -1
+      //set -1 to the corresponding axis
+      mesh.geometry.applyMatrix(mS)
+
+      //only do this once ?
+      if(mesh.material.side != THREE.BackSide)
+      {
+        //mesh.material.side = THREE.BackSide
+      }
+      if(!mesh.flipped){
+        mesh.flipped = [0,1,0]
+      }
+    }*/
 
 
     return setFlags(mesh)
