@@ -53,16 +53,15 @@ export function makeTransformsSystem (actions) {
     return inputs.reduce(function (state, input) {
       let {id} = input
 
-      let sca  = state[id].sca
-      //set -1 to the corresponding axis
+      let sca = state[id].sca.map(d=>d)// DO NOT REMOVE ! a lot of code relies on diffing, and if you mutate the original scale, it breaks !
       sca[input.axis] *= -1
 
-      //let sca = input.value || [1, 1, Math.random()]
       let orig = state[id] || transformDefaults
 
       state = mergeData({}, state)
       // FIXME big hack, use mutability
       state[id] = mergeData({}, orig, {sca})
+
       return state
     }, state)
   }
