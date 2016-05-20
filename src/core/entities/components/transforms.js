@@ -51,11 +51,9 @@ export function makeTransformsSystem (actions) {
     console.log('mirroring transforms', inputs)
 
     return inputs.reduce(function (state, input) {
-      console.log('mirrorComponents (transforms)')
       let {id} = input
 
       let sca  = state[id].sca
-      //const conv =[1, 1, 1]
       //set -1 to the corresponding axis
       sca[input.axis] *= -1
 
