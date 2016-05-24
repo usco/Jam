@@ -693,6 +693,28 @@ input[type=color]:focus{
   background: #5fc5fb;
 }
 
+.bom tr select:disabled{
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  text-indent: 1px;
+  text-overflow: '';
+  background: rgba(0, 0, 0, 0);
+  color: black;
+  border: none;
+}
+
+.bom tr input[type=number]:disabled{
+  color: black;
+  background: rgba(0, 0, 0, 0);
+}
+
+.bom tr.selected select:disabled{
+  color:white;
+}
+.bom tr.selected input[type=number]:disabled{
+  color:white;
+}
+
 .foo{
   position: absolute;
   right: 0px;
