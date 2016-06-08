@@ -58,14 +58,14 @@ export default function formatDataForYMStorage ({sources, state$}) {
 
   // send simple query to determine if design already exists
   const queryDesignExists$ = combineLatestObj({design, authData, apiEndpoint$})
-    .filter(data => data.authData.token !== undefined && data.design.synched) // only try to save anything when the design is in "synch mode" aka has a ur
+    .filter(data => data.design.synched) // data.authData.token !== undefined &&  only try to save anything when the design is in "synch mode" aka has a ur
     .map(data => ({data, query: 'designExists'}))
     .take(1)
 
   // saving should NOT take place before load is complete IFAND ONLY IF , we are reloading a design
   const saveDesigntoYm$ = state$
     .filter(state => state.settings.autoSave === true) // do not save anything if not in save mode
-    .filter(state => state.design.synched && state.authData.token !== undefined) // only try to save anything when the design is in "synch mode" aka has a ur
+    .filter(state => state.design.synched) // && state.authData.token !== undefined only try to save anything when the design is in "synch mode" aka has a ur
     .skipUntil(loadAllDone$)
     //.tap(e => console.log('we are all done loading so SAVE', e))
     .flatMap(_ => combineLatestObj({
