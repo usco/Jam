@@ -45,7 +45,7 @@ var pathsToInclude = [path.join(__dirname, srcPath)] // getSymlinkedModules().co
 // pathsToInclude.push( path.join(__dirname, "node_modules", "usco-ply-parser")   )
 
 console.log('pathsToInclude', pathsToInclude)
-pathsToInclude.push(path.join(__dirname, 'node_modules', 'usco-ym-storage'))
+//pathsToInclude.push(path.join(__dirname, 'node_modules', 'usco-ym-storage'))
 
 // console.log("will user loaders on",pathsToInclude)
 
@@ -71,8 +71,8 @@ var config = {
     loaders: [
       { test: /\.json$/, loader: 'json-loader' },
       // { test: /-worker*\.js$/, loader: "worker-loader",include : pathsToInclude},//if any module does "require(XXX-worker)" it converts to a web worker
-      { test: /\.js$/, loaders: ['babel']}, // /* WebpackStrip.loader('console.log', 'console.error')*/
-    //  include: pathsToInclude},//, exclude: /(node_modules|bower_components)/
+      { test: /\.js$/, loaders: ['babel'], exclude: /node_modules/}, // /* WebpackStrip.loader('console.log', 'console.error')*/
+    //  include: pathsToInclude},//,
       { test: /\.css$/, loader: 'style-loader!css-loader' },
       // special string replacements , could be cleaner
       { test: /index.js$/, loader: StringReplacePlugin.replace({
