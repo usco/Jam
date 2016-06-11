@@ -16,6 +16,10 @@ export default function intent (DOM, params) {
   const toggleAutoRotate$ = DOM.select('.settingsView .autoRotate').events('change').map(checked)
   const toggleFullScreen$ = DOM.select('.fullScreenToggler').events('click')
 
+  const toggleSnapScaling$ = DOM.select('.popOverContent .snapScaling').events('change').map(checked)
+  const toggleUniformScaling$ = DOM.select('.popOverContent .uniformScaling').events('change').map(checked)
+  const toggleSnapRotation$ = DOM.select('.popOverContent .snapRotation').events('change').map(checked)
+
   // const toggleAutoSelectNewEntities$ = Rx.Observable.just(true) //TODO: make settable
   // tools
   // const toggleRepeatTool$            = Rx.Observable.just(false) // does a tool gets stopped after a single use or not
@@ -53,6 +57,9 @@ export default function intent (DOM, params) {
     setActiveTool$,
     toggleAutoRotate$,
     toggleShowGrid$,
-    toggleShowAnnot$
+    toggleShowAnnot$,
+    toggleSnapScaling$,
+    toggleUniformScaling$,
+    toggleSnapRotation$
   }
 }
