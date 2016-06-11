@@ -10,6 +10,36 @@ export function makeTransformsSystem (actions) {
     rot: [ 0, 0, 0 ],
     sca: [ 1, 1, 1 ]
   }
+  const snapDefaults = {
+    rot: 10, // snap rotation snaps to fifths of degrees
+    sca: 0.1 // snap scaling snaps to tens of percentages
+  }
+  let objectDimensions = []
+
+  function applyUniformScaling2 (id, transformValues) {
+    // i'm just putting this in here for future reference
+    let formerDimensions = transformDefaults.sca
+    for (let i = 0; i < objectDimensions.length; i++) {
+      if (objectDimensions[i].id === id) {
+        formerDimensions = objectDimensions[i].dimensions
+      }
+    }
+    let resizeRatio
+    for (let i = 0; i < formerDimensions.length; i++) {
+      if (transformValues[i] !== formerDimensions[i]) {
+        resizeRatio = transformValues[i] / formerDimensions[i]
+      }
+    }
+    for (let i = 0; i < transformValues.length; i++) {
+      if (transformValues[i] === formerDimensions[i]) {
+        transformValues[i] = transformValues[i] * resizeRatio
+      } else {
+        transformValues[i] = transformValues[i]
+      }
+      if (transformValues[i].isNaN) { transformValues[i] = transformDefaults.sca[i] }
+    }
+    return transformValues
+  }
 
   function updatePosition (state, input) {
     console.log('updatePosition')
@@ -53,7 +83,7 @@ export function makeTransformsSystem (actions) {
     return inputs.reduce(function (state, input) {
       let {id} = input
 
-      let sca = state[id].sca.map(d=>d)// DO NOT REMOVE ! a lot of code relies on diffing, and if you mutate the original scale, it breaks !
+      let sca = state[id].sca.map(d => d) // DO NOT REMOVE ! a lot of code relies on diffing, and if you mutate the original scale, it breaks !
       sca[input.axis] *= -1
 
       let orig = state[id] || transformDefaults
@@ -66,17 +96,73 @@ export function makeTransformsSystem (actions) {
     }, state)
   }
 
+  function applySnapping (transformValues, stepSize, mapValue = undefined) {
+    let numberToRoundTo = 1 / stepSize
+    for (let i = 0; i < transformValues.length; i++) {
+      if (mapValue) { transformValues[i] = transformValues[i] * 360 / mapValue }
+      let roundedNumber = Math.round(transformValues[i] * numberToRoundTo) / numberToRoundTo
+      if (mapValue) { roundedNumber = roundedNumber / 360 * mapValue }
+      transformValues[i] = roundedNumber
+    }
+    return transformValues
+  }
+
+  function applyUniformScaling (transformValues) {
+    // sorts the values and sees which is different, because this is the changes
+    // then applies the new value to all dimension in respect to the minussign because this is added by mirroring
+    let sortedValues = transformValues
+    sortedValues.forEach(function (part, i) {
+      if (sortedValues[i].isNaN) { transformValues = sortedValues = transformDefaults.sca }
+      sortedValues[i] = Math.abs(part)
+    })
+    sortedValues = sortedValues.slice().sort
+    for (let i = 0; i < sortedValues.length; i++) {
+      sortedValues[i] = Math.abs(sortedValues[i])
+      if (sortedValues[i] === sortedValues[i + 1]) {
+        sortedValues.splice(i, 2)
+      }
+    }
+    let newValue = sortedValues[0]
+    for (let i = 0; i < transformValues.length; i++) {
+      if (transformValues[i] < 0) {
+        transformValues[i] = -(newValue)
+      } else {
+        transformValues[i] = newValue
+      }
+    }
+    return transformValues
+  }
+
+  function storeObjectDimensions (id, scale) {
+    let object = {id: id, dimensions: scale}
+    for (let i = 0; i < objectDimensions.length; i++) {
+      if (objectDimensions[i].id === id) {
+        objectDimensions[i].dimensions = scale
+        break
+      } else if (objectDimensions.length === i + 1) {
+        objectDimensions.push(object)
+      }
+    }
+    if (!objectDimensions[0]) { objectDimensions.push(object) }
+  }
+
+  function checkSnapStates (id, transformation, settings) {
+    let {uniformScaling, snapScaling, snapRotation} = settings
+    // if (uniformScaling) { transformation.sca = applyUniformScaling(id, transformation.sca) }
+    if (uniformScaling) { transformation.sca = applyUniformScaling(transformation.sca) }
+    if (snapScaling) { transformation.sca = applySnapping(transformation.sca, snapDefaults.sca) }
+    if (snapRotation) { transformation.rot = applySnapping(transformation.rot, snapDefaults.rot, (2 * Math.PI)) }
+    storeObjectDimensions(id, transformation.sca)
+    return transformation
+  }
+
   function updateComponents (state, inputs) {
     console.log('updating transforms', inputs)
-
     return inputs.reduce(function (state, input) {
       state = mergeData({}, state)
-
       let {id} = input
-      let transforms = input.value || transformDefaults
-
-      // FIXME big hack, use mutability
-      state[id] = transforms
+      let transformation = input.value || transformDefaults
+      state[id] = checkSnapStates(input.id, transformation, input.settings)
       return state
     }, state)
   }
