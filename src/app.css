@@ -1244,8 +1244,13 @@ Chrome, Safari, Opera */
   padding: 10px
 }
 
-.label{
+.popOverContent{
+  display: block;
+  float: left;
+  margin: 2px 10px;
+  clear: both;
   font-size: 1.1em;
+  cursor: pointer;
 }
 
 /* Base styles for the element that has a tooltip */
