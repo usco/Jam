@@ -14,9 +14,15 @@ export default function intent (events, params) {
     .map(toArray)
     .shareReplay(1)
 
+  const focusOnEntities$ = events.select('bom').events('entryDoubleTapped$')
+    .map(toArray)
+    .shareReplay(1)
+
   return reverseSelections({
     selectEntities$,
-    selectBomEntries$}, idsMapper$)
+    selectBomEntries$,
+    focusOnEntities$
+  }, idsMapper$)
 }
 
 function extractEntities (data) {
@@ -45,8 +51,16 @@ function reverseSelections (intents, idsMapper$) {
     // .do(e=>console.log("selectedEntities",e))
     .merge(intents.selectEntities$)
 
+  const focusOnEntities$ = intents
+    .focusOnEntities$
+    .withLatestFrom(idsMapper$, function (bomIds, idsMapper) {
+      return flatten(bomIds.map(id => idsMapper.instUidFromTypeUid[id])).filter(exists)
+    })
+    .distinctUntilChanged(null, equals)
+
   return {
     selectEntities$: selectEntities$.distinctUntilChanged(null, equals),
-    selectBomEntries$: selectBomEntries$.distinctUntilChanged(null, equals)
+    selectBomEntries$: selectBomEntries$.distinctUntilChanged(null, equals),
+    focusOnEntities$
   }
 }
