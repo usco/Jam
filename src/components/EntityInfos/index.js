@@ -31,8 +31,9 @@ function model (props$, actions) {
   let comments$ = props$.pluck('comments').filter(exists).startWith(undefined)
   let meta$ = props$.pluck('meta').filter(exists).startWith(undefined)
   let transforms$ = props$.pluck('transforms').filter(exists).startWith(undefined)
+  let settings$ = props$.pluck('settings').filter(exists).startWith(undefined)
 
-  return combineLatestObj({meta$, transforms$, comments$})
+  return combineLatestObj({meta$, transforms$, comments$, settings$})
     .distinctUntilChanged()
     .shareReplay(1)
 }

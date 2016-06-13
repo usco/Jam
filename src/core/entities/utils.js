@@ -114,7 +114,7 @@ export function remapMeshActions (entityActions, componentBase$, currentSelectio
 }
 
 // function to add extra data to transform component actions
-export function remapTransformActions (entityActions, componentBase$, currentSelections$) {
+export function remapTransformActions (entityActions, componentBase$, currentSelections$, settings$) {
   const createComponents$ = componentBase$
     .filter(c => c.length > 0)
     .map(function (datas) {
@@ -130,9 +130,9 @@ export function remapTransformActions (entityActions, componentBase$, currentSel
   const updateComponents$ = entityActions.updateComponent$
     .filter(u => u.target === 'transforms')
     .pluck('data')
-    .withLatestFrom(currentSelections$.map(s => s.map(s => s.id)), function (transforms, instIds) {
+    .withLatestFrom(currentSelections$.map(s => s.map(s => s.id)),settings$, function (transforms, instIds, settings) {
       return instIds.map(function (instId) {
-        return {id: instId, value: transforms}
+        return {id: instId, value: transforms, settings}
       })
     })
 

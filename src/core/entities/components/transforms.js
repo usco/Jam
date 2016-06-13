@@ -10,6 +10,10 @@ export function makeTransformsSystem (actions) {
     rot: [ 0, 0, 0 ],
     sca: [ 1, 1, 1 ]
   }
+  const snapDefaults = {
+    rot: 10, // snap rotation snaps to tens of degrees
+    sca: 0.1 // snap scaling snaps to tens of percentages
+  }
 
   function updatePosition (state, input) {
     console.log('updatePosition')
@@ -53,7 +57,7 @@ export function makeTransformsSystem (actions) {
     return inputs.reduce(function (state, input) {
       let {id} = input
 
-      let sca = state[id].sca.map(d=>d)// DO NOT REMOVE ! a lot of code relies on diffing, and if you mutate the original scale, it breaks !
+      let sca = state[id].sca.map(d => d) // DO NOT REMOVE ! a lot of code relies on diffing, and if you mutate the original scale, it breaks !
       sca[input.axis] *= -1
 
       let orig = state[id] || transformDefaults
@@ -66,17 +70,59 @@ export function makeTransformsSystem (actions) {
     }, state)
   }
 
+  function applySnapping (transformValues, stepSize, mapValue = undefined) {
+    // applies snapping for both rotation and scaling
+    // maps the rotationtransformValues from tau (2 * pi) to degrees and back
+    let numberToRoundTo = 1 / stepSize
+    for (let i = 0; i < transformValues.length; i++) {
+      if (mapValue) { transformValues[i] = transformValues[i] * 360 / mapValue }
+      let roundedNumber = Math.round(transformValues[i] * numberToRoundTo) / numberToRoundTo
+      if (mapValue) { roundedNumber = roundedNumber / 360 * mapValue }
+      transformValues[i] = roundedNumber
+    }
+    return transformValues
+  }
+
+  function applyUniformScaling (transformValues) {
+    // sorts the values and sees which is different, because this is the changes
+    // then applies the new value to all dimension in respect to the minussign because this is added by mirroring
+    let sortedValues = JSON.parse(JSON.stringify(transformValues)) // deepcopy
+    sortedValues.forEach(function (part, i) {
+      if (sortedValues[i].isNaN) { transformValues = sortedValues = transformDefaults.sca } // safety catch
+      sortedValues[i] = Math.abs(part)
+    })
+    sortedValues = sortedValues.slice().sort()
+    for (let i = 0; i < sortedValues.length; i++) {
+      if (sortedValues[i] === sortedValues[i + 1]) {
+        sortedValues.splice(i, 2)
+      }
+    }
+    let newValue = sortedValues[0]
+    for (let i = 0; i < transformValues.length; i++) {
+      if (transformValues[i] < 0) {
+        transformValues[i] = -(newValue)
+      } else {
+        transformValues[i] = newValue
+      }
+    }
+    return transformValues
+  }
+
+  function applySnapStates (id, transformation, settings) {
+    let {uniformScaling, snapScaling, snapRotation} = settings
+    if (uniformScaling) { transformation.sca = applyUniformScaling(transformation.sca) }
+    if (snapScaling) { transformation.sca = applySnapping(transformation.sca, snapDefaults.sca) }
+    if (snapRotation) { transformation.rot = applySnapping(transformation.rot, snapDefaults.rot, (2 * Math.PI)) }
+    return transformation
+  }
+
   function updateComponents (state, inputs) {
     console.log('updating transforms', inputs)
-
     return inputs.reduce(function (state, input) {
       state = mergeData({}, state)
-
       let {id} = input
-      let transforms = input.value || transformDefaults
-
-      // FIXME big hack, use mutability
-      state[id] = transforms
+      let transformation = input.value || transformDefaults
+      state[id] = applySnapStates(input.id, transformation, input.settings)
       return state
     }, state)
   }
