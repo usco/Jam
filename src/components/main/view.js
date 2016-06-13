@@ -202,17 +202,22 @@ function makeTopToolBar(state){
 
     function getPopOverContent (popOverType) {
       switch (popOverType) {
-        case 'snapScaling':
-          return undefined
+        case 'scalingSubTools':
+          // return undefined
           return <span>
-            <input type='checkbox' className={Class('checkbox', popOverType)} checked='checked' />
-            <label className={Class('label', popOverType)}>Snap scaling</label>
+            <label className='popOverContent'>
+              <input type='checkbox' className='snapScaling' checked={state.settings.snapScaling}/>snap scaling
+            </label>
+            <label className='popOverContent'>
+              <input type='checkbox' className='uniformScaling' checked={state.settings.uniformScaling}/>uniform scaling
+            </label>
           </span>
-        case 'snapRotation':
-          return undefined
+        case 'rotationSubTools':
+          // return undefined
           return <span>
-            <input type='checkbox' className={Class('checkbox', popOverType)} checked='checked' />
-            <label className={Class('label', popOverType)}> Snap rotation</label>
+            <label className='popOverContent'>
+              <input type='checkbox' className='snapRotation' checked={state.settings.snapRotation}/>snap rotation
+            </label>
           </span>
         case 'mirrorSubTools':
           return <span>
@@ -231,10 +236,10 @@ function makeTopToolBar(state){
         , translateIconSvg, "toTranslateMode", "move", "bottom")}
 
       {tooltipIconBtn(rotateModeToggled
-        , rotateIconSvg, "toRotateMode", "rotate", "bottom", false, getPopOverContent('snapRotation'))}
+        , rotateIconSvg, "toRotateMode", "rotate", "bottom", false, getPopOverContent('rotationSubTools'))}
 
       {tooltipIconBtn(scaleModeToggled
-        , scaleIconSvg, "toScaleMode", "scale", "bottom", false,  getPopOverContent('snapScaling'))}
+        , scaleIconSvg, "toScaleMode", "scale", "bottom", false,  getPopOverContent('scalingSubTools'))}
 
       {tooltipIconBtn(mirrorModeToggled
         , mirrorIconSvg, "toMirrorMode", "mirror", "bottom", false, getPopOverContent('mirrorSubTools'))}

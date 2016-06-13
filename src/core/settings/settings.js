@@ -47,6 +47,24 @@ function toggleAutoRotate (state, input) {
   return output
 }
 
+function toggleSnapScaling (state, input) {
+  console.log('toggleSnapScaling', input)
+  let output = mergeData(state, {snapScaling: input})
+  return output
+}
+
+function toggleUniformScaling (state, input) {
+  console.log('toggleUniformScaling', input)
+  let output = mergeData(state, {uniformScaling: input})
+  return output
+}
+
+function toggleSnapRotation (state, input) {
+  console.log('toggleSnapRotation', input)
+  let output = mergeData(state, {snapRotation: input})
+  return output
+}
+
 function setActiveTool (state, input) {
   console.log('setting activeTool', input)
   let output = mergeData(state, {activeTool: input})
@@ -97,7 +115,7 @@ function settings (actions, source) {
 
     toolSets: ['view', 'edit', 'annotate'], // what categories of tools do we want on screen
 
-    selections: undefined, //FIXME : not entirely sure this should even be here
+    selections: undefined, // FIXME : not entirely sure this should even be here
 
     // these are "domain specific", there should be a way for sub systems
     // to "hook up" to the main data storage
@@ -113,14 +131,20 @@ function settings (actions, source) {
       show: true
     },
 
-    //persistence
+    // persistence
     autoSave: false,
-    autoLoad: true
+    autoLoad: true,
+
+    snapScaling: true,
+    uniformScaling: true,
+    snapRotation: true
   }
 
-  let updateFns = {setAllValues, toggleShowGrid,
-    toggleAutoRotate, setActiveTool, setAppMode, setToolsets,
-    setAutoSave, setAutoLoad}
+  const test = 'test'
+
+  let updateFns = {setAllValues, toggleShowGrid, toggleAutoRotate,
+    toggleSnapScaling, toggleUniformScaling, toggleSnapRotation,
+    setActiveTool, setAppMode, setToolsets, setAutoSave, setAutoLoad}
   return makeModel(defaults, updateFns, actions, source)
 }
 
