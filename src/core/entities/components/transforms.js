@@ -11,34 +11,8 @@ export function makeTransformsSystem (actions) {
     sca: [ 1, 1, 1 ]
   }
   const snapDefaults = {
-    rot: 10, // snap rotation snaps to fifths of degrees
+    rot: 10, // snap rotation snaps to tens of degrees
     sca: 0.1 // snap scaling snaps to tens of percentages
-  }
-  let objectDimensions = []
-
-  function applyUniformScaling2 (id, transformValues) {
-    // i'm just putting this in here for future reference
-    let formerDimensions = transformDefaults.sca
-    for (let i = 0; i < objectDimensions.length; i++) {
-      if (objectDimensions[i].id === id) {
-        formerDimensions = objectDimensions[i].dimensions
-      }
-    }
-    let resizeRatio
-    for (let i = 0; i < formerDimensions.length; i++) {
-      if (transformValues[i] !== formerDimensions[i]) {
-        resizeRatio = transformValues[i] / formerDimensions[i]
-      }
-    }
-    for (let i = 0; i < transformValues.length; i++) {
-      if (transformValues[i] === formerDimensions[i]) {
-        transformValues[i] = transformValues[i] * resizeRatio
-      } else {
-        transformValues[i] = transformValues[i]
-      }
-      if (transformValues[i].isNaN) { transformValues[i] = transformDefaults.sca[i] }
-    }
-    return transformValues
   }
 
   function updatePosition (state, input) {
@@ -97,6 +71,8 @@ export function makeTransformsSystem (actions) {
   }
 
   function applySnapping (transformValues, stepSize, mapValue = undefined) {
+    // applies snapping for both rotation and scaling
+    // maps the rotationtransformValues from tau (2 * pi) to degrees and back
     let numberToRoundTo = 1 / stepSize
     for (let i = 0; i < transformValues.length; i++) {
       if (mapValue) { transformValues[i] = transformValues[i] * 360 / mapValue }
@@ -110,14 +86,13 @@ export function makeTransformsSystem (actions) {
   function applyUniformScaling (transformValues) {
     // sorts the values and sees which is different, because this is the changes
     // then applies the new value to all dimension in respect to the minussign because this is added by mirroring
-    let sortedValues = transformValues
+    let sortedValues = JSON.parse(JSON.stringify(transformValues)) // deepcopy
     sortedValues.forEach(function (part, i) {
-      if (sortedValues[i].isNaN) { transformValues = sortedValues = transformDefaults.sca }
+      if (sortedValues[i].isNaN) { transformValues = sortedValues = transformDefaults.sca } // safety catch
       sortedValues[i] = Math.abs(part)
     })
-    sortedValues = sortedValues.slice().sort
+    sortedValues = sortedValues.slice().sort()
     for (let i = 0; i < sortedValues.length; i++) {
-      sortedValues[i] = Math.abs(sortedValues[i])
       if (sortedValues[i] === sortedValues[i + 1]) {
         sortedValues.splice(i, 2)
       }
@@ -133,26 +108,11 @@ export function makeTransformsSystem (actions) {
     return transformValues
   }
 
-  function storeObjectDimensions (id, scale) {
-    let object = {id: id, dimensions: scale}
-    for (let i = 0; i < objectDimensions.length; i++) {
-      if (objectDimensions[i].id === id) {
-        objectDimensions[i].dimensions = scale
-        break
-      } else if (objectDimensions.length === i + 1) {
-        objectDimensions.push(object)
-      }
-    }
-    if (!objectDimensions[0]) { objectDimensions.push(object) }
-  }
-
-  function checkSnapStates (id, transformation, settings) {
+  function applySnapStates (id, transformation, settings) {
     let {uniformScaling, snapScaling, snapRotation} = settings
-    // if (uniformScaling) { transformation.sca = applyUniformScaling(id, transformation.sca) }
     if (uniformScaling) { transformation.sca = applyUniformScaling(transformation.sca) }
     if (snapScaling) { transformation.sca = applySnapping(transformation.sca, snapDefaults.sca) }
     if (snapRotation) { transformation.rot = applySnapping(transformation.rot, snapDefaults.rot, (2 * Math.PI)) }
-    storeObjectDimensions(id, transformation.sca)
     return transformation
   }
 
@@ -162,7 +122,7 @@ export function makeTransformsSystem (actions) {
       state = mergeData({}, state)
       let {id} = input
       let transformation = input.value || transformDefaults
-      state[id] = checkSnapStates(input.id, transformation, input.settings)
+      state[id] = applySnapStates(input.id, transformation, input.settings)
       return state
     }, state)
   }
