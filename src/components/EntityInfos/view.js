@@ -8,6 +8,11 @@ import { isEmpty } from '../../utils/utils'
 // //////
 import ColorPicker from '../widgets/ColorPicker'
 
+const snapDefaults = {
+  rot: 10, // snap rotation snaps to tens of degrees
+  sca: 0.1 // snap scaling snaps to tens of percentages
+}
+
 export function colorPickerWrapper (state$, DOM) {
   const props$ = just({color: '#FF00FF'})
 
@@ -175,13 +180,36 @@ function transformInputs (transforms, fieldName, displayName, controlsStep, numb
   }
 }
 
+function getControlStep (transformType) {//, snapping) {
+  let snapping = true // please replace this with actual settings
+  switch (transformType) {
+    case 'pos':
+      return 0.1
+    case 'rot':
+      if (snapping) {
+        return snapDefaults.rot
+      } else {
+        return 0.5
+      }
+      break
+    case 'sca':
+      if (snapping) {
+        return snapDefaults.sca
+      } else {
+        return 0.01
+      }
+      break
+    default:
+      return 0.4
+  }
+}
+
 export default function view (state$, colorPicker) {
   let numberPrecision = 2
-  let controlsStep = 0.5
 
   // {colorPicker}
   return state$.map(function (state) {
-    let {meta, transforms} = state
+    let {meta, transforms, settings} = state
 
     if (!meta || !transforms) {
       return undefined
@@ -194,9 +222,9 @@ export default function view (state$, colorPicker) {
     return <div className='toolBarBottom entityInfos'>
              {colorInput(meta)}
              {nameInput(meta)}
-             {transformInputs(transforms, 'pos', undefined, controlsStep, numberPrecision)}
-             {transformInputs(transforms, 'rot', undefined, controlsStep, numberPrecision)}
-             {transformInputs(transforms, 'sca', undefined, controlsStep, numberPrecision)}
+             {transformInputs(transforms, 'pos', undefined, getControlStep('pos'), numberPrecision)}
+             {transformInputs(transforms, 'rot', undefined, getControlStep('rot'), numberPrecision)}
+             {transformInputs(transforms, 'sca', undefined, getControlStep('sca'), numberPrecision)}
            </div>
   })
 }
