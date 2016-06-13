@@ -111,17 +111,21 @@ export function GLWrapper (state$, drivers) {
 
   const selections$ = selectedInstIds$
     .withLatestFrom(state$, function (ids, state) {
-      // console.log("gnagna gna")
-      let meta = ids.map(function (id) {
+      return ids.map(function (id) {
         return state.meta[id]
       })
-      return meta
     })
     .shareReplay(1)
+
+  const focusedEntities$ = state$
+    .pluck('selections')
+    .map(s => s.focusInstIds)
+    .filter(s => s !== undefined)
 
   let glProps$ = combineLatestObj({
     settings: state$.pluck('settings'),
     selections$,
+    focusedEntities$,
     meta: state$.pluck('meta'),
     meshes: state$.pluck('meshes'),
     transforms: state$.pluck('transforms'),

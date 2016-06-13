@@ -28,6 +28,9 @@ let ShadowPlane = planes.ShadowPlane.default // ugh FIXME: bloody babel6
 // let annotations    = annotations
 let {zoomInOn, zoomToFit} = cameraEffects
 
+import zoomToFitBounds from './cameraUtils2'
+import {computeBoundingBox} from './computeBounds2'
+
 import { makeCamera, makeControls, makeLight, renderMeta} from './utils2'
 
 import { presets } from './presets' // default configuration for lighting, cameras etc
@@ -164,7 +167,7 @@ function GLView ({drivers, props$}) {
   let grid = new LabeledGrid(200, 200, 10, config.cameras[0].up)
   let shadowPlane = new ShadowPlane(2000, 2000, null, config.cameras[0].up)
 
-  const actions = intent({DOM}, {camera, scene, transformControls})
+  const actions = intent({DOM, events: drivers.events}, {camera, scene, transformControls})
   const state$ = model(props$, actions)
 
   // FIXME: proxies for now, not sure how to deal with them
@@ -177,11 +180,15 @@ function GLView ({drivers, props$}) {
       return state
     })
 
+  const focusedMeshesFromFocusedEntities$ = state$.pluck('focusedMeshesFromFocusedEntities').startWith([])
+
   const zoomToFit$ = settings$
     .filter(s => s.toolSets.indexOf('edit') === -1 && s.toolSets.length === 1) // only in view only mode
     .combineLatest(state$.pluck('items'), function (settings, items) {
       return items
     })
+    .merge(focusedMeshesFromFocusedEntities$)
+    .filter(exists)
     .filter(i => i.length > 0)
     .distinctUntilChanged()
 
@@ -195,8 +202,22 @@ function GLView ({drivers, props$}) {
   // react to actions
   actions.zoomInOnPoint$
     .forEach((oAndP) => zoomInOn(oAndP.object, camera, {position: oAndP.point}))
+
   zoomToFit$
-    .forEach((meshes) => zoomToFit(meshes[meshes.length - 1], camera, new THREE.Vector3()))
+    .tap(e=>console.info('zoomToFit', e))
+    .map(function(meshesToFocus){
+      let wrapperObject = new THREE.Object3D()
+      wrapperObject.boundingBox = computeBoundingBox(wrapperObject, meshesToFocus)
+      wrapperObject.boundingSphere = wrapperObject.boundingBox.getBoundingSphere()
+      console.log('wrapperObject', wrapperObject)
+
+      const centerX = 0.5 * ( wrapperObject.boundingBox.max.x - wrapperObject.boundingBox.min.x )
+      const centerY = 0.5 * ( wrapperObject.boundingBox.max.y - wrapperObject.boundingBox.min.y )
+      const centerZ = 0.5 * ( wrapperObject.boundingBox.max.z - wrapperObject.boundingBox.min.z )
+      const center = new THREE.Vector3(centerX, centerY, centerZ)
+      return {focusMesh: wrapperObject, center}
+    })
+    .forEach(({focusMesh, center}) => zoomToFitBounds(focusMesh, camera, center))
 
   let windowResizes$ = windowResizes(1) // get from intents/interactions ?
 
