@@ -29,9 +29,9 @@ let ShadowPlane = planes.ShadowPlane.default // ugh FIXME: bloody babel6
 let {zoomInOn, zoomToFit} = cameraEffects
 
 import zoomToFitBounds from './cameraUtils2'
-import {computeBoundingBox} from './computeBounds2'
+import { computeBoundingBox } from './computeBounds2'
 
-import { makeCamera, makeControls, makeLight, renderMeta} from './utils2'
+import { makeCamera, makeControls, makeLight, renderMeta } from './utils2'
 
 import { presets } from './presets' // default configuration for lighting, cameras etc
 
@@ -126,7 +126,7 @@ function setupPostProcess (camera, renderer, scene) {
 
   return {composers: [composer], fxaaPass, outScene, maskScene}
 
-  // return {composer:finalComposer, fxaaPass, outScene, maskScene, composers:[normalComposer,depthComposer,finalComposer]}
+// return {composer:finalComposer, fxaaPass, outScene, maskScene, composers:[normalComposer,depthComposer,finalComposer]}
 }
 
 import intent from './intent'
@@ -204,17 +204,11 @@ function GLView ({drivers, props$}) {
     .forEach((oAndP) => zoomInOn(oAndP.object, camera, {position: oAndP.point}))
 
   zoomToFit$
-    .tap(e=>console.info('zoomToFit', e))
-    .map(function(meshesToFocus){
+    .map(function (meshesToFocus) {
       let wrapperObject = new THREE.Object3D()
       wrapperObject.boundingBox = computeBoundingBox(wrapperObject, meshesToFocus)
       wrapperObject.boundingSphere = wrapperObject.boundingBox.getBoundingSphere()
-      console.log('wrapperObject', wrapperObject)
-
-      const centerX = 0.5 * ( wrapperObject.boundingBox.max.x - wrapperObject.boundingBox.min.x )
-      const centerY = 0.5 * ( wrapperObject.boundingBox.max.y - wrapperObject.boundingBox.min.y )
-      const centerZ = 0.5 * ( wrapperObject.boundingBox.max.z - wrapperObject.boundingBox.min.z )
-      const center = new THREE.Vector3(centerX, centerY, centerZ)
+      const center = new THREE.Vector3().subVectors(wrapperObject.boundingBox.max, wrapperObject.boundingBox.min).multiplyScalar(0.5)
       return {focusMesh: wrapperObject, center}
     })
     .forEach(({focusMesh, center}) => zoomToFitBounds(focusMesh, camera, center))
@@ -391,8 +385,7 @@ function GLView ({drivers, props$}) {
           transformControls.attach(mesh)
           transformControls.setMode(tool)
         }
-        else if ((!tool && mesh) || ['translate', 'rotate', 'scale'].indexOf(tool) === -1)
-        { // tool is undefined, but we still had selections
+        else if ((!tool && mesh) || ['translate', 'rotate', 'scale'].indexOf(tool) === -1) { // tool is undefined, but we still had selections
           transformControls.detach(mesh)
         }
       })
