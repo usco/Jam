@@ -28,7 +28,10 @@ let ShadowPlane = planes.ShadowPlane.default // ugh FIXME: bloody babel6
 // let annotations    = annotations
 let {zoomInOn, zoomToFit} = cameraEffects
 
-import { makeCamera, makeControls, makeLight, renderMeta} from './utils2'
+import zoomToFitBounds from './cameraUtils2'
+import { computeBoundingBox } from './computeBounds2'
+
+import { makeCamera, makeControls, makeLight, renderMeta } from './utils2'
 
 import { presets } from './presets' // default configuration for lighting, cameras etc
 
@@ -123,7 +126,7 @@ function setupPostProcess (camera, renderer, scene) {
 
   return {composers: [composer], fxaaPass, outScene, maskScene}
 
-  // return {composer:finalComposer, fxaaPass, outScene, maskScene, composers:[normalComposer,depthComposer,finalComposer]}
+// return {composer:finalComposer, fxaaPass, outScene, maskScene, composers:[normalComposer,depthComposer,finalComposer]}
 }
 
 import intent from './intent'
@@ -164,7 +167,7 @@ function GLView ({drivers, props$}) {
   let grid = new LabeledGrid(200, 200, 10, config.cameras[0].up)
   let shadowPlane = new ShadowPlane(2000, 2000, null, config.cameras[0].up)
 
-  const actions = intent({DOM}, {camera, scene, transformControls})
+  const actions = intent({DOM, events: drivers.events}, {camera, scene, transformControls})
   const state$ = model(props$, actions)
 
   // FIXME: proxies for now, not sure how to deal with them
@@ -177,11 +180,15 @@ function GLView ({drivers, props$}) {
       return state
     })
 
+  const focusedMeshesFromFocusedEntities$ = state$.pluck('focusedMeshesFromFocusedEntities').startWith([])
+
   const zoomToFit$ = settings$
     .filter(s => s.toolSets.indexOf('edit') === -1 && s.toolSets.length === 1) // only in view only mode
     .combineLatest(state$.pluck('items'), function (settings, items) {
       return items
     })
+    .merge(focusedMeshesFromFocusedEntities$)
+    .filter(exists)
     .filter(i => i.length > 0)
     .distinctUntilChanged()
 
@@ -195,8 +202,16 @@ function GLView ({drivers, props$}) {
   // react to actions
   actions.zoomInOnPoint$
     .forEach((oAndP) => zoomInOn(oAndP.object, camera, {position: oAndP.point}))
+
   zoomToFit$
-    .forEach((meshes) => zoomToFit(meshes[meshes.length - 1], camera, new THREE.Vector3()))
+    .map(function (meshesToFocus) {
+      let wrapperObject = new THREE.Object3D()
+      wrapperObject.boundingBox = computeBoundingBox(wrapperObject, meshesToFocus)
+      wrapperObject.boundingSphere = wrapperObject.boundingBox.getBoundingSphere()
+      const center = new THREE.Vector3().subVectors(wrapperObject.boundingBox.max, wrapperObject.boundingBox.min).multiplyScalar(0.5)
+      return {focusMesh: wrapperObject, center}
+    })
+    .forEach(({focusMesh, center}) => zoomToFitBounds(focusMesh, camera, center))
 
   let windowResizes$ = windowResizes(1) // get from intents/interactions ?
 
@@ -370,8 +385,7 @@ function GLView ({drivers, props$}) {
           transformControls.attach(mesh)
           transformControls.setMode(tool)
         }
-        else if ((!tool && mesh) || ['translate', 'rotate', 'scale'].indexOf(tool) === -1)
-        { // tool is undefined, but we still had selections
+        else if ((!tool && mesh) || ['translate', 'rotate', 'scale'].indexOf(tool) === -1) { // tool is undefined, but we still had selections
           transformControls.detach(mesh)
         }
       })

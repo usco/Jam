@@ -5,9 +5,27 @@ import { mergeData } from '../../utils/modelUtils'
 import { generateUUID } from '../../utils/utils'
 
 export default function intent (DOM) {
-  const entryTapped$ = DOM.select('.bom .normal').events('click', true) // capture == true
+
+  const entryTaps$ = DOM.select('.bom .normal').events('click', true) // capture == true
     .tap(e => e.stopPropagation())
     .map(e => e.currentTarget.dataset.id)
+
+  const entryMultiTaps$ = entryTaps$
+    .buffer(entryTaps$.debounce(250))
+    .map(list => ({item: list[0], nb: list.length}))
+    .shareReplay(10)
+
+  const entryTapped$ = entryMultiTaps$
+    .filter(data => data.nb === 1)
+    .pluck('item')
+    //.shareReplay(1)
+
+  const entryDoubleTapped$ = entryMultiTaps$
+    .filter(data => data.nb === 2)
+    .pluck('item')
+    .tap(e => console.log('entryDoubleTapped', e))
+    //.shareReplay(1)
+
 
   const headerTapped$ = DOM.select('.headerCell').events('click', true)
     .tap(e => e.stopPropagation())
@@ -126,11 +144,12 @@ export default function intent (DOM) {
   // FIMXE: pressing enter in the name edit, add multiple copies
   return {
     entryTapped$,
+    entryDoubleTapped$,
     headerTapped$,
     addEntry$,
     editEntry$,
     removeEntryRequest$,
     removeEntryRequestCancel$,
     removeEntry$,
-    toggle$}
+  toggle$}
 }

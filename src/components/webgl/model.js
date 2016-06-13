@@ -36,20 +36,20 @@ function makeRemoteMeshVisual (meta, transform, mesh) {
     // this is for mirroring
     function isOdd (num) { return num % 2 }
 
-    function handleMirroring(){
+    function handleMirroring () {
       let flipped = mesh.flipped || [0, 0, 0]
       let mS = (new THREE.Matrix4()).identity()
       const conv = [0, 5, 10]
 
       transform.sca
-        .map(val => val <0)
+        .map(val => val < 0)
         .forEach(function (val, index) {
-          if(val && flipped[index] === 0) {
+          if (val && flipped[index] === 0) {
             mS.elements[conv[index]] = -1
-            flipped[index]=1
+            flipped[index] = 1
           }
-          //flip back
-          if(!val && flipped[index] === 1) {
+          // flip back
+          if (!val && flipped[index] === 1) {
             mS.elements[conv[index]] = -1
             flipped[index] = 0
           }
@@ -76,7 +76,7 @@ function getVisual (components) {
     let mesh = components.meshes[key]
 
     // TODO: refactor this horror
-    if (meta.typeUid === 'A1') {// typeUid:"A1"=> notes
+    if (meta.typeUid === 'A1') { // typeUid:"A1"=> notes
       return makeNoteVisual(meta, components.meshes)
     }else if (meta.typeUid === 'A2') {
       return makeThicknessVisual(meta, components.meshes)
@@ -105,12 +105,12 @@ export default function model (props$, actions) {
   const meshes$ = props$.pluck('meshes').filter(exists).distinctUntilChanged(function (m) {
     return Object.keys(m)
   })
-  //this is for any NON composite data , so pure mesh /visuals withouth any metadata, transformsetc
+  // this is for any NON composite data , so pure mesh /visuals withouth any metadata, transformsetc
   const rawVisuals$ = props$.pluck('rawVisuals').startWith(undefined)
     .distinctUntilChanged()
     .tap(e => console.log('rawVisuals', e))
 
-  //FIXME: items is emiting WAAY too much values, look into why it does so
+  // FIXME: items is emiting WAAY too much values, look into why it does so
   // combine All needed components to apply any "transforms" to their visuals
   const items0$ = combineLatestObj({meta$, transforms$, meshes$})
     .debounce(1) // ignore if we have too fast changes in any of the 3 components
@@ -119,8 +119,8 @@ export default function model (props$, actions) {
     // .sample(0, requestAnimationFrameScheduler)
     // .distinctUntilChanged()
     // .tap(e => console.log('DONE with items in GLView', e))
-    .combineLatest(rawVisuals$,function(composites, raw){
-      //console.log('composites', composites,'raw',raw)
+    .combineLatest(rawVisuals$, function (composites, raw) {
+      // console.log('composites', composites,'raw',raw)
       return composites
     })
     .filter(exists)
@@ -129,17 +129,17 @@ export default function model (props$, actions) {
 
   const items$ = props$
     .debounce(1)
-    .map(function(props){
+    .map(function (props) {
       const meta = props.meta
       const transforms = props.transforms
       const meshes = props.meshes
       let visual = getVisual({meta, transforms, meshes})
       return visual.concat(props.rawVisuals)
-  })
-  .startWith(undefined)
-  .filter(exists)
-  //.tap(e => console.log('items2', e))
-  .shareReplay(1)
+    })
+    .startWith(undefined)
+    .filter(exists)
+    // .tap(e => console.log('items2', e))
+    .shareReplay(1)
 
   // "external" selected meshes
   const selectedMeshesFromSelections$ = selections$
@@ -167,7 +167,23 @@ export default function model (props$, actions) {
     .distinctUntilChanged()
     .startWith([])
 
+  const focusedMeshesFromFocusedEntities$ = props$
+    .pluck('focusedEntities').startWith([]).filter(exists).distinctUntilChanged()
+    .withLatestFrom(meshes$, function (selections, meshes) {
+      return selections
+        .filter(exists)
+        .map(function (id) {
+          return meshes[id]
+        })
+    })
+    .merge(actions.selectMeshes$.filter(sm => sm.length ===0)) //we want to be able to reset selections to nothing
+    .tap(e => console.log('selections in glView', e))
+    .distinctUntilChanged()
+    .startWith([])
+
   return combineLatestObj({
     items$,
-    selectedMeshes$})
+    selectedMeshes$,
+    focusedMeshesFromFocusedEntities$
+  })
 }
