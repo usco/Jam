@@ -32,6 +32,7 @@ export default function zoomToFitBounds (object, camera, target) {
   const center =  object.boundingSphere.center
   const distance = height / 2 / Math.tan(Math.PI * fov / 360)//center.distanceTo(camera.position) - radius
   const offset = new THREE.Vector3().subVectors(center, camera.position)
+  const targetOffset = new THREE.Vector3().subVectors(center, camera.target)
 
 
   var realHeight = Math.abs(bbox.max.y - bbox.min.y)
@@ -39,13 +40,11 @@ export default function zoomToFitBounds (object, camera, target) {
   //camera.fov = fov
 
   //move camera
-  console.log('offset',offset)
-  //console.log('camera',camera.target, camera.position, camera)
-  camera.position.add(offset)
-  //camera.target.copy(target)
+  console.log('offset',targetOffset)
+  camera.position.add(targetOffset)
+  camera.target.copy(center)
 
   camera.updateProjectionMatrix()
-  camera.toPerspective()
 
 // possible api change, to have function return data instead of mutating anything
 /*vec.addVectors(vec, target)
