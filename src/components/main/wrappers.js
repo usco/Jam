@@ -40,7 +40,9 @@ export function EntityInfosWrapper (state$, DOM) {
         let meta = ids.map(function (id) {
           return state.meta[id]
         })
-        return {transforms, meta}
+
+
+        return {transforms, meta, settings: state.settings}
       })
       .shareReplay(1)
   }

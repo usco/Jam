@@ -140,8 +140,6 @@ function settings (actions, source) {
     snapRotation: true
   }
 
-  const test = 'test'
-
   let updateFns = {setAllValues, toggleShowGrid, toggleAutoRotate,
     toggleSnapScaling, toggleUniformScaling, toggleSnapRotation,
     setActiveTool, setAppMode, setToolsets, setAutoSave, setAutoLoad}
