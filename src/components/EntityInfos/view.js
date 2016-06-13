@@ -7,11 +7,7 @@ import { formatNumberTo, absSizeFromBBox, toDegree } from '../../utils/formatter
 import { isEmpty } from '../../utils/utils'
 // //////
 import ColorPicker from '../widgets/ColorPicker'
-
-const snapDefaults = {
-  rot: 10, // snap rotation snaps to tens of degrees
-  sca: 0.1 // snap scaling snaps to tens of percentages
-}
+import assign from 'fast.js/object/assign' // faster object.assign
 
 export function colorPickerWrapper (state$, DOM) {
   const props$ = just({color: '#FF00FF'})
@@ -180,24 +176,25 @@ function transformInputs (transforms, fieldName, displayName, controlsStep, numb
   }
 }
 
-function getControlStep (transformType) {//, snapping) {
-  let snapping = true // please replace this with actual settings
+function getControlStep (transformType, settings) { // , snapping) {
+  let {snapScaling, snapRotation} = settings // please replace this with actual settings
+
+  const snapDefaults = {
+    rot: 10, // snap rotation snaps to tens of degrees
+    sca: 0.1 // snap scaling snaps to tens of percentages
+  }
+
+  const rotateStep = settings.snapRotation ? snapDefaults.rot : 0.5
+  const scaleStep = settings.snapScaling ? snapDefaults.sca : 0.01
+
   switch (transformType) {
     case 'pos':
       return 0.1
     case 'rot':
-      if (snapping) {
-        return snapDefaults.rot
-      } else {
-        return 0.5
-      }
+      return rotateStep
       break
     case 'sca':
-      if (snapping) {
-        return snapDefaults.sca
-      } else {
-        return 0.01
-      }
+      return scaleStep
       break
     default:
       return 0.4
@@ -211,7 +208,7 @@ export default function view (state$, colorPicker) {
   return state$.map(function (state) {
     let {meta, transforms, settings} = state
 
-    if (!meta || !transforms) {
+    if (!meta || !transforms || !settings) {
       return undefined
     }
     if (transforms.length > 0) transforms = transforms[0]
@@ -222,9 +219,9 @@ export default function view (state$, colorPicker) {
     return <div className='toolBarBottom entityInfos'>
              {colorInput(meta)}
              {nameInput(meta)}
-             {transformInputs(transforms, 'pos', undefined, getControlStep('pos'), numberPrecision)}
-             {transformInputs(transforms, 'rot', undefined, getControlStep('rot'), numberPrecision)}
-             {transformInputs(transforms, 'sca', undefined, getControlStep('sca'), numberPrecision)}
+             {transformInputs(transforms, 'pos', undefined, getControlStep('pos', settings), numberPrecision)}
+             {transformInputs(transforms, 'rot', undefined, getControlStep('rot', settings), numberPrecision)}
+             {transformInputs(transforms, 'sca', undefined, getControlStep('sca', settings), numberPrecision)}
            </div>
   })
 }
