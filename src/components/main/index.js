@@ -16,6 +16,7 @@ import view from './view'
 import api from '../../core/api/api'
 import formatDataForYMStorage from './formatDataForYMStorage'
 import formatDataForLocalStorage from './formatDataForLocalStorage'
+import formatDataForFileStorage from './formatDataForFileStorage'
 
 export default function main (sources) {
   const {DOM} = sources
@@ -49,6 +50,9 @@ export default function main (sources) {
   const localStorage$ = formatDataForLocalStorage({sources, state$})
   // ymStorage
   const ymStorage$ = formatDataForYMStorage({sources, state$})
+  // save file to user hdd
+  const fileStorage$ = formatDataForFileStorage({sources, state$}, bom)
+
 
   // return anything you want to output to sources
   return {
@@ -59,6 +63,7 @@ export default function main (sources) {
     http: actions.requests.http$,
     desktop: actions.requests.desktop$,
     localStorage: localStorage$,
-    ym: ymStorage$
+    ym: ymStorage$,
+    fileStorage: fileStorage$
   }
 }
