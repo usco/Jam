@@ -141,15 +141,28 @@ export default function intent (DOM) {
     .map(true)
     .scan((acc, val) => !acc, false) // intitial value of scan needs to match the one of "startWith" in "toggled" model
 
-  // FIMXE: pressing enter in the name edit, add multiple copies
+  const exportAsJson$ = DOM.select('.bom-as-json')
+    .events('click')
+    .tap(e=>console.log('exportAsJson'))
+
+  const exportAsText$ = DOM.select('.bom-as-text')
+    .events('click')
+    .tap(e=>console.log('exportAsText'))
+
   return {
     entryTapped$,
     entryDoubleTapped$,
     headerTapped$,
+
     addEntry$,
     editEntry$,
     removeEntryRequest$,
     removeEntryRequestCancel$,
     removeEntry$,
-  toggle$}
+
+    exportAsJson$,
+    exportAsText$,
+
+    toggle$
+  }
 }
