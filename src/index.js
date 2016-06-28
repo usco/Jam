@@ -12,20 +12,26 @@ import makeHttpDriver from 'cycle-simple-http-driver'
 import localStorageDriver from './drivers/localStorageDriver'
 import makeDesktopDriver from './drivers/desktopStoreDriver'
 import makeYMDriver from 'usco-ym-storage'
+import fileStorageDriver from './drivers/fileStorageDriver'
+import clipBoardDriver from './drivers/clipBoardDriver'
+
 
 import main from './components/main/index'
 
 
 // ////////setup drivers
-let domDriver = makeDOMDriver('#jamRoot')
+const domDriver = makeDOMDriver('#jamRoot')
 // other drivers
-let postMessage = postMessageDriver
-let localStorage = localStorageDriver
-let addressbar = addressbarDriver
-let browserCaps = browserCapsDriver
-let httpDriver = makeHttpDriver()
-let desktopStoreDriver = makeDesktopDriver()
-let ymDriver = makeYMDriver(httpDriver)
+const postMessage = postMessageDriver
+const localStorage = localStorageDriver
+const addressbar = addressbarDriver
+const browserCaps = browserCapsDriver
+const httpDriver = makeHttpDriver()
+const desktopStoreDriver = makeDesktopDriver()
+const ymDriver = makeYMDriver(httpDriver)
+const fileStorage = fileStorageDriver
+const clipBoard = clipBoardDriver
+
 
 let drivers = {
   DOM: domDriver,
@@ -38,6 +44,8 @@ let drivers = {
   localStorage,
   http: httpDriver,
   desktop: desktopStoreDriver,
+  fileStorage,
+  clipBoard,
 
   ym: ymDriver
 }

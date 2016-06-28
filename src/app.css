@@ -457,6 +457,8 @@ input[type=color]:focus{
   bottom: 54px;*/
   height: auto;
   cursor: default;
+  font-weight: 600;
+  font-size: .9em;
 }
 
 .bom .bomToggler{
@@ -476,6 +478,10 @@ input[type=color]:focus{
   right: 20px;
   height: calc(100% - 132px);
   pointer-events: none;
+}
+
+.bom .export button {
+  
 }
 
 .bom table{
@@ -508,10 +514,6 @@ input[type=color]:focus{
   pointer-events: auto;
 }
 
-.bom{
-  font-weight: 600;
-  font-size: .9em;
-}
 
 .bom tr:hover{
    background-color: #F4F4F4;

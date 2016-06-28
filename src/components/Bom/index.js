@@ -18,6 +18,11 @@ export default function Bom ({DOM, props$}) {
       editEntry$: actions.editEntry$,
       addEntry$: actions.addEntry$,
       removeEntry$: actions.removeEntry$
+    },
+    //FIXME: not sure
+    fileStorage: {
+      exportBOMAsJson$: actions.exportAsJson$,
+      exportBOMAsText$: actions.exportAsText$
     }
   }
 }

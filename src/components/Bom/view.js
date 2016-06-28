@@ -14,6 +14,24 @@ export default function view (state$) {
       let direction = sortablesDirection
       // const readOnly = true // for testing
 
+      /*const exportIconSvg = `<svg version="1.1" id="Flag" xmlns="http://www.w3.org/2000/svg"
+        width="16" height="16" x="0px" y="0px" viewBox="0 0 20 20" enable-background="new 0 0 20 20" class="icon">
+      <path d="M18.926,5.584c-9.339,13.568-6.142-0.26-14.037,6.357L6.684,19H4.665L1,4.59l1.85-0.664
+        c8.849-6.471,4.228,5.82,15.637,1.254C18.851,5.033,19.142,5.27,18.926,5.584z"/>
+      </svg>`
+
+      const exportSubItems = <span>
+        <button className='bom-as-json' value='bom-as-json'>Export as json</button>
+        <button className='bom-as-text' value='bom-as-text'>Export as plain text</button>
+      </span>
+
+      const exportButton = tooltipIconBtn(true
+        , exportIconSvg, 'exportBOMData', 'export', 'bottom', false, exportSubItems)*/
+      const exportButtons = <span >
+        <button className='bom-as-json' value='bom-as-json' ><span className='tooltip-bottom' attributes={{'data-tooltip': 'copy to clipboard as Json'}}> json </span> </button>
+        <button className='bom-as-text' value='bom-as-text'><span className='tooltip-bottom' attributes={{'data-tooltip': 'copy to clipboard as text'}}> text </span> </button>
+        </span>
+
       // PRIMARY DOM-FUNCTIONS
       function getHeaderRow () {
         let cells = fieldNames.map(function (name) {
@@ -25,11 +43,11 @@ export default function view (state$) {
           const lastInRow = fieldNames.indexOf(name) === (fieldNames.length - 1)
           const thContent = <span className='tooltip-bottom' attributes={{'data-tooltip': toolTip}}>{name} {sortArrow}</span>
           return (
-            <th className={`headerCell ${columnName}`}attributes={{'data-name': name, 'colspan': lastInRow ? '2' : '1'}}>
+            <th className={`headerCell ${columnName}`}attributes={{'data-name': name, 'colspan': lastInRow ? '1' : '1'}}>
               {thContent}
             </th>
           )
-        }).concat([]) // for 'hidden field to add/remove entries'
+        }).concat([<th className='export'>{exportButtons}</th>]) // for 'hidden field to add/remove entries'
         return (<tr className='headerRow'>
                   {cells}
                 </tr>)

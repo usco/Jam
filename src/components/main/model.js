@@ -79,6 +79,7 @@ export default function model (props$, actions, sources) {
   // close some cycles
   replicateStream(currentSelections$, proxySelections$)
 
+  //FIXME : must find a way to get it out of here
   const bomActions = bomIntents(sources, types$, metaActions, entityActions)
   const bom$ = bom(bomActions)
 
