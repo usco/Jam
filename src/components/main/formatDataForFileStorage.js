@@ -2,7 +2,6 @@ import { pick } from 'ramda'
 import { remapJson } from '../../utils/utils'
 
 export default function formatDataForFileStorage ({sources, state$}, bom) {
-
   const fieldNames = [ 'part_uuid', 'name', 'qty', 'phys_qty', 'unit', 'printable' ] // , 'version' ]
   const mapping = {
     'id': 'part_uuid'
@@ -15,7 +14,7 @@ export default function formatDataForFileStorage ({sources, state$}, bom) {
       const unit = entry.unit === 'EA' ? '' : entry.unit + ' '
       return `- ${entry.qty} X ${phys_qty}${unit}${entry.name} (Part Id : ${entry.part_uuid})`
     })
-      .join('\n')
+      .join('\r')
 
     return result
   }
@@ -40,5 +39,5 @@ export default function formatDataForFileStorage ({sources, state$}, bom) {
     .map(formatBomAsPlainText)
     .map(bom => ({data: bom, type: 'text', name: 'bom.md'}))
 
-    return bomJsonOutput$.merge(bomTextOutput$)
+  return bomJsonOutput$.merge(bomTextOutput$)
 }

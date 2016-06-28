@@ -13,6 +13,8 @@ import localStorageDriver from './drivers/localStorageDriver'
 import makeDesktopDriver from './drivers/desktopStoreDriver'
 import makeYMDriver from 'usco-ym-storage'
 import fileStorageDriver from './drivers/fileStorageDriver'
+import clipBoardDriver from './drivers/clipBoardDriver'
+
 
 import main from './components/main/index'
 
@@ -28,6 +30,8 @@ const httpDriver = makeHttpDriver()
 const desktopStoreDriver = makeDesktopDriver()
 const ymDriver = makeYMDriver(httpDriver)
 const fileStorage = fileStorageDriver
+const clipBoard = clipBoardDriver
+
 
 let drivers = {
   DOM: domDriver,
@@ -41,6 +45,7 @@ let drivers = {
   http: httpDriver,
   desktop: desktopStoreDriver,
   fileStorage,
+  clipBoard,
 
   ym: ymDriver
 }

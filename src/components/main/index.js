@@ -64,6 +64,6 @@ export default function main (sources) {
     desktop: actions.requests.desktop$,
     localStorage: localStorage$,
     ym: ymStorage$,
-    fileStorage: fileStorage$
+    clipBoard: fileStorage$
   }
 }
