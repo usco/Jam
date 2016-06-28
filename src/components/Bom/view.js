@@ -28,8 +28,8 @@ export default function view (state$) {
       const exportButton = tooltipIconBtn(true
         , exportIconSvg, 'exportBOMData', 'export', 'bottom', false, exportSubItems)*/
       const exportButtons = <span >
-        <button className='bom-as-json' value='bom-as-json' ><span className='tooltip-bottom' attributes={{'data-tooltip': 'export as Json'}}> json </span> </button>
-        <button className='bom-as-text' value='bom-as-text'><span className='tooltip-bottom' attributes={{'data-tooltip': 'export as plain text'}}> text </span> </button>
+        <button className='bom-as-json' value='bom-as-json' ><span className='tooltip-bottom' attributes={{'data-tooltip': 'copy to clipboard as Json'}}> json </span> </button>
+        <button className='bom-as-text' value='bom-as-text'><span className='tooltip-bottom' attributes={{'data-tooltip': 'copy to clipboard as text'}}> text </span> </button>
         </span>
 
       // PRIMARY DOM-FUNCTIONS
