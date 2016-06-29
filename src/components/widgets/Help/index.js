@@ -74,7 +74,7 @@ function view (state$) {
 
     return <div className='help'>
              {tooltipIconBtn(toggled
-                , helpIconSvg, 'helpToggler', 'help', 'top')}
+                , helpIconSvg, 'containerToggler helpToggler', 'help', 'top')}
              {content}
            </div>
   })

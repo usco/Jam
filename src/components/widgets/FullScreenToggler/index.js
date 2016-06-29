@@ -37,7 +37,7 @@ function view (state$) {
 
       return (
       <div className='fullScreenToggler'>
-        <button innerHTML={fullScreenTogglerImg}>
+        <button className='containerToggler' innerHTML={fullScreenTogglerImg}>
         </button>
       </div>
       )

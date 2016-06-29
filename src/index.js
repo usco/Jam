@@ -1,4 +1,13 @@
 require('./app.css')
+require('./bom.css')
+require('./settings.css')
+require('./tooltips.css')
+require('./topToolbar.css')
+require('./bottomToolBar.css')
+require('./help.css')
+require('./fullScreenToggler.css')
+
+
 import Cycle from '@cycle/core'
 
 import { makeDOMDriver } from '@cycle/dom'

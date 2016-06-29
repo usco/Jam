@@ -1,0 +1,71 @@
+
+.topToolbar{
+  /*background: #fff; #f5f5f5;*/
+  padding: 0;/*5 0 0 10; */
+
+  position: absolute;
+  top: 10px;
+  left:10px;
+  width: 150px;
+  height: 90%;
+  overflow: hidden;
+}
+
+.topToolbar h1{
+  display: inline-block;
+  padding: 4px;
+  margin: 0px;
+  margin-left: 5px;
+  font-size: 1.3em;
+  font-weight: 500;
+
+  min-width: 200px;
+}
+
+/* text entry*/
+.topToolbar input[type=text]{
+  color:#60c4f8;
+  outline: none;
+  font-size: 1.1em;
+  font-weight: 500;
+
+  min-width: 10em;
+  width:100%;
+  box-sizing:border-box;
+  -moz-box-sizing:border-box;
+
+  border: none;
+  border-width: 0px;
+}
+
+.topToolbar input[type=text]:focus{
+  outline: none;
+}
+
+.topToolbar .history{
+    padding-left: 5px;
+  padding-right: 5px;
+}
+
+.topToolbar .social{
+  padding-left: 5px;
+  padding-right: 5px;
+}
+
+.topToolbar section{
+  display: inline-flex;;
+  /* padding-left: 15px;
+  padding-right: 25px;
+      width: 50px;*/
+          flex-direction: column;
+}
+
+.topToolbar button {
+  width:50px;
+  height:50px;
+  margin: 2px;
+}
+.topToolbar button .icon{
+  width:20px;
+  height:20px;
+}

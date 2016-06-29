@@ -56,7 +56,7 @@ export default function view (state$) {
     return (
     <div className='settings'>
       {tooltipIconBtn(toggled
-         , iconSvg, 'settingsToggler', 'settings', 'top')}
+         , iconSvg, 'containerToggler settingsToggler', 'settings', 'top')}
       <section className={Class('content', {toggled: toggled})}>
         {fields}
       </section>

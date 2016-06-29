@@ -1,3 +1,11 @@
+/*
+youmagine highlight blackish(old): #555555;
+youmagine highlight blue: #5bc3fa;
+
+
+ultimaker site pale blue(not used for now):#f5f5f5:
+*/
+
 body{
   width: 100%;
   height: 100%;
@@ -5,9 +13,7 @@ body{
   padding: 0;
   margin: 0;
 }
-/*
-  #f5f5f5 //ultimaker site pale blue
-*/
+
 #jamRoot/*external wrapper aka "where to put Jam into"*/
 {
   font-family: 'Open Sans', sans-serif;
@@ -65,7 +71,7 @@ button:focus {outline:0;}
 button:focus {background:#555555; outline:0;}*/
 
 button {
-  margin: 0 10px 0 0;
+  /*margin: 0 10px 0 0;*/
   line-height: 1.8;
   appearance: none;
   box-shadow: none;
@@ -78,80 +84,35 @@ button {
 }
 
 button:hover{
-  background:#555555;
+  background: #5bc3fa;/*#555555;*/
 }
 
 button:hover path{
   fill:white !important;
+  stroke: white ! important;
 }
 
-button[disabled=disabled], button:disabled path{
-  fill:#AAAAAA !important;
+button:hover svg *{
+  fill:white;
 }
+
+
+/*#crosshair:hover {
+  fill: red;
+}*/
 
 button[disabled=disabled]:hover, button:disabled:hover{
   background: whitesmoke;
 }
 
-
-
-.titleBar{
-  /*background: #fff; #f5f5f5;*/
-  width:'100%';
-  height:'100%';
-  padding: 0;/*5 0 0 10; */
-
-  position: absolute;
-  top: 10px;
-  left:10px;
+.containerToggler{
+  width: 50px;
+  height: 50px;
+  margin: 2px;
 }
 
-.titleBar h1{
-  display: inline-block;
-  padding: 4px;
-  margin: 0px;
-  margin-left: 5px;
-  font-size: 1.3em;
-  font-weight: 500;
 
-  min-width: 200px;
-}
 
-/* text entry*/
-.titleBar input[type=text]{
-  color:#60c4f8;
-  outline: none;
-  font-size: 1.1em;
-  font-weight: 500;
-
-  min-width: 10em;
-  width:100%;
-  box-sizing:border-box;
-  -moz-box-sizing:border-box;
-
-  border: none;
-  border-width: 0px;
-}
-
-.titlebar input[type=text]:focus{
-  outline: none;
-}
-
-.titlebar .history{
-    padding-left: 5px;
-  padding-right: 5px;
-}
-
-.titlebar .social{
-  padding-left: 5px;
-  padding-right: 5px;
-}
-
-.titlebar section{
-  display: inline-block;
-  /* padding-left: 15px; */
-  padding-right: 25px;
-}
 
 /*//////////////*/
 /*contextMenu*/
@@ -398,26 +359,21 @@ input[type=color]:focus{
   opacity: 1;
 }
 
+/* used mainly for statefull ui containers (open containers)*/
 .active{
-  /*background: rgb(255, 223, 0);*/
-  background: #555555;
+  background: #5bc3fa;
   fill:white !important;
 }
 
 .active path{
-  /*fill:#60C4F8;*/
   fill:white !important;
 }
-
-
-
 
 
 /*//////////////*/
 /*design card wrapper overlay*/
 .designCardWrapper{
 }
-
 
 .designCard{
   position: absolute;
@@ -445,277 +401,6 @@ input[type=color]:focus{
   padding: 10px;
 }
 
-/*//////////////*/
-/*bom view*/
-
-.bom{
-  /*position: absolute;
-  padding: 10px 20px;
-  min-width: 550px;
-  top: 0px;
-  right: 0px;
-  bottom: 54px;*/
-  height: auto;
-  cursor: default;
-  font-weight: 600;
-  font-size: .9em;
-}
-
-.bom .bomToggler{
-  float: right;
-  margin: 0;
-  top: 10px;
-  right: 20px;
-  position: absolute;
-}
-.bom .toolTipButtonContainer{
-  position: inherit;
-}
-
-.bom .tableContainer{
-  position: absolute;
-  top: 42px;
-  right: 20px;
-  height: calc(100% - 132px);
-  pointer-events: none;
-}
-
-.bom .export button {
-  
-}
-
-.bom table{
-  font-size: 13px;
-  border-collapse: collapse;
-  background: white;
-  width: 100%;
-}
-
-.bom .column0{ width: 40% }
-.bom .column1{ width: 10% }
-.bom .column2{ width: 15% }
-.bom .column3{ width: 10% }
-.bom .column4{ width: 15% }
-.bom .column5{ width: 10% }
-
-.bom #tableheader{
-  cursor: pointer;
-  border: 1px solid #F7F6F6;
-  pointer-events: auto;
-}
-
-.bom #tablebody{
-  display: block;
-  max-height: 80%;
-  overflow-x: hidden;
-  overflow-y: auto;
-  border: 1px solid #F7F6F6;
-  border-top: 0px;
-  pointer-events: auto;
-}
-
-
-.bom tr:hover{
-   background-color: #F4F4F4;
-   color: black;
-   font-weight: bold;
-}
-
-.bom tr.selected{
-   background-color: #484848;
-   color:white;
-}
-
-.bom .adderRow td{
-  border: 1px solid #F7F6F6;
-}
-
-.bom td.column0, .bom th.column4 {
-  text-align: left;
-}.readOnly th.column4 { text-align: center; }
-
-.bom .cell{
-  vertical-align: middle;
-  text-align: center;
-  padding: 5 5 5 5;
-}
-
-
-.bom .directionArrow{
-  font-size: 0.6em;
-}
-.bom .directionArrow .asc:after {
-    content: "▲";
-    /*
-    &#x25B2;
-     ▼
-    */
-}
-.bom .directionArrow .desc:after {
-    content: "▼";
-    /*
-    &#x25B2;
-     ▼
-    */
-}
-.bom .directionArrow .neut:after{
-  content: "⬍";
-  font-size: 12px;
-}
-
-.bom input[type=text]{
-  border: none;
-  background: none;
-  color: #555555;
-  font-family: 'Open Sans', sans-serif;
-  padding-left: 3px;
-}
-
-.bom tr.selected input[type=text]{
-  border: none;
-  background: none;
-  color: white;
-}
-
-.bom tr.selected input[type=checkbox]{
-}
-
-.bom .name input[type=text]{
-  min-width: 150px;
-  text-overflow: ellipsis;
-}
-.bom .qty input[type=number]{
-  width: 50px;
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  border: none;
-  border-width: 0px;
-  width: 10em;
-  max-width: 50px;
-  border: none;
-  line-height: 0.8em;
-  font-size: 0.8em;
-  font-family: inherit;
-}
-
-.bom tr.selected input[type=number]{
-  color:white;
-}
-
-.bom .phys_qty input[type=number]{
-  width: 50px;
-  box-sizing: border-box;
-  -moz-box-sizing: border-box;
-  border: none;
-  border-width: 0px;
-  width: 10em;
-  max-width: 50px;
-  border: none;
-  line-height: 0.8em;
-  font-size: 0.8em;
-  font-family: inherit;
-}
-
-.bom .adder{
-  font-style: italic;
-  color: #827D7D;
-}
-
-.bom .adder td {
-  border-collapse: separate;
-  border: 1px solid #EFEFEF !important;
-}
-
-.bom .adder input[type=text]{
-  color:#827D7D;
-  font-style: italic!important;
-}
-/* do not group these rules */
-.bom .adder *::-webkit-input-placeholder {
-    color: #827D7D;
-    font-style: italic!important;
-}
-.bom .adder *:-moz-placeholder {
-    /* FF 4-18 */
-    color: #827D7D;
-    font-style: italic!important;
-}
-.bom .adder *::-moz-placeholder {
-    /* FF 19+ */
-    color: #827D7D;
-    font-style: italic!important;
-}
-.bom .adder *:-ms-input-placeholder {
-    /* IE 10+ */
-    color: #827D7D;
-    font-style: italic!important;
-}
-
-.bom .adder button{
-  color: white;
-  padding: 2 5 2 5;
-  background: #5fc5fb;
-  margin: 0;
-}
-
-.bom .bomEntry button{
-  margin: 0;
-}
-
-.bom .bomEntry button .icon{
-  background: white;
-}
-
-/*.bom .bomEntry button .icon path{
-  fill: rgba(0, 0, 0, 0)!important;
-}*/
-
-.bom .bomEntry button:hover .icon{
-  background: #F4F4F4;
-}
-
-.bom .bomEntry button:hover .icon path{
-  /*background: white;*/
-  fill:black !important;
-}
-
-.bom .removal {
-  height: 42px;
-}
-
-.bom .removal span{
-  padding: 5 5 5 5;
-  font-size: 11px;
-
-}
-
-.bom .removal button{
-  color: white;
-  padding: 2 5 2 5;
-  background: #5fc5fb;
-}
-
-.bom tr select:disabled{
-  -webkit-appearance: none;
-  -moz-appearance: none;
-  text-indent: 1px;
-  text-overflow: '';
-  background: rgba(0, 0, 0, 0);
-  color: black;
-  border: none;
-}
-
-.bom tr input[type=number]:disabled{
-  color: black;
-  background: rgba(0, 0, 0, 0);
-}
-
-.bom tr.selected select:disabled{
-  color:white;
-}
-.bom tr.selected input[type=number]:disabled{
-  color:white;
-}
 
 .foo{
   position: absolute;
@@ -723,133 +408,19 @@ input[type=color]:focus{
   top:240px;
 }
 
-/*//////////////////*/
-
-.fullScreenToggler{
-  position: absolute;
-
-  bottom: 10px;
-  right: 20px;
-
-  background: white;
-  border: none;
-  padding: 0px;
-  margin: 0px;
-
-  z-index: 2;
-}
-.fullScreenToggler button{
-  margin: 0;
-  padding: 0;
-}
-
-/*//////////////////*/
-/*help*/
-.help{
-  position: absolute;
-  bottom: 10px;
-  right: 55px;
-  z-index: 2;
-
-  cursor: default;
-}
-
-.help .content {
-  background: white;
-  font-size: 0.8em;
-  position: absolute;
-  right: 10px;
-  bottom: 32px;
-  width: 250px;
-  padding: 5px;
-}
-
-.help .content ul{
-  /*list-style: none;*/
-  margin-left: 0;
-  border: none;
-  padding: 0 0 0 20;
-}
-.help .content li{
-  /*padding: 5px;
-  background: #f4f4f4;*/
-}
-
-.help .content .appVersion{
-  text-align: center;
-  width: 100%;
-  height: 10px;
-  padding: 2px;
-  font-size: 0.8em;
-  /* border: 1px solid; */
-  display: block;
-  line-height: 1;
-}
-
-.help .toggled {
-  border: 1px solid #F7F6F6 !important;
-}
-
-
-
-
-/*//////////////////*/
-.settings{
-  position: absolute;
-  right: 110px;
-  bottom:10px;
-  background: white;
-  z-index: 2;
-}
-
-
-.settings .settingEntry{
-  padding: 6px;
-  /*border-bottom: 1px solid #e0e0e0;*/
-}
-
-.settings .content {
-  background: white;
-  font-size: 0.8em;
-  position: absolute;
-  right: 0px;
-  bottom: 32px;
-  width: 200px;
-}
-
-.settings .toggled {
-  border: 1px solid #F7F6F6 !important;
-}
-
 
 .icon{
   /*width: 24px;
   height: 24px;
   padding: 4px;*/
-  width: 16px;
-  height: 16px;
+  width: 20px;
+  height: 20px;
   padding: 8px;
-
 
   /*stroke: #60C4F8;
   stroke-width: 2;*/
 }
 
-.settings #toggler{
-  float: right;
-  display: block;
-}
-
-.settings .toggler{
-  border: 1px solid white;
-}
-
-/*.settings .toggler .toggled .icon{
-  border-left: 1px solid #dddddd;
-  border-top: 1px solid #dddddd;
-  border-right: 1px solid #dddddd;
-  border-bottom: 1px solid #dddddd;
-}*/
 /*ICONS*/
 
 .icon path{
@@ -860,14 +431,6 @@ input[type=color]:focus{
   fill:#60C4F8;
 }
 
-.settings button{
-  border: none;
-  margin: 0;
-  padding: 0;
-}
-
-.settings button:focus {outline:0;}
-.settings button:focus path{fill:#60C4F8;}
 
 
 /*----------------*/
@@ -1255,212 +818,7 @@ Chrome, Safari, Opera */
   cursor: pointer;
 }
 
-/* Base styles for the element that has a tooltip */
-[data-tooltip],
-.tooltip {
-  position: relative;
-  cursor: pointer;
-}
 
-/* Base styles for the entire tooltip */
-[data-tooltip]:before,
-[data-tooltip]:after,
-.tooltip:before,
-.tooltip:after {
-  position: absolute;
-  visibility: hidden;
-  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
-  filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=0);
-  opacity: 0;
-  -webkit-transition:
-      opacity 0.2s ease-in-out,
-        visibility 0.2s ease-in-out,
-        -webkit-transform 0.2s cubic-bezier(0.71, 1.7, 0.77, 1.24);
-    -moz-transition:
-        opacity 0.2s ease-in-out,
-        visibility 0.2s ease-in-out,
-        -moz-transform 0.2s cubic-bezier(0.71, 1.7, 0.77, 1.24);
-    transition:
-        opacity 0.2s ease-in-out,
-        visibility 0.2s ease-in-out,
-        transform 0.2s cubic-bezier(0.71, 1.7, 0.77, 1.24);
-  -webkit-transform: translate3d(0, 0, 0);
-  -moz-transform:    translate3d(0, 0, 0);
-  transform:         translate3d(0, 0, 0);
-  pointer-events: none;
-}
-
-/* Show the entire tooltip on hover and focus */
-[data-tooltip]:hover:before,
-[data-tooltip]:hover:after,
-/*[data-tooltip]:focus:before,
-[data-tooltip]:focus:after,*/
-.tooltip:hover:before,
-.tooltip:hover:after
-/*.tooltip:focus:before,
-.tooltip:focus:after*/ {
-  visibility: visible;
-  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";
-  filter: progid:DXImageTransform.Microsoft.Alpha(Opacity=100);
-  opacity: 1;
-}
-
-/* Base styles for the tooltip's directional arrow */
-.tooltip:before,
-[data-tooltip]:before {
-  z-index: 1001;
-  border: 6px solid transparent;
-  background: transparent;
-  content: "";
-}
-
-/* Base styles for the tooltip's content area */
-.tooltip:after,
-[data-tooltip]:after {
-  z-index: 1000;
-  padding: 3px;
-  width: 60px;
-  background-color: #000;
-  background-color: hsla(0, 0%, 20%, 0.9);
-  color: #fff;
-  content: attr(data-tooltip);
-  font-size: 12px;
-  line-height: 1.0;
-}
-
-/* Directions */
-
-/* Top (default) */
-[data-tooltip]:before,
-[data-tooltip]:after,
-.tooltip:before,
-.tooltip:after,
-.tooltip-top:before,
-.tooltip-top:after {
-  bottom: 100%;
-  left: 50%;
-}
-
-[data-tooltip]:before,
-.tooltip:before,
-.tooltip-top:before {
-  margin-left: -6px;
-  margin-bottom: -12px;
-  border-top-color: #000;
-  border-top-color: hsla(0, 0%, 20%, 0.9);
-}
-
-/* Horizontally align top/bottom tooltips */
-[data-tooltip]:after,
-.tooltip:after,
-.tooltip-top:after {
-  margin-left: -20px;
-}
-
-[data-tooltip]:hover:before,
-[data-tooltip]:hover:after,
-/*[data-tooltip]:focus:before,
-[data-tooltip]:focus:after,*/
-.tooltip:hover:before,
-.tooltip:hover:after,
-/*.tooltip:focus:before,
-.tooltip:focus:after,*/
-.tooltip-top:hover:before,
-.tooltip-top:hover:after
-/*.tooltip-top:focus:before,
-.tooltip-top:focus:after*/ {
-  -webkit-transform: translateY(-12px);
-  -moz-transform:    translateY(-12px);
-  transform:         translateY(-12px);
-}
-
-/* Left */
-.tooltip-left:before,
-.tooltip-left:after {
-  right: 100%;
-  bottom: 50%;
-  left: auto;
-}
-
-.tooltip-left:before {
-  margin-left: 0;
-  margin-right: -12px;
-  margin-bottom: 0;
-  border-top-color: transparent;
-  border-left-color: #000;
-  border-left-color: hsla(0, 0%, 20%, 0.9);
-}
-
-.tooltip-left:hover:before,
-.tooltip-left:hover:after
-/*.tooltip-left:focus:before,
-.tooltip-left:focus:after*/ {
-  -webkit-transform: translateX(-12px);
-  -moz-transform:    translateX(-12px);
-  transform:         translateX(-12px);
-}
-
-/* Bottom */
-.tooltip-bottom:before,
-.tooltip-bottom:after {
-  top: 100%;
-  bottom: auto;
-  left: 50%;
-}
-
-.tooltip-bottom:before {
-  margin-top: -12px;
-  margin-bottom: 0;
-  border-top-color: transparent;
-  border-bottom-color: #000;
-  border-bottom-color: hsla(0, 0%, 20%, 0.9);
-}
-
-.tooltip-bottom:hover:before,
-.tooltip-bottom:hover:after
-/*.tooltip-bottom:focus:before,
-.tooltip-bottom:focus:after */{
-  -webkit-transform: translateY(12px);
-  -moz-transform:    translateY(12px);
-  transform:         translateY(12px);
-}
-
-/* Right */
-.tooltip-right:before,
-.tooltip-right:after {
-  bottom: 50%;
-  left: 100%;
-}
-
-.tooltip-right:before {
-  margin-bottom: 0;
-  margin-left: -12px;
-  border-top-color: transparent;
-  border-right-color: #000;
-  border-right-color: hsla(0, 0%, 20%, 0.9);
-}
-
-.tooltip-right:hover:before,
-.tooltip-right:hover:after
-/*.tooltip-right:focus:before,
-.tooltip-right:focus:after */{
-  -webkit-transform: translateX(12px);
-  -moz-transform:    translateX(12px);
-  transform:         translateX(12px);
-}
-
-/* Move directional arrows down a bit for left/right tooltips */
-.tooltip-left:before,
-.tooltip-right:before {
-  top: 3px;
-}
-
-/* Vertically center tooltip content for left/right tooltips */
-.tooltip-left:after,
-.tooltip-right:after {
-  margin-left: 0;
-  margin-bottom: -16px;
-}
 
 #test{
   position: absolute;

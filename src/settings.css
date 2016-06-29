@@ -1,0 +1,46 @@
+/*//////////////////*/
+.settings{
+  /*position: absolute;
+  right: 110px;
+  bottom:10px;*/
+  background: white;
+  z-index: 2;
+}
+
+
+.settings .settingEntry{
+  padding: 6px;
+  /*border-bottom: 1px solid #e0e0e0;*/
+}
+
+.settings .content {
+  background: white;
+  font-size: 0.8em;
+  position: absolute;
+  right: 0px;
+  bottom: 32px;
+  width: 200px;
+}
+
+.settings .toggled {
+  border: 1px solid #F7F6F6 !important;
+}
+
+
+.settings #toggler{
+  float: right;
+  display: block;
+}
+
+.settings .toggler{
+  border: 1px solid white;
+}
+
+
+.settings button{
+  border: none;
+  padding: 0;
+}
+
+.settings button:focus {outline:0;}
+.settings button:focus path{fill:#60C4F8;}
