@@ -1,3 +1,5 @@
+/** @jsx hJSX */
+import { hJSX } from '@cycle/dom'
 import Class from 'classnames'
 
 function getToolTip (tooltip, toggleCondition) {

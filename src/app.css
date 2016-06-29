@@ -766,16 +766,17 @@ Chrome, Safari, Opera */
 }
 
 .popOver {
-    display: none;
-    position: absolute;
-    width: 150px;
-    z-index: 999;
-    top: 28px;
-    left: -10px;
-    background-color: white;
-    border: 1px solid #dddddd;
-    padding: 10px 0px;
-    font-size: 0.8em;
+  display: none;
+  position: absolute;
+  width: 150px;
+  z-index: 999;
+  /* top: 0px; */
+  /* left: -10px; */
+  background-color: white;
+  border: 1px solid #dddddd;
+  padding: 10px 0px;
+  font-size: 0.8em;
+  margin-top: 10px;
 }
 .popOver.active{
   text-align: center;
