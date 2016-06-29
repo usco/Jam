@@ -96,19 +96,57 @@ button:hover svg *{
   fill:white;
 }
 
-
-/*#crosshair:hover {
-  fill: red;
-}*/
+button[disabled=disabled], button:disabled svg *{
+  fill:gray;
+}
 
 button[disabled=disabled]:hover, button:disabled:hover{
   background: whitesmoke;
 }
 
+
+/*button for toggling menus*/
 .containerToggler{
   width: 50px;
   height: 50px;
   margin: 2px;
+  background: rgba(0,0,0,0);
+}
+
+/*//////////////*/
+/*generic styling*/
+.fadesIn{
+  opacity: 0;
+  transition: opacity 0.4s ease-in;
+  -ms-transition: opacity 0.4s ease-in;
+  -moz-transition: opacity 0.4s ease-in;
+  -webkit-transition: opacity 0.4s ease-in;
+}
+
+.fadesOut{
+  opacity: 1;
+  transition: opacity 0.4s ease-out;
+  -ms-transition: opacity 0.4s ease-out;
+  -moz-transition: opacity 0.4s ease-out;
+  -webkit-transition: opacity 0.4s ease-out;
+}
+
+.visible{
+  opacity: 1;
+}
+
+/* used mainly for statefull ui containers (open containers)*/
+.active{
+  background: #5bc3fa;
+  fill:white !important;
+}
+
+.active path{
+  fill:white !important;
+}
+
+.active svg *{
+  fill:white;
 }
 
 
@@ -337,37 +375,7 @@ input[type=color]:focus{
 }
 
 
-/*//////////////*/
-/*generic styling*/
-.fadesIn{
-  opacity: 0;
-  transition: opacity 0.4s ease-in;
-  -ms-transition: opacity 0.4s ease-in;
-  -moz-transition: opacity 0.4s ease-in;
-  -webkit-transition: opacity 0.4s ease-in;
-}
 
-.fadesOut{
-  opacity: 1;
-  transition: opacity 0.4s ease-out;
-  -ms-transition: opacity 0.4s ease-out;
-  -moz-transition: opacity 0.4s ease-out;
-  -webkit-transition: opacity 0.4s ease-out;
-}
-
-.visible{
-  opacity: 1;
-}
-
-/* used mainly for statefull ui containers (open containers)*/
-.active{
-  background: #5bc3fa;
-  fill:white !important;
-}
-
-.active path{
-  fill:white !important;
-}
 
 
 /*//////////////*/
@@ -430,7 +438,6 @@ input[type=color]:focus{
 .icon:hover path{
   fill:#60C4F8;
 }
-
 
 
 /*----------------*/

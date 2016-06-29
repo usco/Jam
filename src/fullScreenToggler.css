@@ -1,16 +1,11 @@
 /*//////////////////*/
 
 .fullScreenToggler{
-  /*position: absolute;
-
-  bottom: 10px;
-  right: 20px;*/
-
-  background: white;
   border: none;
   padding: 0px;
   z-index: 2;
 }
+
 .fullScreenToggler button{
   padding: 0;
 }

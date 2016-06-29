@@ -191,10 +191,23 @@ export default function view (state$) {
       function getIcon (icon) {
         switch (icon) {
           case 'bomToggler':
-            return `<svg xmlns='http://www.w3.org/2000/svg' version='1.1' id='List' class='icon'
-              x='0px' y='0px' viewBox='0 0 20 20' enable-background='new 0 0 20 20' xml:space='preserve'>
-              <path fill='#FFFFFF' d='M14.4,9H8.6C8.048,9,8,9.447,8,10s0.048,1,0.6,1h5.8c0.552,0,0.6-0.447,0.6-1S14.952,9,14.4,9z M16.4,14H8.6  C8.048,14,8,14.447,8,15s0.048,1,0.6,1h7.8c0.552,0,0.6-0.447,0.6-1S16.952,14,16.4,14z M8.6,6h7.8C16.952,6,17,5.553,17,5  s-0.048-1-0.6-1H8.6C8.048,4,8,4.447,8,5S8.048,6,8.6,6z M5.4,9H3.6C3.048,9,3,9.447,3,10s0.048,1,0.6,1h1.8C5.952,11,6,10.553,6,10  S5.952,9,5.4,9z M5.4,14H3.6C3.048,14,3,14.447,3,15s0.048,1,0.6,1h1.8C5.952,16,6,15.553,6,15S5.952,14,5.4,14z M5.4,4H3.6  C3.048,4,3,4.447,3,5s0.048,1,0.6,1h1.8C5.952,6,6,5.553,6,5S5.952,4,5.4,4z'/>
-              </svg>`
+            return `<svg width="24px" height="21px" viewBox="0 0 24 21" version="1.1" id='List' class='icon'
+              xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+                <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
+                <title>bom</title>
+                <desc>Created with Sketch.</desc>
+                <defs></defs>
+                <g id="icons" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+                    <g id="bom" fill="#000000">
+                        <path d="M2.5,5 C3.88071187,5 5,3.88071187 5,2.5 C5,1.11928813 3.88071187,0 2.5,0 C1.11928813,0 0,1.11928813 0,2.5 C0,3.88071187 1.11928813,5 2.5,5 L2.5,5 Z M2.5,4 C1.67157288,4 1,3.32842712 1,2.5 C1,1.67157288 1.67157288,1 2.5,1 C3.32842712,1 4,1.67157288 4,2.5 C4,3.32842712 3.32842712,4 2.5,4 L2.5,4 Z" id="Oval"></path>
+                        <polygon id="Shape" points="8.5 3 23.5 3 23.5 2 8.5 2"></polygon>
+                        <path d="M2.5,13 C3.88071187,13 5,11.8807119 5,10.5 C5,9.11928813 3.88071187,8 2.5,8 C1.11928813,8 0,9.11928813 0,10.5 C0,11.8807119 1.11928813,13 2.5,13 L2.5,13 Z M2.5,12 C1.67157288,12 1,11.3284271 1,10.5 C1,9.67157288 1.67157288,9 2.5,9 C3.32842712,9 4,9.67157288 4,10.5 C4,11.3284271 3.32842712,12 2.5,12 L2.5,12 Z" id="Oval"></path>
+                        <polygon id="Shape" points="8.5 11 23.5 11 23.5 10 8.5 10"></polygon>
+                        <path d="M2.5,21 C3.88071187,21 5,19.8807119 5,18.5 C5,17.1192881 3.88071187,16 2.5,16 C1.11928813,16 0,17.1192881 0,18.5 C0,19.8807119 1.11928813,21 2.5,21 L2.5,21 Z M2.5,20 C1.67157288,20 1,19.3284271 1,18.5 C1,17.6715729 1.67157288,17 2.5,17 C3.32842712,17 4,17.6715729 4,18.5 C4,19.3284271 3.32842712,20 2.5,20 L2.5,20 Z" id="Oval"></path>
+                        <polygon id="Shape" points="8.5 19 23.5 19 23.5 18 8.5 18"></polygon>
+                    </g>
+                </g>
+            </svg>`
           case 'delete':
             return `<svg version='1.1' id='Trash' xmlns='http://www.w3.org/2000/svg'
               width='16' height='16' x='0px' y='0px' data-icon='duplicate' viewBox='0 0 20 20' class='icon'>
@@ -247,7 +260,7 @@ export default function view (state$) {
       }
       return (
         <div className={Class('bom', {readOnly})}>
-          {tooltipIconBtn(toggled, getIcon('bomToggler'), 'bomToggler', 'bom/list of parts', 'left')}
+          {tooltipIconBtn(toggled, getIcon('bomToggler'), 'containerToggler bomToggler', 'bom/list of parts', 'bottom')}
           {content}
         </div>
       )
