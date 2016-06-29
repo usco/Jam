@@ -35,7 +35,6 @@ body{
   height: 100%;
 }
 
-
 .jam {
   /*background-color: #fff;#f5f5f5;
   z-index: 9999;*/
@@ -43,7 +42,6 @@ body{
   top: 0px;
   left: 0px;
   width: 100%;
-
 }
 
 .jam input[type=text]{
@@ -98,11 +96,14 @@ button:hover svg *{
 }
 
 button[disabled=disabled], button:disabled svg *{
-  fill:gray;
+  fill:lightgray;
+  stroke: lightgray;
 }
 
 button[disabled=disabled]:hover, button:disabled:hover{
-  background: whitesmoke;
+
+  stroke: lightgray;
+  fill:lightgray;
 }
 
 
@@ -765,6 +766,18 @@ Chrome, Safari, Opera */
   position: relative;
 }
 
+
+.subItemsIndicator{
+  position: absolute;
+  bottom: 1;
+  right: 0;
+  border-bottom: 10px solid rgb(0, 0, 0);
+  border-top: 10px solid rgba(0, 0, 0, 0);
+  border-left: 10px solid rgba(0, 0, 0, 0);
+  /* border-right: 10px solid rgba(0, 0, 0, 0); */
+  /* border-bottom: 10px solid rgb(0, 0, 0); */
+}
+
 .popOver {
   display: none;
   position: absolute;
@@ -789,7 +802,7 @@ Chrome, Safari, Opera */
   animation-duration: 0.2s;
   animation-timing-function: ease-in-out;
 }
-.popOver .notch {
+.popOver-bottom .notch {
     position: absolute;
     top: -10px;
     left: 17px;
@@ -808,7 +821,37 @@ Chrome, Safari, Opera */
     _border-right-color: pink;
     _border-left-color: pink;
     _filter: chroma(color=pink);
-}.popOver .border-notch { border-bottom-color: #dddddd; top: -11px}
+}
+.popOver-bottom .border-notch { border-bottom-color: #dddddd; top: -11px}
+
+.popOver-right {
+  top: 0%;
+  bottom: auto;
+  left: 110%;
+}
+.popOver-right .notch {
+    position: absolute;
+    top: -10px;
+    left: 17px;
+    margin: 0;
+    border-top: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 10px solid white;
+    padding: 0;
+    width: 0;
+    height: 0;
+    /* ie6 height fix */
+    font-size: 0;
+    line-height: 0;
+     /* ie6 transparent fix */
+    _border-right-color: pink;
+    _border-left-color: pink;
+    _filter: chroma(color=pink);
+}
+.popOver-right .border-notch { border-bottom-color: #dddddd; top: -11px}
+
+
 
 .popOver input[type=checkbox]{
   margin-right: 10px;

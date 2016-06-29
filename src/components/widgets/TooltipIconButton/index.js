@@ -11,18 +11,20 @@ function getToolTip (tooltip, toggleCondition) {
 }
 
 export default function tooltipIconBtn (toggleCondition, iconSvg, mainClass, tooltip,
-  tooltipPos = 'bottom', disabledCondition = false, popOverContent = undefined) {
+  tooltipPos = 'bottom', disabledCondition = false, popOverContent = undefined, position='right') {
+
   const button = <button
       disabled = {disabledCondition}
       className={Class(mainClass, `tooltip-${tooltipPos}`, {active: toggleCondition})}
       attributes={getToolTip(tooltip, toggleCondition)}>
       <span innerHTML={iconSvg}/>
+      <span className='subItemsIndicator'/>
     </button>
 
-  let popOver
+  let content
   if (popOverContent !== undefined && toggleCondition) {
-    popOver = <div
-      className={Class('popOver', {active: toggleCondition})}>
+    content = <div
+      className={Class('popOver', {active: toggleCondition}, `popOver-${position}`)}>
         {popOverContent}
         <b className='border-notch notch'></b>
         <b className='notch'></b>
@@ -31,6 +33,6 @@ export default function tooltipIconBtn (toggleCondition, iconSvg, mainClass, too
 
   return <span className='toolTipButtonContainer'>
     {button}
-    {popOver}
+    {content}
     </span>
 }
