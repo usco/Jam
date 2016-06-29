@@ -741,23 +741,36 @@ http://cbracco.me/a-simple-css-tooltip/
 */
 
 /* Chrome, Safari, Opera */
-@-webkit-keyframes dropInEffect {
+@-webkit-keyframes dropInEffect-fromTop {
     0%   {opacity: 0; height: 0; margin-top: -20px;}
     90% {margin-top: 2px;}
     100% {opacity: 1; height: auto; margin-top: 0px;}
 }
-@keyframes dropInEffect {
+@keyframes dropInEffect-fromTop {
   0%   {opacity: 0; height: 0; margin-top: -20px;}
   90% {margin-top: 2px;}
   100% {opacity: 1; height: auto; margin-top: 0px;}
 }
-/*
+
+/* Chrome, Safari, Opera */
+@-webkit-keyframes dropInEffect-fromLeft {
+    0%   {opacity: 0; height: 0; margin-left: -20px;}
+    90% {margin-left: 2px;}
+    100% {opacity: 1; height: auto; margin-left: 0px;}
+}
+@keyframes dropInEffect-fromLeft {
+  0%   {opacity: 0; height: 0; margin-left: -20px;}
+  90% {margin-left: 2px;}
+  100% {opacity: 1; height: auto; margin-left: 0px;}
+}
+
+/*Coming in from the left
 Chrome, Safari, Opera */
-@-webkit-keyframes dropOutEffect {
+@-webkit-keyframes dropOutEffect-fromTop {
     0% {opacity: 1; height: auto; margin-top: 0px;}
     100%   {opacity: 0; height: 0; margin-top: -20px;}
 }
-@keyframes dropOutEffect {
+@keyframes dropOutEffect-fromTop {
   0% {opacity: 1; height: auto; margin-top: 0px;}
   100%   {opacity: 0; height: 0; margin-top: -20px;}
 }
@@ -766,14 +779,13 @@ Chrome, Safari, Opera */
   position: relative;
 }
 
-
 .subItemsIndicator{
   position: absolute;
-  bottom: 1;
-  right: 0;
-  border-bottom: 10px solid rgb(0, 0, 0);
-  border-top: 10px solid rgba(0, 0, 0, 0);
-  border-left: 10px solid rgba(0, 0, 0, 0);
+    bottom: 1;
+    right: 0;
+    border-bottom: 8px solid rgb(0, 0, 0);
+    border-top: 8px solid rgba(0, 0, 0, 0);
+    border-left: 8px solid rgba(0, 0, 0, 0);
   /* border-right: 10px solid rgba(0, 0, 0, 0); */
   /* border-bottom: 10px solid rgb(0, 0, 0); */
 }
@@ -791,17 +803,29 @@ Chrome, Safari, Opera */
   font-size: 0.8em;
   margin-top: 10px;
 }
+
 .popOver.active{
   text-align: center;
-
   display: block;
-  -webkit-animation-name: dropInEffect; /* Chrome, Safari, Opera */
+
   -webkit-animation-duration: 0.2s; /* Chrome, Safari, Opera */
   -webkit-animation-timing-function: ease-in-out; /* Chrome, Safari, Opera */
-  animation-name: dropInEffect;
+
   animation-duration: 0.2s;
   animation-timing-function: ease-in-out;
 }
+
+/*animation for bottom variant*/
+.popOver-bottom.active{
+  -webkit-animation-name: dropInEffect-fromTop; /* Chrome, Safari, Opera */
+  animation-name: dropInEffect-fromTop;
+}
+/* animation for right variant*/
+.popOver-right.active{
+  -webkit-animation-name: dropInEffect-fromLeft; /* Chrome, Safari, Opera */
+  animation-name: dropInEffect-fromLeft;
+}
+
 .popOver-bottom .notch {
     position: absolute;
     top: -10px;
@@ -824,32 +848,39 @@ Chrome, Safari, Opera */
 }
 .popOver-bottom .border-notch { border-bottom-color: #dddddd; top: -11px}
 
+
+/* left */
+.popOver-left {
+  top: 0%;
+  bottom: auto;
+  right: 120%;
+}
+
+/* right*/
 .popOver-right {
   top: 0%;
   bottom: auto;
-  left: 110%;
+  left: 120%;
 }
+
 .popOver-right .notch {
-    position: absolute;
-    top: -10px;
-    left: 17px;
-    margin: 0;
-    border-top: 0;
-    border-left: 10px solid transparent;
-    border-right: 10px solid transparent;
-    border-bottom: 10px solid white;
-    padding: 0;
-    width: 0;
-    height: 0;
-    /* ie6 height fix */
-    font-size: 0;
-    line-height: 0;
-     /* ie6 transparent fix */
-    _border-right-color: pink;
-    _border-left-color: pink;
-    _filter: chroma(color=pink);
+  position: absolute;
+  top: 10px;
+  left: -20px;
+  margin: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid white;
+  border-bottom: 10px solid transparent;
+  border-top: 10px solid transparent;
+  padding: 0;
+  width: 0;
+  height: 0;
 }
-.popOver-right .border-notch { border-bottom-color: #dddddd; top: -11px}
+.popOver-right .border-notch {
+  border-left: 8px solid transparent;
+  border-right: 11px solid #dddddd;
+  border-top: 12px solid transparent;
+}
 
 
 
