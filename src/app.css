@@ -858,6 +858,12 @@ Chrome, Safari, Opera */
 
 /* right*/
 .popOver-right {
+  top: -8;
+  bottom: auto;
+  left: 52;
+}
+
+.popOver-right.arrowOffset{
   top: 0%;
   bottom: auto;
   left: 120%;
