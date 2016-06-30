@@ -8,6 +8,7 @@ import {combineLatestObj} from '../../utils/obsUtils'
 import {exists} from '../../utils/utils'
 
 import tooltipIconBtn from '../widgets/TooltipIconButton'
+import checkbox from '../widgets/Checkbox'
 //spinner /loader
 /*
 
@@ -219,23 +220,28 @@ function makeTopToolBar(state){
   /*{ tooltipIconBtn(true,
       mirrorIconSvg, "mirror", "mirror", "bottom", mirrorSubItems)}*/
 
+    /*<input type='checkbox' className='snapScaling' checked={state.settings.snapScaling}/>*/
+
     function getPopOverContent (popOverType) {
       switch (popOverType) {
         case 'scalingSubTools':
           // return undefined
           return <span>
             <label className='popOverContent'>
-              <input type='checkbox' className='snapScaling' checked={state.settings.snapScaling}/>snap scaling
+              {checkbox({id:'snapScaling', className:'snapScaling', checked:state.settings.snapScaling})}
+              snap scaling
             </label>
             <label className='popOverContent'>
-              <input type='checkbox' className='uniformScaling' checked={state.settings.uniformScaling}/>uniform scaling
+              {checkbox({id:'uniformScaling', className:'uniformScaling', checked:state.settings.uniformScaling})}
+              uniform scaling
             </label>
           </span>
         case 'rotationSubTools':
           // return undefined
           return <span>
             <label className='popOverContent'>
-              <input type='checkbox' className='snapRotation' checked={state.settings.snapRotation}/>snap rotation
+              {checkbox({id:'snapRotation', className:'snapRotation', checked:state.settings.snapRotation})}
+              snap rotation
             </label>
           </span>
         case 'mirrorSubTools':
