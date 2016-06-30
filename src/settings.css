@@ -6,7 +6,6 @@
   z-index: 2;
 }
 
-
 .settings .settingEntry{
   padding: 6px;
   /*border-bottom: 1px solid #e0e0e0;*/
@@ -25,7 +24,6 @@
   border: 1px solid #F7F6F6 !important;
 }
 
-
 .settings #toggler{
   float: right;
   display: block;
@@ -34,7 +32,6 @@
 .settings .toggler{
   border: 1px solid white;
 }
-
 
 .settings button{
   border: none;
