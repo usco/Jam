@@ -2,6 +2,7 @@
 import { hJSX } from '@cycle/dom'
 import Class from 'classnames'
 import tooltipIconBtn from '../widgets/TooltipIconButton'
+import checkbox from '../widgets/Checkbox'
 
 export default function view (state$) {
   return state$.map(function ({settings, toggled}) {
@@ -14,23 +15,13 @@ export default function view (state$) {
       fields = (
         <div className='settingsView'>
           <section className='settingEntry'>
-            <input
-              className='showGrid'
-              type='checkbox'
-              id='showGrid'
-              checked={showGrid}>
-            </input>
+            {checkbox({id: 'showGrid', className: 'showGrid', checked: showGrid})}
             <label htmlFor='showGrid'>
               Show grid
             </label>
           </section>
           <section className='settingEntry'>
-            <input
-              className='autoRotate'
-              type='checkbox'
-              id='autoRotate'
-              checked={autoRotate}>
-            </input>
+            {checkbox({id: 'autoRotate', className: 'autoRotate', checked: autoRotate})}
             <label htmlFor='autoRotate'>
               Auto rotate camera
             </label>
