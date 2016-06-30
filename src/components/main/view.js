@@ -226,7 +226,49 @@ function makeTopToolBar(state){
       switch (popOverType) {
         case 'scalingSubTools':
           // return undefined
+          const unit = 'mm'
           return <span>
+
+          <div className='transformsGroup'>
+            <span className='axisData x-axis'>
+              <span className='valueGroup'>
+                <span className='axisName'>X</span>
+                <input id='x-scale' type='number' lang='en' value='2.7' step='0.2' className='transformsInput value'/>
+                <span className='unit'>{unit}</span>
+              </span>
+              <span className='percentGroup'>
+                <input id='x-scale-pcent' type='number' lang='en' value='100' step='1' className={`transformsInputPercent percent`}/>
+                <span className='unit'>%</span>
+              </span>
+            </span>
+
+            <span className='axisData y-axis'>
+              <span className='valueGroup'>
+                <label htmlFor='y-scale'>Y</label>
+                <input id='y-scale' type='number' lang='en' value='2.7' step='0.2' className={`transformsInput value`}/>
+                <span className='unit'>{unit}</span>
+              </span>
+              <span className='percentGroup'>
+                <input id='y-scale-pcent' type='number' lang='en' value='100' step='1' className={`transformsInputPercent percent`}/>
+                <span className='unit'>%</span>
+              </span>
+            </span>
+
+            <span className='axisData z-axis'>
+              <span className='valueGroup'>
+                <label htmlFor='z-scale'>Z</label>
+                <input id='z-scale' type='number' lang='en' value='2.7' step='0.2' className={`transformsInput value`}/>
+                <span className='unit'>{unit}</span>
+              </span>
+              <span className='percentGroup'>
+                <input id='z-scale-pcent' type='number' lang='en' value='100' step='1' className={`transformsInputPercent percent`}/>
+                <span className='unit'>%</span>
+              </span>
+            </span>
+
+          </div>
+
+          <div className='optionsGroup'>
             <label className='popOverContent'>
               {checkbox({id:'snapScaling', className:'snapScaling', checked:state.settings.snapScaling})}
               snap scaling
@@ -235,7 +277,8 @@ function makeTopToolBar(state){
               {checkbox({id:'uniformScaling', className:'uniformScaling', checked:state.settings.uniformScaling})}
               uniform scaling
             </label>
-          </span>
+          </div>
+        </span>
         case 'rotationSubTools':
           // return undefined
           return <span>
