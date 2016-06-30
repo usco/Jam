@@ -217,55 +217,33 @@ function makeTopToolBar(state){
       return <button className={name}>{name}</button>
     })
 
-  /*{ tooltipIconBtn(true,
-      mirrorIconSvg, "mirror", "mirror", "bottom", mirrorSubItems)}*/
 
-    /*<input type='checkbox' className='snapScaling' checked={state.settings.snapScaling}/>*/
+    function transformInputs(unit='mm', showPercents=false, axes=['x','y','z']){
+      return axes
+        .map(function(axisName){
+          const percentGroup = showPercents? <span className='percentGroup'>
+            <input id={`${axisName}-scale-pcent`} type='number' lang='en' value='100' step='1' className={`transformsInputPercent percent`}/>
+            <span className='unit'>%</span>
+          </span> : ''
+          return <span className={`axisData ${axisName}-axis`}>
+            <span className='valueGroup'>
+              <span className='axisName'>{axisName.toUpperCase()}</span>
+              <input id={`${axisName}-scale`} type='number' lang='en' value='2.7' step='0.2' className='transformsInput value'/>
+              <span className='unit'>{unit}</span>
+            </span>
+            {percentGroup}
+          </span>
+        })
+    }
 
     function getPopOverContent (popOverType) {
       switch (popOverType) {
         case 'scalingSubTools':
           // return undefined
-          const unit = 'mm'
           return <span>
 
           <div className='transformsGroup'>
-            <span className='axisData x-axis'>
-              <span className='valueGroup'>
-                <span className='axisName'>X</span>
-                <input id='x-scale' type='number' lang='en' value='2.7' step='0.2' className='transformsInput value'/>
-                <span className='unit'>{unit}</span>
-              </span>
-              <span className='percentGroup'>
-                <input id='x-scale-pcent' type='number' lang='en' value='100' step='1' className={`transformsInputPercent percent`}/>
-                <span className='unit'>%</span>
-              </span>
-            </span>
-
-            <span className='axisData y-axis'>
-              <span className='valueGroup'>
-                <label htmlFor='y-scale'>Y</label>
-                <input id='y-scale' type='number' lang='en' value='2.7' step='0.2' className={`transformsInput value`}/>
-                <span className='unit'>{unit}</span>
-              </span>
-              <span className='percentGroup'>
-                <input id='y-scale-pcent' type='number' lang='en' value='100' step='1' className={`transformsInputPercent percent`}/>
-                <span className='unit'>%</span>
-              </span>
-            </span>
-
-            <span className='axisData z-axis'>
-              <span className='valueGroup'>
-                <label htmlFor='z-scale'>Z</label>
-                <input id='z-scale' type='number' lang='en' value='2.7' step='0.2' className={`transformsInput value`}/>
-                <span className='unit'>{unit}</span>
-              </span>
-              <span className='percentGroup'>
-                <input id='z-scale-pcent' type='number' lang='en' value='100' step='1' className={`transformsInputPercent percent`}/>
-                <span className='unit'>%</span>
-              </span>
-            </span>
-
+            {transformInputs('mm',true)}
           </div>
 
           <div className='optionsGroup'>
@@ -282,10 +260,15 @@ function makeTopToolBar(state){
         case 'rotationSubTools':
           // return undefined
           return <span>
-            <label className='popOverContent'>
-              {checkbox({id:'snapRotation', className:'snapRotation', checked:state.settings.snapRotation})}
-              snap rotation
-            </label>
+            <div className='transformsGroup'>
+              {transformInputs('°')}
+            </div>
+            <div className='optionsGroup'>
+              <label className='popOverContent'>
+                {checkbox({id:'snapRotation', className:'snapRotation', checked:state.settings.snapRotation})}
+                snap rotation
+              </label>
+            </div>
           </span>
         case 'mirrorSubTools':
           return <span>
