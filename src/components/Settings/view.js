@@ -30,7 +30,7 @@ export default function view (state$) {
       )
     }
 
-    const iconSvg = `<svg width="23px" height="22px" viewBox="0 0 23 22" class='icon'
+    const icon = `<svg width="23px" height="22px" viewBox="0 0 23 22" class='icon'
     version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
     <title>settings</title>
@@ -44,10 +44,11 @@ export default function view (state$) {
     </g>
 </svg>`
 
+
+
     return (
     <div className='settings'>
-      {tooltipIconBtn(toggled
-         , iconSvg, 'containerToggler settingsToggler', 'settings', 'top')}
+      {tooltipIconBtn({toggled, icon, klass: 'containerToggler settingsToggler', tooltip: 'settings', tooltipPos: 'top'})}
       <section className={Class('content', {toggled: toggled})}>
         {fields}
       </section>

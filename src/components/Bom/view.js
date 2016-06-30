@@ -258,9 +258,10 @@ export default function view (state$) {
             </table>
           </div>
       }
+      //{tooltipIconBtn(toggled, getIcon('bomToggler'), 'containerToggler bomToggler', 'bom/list of parts', 'bottom')}
       return (
         <div className={Class('bom', {readOnly})}>
-          {tooltipIconBtn(toggled, getIcon('bomToggler'), 'containerToggler bomToggler', 'bom/list of parts', 'bottom')}
+          {tooltipIconBtn({toggled, icon: getIcon('bomToggler'), klass: 'containerToggler bomToggler', tooltip: 'bom/list of parts', tooltipPos: 'bottom'})}
           {content}
         </div>
       )

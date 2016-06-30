@@ -238,21 +238,34 @@ function makeTopToolBar(state){
 
     function getPopOverContent (popOverType) {
       switch (popOverType) {
+        case 'translateSubTools':
+          return <span>
+            <div className='transformsGroup'>
+              {transformInputs('mm')}
+            </div>
+            <div className='optionsGroup'>
+              <label className='popOverContent'>
+                {checkbox({id: 'snapTranslation', className: 'snapTranslation', checked: state.settings.snapRotation})}
+                snap translation
+              </label>
+            </div>
+          </span>
+
         case 'scalingSubTools':
           // return undefined
           return <span>
 
           <div className='transformsGroup'>
-            {transformInputs('mm',true)}
+            {transformInputs('mm', true)}
           </div>
 
           <div className='optionsGroup'>
             <label className='popOverContent'>
-              {checkbox({id:'snapScaling', className:'snapScaling', checked:state.settings.snapScaling})}
+              {checkbox({id: 'snapScaling', className: 'snapScaling', checked: state.settings.snapScaling})}
               snap scaling
             </label>
             <label className='popOverContent'>
-              {checkbox({id:'uniformScaling', className:'uniformScaling', checked:state.settings.uniformScaling})}
+              {checkbox({id: 'uniformScaling', className: 'uniformScaling', checked: state.settings.uniformScaling})}
               uniform scaling
             </label>
           </div>
@@ -265,7 +278,7 @@ function makeTopToolBar(state){
             </div>
             <div className='optionsGroup'>
               <label className='popOverContent'>
-                {checkbox({id:'snapRotation', className:'snapRotation', checked:state.settings.snapRotation})}
+                {checkbox({id: 'snapRotation', className: 'snapRotation', checked: state.settings.snapRotation})}
                 snap rotation
               </label>
             </div>
@@ -281,46 +294,48 @@ function makeTopToolBar(state){
       }
     }
 
+
+
+
   const editIcons = [
     <section>
-      {tooltipIconBtn(translateModeToggled
-        , translateIconSvg, "toTranslateMode", "move", "bottom")}
+      {tooltipIconBtn({toggled: translateModeToggled, icon: translateIconSvg, klass: 'toTranslateMode',
+       tooltip: 'move', tooltipPos: 'bottom', content: getPopOverContent('translateSubTools')})}
 
-      {tooltipIconBtn(rotateModeToggled
-        , rotateIconSvg, "toRotateMode", "rotate", "bottom", false, getPopOverContent('rotationSubTools'))}
+      {tooltipIconBtn({toggled: rotateModeToggled, icon: rotateIconSvg, klass: 'toRotateMode',
+        tooltip: 'rotate', tooltipPos: 'bottom', content: getPopOverContent('rotationSubTools')})}
 
-      {tooltipIconBtn(scaleModeToggled
-        , scaleIconSvg, "toScaleMode", "scale", "bottom", false,  getPopOverContent('scalingSubTools'))}
+      {tooltipIconBtn({toggled: scaleModeToggled, icon: scaleIconSvg, klass: 'toScaleMode',
+        tooltip: 'scale', tooltipPos: 'bottom', content: getPopOverContent('scalingSubTools')})}
 
-      {tooltipIconBtn(mirrorModeToggled
-        , mirrorIconSvg, "toMirrorMode", "mirror", "bottom", false, getPopOverContent('mirrorSubTools'))}
-
+      {tooltipIconBtn({toggled: mirrorModeToggled, icon: scaleIconSvg, klass: 'toMirrorMode',
+        tooltip: 'mirror', tooltipPos: 'bottom', content: getPopOverContent('mirrorSubTools')})}
     </section>,
 
     <section>
-      {tooltipIconBtn(undefined
-        , duplicateIconSvg, "duplicate", "duplicate", "bottom",!toggleControls)}
+      {tooltipIconBtn({icon: duplicateIconSvg, klass: 'duplicate',
+        tooltip: 'duplicate', tooltipPos: 'bottom', disabledCondition: !toggleControls})}
 
-      {tooltipIconBtn(undefined
-        , deleteIconSvg, "delete", "delete", "bottom",!toggleControls)}
+      {tooltipIconBtn({icon: deleteIconSvg, klass: 'delete',
+        tooltip: 'delete', tooltipPos: 'bottom', disabledCondition: !toggleControls})}
     </section>
   ]
 
   const annotIcons =   [<section>
-      {tooltipIconBtn(activeTool === 'addNote'
-        , addNoteIconSvg, "addNote", "add note", "bottom")}
+      {tooltipIconBtn({toggled: activeTool === 'addNote', icon: addNoteIconSvg, klass: 'addNote',
+        tooltip: 'add note', tooltipPos: 'bottom'})}
 
-      {tooltipIconBtn(activeTool === 'measureDistance'
-        , measureDistanceIconSvg, "measureDistance", "measure distance", "bottom")}
+      {tooltipIconBtn({toggled: activeTool === 'measureDistance', icon: measureDistanceIconSvg, klass: 'measureDistance',
+        tooltip: 'measure distance', tooltipPos: 'bottom'})}
 
-      {tooltipIconBtn(activeTool === 'measureThickness'
-        , measureThicknessIconSvg, "measureThickness", "measure thickness", "bottom")}
+      {tooltipIconBtn({toggled: activeTool === 'measureThickness', icon: measureThicknessIconSvg, klass: 'measureThickness',
+        tooltip: 'measure thickness', tooltipPos: 'bottom'})}
 
-      {tooltipIconBtn(activeTool === 'measureDiameter'
-        , measureDiameterIconSvg, "measureDiameter", "measure diameter", "bottom")}
+      {tooltipIconBtn({toggled: activeTool === 'measureDiameter', icon: measureDiameterIconSvg, klass: 'measureDiameter',
+        tooltip: 'measure diameter', tooltipPos: 'bottom'})}
 
-      {tooltipIconBtn(activeTool === 'measureAngle'
-        , measureAngleIconSvg, "measureAngle", "measure angle", "bottom")}
+      {tooltipIconBtn({toggled: activeTool === 'measureAngle', icon: measureAngleIconSvg, klass: 'measureAngle',
+        tooltip: 'measure angle', tooltipPos: 'bottom'})}
     </section>]
 
   /*if(state.settings.appMode === "viewer"){
