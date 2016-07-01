@@ -21,7 +21,6 @@ export default function tooltipIconBtn (options) {
     arrow: true,
 
     contentPosition: 'right',
-    size: 'normal',
     subItems: false,
 
     tooltip: '',
@@ -29,7 +28,7 @@ export default function tooltipIconBtn (options) {
 
     content: undefined
   }
-  const {toggled, disabledCondition, icon, klass, arrow, contentPosition, size, subItems, tooltip, tooltipPos, content} = assign({}, defaults, options)
+  const {toggled, disabledCondition, icon, klass, arrow, contentPosition, subItems, tooltip, tooltipPos, content} = assign({}, defaults, options)
 
   const subItemsIndicator = subItems ? <span className='subItemsIndicator'/> : ''
   // arrow related
@@ -47,7 +46,7 @@ export default function tooltipIconBtn (options) {
   let innerContent
   if (content !== undefined && toggled) {
     innerContent = <div
-      className={Class('popOver', `popOver-${contentPosition} ${size}`, {active: toggled, arrowOffset: arrow})}>
+      className={Class('popOver', `popOver-${contentPosition}`, {active: toggled, arrowOffset: arrow})}>
         {content}
         {borderNotch}
         {notch}

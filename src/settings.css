@@ -1,15 +1,11 @@
 /*//////////////////*/
 .settings{
-  /*position: absolute;
-  right: 110px;
-  bottom:10px;*/
   z-index: 2;
 }
 
 .settings .settingEntry{
   padding: 6px;
   text-align: justify;
-  /*border-bottom: 1px solid #e0e0e0;*/
 }
 
 .settings .content {
@@ -18,9 +14,6 @@
   width: 200px;
 }
 
-.settings .toggled {
-  border: 1px solid #F7F6F6 !important;
-}
 
 /*.settings #toggler{
   float: right;

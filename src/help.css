@@ -1,11 +1,7 @@
 /*//////////////////*/
 /*help*/
 .help{
-  /*position: absolute;
-  bottom: 10px;
-  right: 55px;*/
   z-index: 2;
-
   cursor: default;
 }
 
@@ -13,10 +9,6 @@
   background: white;
   font-size: 0.8em;
   width: 250px;
-  /*position: absolute;
-  right: 10px;
-  bottom: 32px;
-  */
   padding: 5px;
   text-align: justify;
 }
@@ -41,8 +33,4 @@
   /* border: 1px solid; */
   display: block;
   line-height: 1;
-}
-
-.help .toggled {
-  border: 1px solid #F7F6F6 !important;
 }

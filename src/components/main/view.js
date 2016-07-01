@@ -239,7 +239,7 @@ function makeTopToolBar(state){
     function getPopOverContent (popOverType) {
       switch (popOverType) {
         case 'translateSubTools':
-          return <span>
+          return <span className='movingSubTools'>
             <div className='transformsGroup'>
               {transformInputs('mm')}
             </div>
@@ -252,27 +252,25 @@ function makeTopToolBar(state){
           </span>
 
         case 'scalingSubTools':
-          // return undefined
-          return <span>
+          return <span className='scalingSubTools'>
+            <div className='transformsGroup'>
+              {transformInputs('mm', true)}
+            </div>
 
-          <div className='transformsGroup'>
-            {transformInputs('mm', true)}
-          </div>
-
-          <div className='optionsGroup'>
-            <label className='popOverContent'>
-              {checkbox({id: 'snapScaling', className: 'snapScaling', checked: state.settings.snapScaling})}
-              snap scaling
-            </label>
-            <label className='popOverContent'>
-              {checkbox({id: 'uniformScaling', className: 'uniformScaling', checked: state.settings.uniformScaling})}
-              uniform scaling
-            </label>
-          </div>
-        </span>
+            <div className='optionsGroup'>
+              <label className='popOverContent'>
+                {checkbox({id: 'snapScaling', className: 'snapScaling', checked: state.settings.snapScaling})}
+                snap scaling
+              </label>
+              <label className='popOverContent'>
+                {checkbox({id: 'uniformScaling', className: 'uniformScaling', checked: state.settings.uniformScaling})}
+                uniform scaling
+              </label>
+            </div>
+          </span>
         case 'rotationSubTools':
           // return undefined
-          return <span>
+          return <span className='rotationSubTools'>
             <div className='transformsGroup'>
               {transformInputs('°')}
             </div>

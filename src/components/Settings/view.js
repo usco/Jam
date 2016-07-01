@@ -52,7 +52,7 @@ export default function view (state$) {
     return (
     <div className='settings'>
       {tooltipIconBtn({toggled, icon, klass: 'containerToggler settingsToggler', tooltip: 'settings', tooltipPos: 'top',
-        content, contentPosition: 'top', arrow:false
+        content, contentPosition: 'top', arrow: false
       })}
 
     </div>)

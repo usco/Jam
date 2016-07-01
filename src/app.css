@@ -782,18 +782,17 @@ Chrome, Safari, Opera */
 }
 
 .popOver {
+  /*
+
+  padding: 10px 0px;
+  margin-top: 10px;*/
+
   display: none;
   position: absolute;
-
   z-index: 999;
-  /*   width: 190px;
-  top: 0px; */
-  /* left: -10px; */
   background-color: white;
   border: 1px solid #dddddd;
-  padding: 10px 0px;
   font-size: 0.8em;
-  margin-top: 10px;
 }
 
 .popOver input[type=checkbox]{
@@ -811,10 +810,6 @@ Chrome, Safari, Opera */
   clear: both;
   font-size: 0.8em;
   cursor: pointer;
-}
-
-.popOver.large{
-  width: 270px;
 }
 
 .popOver.active{
@@ -903,9 +898,9 @@ Chrome, Safari, Opera */
 
 /* top */
 .popOver-top {
-  top: -160;
-  bottom: auto;
-  left: -212;
+
+  right: calc(0% + 2px);
+  bottom: calc(200% + 4px);
 }
 
 .popOver-top.arrowOffset{
@@ -1131,4 +1126,19 @@ Chrome, Safari, Opera */
   font-size: 0.7em;
   margin-top: -10px;
   vertical-align: text-top;
+}
+
+.movingSubTools{
+  width: 190px;
+  display: block;
+}
+
+.rotationSubTools{
+  width: 165px;
+  display: block;
+}
+
+.scalingSubTools{
+  width: 270px;
+  display: block;
 }
