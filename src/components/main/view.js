@@ -305,10 +305,10 @@ function makeTopToolBar(state){
       {tooltipIconBtn({toggled: rotateModeToggled, icon: rotateIconSvg, klass: 'toRotateMode',
         tooltip: 'rotate', tooltipPos: 'bottom', content: getPopOverContent('rotationSubTools')})}
 
-      {tooltipIconBtn({toggled: scaleModeToggled, icon: scaleIconSvg, klass: 'toScaleMode',
+      {tooltipIconBtn({toggled: scaleModeToggled, size: 'large', icon: scaleIconSvg, klass: 'toScaleMode',
         tooltip: 'scale', tooltipPos: 'bottom', content: getPopOverContent('scalingSubTools')})}
 
-      {tooltipIconBtn({toggled: mirrorModeToggled, icon: scaleIconSvg, klass: 'toMirrorMode',
+      {tooltipIconBtn({toggled: mirrorModeToggled, icon: mirrorIconSvg, klass: 'toMirrorMode',
         tooltip: 'mirror', tooltipPos: 'bottom', content: getPopOverContent('mirrorSubTools')})}
     </section>,
 

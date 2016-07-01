@@ -47,33 +47,30 @@ function view (state$) {
 </svg>`
 
   return state$.map(function ({toggled, appVersion}) {
-    let content
-
-    if (toggled) {
-      content = <section className={Class('content', {toggled: toggled})}>
-                  <ul>
-                    <li>
-                      Click/tap and drag to rotate.
-                    </li>
-                    <li>
-                      Mouse wheel to zoom.
-                    </li>
-                    <li>
-                      Single click/tap to select items.
-                    </li>
-                    <li>
-                      Double click/tap to zoom on points/objects.
-                    </li>
-                  </ul>
-                  <span className='appVersion'>Jam version {appVersion}</span>
-                </section>
-    }
+    const  content = <section className={Class('content', {toggled: toggled})}>
+        <span className='helpItems'>
+          <ul>
+            <li>
+              Click/tap and drag to rotate.
+            </li>
+            <li>
+              Mouse wheel to zoom.
+            </li>
+            <li>
+              Single click/tap to select items.
+            </li>
+            <li>
+              Double click/tap to zoom on points/objects.
+            </li>
+          </ul>
+        </span>
+        <span className='appVersion'>Jam version {appVersion}</span>
+      </section>
 
     return <div className='help'>
-             {tooltipIconBtn(toggled
-                , helpIconSvg, 'containerToggler helpToggler', 'help', 'top')}
-             {content}
-           </div>
+      {tooltipIconBtn({toggled, icon: helpIconSvg, klass: 'containerToggler helpToggler',
+       tooltip: 'help', tooltipPos: 'top', content, contentPosition: 'top', arrow:false})}
+     </div>
   })
 }
 

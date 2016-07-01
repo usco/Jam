@@ -12,11 +12,13 @@
 .help .content {
   background: white;
   font-size: 0.8em;
-  position: absolute;
+  width: 250px;
+  /*position: absolute;
   right: 10px;
   bottom: 32px;
-  width: 250px;
+  */
   padding: 5px;
+  text-align: justify;
 }
 
 .help .content ul{

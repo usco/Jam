@@ -740,7 +740,8 @@ a:hover.tooltips span {
 http://cbracco.me/a-simple-css-tooltip/
 */
 
-/* Chrome, Safari, Opera */
+/* Coming in from the top
+Chrome, Safari, Opera */
 @-webkit-keyframes dropInEffect-fromTop {
     0%   {opacity: 0; height: 0; margin-top: -20px;}
     90% {margin-top: 2px;}
@@ -752,7 +753,8 @@ http://cbracco.me/a-simple-css-tooltip/
   100% {opacity: 1; height: auto; margin-top: 0px;}
 }
 
-/* Chrome, Safari, Opera */
+/* Coming in from the left
+Chrome, Safari, Opera */
 @-webkit-keyframes dropInEffect-fromLeft {
     0%   {opacity: 0; height: 0; margin-left: -20px;}
     90% {margin-left: 2px;}
@@ -762,17 +764,6 @@ http://cbracco.me/a-simple-css-tooltip/
   0%   {opacity: 0; height: 0; margin-left: -20px;}
   90% {margin-left: 2px;}
   100% {opacity: 1; height: auto; margin-left: 0px;}
-}
-
-/*Coming in from the left
-Chrome, Safari, Opera */
-@-webkit-keyframes dropOutEffect-fromTop {
-    0% {opacity: 1; height: auto; margin-top: 0px;}
-    100%   {opacity: 0; height: 0; margin-top: -20px;}
-}
-@keyframes dropOutEffect-fromTop {
-  0% {opacity: 1; height: auto; margin-top: 0px;}
-  100%   {opacity: 0; height: 0; margin-top: -20px;}
 }
 
 .toolTipButtonContainer{
@@ -793,15 +784,37 @@ Chrome, Safari, Opera */
 .popOver {
   display: none;
   position: absolute;
-  width: 150px;
+
   z-index: 999;
-  /* top: 0px; */
+  /*   width: 190px;
+  top: 0px; */
   /* left: -10px; */
   background-color: white;
   border: 1px solid #dddddd;
   padding: 10px 0px;
   font-size: 0.8em;
   margin-top: 10px;
+}
+
+.popOver input[type=checkbox]{
+  margin-right: 10px;
+}
+
+.popOver button{
+  padding: 10px
+}
+
+.popOverContent{
+  display: block;
+  float: left;
+  margin: 2px 10px;
+  clear: both;
+  font-size: 0.8em;
+  cursor: pointer;
+}
+
+.popOver.large{
+  width: 270px;
 }
 
 .popOver.active{
@@ -813,17 +826,6 @@ Chrome, Safari, Opera */
 
   animation-duration: 0.2s;
   animation-timing-function: ease-in-out;
-}
-
-/*animation for bottom variant*/
-.popOver-bottom.active{
-  -webkit-animation-name: dropInEffect-fromTop; /* Chrome, Safari, Opera */
-  animation-name: dropInEffect-fromTop;
-}
-/* animation for right variant*/
-.popOver-right.active{
-  -webkit-animation-name: dropInEffect-fromLeft; /* Chrome, Safari, Opera */
-  animation-name: dropInEffect-fromLeft;
 }
 
 .popOver-bottom .notch {
@@ -848,6 +850,11 @@ Chrome, Safari, Opera */
 }
 .popOver-bottom .border-notch { border-bottom-color: #dddddd; top: -11px}
 
+/*animation for bottom variant*/
+.popOver-bottom.active{
+  -webkit-animation-name: dropInEffect-fromTop; /* Chrome, Safari, Opera */
+  animation-name: dropInEffect-fromTop;
+}
 
 /* left */
 .popOver-left {
@@ -888,27 +895,61 @@ Chrome, Safari, Opera */
   border-top: 12px solid transparent;
 }
 
-
-
-.popOver input[type=checkbox]{
-  margin-right: 10px;
+/* animation for right variant*/
+.popOver-right.active{
+  -webkit-animation-name: dropInEffect-fromLeft; /* Chrome, Safari, Opera */
+  animation-name: dropInEffect-fromLeft;
 }
 
-.popOver button{
-  padding: 10px
+/* top */
+.popOver-top {
+  top: -160;
+  bottom: auto;
+  left: -212;
 }
 
-.popOverContent{
-  display: block;
-  float: left;
-  margin: 2px 10px;
-  clear: both;
-  font-size: 0.8em;
-  cursor: pointer;
+.popOver-top.arrowOffset{
+  top: -35;
+  bottom: auto;
+  left: -100;
 }
 
-.popOver.large{
-  width: 270px;
+.popOver-top .notch {
+  position: absolute;
+  top: 10px;
+  left: -20px;
+  margin: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid white;
+  border-bottom: 10px solid transparent;
+  border-top: 10px solid transparent;
+  padding: 0;
+  width: 0;
+  height: 0;
+}
+.popOver-top .border-notch {
+  border-left: 8px solid transparent;
+  border-right: 11px solid #dddddd;
+  border-top: 12px solid transparent;
+}
+
+.popOver-top.active{
+  -webkit-animation-name: dropInEffect-fromBottom; /* Chrome, Safari, Opera */
+  animation-name: dropInEffect-fromBottom;
+}
+/* animation for top variant*/
+
+/*Coming in from the bottom
+Chrome, Safari, Opera */
+@-webkit-keyframes dropInEffect-fromBottom {
+  0%   {opacity: 0; height: 0; margin-bottom: -20px;}
+  90% {margin-bottom: 2px;}
+  100% {opacity: 1; height: auto; margin-bottom: 0px;}
+}
+@keyframes dropInEffect-fromBottom {
+  0%   {opacity: 0; height: 0; margin-bottom: -20px;}
+  90% {margin-bottom: 2px;}
+  100% {opacity: 1; height: auto; margin-bottom: 0px;}
 }
 
 

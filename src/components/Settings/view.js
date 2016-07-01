@@ -11,24 +11,27 @@ export default function view (state$) {
     // let showAnnot = settings.annotations.show
     let autoRotate = settings.camera.autoRotate
 
-    if (toggled) {
-      fields = (
-        <div className='settingsView'>
-          <section className='settingEntry'>
-            {checkbox({id: 'showGrid', className: 'showGrid', checked: showGrid})}
-            <label htmlFor='showGrid'>
-              Show grid
-            </label>
-          </section>
-          <section className='settingEntry'>
-            {checkbox({id: 'autoRotate', className: 'autoRotate', checked: autoRotate})}
-            <label htmlFor='autoRotate'>
-              Auto rotate camera
-            </label>
-          </section>
-        </div>
-      )
-    }
+    fields = (
+      <div className='settingsView'>
+        <section className='settingEntry'>
+          {checkbox({id: 'showGrid', className: 'showGrid', checked: showGrid})}
+          <label htmlFor='showGrid'>
+            Show grid
+          </label>
+        </section>
+        <section className='settingEntry'>
+          {checkbox({id: 'autoRotate', className: 'autoRotate', checked: autoRotate})}
+          <label htmlFor='autoRotate'>
+            Auto rotate camera
+          </label>
+        </section>
+      </div>
+    )
+
+    const content = <section className={Class('content', {toggled: toggled})}>
+      {fields}
+    </section>
+
 
     const icon = `<svg width="23px" height="22px" viewBox="0 0 23 22" class='icon'
     version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -48,10 +51,10 @@ export default function view (state$) {
 
     return (
     <div className='settings'>
-      {tooltipIconBtn({toggled, icon, klass: 'containerToggler settingsToggler', tooltip: 'settings', tooltipPos: 'top'})}
-      <section className={Class('content', {toggled: toggled})}>
-        {fields}
-      </section>
+      {tooltipIconBtn({toggled, icon, klass: 'containerToggler settingsToggler', tooltip: 'settings', tooltipPos: 'top',
+        content, contentPosition: 'top', arrow:false
+      })}
+
     </div>)
   }
   )
