@@ -6,6 +6,7 @@ require('./topToolbar.css')
 require('./bottomToolBar.css')
 require('./help.css')
 require('./fullScreenToggler.css')
+require('./popover.css')
 
 
 import Cycle from '@cycle/core'
