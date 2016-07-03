@@ -69,7 +69,7 @@ function view (state$) {
 
     return <div className='help'>
       {tooltipIconBtn({toggled, icon: helpIconSvg, klass: 'containerToggler helpToggler',
-       tooltip: 'help', tooltipPos: 'top', content, contentPosition: 'top', arrow:false})}
+       tooltip: 'help', tooltipPos: 'top', content, contentPosition: 'top', arrow: false})}
      </div>
   })
 }

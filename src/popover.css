@@ -69,7 +69,7 @@ Chrome, Safari, Opera */
   cursor: pointer;
 }
 
-.popOver.active{
+.popOver.active-content{
   text-align: center;
   display: block;
 
@@ -103,7 +103,7 @@ Chrome, Safari, Opera */
 .popOver-bottom .border-notch { border-bottom-color: #dddddd; top: -11px}
 
 /*animation for bottom variant*/
-.popOver-bottom.active{
+.popOver-bottom.active-content{
   -webkit-animation-name: dropInEffect-fromTop; /* Chrome, Safari, Opera */
   animation-name: dropInEffect-fromTop;
 }
@@ -148,7 +148,7 @@ Chrome, Safari, Opera */
 }
 
 /* animation for right variant*/
-.popOver-right.active{
+.popOver-right.active-content{
   -webkit-animation-name: dropInEffect-fromLeft; /* Chrome, Safari, Opera */
   animation-name: dropInEffect-fromLeft;
 }
@@ -185,7 +185,7 @@ Chrome, Safari, Opera */
   border-top: 12px solid transparent;
 }
 
-.popOver-top.active{
+.popOver-top.active-content{
   -webkit-animation-name: dropInEffect-fromBottom; /* Chrome, Safari, Opera */
   animation-name: dropInEffect-fromBottom;
 }

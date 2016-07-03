@@ -46,7 +46,7 @@ export default function tooltipIconBtn (options) {
   let innerContent
   if (content !== undefined && toggled) {
     innerContent = <div
-      className={Class('popOver', `popOver-${contentPosition}`, {active: toggled, arrowOffset: arrow})}>
+      className={Class('popOver', `popOver-${contentPosition}`, {'active-content': toggled, arrowOffset: arrow})}>
         {content}
         {borderNotch}
         {notch}

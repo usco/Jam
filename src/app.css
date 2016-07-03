@@ -101,7 +101,6 @@ button[disabled=disabled], button:disabled svg *{
 }
 
 button[disabled=disabled]:hover, button:disabled:hover{
-
   stroke: lightgray;
   fill:lightgray;
 }
