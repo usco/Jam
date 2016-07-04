@@ -21,12 +21,22 @@ export function renderMovingUi (state) {
   const settings = state.settings
   const activeTool = settings.activeTool
   const translateModeToggled = activeTool === 'translate'
-
   const transformStep = 0.1
+
+  const data = state.selections.instIds.reduce(function (acc, id) {
+    acc['transforms'].push(state.transforms[id])
+    acc['meta'].push(state.meta[id])
+    return acc
+  }, {transforms: [], meta: [], settings})
+
+  let { transforms } = data
+  if (transforms.length > 0) transforms = transforms[0]
+
+  const values = transforms.pos || [0, 0, 0]
 
   const subTools = <span className='movingSubTools'>
     <div className='transformsGroup'>
-      {transformInputs({unit: 'mm', step: transformStep})}
+      {transformInputs({unit: 'mm', step: transformStep, values})}
     </div>
     <div className='optionsGroup'>
       <label className='popOverContent'>

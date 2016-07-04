@@ -22,9 +22,20 @@ export function renderScalingUi (state) {
   const snapDefaults = 10 // snap scaling snaps to tens of percentages
   const transformStep = settings.snapScaling ? snapDefaults : 0.01
 
+  const data = state.selections.instIds.reduce(function (acc, id) {
+    acc['transforms'].push(state.transforms[id])
+    acc['meta'].push(state.meta[id])
+    return acc
+  }, {transforms: [], meta: [], settings})
+
+  let { transforms } = data
+  if (transforms.length > 0) transforms = transforms[0]
+
+  const valuePercents = (transforms.sca || [0, 0, 0]).map(x => x * 100)
+
   const subTools = <span className='scalingSubTools'>
     <div className='transformsGroup'>
-      {transformInputs({unit: 'mm', showPercents: true, step: transformStep})}
+      {transformInputs({unit: 'mm', showPercents: true, step: transformStep, valuePercents})}
     </div>
 
     <div className='optionsGroup'>

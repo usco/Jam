@@ -119,7 +119,7 @@ function makeTopToolBar(state){
   const notifications = state.notifications
 
   const viewIcons = []
-
+  
   const editIcons = [
     <section>
       {renderMovingUi(state)}

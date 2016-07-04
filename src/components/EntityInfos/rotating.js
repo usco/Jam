@@ -4,6 +4,9 @@ import tooltipIconBtn from '../widgets/TooltipIconButton'
 import checkbox from '../widgets/Checkbox'
 import {transformInputs} from './helpers'
 
+import { formatNumberTo, absSizeFromBBox, toDegree } from '../../utils/formatters'
+
+
 const mainIcon = `<svg width="25px" height="24px" viewBox="0 0 25 24" class='icon'
 version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
@@ -23,9 +26,20 @@ export function renderRotatingUi (state) {
   const snapDefaults = 10 // snap rotation snaps to tens of degrees
   const transformStep = settings.snapRotation ? snapDefaults : 0.5
 
+  const data = state.selections.instIds.reduce(function (acc, id) {
+    acc['transforms'].push(state.transforms[id])
+    acc['meta'].push(state.meta[id])
+    return acc
+  }, {transforms: [], meta: [], settings})
+
+  let { transforms } = data
+  if (transforms.length > 0) transforms = transforms[0]
+
+  const values = (transforms.rot || [0, 0, 0]).map(toDegree)//convert to degrees
+
   const subTools = <span className='rotationSubTools'>
     <div className='transformsGroup'>
-      {transformInputs({unit: '°', step: transformStep})}
+      {transformInputs({unit: '°', step: transformStep, values})}
     </div>
     <div className='optionsGroup'>
       <label className='popOverContent'>
