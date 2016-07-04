@@ -35,7 +35,6 @@ export function renderMovingUi (state) {
   if (transforms.length > 0) transforms = transforms[0]
 
   const values = transforms.pos || [0, 0, 0]
-  console.log('input', values)
 
   const subTools = <span className='movingSubTools'>
     <div className='transformsGroup'>
