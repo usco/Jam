@@ -82,16 +82,16 @@ button {
   cursor: pointer;
 }
 
-button:hover{
+button:hover:enabled{
   background: #5bc3fa;/*#555555;*/
 }
 
-button:hover path{
+button:enabled:hover path{
   fill:white !important;
   stroke: white ! important;
 }
 
-button:hover svg *{
+button:enabled:hover svg *{
   fill:white;
 }
 
@@ -104,6 +104,7 @@ button[disabled=disabled]:hover, button:disabled:hover{
   stroke: lightgray;
   fill:lightgray;
 }
+
 
 
 /*button for toggling menus*/
