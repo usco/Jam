@@ -4,6 +4,9 @@ import tooltipIconBtn from '../widgets/TooltipIconButton'
 import checkbox from '../widgets/Checkbox'
 import {transformInputs} from './helpers'
 
+import { absSizeFromBBox } from '../../utils/formatters'
+
+
 const mainIcon = `<svg width="24px" height="21px" viewBox="0 0 24 21" class='icon'
 version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
@@ -19,8 +22,10 @@ export function renderScalingUi (state) {
   const settings = state.settings
   const activeTool = settings.activeTool
   const scaleModeToggled = activeTool === 'scale'
+
   const snapDefaults = 10 // snap scaling snaps to tens of percentages
   const transformStep = settings.snapScaling ? snapDefaults : 0.01
+  const precision = 2
 
   const data = state.selections.instIds.reduce(function (acc, id) {
     acc['transforms'].push(state.transforms[id])
@@ -35,7 +40,7 @@ export function renderScalingUi (state) {
 
   const subTools = <span className='scalingSubTools'>
     <div className='transformsGroup'>
-      {transformInputs({unit: 'mm', showPercents: true, step: transformStep, valuePercents})}
+      {transformInputs({fieldName: 'sca', unit: 'mm', showPercents: true, step: transformStep, valuePercents, precision})}
     </div>
 
     <div className='optionsGroup'>

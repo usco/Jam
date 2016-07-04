@@ -216,7 +216,9 @@ export default function view (state$, colorPicker) {
 
     // console.log('meta,transforms',meta,transforms)
 
-    return <div className='toolBarBottom entityInfos'>
+    return ''
+
+    const res = <div className='toolBarBottom entityInfos'>
              {colorInput(meta)}
              {nameInput(meta)}
              {transformInputs(transforms, 'pos', undefined, getControlStep('pos', settings), numberPrecision)}

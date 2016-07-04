@@ -21,7 +21,9 @@ export function renderMovingUi (state) {
   const settings = state.settings
   const activeTool = settings.activeTool
   const translateModeToggled = activeTool === 'translate'
+
   const transformStep = 0.1
+  const precision = 2
 
   const data = state.selections.instIds.reduce(function (acc, id) {
     acc['transforms'].push(state.transforms[id])
@@ -36,7 +38,7 @@ export function renderMovingUi (state) {
 
   const subTools = <span className='movingSubTools'>
     <div className='transformsGroup'>
-      {transformInputs({unit: 'mm', step: transformStep, values})}
+      {transformInputs({fieldName: 'pos', unit: 'mm', step: transformStep, values, precision})}
     </div>
     <div className='optionsGroup'>
       <label className='popOverContent'>

@@ -8,8 +8,6 @@ import {combineLatestObj} from '../../utils/obsUtils'
 import {exists} from '../../utils/utils'
 
 import tooltipIconBtn from '../widgets/TooltipIconButton'
-import checkbox from '../widgets/Checkbox'
-
 
 import {renderMovingUi} from '../EntityInfos/moving'
 import {renderScalingUi} from '../EntityInfos/scaling'
@@ -119,7 +117,7 @@ function makeTopToolBar(state){
   const notifications = state.notifications
 
   const viewIcons = []
-  
+
   const editIcons = [
     <section>
       {renderMovingUi(state)}

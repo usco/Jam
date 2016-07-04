@@ -36,6 +36,9 @@ export default function intent (DOM) {
       if (trans === 'rot') { // convert rotated values back from degrees to radians
         val = toRadian(val)
       }
+      if(trans === 'sca') {
+        val = val / 100
+      }
       return {val, trans, idx: parseInt(idx, 10)}
     })
     .filter(exists)

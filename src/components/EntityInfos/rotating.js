@@ -4,7 +4,7 @@ import tooltipIconBtn from '../widgets/TooltipIconButton'
 import checkbox from '../widgets/Checkbox'
 import {transformInputs} from './helpers'
 
-import { formatNumberTo, absSizeFromBBox, toDegree } from '../../utils/formatters'
+import { toDegree } from '../../utils/formatters'
 
 
 const mainIcon = `<svg width="25px" height="24px" viewBox="0 0 25 24" class='icon'
@@ -25,6 +25,7 @@ export function renderRotatingUi (state) {
 
   const snapDefaults = 10 // snap rotation snaps to tens of degrees
   const transformStep = settings.snapRotation ? snapDefaults : 0.5
+  const precision = 2
 
   const data = state.selections.instIds.reduce(function (acc, id) {
     acc['transforms'].push(state.transforms[id])
@@ -39,7 +40,7 @@ export function renderRotatingUi (state) {
 
   const subTools = <span className='rotationSubTools'>
     <div className='transformsGroup'>
-      {transformInputs({unit: '°', step: transformStep, values})}
+      {transformInputs({fieldName: 'rot', unit: '°', step: transformStep, values, precision})}
     </div>
     <div className='optionsGroup'>
       <label className='popOverContent'>
