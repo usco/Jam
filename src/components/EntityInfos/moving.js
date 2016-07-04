@@ -18,13 +18,15 @@ version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/
 </svg>`
 
 export function renderMovingUi (state) {
-  const activeTool = state.settings.activeTool
-
+  const settings = state.settings
+  const activeTool = settings.activeTool
   const translateModeToggled = activeTool === 'translate'
+
+  const transformStep = 0.1
 
   const subTools = <span className='movingSubTools'>
     <div className='transformsGroup'>
-      {transformInputs('mm')}
+      {transformInputs({unit: 'mm', step: transformStep})}
     </div>
     <div className='optionsGroup'>
       <label className='popOverContent'>

@@ -16,12 +16,16 @@ version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/
 </svg>`
 
 export function renderRotatingUi (state) {
+  const settings = state.settings
   const activeTool = state.settings.activeTool
   const rotateModeToggled = activeTool === 'rotate'
 
+  const snapDefaults = 10 // snap rotation snaps to tens of degrees
+  const transformStep = settings.snapRotation ? snapDefaults : 0.5
+
   const subTools = <span className='rotationSubTools'>
     <div className='transformsGroup'>
-      {transformInputs('°')}
+      {transformInputs({unit: '°', step: transformStep})}
     </div>
     <div className='optionsGroup'>
       <label className='popOverContent'>

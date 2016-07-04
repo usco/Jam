@@ -16,57 +16,7 @@ import {renderScalingUi} from '../EntityInfos/scaling'
 import {renderRotatingUi} from '../EntityInfos/rotating'
 import {renderMirroringUi} from '../EntityInfos/mirroring'
 
-//spinner /loader
 /*
-
-function getEntitiesMenuItems(entities){
- let menuItems = [
-    {text:"DeleteAll",action:"deleteAll"}
-  ]
-
-  let hasParts = ( entities.filter(e=>e.cid === 0) ) .length > 0
-  let hasAnnots= ( entities.filter(e=>e.cid !== 0) ) .length > 0
-
-  if(hasParts || hasAnnots){
-    menuItems= menuItems.concat([
-        {text:"Duplicate", action:"duplicate"}
-        ,{text:"Delete",action:"delete"}
-
-      ])
-  }
-
-  if(hasParts && !hasAnnots){
-    menuItems= menuItems.concat(
-      [
-        {text:"transforms",items:[
-          {text:"translate", action:"translate"}
-          ,{text:"rotate",action:"rotate"}
-          ,{text:"scale",action:"scale"}
-        ]}
-        ,
-
-        {text:"annotations",items:[
-        {text:"Add note", action:"addNote"},
-        {text:"Measure thickness",action:"measureThickness"},
-        {text:"Measure Diameter",action:"measureDiameter"},
-        {text:"Measure Distance",action:"measureDistance"},
-        {text:"Measure Angle",action:"measureAngle"}
-        ]}
-      ]
-    )
-  }
-
-  return menuItems
-}
-
-
-let loaderSpinner = null
-
-let _loading = (loading && settings.mode === "viewer" && settings.webglEnabled)
-if(_loading){
-  loaderSpinner = <span className="spinner" />
-}
-
 function renderWebglError(){
   return (
     <div className="mainError">
@@ -161,13 +111,7 @@ const measureAngleIconSvg = `<svg version="1.1" xmlns="http://www.w3.org/2000/sv
 function makeTopToolBar(state){
   const selections = state.selections
   const activeTool = state.settings.activeTool
-  const toggleControls  = (selections && selections.instIds.length>0)
-
-  const translateModeToggled = activeTool === 'translate'
-  const rotateModeToggled = activeTool === 'rotate'
-  const scaleModeToggled = activeTool === 'scale'
-
-  const mirrorModeToggled = activeTool === 'mirror'
+  const toggleControls = (selections && selections.instIds.length > 0)
 
   const measureDistanceModeToggled = activeTool === 'rotate'
   const measureThicknessModeToggled = activeTool === 'scale'
@@ -175,13 +119,6 @@ function makeTopToolBar(state){
   const notifications = state.notifications
 
   const viewIcons = []
-
-  function getPopOverContent (popOverType) {
-      return popOverType
-  }
-
-
-
 
   const editIcons = [
     <section>
@@ -200,7 +137,7 @@ function makeTopToolBar(state){
     </section>
   ]
 
-  const annotIcons =   [<section>
+  const annotIcons = [<section>
       {tooltipIconBtn({toggled: activeTool === 'addNote', icon: addNoteIconSvg, klass: 'addNote',
         tooltip: 'add note', tooltipPos: 'bottom'})}
 
@@ -224,10 +161,10 @@ function makeTopToolBar(state){
     </div>
   }*/
   const iconSets = {
-    'view'     :viewIcons
-    ,'edit'    :editIcons
-    ,'annotate':annotIcons
-    ,'bom'     :undefined
+    'view': viewIcons,
+    'edit': editIcons,
+    'annotate': annotIcons,
+    'bom': undefined
   }
 
   const icons = state.settings.toolSets
