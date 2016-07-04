@@ -9,6 +9,13 @@ import {exists} from '../../utils/utils'
 
 import tooltipIconBtn from '../widgets/TooltipIconButton'
 import checkbox from '../widgets/Checkbox'
+
+
+import {renderMovingUi} from '../EntityInfos/moving'
+import {renderScalingUi} from '../EntityInfos/scaling'
+import {renderRotatingUi} from '../EntityInfos/rotating'
+import {renderMirroringUi} from '../EntityInfos/mirroring'
+
 //spinner /loader
 /*
 
@@ -75,39 +82,6 @@ function renderWebglError(){
   )
 }*/
 
-const translateIconSvg = `<svg width="29px" height="29px" viewBox="0 0 29 29" class='icon'
-version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
-    <title>move</title>
-    <desc>Created with Sketch.</desc>
-    <defs></defs>
-    <g id="icons" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <path d="M15,14 L23,14 L23,15 L14,15 L14,14.5 L14,6 L15,6 L15,14 Z M23,10 L23,19 L29,14.5 L23,10 Z M6,10 L6,19 L0,14.5 L6,10 Z M14,14 L6,14 L6,15 L14,15 L14,14 Z M19,23 L10,23 L14.5,29 L19,23 Z M15,15 L15,23 L14,23 L14,15 L15,15 Z M19,6 L10,6 L14.5,0 L19,6 Z" id="move" fill="#000000"></path>
-    </g>
-</svg>`
-
-const rotateIconSvg = `<svg width="25px" height="24px" viewBox="0 0 25 24" class='icon'
-version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
-    <title>rotate</title>
-    <desc>Created with Sketch.</desc>
-    <defs></defs>
-    <g id="icons" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <path d="M20.56,13.492 C23.381,12.471 25,10.963 25,9.296 C25,7.415 22.922,5.787 19.696,4.809 L19.697,4.809 L21.5,0 L3.5,0 L5.304,4.809 C2.079,5.787 0,7.415 0,9.296 C0,11.004 1.669,12.509 4.435,13.508 L0.5,24.001 L24.5,24.001 L20.562,13.502 L20.56,13.492 L20.56,13.492 Z M24,9.296 C24,10.504 22.586,11.702 20.209,12.559 L18.5,8 L19.349,5.738 C22.265,6.607 24,7.979 24,9.296 L24,9.296 Z M3.643,12.078 C3.548,12.033 3.455,11.987 3.366,11.941 C3.27,11.89 3.176,11.84 3.085,11.789 C2.901,11.685 2.728,11.58 2.565,11.473 C2.559,11.469 2.552,11.465 2.546,11.461 C1.568,10.803 1,10.059 1,9.296 C1,7.979 2.735,6.607 5.652,5.738 L5.653,5.742 L6.5,8 L4.791,12.559 C4.379,12.41 3.998,12.248 3.643,12.078 L3.643,12.078 Z M1.943,23.001 L5.386,13.818 C6.375,14.109 7.473,14.341 8.668,14.504 C8.708,14.51 8.749,14.514 8.789,14.519 C8.833,14.525 8.879,14.531 8.924,14.536 L8.924,17.163 L14.104,14.171 L8.924,11.179 L8.924,13.522 C7.778,13.37 6.703,13.15 5.744,12.868 L7.437,8.353 L7.569,8.002 L7.437,7.651 L6.622,5.478 L6.363,4.789 L6.272,4.544 L6.272,4.544 L4.943,1 L20.057,1 L18.729,4.544 L18.508,5.132 L18.378,5.477 L18.378,5.477 L17.564,7.648 L17.432,7.999 L17.564,8.35 L19.264,12.884 L19.614,13.815 L23.057,23.001 L1.943,23.001 L1.943,23.001 Z" id="rotate" fill="#000000"></path>
-    </g>
-</svg>`
-
-const scaleIconSvg = `<svg width="24px" height="21px" viewBox="0 0 24 21" class='icon'
-version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
-    <title>scale</title>
-    <desc>Created with Sketch.</desc>
-    <defs></defs>
-    <g id="icons" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <path d="M21.251,0 L5.149,0 L7.833,6.999 L1.701,7 L3.401,11.667 L0,21 L2.465,21 L13.606,21 L23.935,21 L18.569,6.999 L21.251,0 Z M13.241,20 L10.204,11.667 L11.904,7 L8.903,7 L8.903,6.999 L8.765,6.641 L6.603,1 L19.797,1 L17.635,6.641 L17.497,6.999 L17.635,7.356 L22.481,20 L13.241,20 L13.241,20 Z" id="scale" fill="#000000"></path>
-    </g>
-</svg>`
-
 const duplicateIconSvg = `<svg width="27px" height="27px" viewBox="0 0 27 27" data-icon="duplicate" class="icon"
 version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
@@ -122,58 +96,6 @@ version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/
     </g>
 </svg>`
 
-const mirrorIconSvg = `<svg width="22px" height="26px" viewBox="0 0 22 26" version="1.1" class="icon"
-xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
-    <title>mirror</title>
-    <desc>Created with Sketch.</desc>
-    <defs></defs>
-    <g id="icons" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <path d="M21.47,23.5 L16.103,9.499 L18.787,2.5 L11.234,2.5 L11.234,0 L10.234,0 L10.234,2.5 L2.684,2.5 L5.367,9.499 L0,23.5 L10.234,23.5 L10.234,26 L11.234,26 L11.234,23.5 L21.47,23.5 L21.47,23.5 Z M1.454,22.5 L6.3,9.856 L6.437,9.499 L6.3,9.141 L4.138,3.5 L10.234,3.5 L10.234,22.5 L1.454,22.5 L1.454,22.5 Z" id="mirror" fill="#000000"></path>
-    </g>
-</svg>`
-
-const mirrorXIcon = `<svg width="24px" height="28px" viewBox="0 0 24 28" class='icon'
-version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
-    <title>mirror-x</title>
-    <desc>Created with Sketch.</desc>
-    <defs></defs>
-    <g id="icons" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="mirror-x" fill="#000000">
-            <polygon id="Shape" points="5.181 3.492 18.799 3.492 18.799 5.984 23.98 2.992 18.799 0 18.799 2.492 5.181 2.492 5.181 0 0 2.992 5.181 5.984"></polygon>
-            <path d="M20.041,6.876 L12.016,6.876 L3.938,6.876 L6.622,13.875 L1.255,27.876 L12.016,27.876 L22.725,27.876 L17.359,13.875 L20.041,6.876 L20.041,6.876 Z M12.016,26.876 L2.709,26.876 L7.555,14.232 L7.692,13.875 L7.555,13.517 L5.393,7.876 L12.016,7.876 L12.016,26.876 L12.016,26.876 Z" id="Shape"></path>
-        </g>
-    </g>
-</svg>`
-
-const mirrorYIcon = `<svg width="24px" height="28px" viewBox="0 0 24 28" class='icon'
-version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
-    <title>mirror-y</title>
-    <desc>Created with Sketch.</desc>
-    <defs></defs>
-    <g id="icons" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="mirror-y" fill="#000000">
-            <polygon id="Shape" points="18.8 3.492 5.182 3.492 5.182 5.984 0 2.992 5.182 0 5.182 2.492 18.8 2.492 18.8 0 23.98 2.992 18.8 5.984"></polygon>
-            <path d="M6.366,13.999 L1,28 L11.709,28 L22.47,28 L17.103,13.999 L19.787,7 L11.71,7 L3.683,7 L6.366,13.999 Z M11.709,8 L18.332,8 L16.169,13.641 L16.031,13.999 L16.169,14.356 L21.016,27 L11.709,27 L11.709,8 L11.709,8 Z" id="Shape"></path>
-        </g>
-    </g>
-</svg>`
-
-const mirrorZIcon = `<svg width="29px" height="24px" viewBox="0 0 29 24" class='icon'
- version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
-    <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
-    <title>mirror-z</title>
-    <desc>Created with Sketch.</desc>
-    <defs></defs>
-    <g id="icons" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
-        <g id="mirror-z" fill="#000000">
-            <polygon id="Shape" points="25.641 5.181 28.133 5.181 25.141 0 22.148 5.181 24.641 5.181 24.641 18.8 22.148 18.8 25.141 23.98 28.133 18.8 25.641 18.8"></polygon>
-            <path d="M16.604,8.439 L19.286,1.44 L3.184,1.44 L5.868,8.439 L4.358,12.376 L0.5,22.44 L21.969,22.44 L18.112,12.376 L16.604,8.439 L16.604,8.439 Z M5.43,12.376 L6.801,8.797 L6.938,8.44 L6.801,8.082 L4.639,2.44 L17.832,2.44 L15.67,8.082 L15.533,8.439 L15.67,8.796 L17.041,12.375 L5.43,12.375 L5.43,12.376 Z" id="Shape"></path>
-        </g>
-    </g>
-</svg>`
 
 const deleteIconSvg = `<svg width="27px" height="27px" viewBox="0 0 27 27" class='icon'
 version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -254,102 +176,19 @@ function makeTopToolBar(state){
 
   const viewIcons = []
 
-  const mirrorSubItems = ['foo', 'bar', 'baz']
-    .map(function (name) {
-      return <button className={name}>{name}</button>
-    })
-
-
-    function transformInputs(unit='mm', showPercents=false, axes=['x','y','z']){
-      return axes
-        .map(function(axisName){
-          const percentGroup = showPercents? <span className='percentGroup'>
-            <input id={`${axisName}-scale-pcent`} type='number' lang='en' value='100' step='1' className={`transformsInputPercent percent`}/>
-            <span className='unit'>%</span>
-          </span> : ''
-          return <span className={`axisData ${axisName}-axis`}>
-            <span className='valueGroup'>
-              <span className='axisName'>{axisName.toUpperCase()}</span>
-              <input id={`${axisName}-scale`} type='number' lang='en' value='2.7' step='0.2' className='transformsInput value'/>
-              <span className='unit'>{unit}</span>
-            </span>
-            {percentGroup}
-          </span>
-        })
-    }
-
-    function getPopOverContent (popOverType) {
-      switch (popOverType) {
-        case 'translateSubTools':
-          return <span className='movingSubTools'>
-            <div className='transformsGroup'>
-              {transformInputs('mm')}
-            </div>
-            <div className='optionsGroup'>
-              <label className='popOverContent'>
-                {checkbox({id: 'snapTranslation', className: 'snapTranslation', checked: state.settings.snapRotation})}
-                snap translation
-              </label>
-            </div>
-          </span>
-
-        case 'scalingSubTools':
-          return <span className='scalingSubTools'>
-            <div className='transformsGroup'>
-              {transformInputs('mm', true)}
-            </div>
-
-            <div className='optionsGroup'>
-              <label className='popOverContent'>
-                {checkbox({id: 'snapScaling', className: 'snapScaling', checked: state.settings.snapScaling})}
-                snap scaling
-              </label>
-              <label className='popOverContent'>
-                {checkbox({id: 'uniformScaling', className: 'uniformScaling', checked: state.settings.uniformScaling})}
-                uniform scaling
-              </label>
-            </div>
-          </span>
-        case 'rotationSubTools':
-          // return undefined
-          return <span className='rotationSubTools'>
-            <div className='transformsGroup'>
-              {transformInputs('°')}
-            </div>
-            <div className='optionsGroup'>
-              <label className='popOverContent'>
-                {checkbox({id: 'snapRotation', className: 'snapRotation', checked: state.settings.snapRotation})}
-                snap rotation
-              </label>
-            </div>
-          </span>
-        case 'mirrorSubTools':
-          return <span>
-            <button className='mirror-x' value='mirror-x'><span innerHTML={mirrorXIcon}/></button>
-            <button className='mirror-y' value='mirror-y'><span innerHTML={mirrorYIcon}/></button>
-            <button className='mirror-z' value='mirror-z'><span innerHTML={mirrorZIcon}/></button>
-          </span>
-        default:
-          return popOverType
-      }
-    }
+  function getPopOverContent (popOverType) {
+      return popOverType
+  }
 
 
 
 
   const editIcons = [
     <section>
-      {tooltipIconBtn({toggled: translateModeToggled, icon: translateIconSvg, klass: 'toTranslateMode',
-       tooltip: 'move', tooltipPos: 'bottom', content: getPopOverContent('translateSubTools')})}
-
-      {tooltipIconBtn({toggled: rotateModeToggled, icon: rotateIconSvg, klass: 'toRotateMode',
-        tooltip: 'rotate', tooltipPos: 'bottom', content: getPopOverContent('rotationSubTools')})}
-
-      {tooltipIconBtn({toggled: scaleModeToggled, size: 'large', icon: scaleIconSvg, klass: 'toScaleMode',
-        tooltip: 'scale', tooltipPos: 'bottom', content: getPopOverContent('scalingSubTools')})}
-
-      {tooltipIconBtn({toggled: mirrorModeToggled, icon: mirrorIconSvg, klass: 'toMirrorMode',
-        tooltip: 'mirror', tooltipPos: 'bottom', content: getPopOverContent('mirrorSubTools')})}
+      {renderMovingUi(state)}
+      {renderRotatingUi(state)}
+      {renderScalingUi(state)}
+      {renderMirroringUi(state)}
     </section>,
 
     <section>
