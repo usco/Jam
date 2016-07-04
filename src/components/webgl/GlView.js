@@ -2,9 +2,8 @@ import THREE from 'three'
 import TWEEN from 'tween.js'
 import Detector from './deps/Detector.js'
 
-/** @jsx hJSX */
 import Rx from 'rx'
-import { hJSX } from '@cycle/dom'
+import { html } from 'snabbdom-jsx'
 
 let fromEvent = Rx.Observable.fromEvent
 let merge = Rx.Observable.merge

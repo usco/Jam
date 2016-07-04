@@ -1,5 +1,5 @@
-/** @jsx hJSX */
-import { hJSX } from '@cycle/dom'
+
+import { html } from 'snabbdom-jsx'
 import Class from 'classnames'
 import assign from 'fast.js/object/assign'//faster object.assign
 

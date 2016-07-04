@@ -1,5 +1,5 @@
-/** @jsx hJSX */
-import {hJSX} from '@cycle/dom'
+
+import {html} from 'snabbdom-jsx'
 import tooltipIconBtn from '../widgets/TooltipIconButton'
 
 const mainIcon = `<svg width="22px" height="26px" viewBox="0 0 22 26" version="1.1" class="icon"

@@ -1,5 +1,5 @@
-/** @jsx hJSX */
-import { hJSX } from '@cycle/dom'
+
+import { html } from 'snabbdom-jsx'
 import screenfull from 'screenfull'
 
 function intent ({DOM}) {

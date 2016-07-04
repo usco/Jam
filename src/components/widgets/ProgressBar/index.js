@@ -1,5 +1,5 @@
-/** @jsx hJSX */
-import { hJSX } from '@cycle/dom'
+
+import { html } from 'snabbdom-jsx'
 import { combineLatestObj } from '../../../utils/obsUtils'
 import { exists } from '../../../utils/utils'
 

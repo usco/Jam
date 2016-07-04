@@ -1,7 +1,7 @@
-/** @jsx hJSX */
+
 import Rx from 'rx'
 const {just} = Rx.Observable
-import { hJSX } from '@cycle/dom'
+import { html } from 'snabbdom-jsx'
 
 import { formatNumberTo, absSizeFromBBox, toDegree } from '../../utils/formatters'
 import { isEmpty } from '../../utils/utils'

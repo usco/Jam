@@ -1,5 +1,5 @@
-/** @jsx hJSX */
-import { hJSX } from '@cycle/dom'
+
+import { html } from 'snabbdom-jsx'
 import Class from 'classnames'
 import { prepend } from 'ramda'
 import tooltipIconBtn from '../widgets/TooltipIconButton'

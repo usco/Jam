@@ -1,6 +1,5 @@
-/** @jsx hJSX */
 import Rx from 'rx'
-import {hJSX} from '@cycle/dom'
+import {html} from 'snabbdom-jsx'
 import Class from "classnames"
 const combineLatest = Rx.Observable.combineLatest
 

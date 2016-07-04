@@ -1,6 +1,6 @@
-/** @jsx hJSX */
+
 import Rx from 'rx'
-import { hJSX } from '@cycle/dom'
+import { html } from 'snabbdom-jsx'
 
 import Classes from 'classnames'
 

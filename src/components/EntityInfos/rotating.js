@@ -1,5 +1,5 @@
-/** @jsx hJSX */
-import {hJSX} from '@cycle/dom'
+
+import {html} from 'snabbdom-jsx'
 import tooltipIconBtn from '../widgets/TooltipIconButton'
 import checkbox from '../widgets/Checkbox'
 import {transformInputs} from './helpers'
