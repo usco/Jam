@@ -23,13 +23,13 @@ export function transformInputs (options) {
       const valuePercent = valuePercents[index]
       const percentGroup = showPercents ? <span className='percentGroup'>
         <input id={`${axisName}-scale-pcent`} type='number' lang='en' value={valuePercent} step={stepPercents}
-          className='transformsInput percent' attributes={{ 'data-transform': `${fieldName}_${index}` }} />
+          className='transformsInputPercent percent' attributes={{ 'data-transform': `${fieldName}_${index}` }} />
         <span className='unit'>%</span>
       </span> : ''
       return <span className={`axisData ${axisName}-axis`}>
         <span className='valueGroup'>
           <span className='axisName'>{axisName.toUpperCase()}</span>
-          <input id={`${axisName}-scale`} type='number' lang='en' value={value} step={step}
+          <input id={`${axisName}-scale`} key={'foo'+index+Math.random()} type='number' lang='en' value={value} step={step}
             className='transformsInput value' attributes={{ 'data-transform': `${fieldName}_${index}` }} />
           <span className='unit'>{unit}</span>
         </span>

@@ -24,12 +24,14 @@ export default function intent (DOM) {
     .debounce(20)
     .shareReplay(1)
 
+
   const changeTransforms$ = merge(
     DOM.select('.transformsInput').events('change'),
-    DOM.select('.transformsInput').events('blur')
-    // DOM.select(".transformsInput").events('input'),
+    //DOM.select('.transformsInput').events('blur').share()
+   DOM.select('.transformsInput').events('input')
   )
     .map(function (e) {
+      console.log('here', e)
       let val = parseFloat(e.target.value)
       let dtrans = e.target.attributes['data-transform'].value
       let [trans, idx] = dtrans.split('_')
@@ -39,6 +41,8 @@ export default function intent (DOM) {
       if(trans === 'sca') {
         val = val / 100
       }
+      console.log('there', val, idx)
+
       return {val, trans, idx: parseInt(idx, 10)}
     })
     .filter(exists)

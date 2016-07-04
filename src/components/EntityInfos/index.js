@@ -52,6 +52,7 @@ function refineActions (props$, actions) {
       let output = JSON.parse(JSON.stringify(transforms))
 
       output[changed.trans][changed.idx] = changed.val
+      console.log('output', output)
       return output
     })
   return {
