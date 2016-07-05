@@ -52,6 +52,7 @@ export default function intent (DOM) {
     .tap(e => e.stopPropagation())
     .map(function (e) {
       const actualTarget = e.currentTarget.dataset
+      console.log('actualTarget',actualTarget.id)
       return {
         id: actualTarget.id
       }

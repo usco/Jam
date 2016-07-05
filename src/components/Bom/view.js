@@ -1,4 +1,4 @@
-
+import { h } from '@cycle/dom'
 import { html } from 'snabbdom-jsx'
 import Class from 'classnames'
 import { prepend } from 'ramda'
@@ -27,10 +27,23 @@ export default function view (state$) {
 
       const exportButton = tooltipIconBtn(true
         , exportIconSvg, 'exportBOMData', 'export', 'bottom', false, exportSubItems)*/
-      const exportButtons = <span >
-        <button className='bom-as-json' value='bom-as-json' ><span className='tooltip-bottom' attributes={{'data-tooltip': 'copy to clipboard as Json'}}> json </span> </button>
-        <button className='bom-as-text' value='bom-as-text'><span className='tooltip-bottom' attributes={{'data-tooltip': 'copy to clipboard as text'}}> text </span> </button>
-        </span>
+      const exportButtons =
+        h('span', [
+          h('button.bom-as-json', {props: {value: 'bom-as-json'}}, [
+            h('span.tooltip-bottom', {attrs: {'data-tooltip': 'copy to clipboard as Json'}}, ['json'])
+          ]),
+
+          h('button.bom-as-text', {props: {value: 'bom-as-text'}}, [
+            h('span.tooltip-bottom', {attrs: {'data-tooltip': 'copy to clipboard as text'}}, ['text'])
+          ])
+        ])
+        /*<span>
+          <button className='bom-as-json' value='bom-as-json' >
+            <span className='tooltip-bottom' attributes={{'data-tooltip': 'copy to clipboard as Json'}}> json </span> </button>
+          <button className='bom-as-text' value='bom-as-text'>
+            <span className='tooltip-bottom' attributes={{'data-tooltip': 'copy to clipboard as text'}}> text </span> </button>
+          </span>*/
+          //
 
       // PRIMARY DOM-FUNCTIONS
       function getHeaderRow () {
@@ -41,12 +54,15 @@ export default function view (state$) {
 
           let sortArrow = getSortArrow(name, direction)
           const lastInRow = fieldNames.indexOf(name) === (fieldNames.length - 1)
-          const thContent = <span className='tooltip-bottom' attributes={{'data-tooltip': toolTip}}>{name} {sortArrow}</span>
-          return (
-            <th className={`headerCell ${columnName}`}attributes={{'data-name': name, 'colspan': lastInRow ? '1' : '1'}}>
+          const thContent = h('span', {attrs: {'data-tooltip': toolTip}}, [name, sortArrow])// <span className='tooltip-bottom' attributes={{'data-tooltip': toolTip}}>{name} {sortArrow}</span>
+          return h('th',
+            {props: {className: `headerCell ${columnName}`},
+            attrs: {'data-name': name, 'colspan': lastInRow ? '1' : '1'}}, [thContent])
+          /*(
+            <th className={`headerCell ${columnName}`} attributes={{'data-name': name, 'colspan': lastInRow ? '1' : '1'}}>
               {thContent}
             </th>
-          )
+          )*/
         }).concat([<th className='export'>{exportButtons}</th>]) // for 'hidden field to add/remove entries'
         return (<tr className='headerRow'>
                   {cells}
@@ -57,10 +73,11 @@ export default function view (state$) {
         return adderFieldsArray.map(function (row, index) {
           const placeholder = 'f.e:velcro, nuts, bolts'
           let cells = getCells(row, placeholder)
-          const adder =
-            <tr className='adderRow'>
-              {cells}
-            </tr>
+          const adder = h('tr.adderRow', cells)
+            /*  <tr className='adderRow'>
+                {cells}
+              </tr> */
+
           return adder
         }).concat([])
       }
@@ -102,14 +119,22 @@ export default function view (state$) {
           cellToolTip = readOnly ? undefined : cellToolTip // if the field is disabled do not add any extra toolTip
 
           let value = getInputField(row, name)
-          return (<td className={`${baseClassName} ${columnName} ${name}`} attributes={{'data-name': name, 'data-id': row.id}}>
+          return h('td',
+            {props: {className: `${baseClassName} ${columnName} ${name}`},
+            attrs: {'data-name': name, 'data-id': row.id}}, [value])
+
+          /*(<td className={`${baseClassName} ${columnName} ${name}`} attributes={{'data-name': name, 'data-id': row.id}}>
                     {value}
-                  </td>)
+                  </td>)*/
         })
         if (!readOnly) {
-          cells.push(<td className={`${baseClassName} ${'column' + fieldNames.length}`}>
+          cells.push(
+            h('td',
+              {props: {className: `${baseClassName} ${'column' + fieldNames.length}`}}, [getModifierButton(row)])
+          )
+          /*<td className={`${baseClassName} ${'column' + fieldNames.length}`}>
                       {getModifierButton(row)}
-                    </td>)
+                    </td>*/
         }
         return cells
       }
@@ -121,9 +146,13 @@ export default function view (state$) {
                     Add
                   </button>)
         } else {
-          return (<button type='button' className='removeBomEntry' attributes={{'data-name': '', 'data-id': row.id}}>
+          return h('button.removeBomEntry', {attrs: {'data-name': '', 'data-id': row.id}}, [
+                  h('span.tooltip-bottom', {props: {innerHTML: getIcon('delete')}})
+                ])
+
+          /*(<button type='button' className='removeBomEntry' attributes={{'data-name': '', 'data-id': row.id}}>
                     <span innerHTML={getIcon('delete')}/>
-                  </button>)
+                  </button>)*/
         }
       }
 
@@ -172,15 +201,20 @@ export default function view (state$) {
                       disabled={disabled}
                       key={generateUUID()} /> // VDOM BUG: need to force a new uuid or it will not rerender correctly
           case 'list':
-            const options = units.map(unit => <option value={unit} selected={dataValue === unit}>
+            /*const options = units.map(unit => <option value={unit} selected={dataValue === unit}>
                                                 {unit}
                                               </option>)
+
+            function classes(list){
+              return list.join('.') //list.reduce(funcio(acc, cur)=> acc = ,'')
+            }*/
+            const options = units.map(unit => h('option', {props: {value: unit, selected: dataValue === unit}}, [unit]))
+            //VDOM BUG: need to force a new uuid or it will not rerender correctly
             return <select
                       name={name}
                       value={dataValue}
                       disabled={disabled}
                       key={generateUUID()}>
-                      //VDOM BUG: need to force a new uuid or it will not rerender correctly
                       {options}
                     </select>
           default:
@@ -243,6 +277,8 @@ export default function view (state$) {
       let content
       let header = getHeaderRow()
       let adder = !readOnly ? getAdderRow(getFieldsArray('_adder')) : null
+      if(adder) adder = adder[0] // FIXME hack, snabdom
+
       let body = getTableBody(getFieldsArray('_adder', false))
       if (toggled) {
         //console.log('entries', entries, entries.length)
