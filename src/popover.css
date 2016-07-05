@@ -203,3 +203,52 @@ Chrome, Safari, Opera */
   90% {margin-bottom: 2px;}
   100% {opacity: 1; height: auto; margin-bottom: 0px;}
 }
+
+/* bottom */
+.popOver-bottom {
+  right: 20;
+  top: 60;
+}
+
+.popOver-bottom.arrowOffset{
+  top: -35;
+  bottom: auto;
+  left: -100;
+}
+
+.popOver-bottom .notch {
+  position: absolute;
+  top: 10px;
+  left: -20px;
+  margin: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid white;
+  border-bottom: 10px solid transparent;
+  border-top: 10px solid transparent;
+  padding: 0;
+  width: 0;
+  height: 0;
+}
+.popOver-bottom .border-notch {
+  border-left: 8px solid transparent;
+  border-right: 11px solid #dddddd;
+  border-top: 12px solid transparent;
+}
+
+.popOver-bottom.active-content{
+  -webkit-animation-name: dropInEffect-fromTop; /* Chrome, Safari, Opera */
+  animation-name: dropInEffect-fromTop;
+}
+
+/*Coming in from the top
+Chrome, Safari, Opera */
+@-webkit-keyframes dropInEffect-fromTop {
+  0%   {opacity: 0; height: 0; margin-top: -20px;}
+  90% {margin-top: 2px;}
+  100% {opacity: 1; height: auto; margin-top: 0px;}
+}
+@keyframes dropInEffect-fromTop {
+  0%   {opacity: 0; height: 0; margin-top: -20px;}
+  90% {margin-top: 2px;}
+  100% {opacity: 1; height: auto; margin-top: 0px;}
+}

@@ -700,7 +700,7 @@ http://cbracco.me/a-simple-css-tooltip/
 .checkbox{
   width: 28px;
   height: 28px;
-  top: -4px;
+  top: 0px;/*-4px;*/
   background: white;
   position: relative;
   padding: 0;

@@ -20,8 +20,6 @@
   top: 10px;
   right: 20px;
   position: absolute;
-  width:50px;
-  height:50px;
 }
 
 .bom .toolTipButtonContainer{
@@ -29,15 +27,13 @@
 }
 
 .bom .tableContainer{
-  position: absolute;
-  top: 60px;
-  right: 20px;
+  /*tposition: absolute;
+  op: 60px;
+  right: 20px;*/
   height: calc(100% - 132px);
   pointer-events: none;
 }
 
-.bom .export button {
-}
 
 .bom table{
   font-size: 13px;
@@ -60,13 +56,13 @@
 }
 
 .bom #tablebody{
-  display: block;
   max-height: 80%;
   overflow-x: hidden;
   overflow-y: auto;
   border: 1px solid #F7F6F6;
   border-top: 0px;
   pointer-events: auto;
+  position: absolute;
 }
 
 
@@ -76,8 +72,12 @@
    font-weight: bold;
 }
 
+.bom tr:hover input{
+  font-weight: bold;
+}
+
 .bom tr.selected{
-   background-color: #484848;
+   background-color: #5bc3fa;/*#484848;*/
    color:white;
 }
 
@@ -217,8 +217,11 @@
   margin: 0;
 }
 
+.bom .bomEntry button{
+  background: rgba(245, 245, 245, 0)
+}
 .bom .bomEntry button .icon{
-  background: white;
+  background: rgba(245, 245, 245, 0)
 }
 
 /*.bom .bomEntry button .icon path{
@@ -226,14 +229,20 @@
 }*/
 
 .bom .bomEntry button:hover .icon{
-  background: #F4F4F4;
+  /*background: #F4F4F4;*/
+  background: #5bc3fa;
 }
 
 .bom .bomEntry button:hover .icon path{
   /*background: white;*/
-  fill:black !important;
+  /*fill:black !important;*/
 }
 
+/*removal*/
+.bom .removeBomEntry{
+  color:red;
+  padding: 1px;
+}
 .bom .removal {
   height: 42px;
 }
@@ -241,7 +250,6 @@
 .bom .removal span{
   padding: 5 5 5 5;
   font-size: 11px;
-
 }
 
 .bom .removal button{
@@ -271,3 +279,18 @@
 .bom tr.selected input[type=number]:disabled{
   color:white;
 }
+
+.bom .export button{
+  padding: 0 2px 0px 2px;
+  margin: 0 2px 0 0;
+}
+
+/* for smaller checkbox
+.bom .checkbox{
+  width: 20px;
+  height: 20px;
+}
+.bom .checkbox label{
+  left: 0px;
+  top: 0px;
+}*/

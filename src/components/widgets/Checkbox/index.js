@@ -1,13 +1,8 @@
-
 import { html } from 'snabbdom-jsx'
-import Class from 'classnames'
 
-
-export default function checkbox({id, value, checked, className}){
-
-
-  return <div className='checkbox'>
-  	<input type='checkbox' value={value} checked={checked} id={id} className={className}/>
-  	<label htmlFor={id}></label>
+export default function checkbox ({id, value, checked, name, className, disabled}) {
+  return <div className='checkbox' disabled={disabled}>
+    <input type='checkbox' value={value} checked={checked} id={id} name={name} className={className} disabled={disabled}/>
+    <label htmlFor={id}></label>
   </div>
 }

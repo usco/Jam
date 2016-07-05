@@ -3,6 +3,8 @@ import { html } from 'snabbdom-jsx'
 import Class from 'classnames'
 import { prepend } from 'ramda'
 import tooltipIconBtn from '../widgets/TooltipIconButton'
+import checkbox from '../widgets/Checkbox'
+
 import { generateUUID } from '../../utils/utils'
 
 export default function view (state$) {
@@ -94,19 +96,37 @@ export default function view (state$) {
         const selected = selectedEntries.indexOf(row.id) > -1
         if (removeEntryRequested !== undefined && removeEntryRequested.id === row.id) {
           // deletion row
-          return (<tr className='test removal' attributes={{'data-name': row.name, 'data-id': row.id}} key={index}>
+          //<button className='confirm' attributes={{'data-name': row.name, 'data-id': row.id}}> Yes </button>
+          const confirmButton = h('button.confirm', {attrs: {'data-name': row.name, 'data-id': row.id}}, ['yes'])
+          const cancelButton = h('button.cancel', ['no'])
+          return h('tr.test.removal', {attrs: {'data-name': row.name, 'data-id': row.id}}, [
+            h('td.cell', {attrs: {'colspan': '100%'}}, [
+              h('span', ['This will delete this part (and its copies), are you sure ?']),
+              h('span', [
+                confirmButton,
+                cancelButton
+              ])
+            ])
+          ])
+            /*(<tr className='test removal' attributes={{'data-name': row.name, 'data-id': row.id}} key={index}>
                    <td className='cell' attributes={{colspan: '100%'}}>
                      <span>This will delete this part (and its copies), are you sure ?</span>
-                     <span><button className='confirm' attributes={{'data-name': row.name, 'data-id': row.id}}> Yes </button> <button className='cancel'> No </button></span>
+                     <span>
+                      {confirmButton}
+                      <button className='cancel'> No </button></span>
                    </td>
-                 </tr>)
+                 </tr>)*/
         } else {
           // normal row
-          return (
+          //key: index,
+          return h('tr',
+            {class: { test: true, normal: true, selected }, attrs: {'data-name': row.name, 'data-id': row.id}},
+            cells)
+            /*(
             <tr className={Class('test', 'normal', {selected})} attributes={{'data-name': row.name, 'data-id': row.id}} key={index}>
              {cells}
             </tr>
-          )
+          )*/
         }
       }
 
@@ -193,6 +213,8 @@ export default function view (state$) {
                       name={name}
                       disabled={disabled} />
           case 'boolean':
+            return checkbox({checked: dataValue, value: dataValue, name, disabled, id: generateUUID()})
+
             return <input
                       type='checkbox'
                       checked={dataValue}
@@ -280,7 +302,6 @@ export default function view (state$) {
       if(adder) adder = adder[0] // FIXME hack, snabdom
 
       let body = getTableBody(getFieldsArray('_adder', false))
-      if (toggled) {
         //console.log('entries', entries, entries.length)
         //style={`height: ${(entries.length)*42+60}px`}
         content =
@@ -293,12 +314,11 @@ export default function view (state$) {
               {body}
             </table>
           </div>
-      }
-      //{tooltipIconBtn(toggled, getIcon('bomToggler'), 'containerToggler bomToggler', 'bom/list of parts', 'bottom')}
+
       return (
         <div className={Class('bom', {readOnly})}>
-          {tooltipIconBtn({toggled, icon: getIcon('bomToggler'), klass: 'containerToggler bomToggler', tooltip: 'bom/list of parts', tooltipPos: 'bottom'})}
-          {content}
+          {tooltipIconBtn({toggled, icon: getIcon('bomToggler'), klass: 'containerToggler bomToggler',
+          tooltip: 'bom/list of parts', tooltipPos: 'bottom', content, contentPosition: 'bottom', arrow: false})}
         </div>
       )
     })

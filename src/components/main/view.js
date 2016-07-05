@@ -1,5 +1,7 @@
 import Rx from 'rx'
 import {html} from 'snabbdom-jsx'
+import { h } from '@cycle/dom'
+
 import Class from "classnames"
 const combineLatest = Rx.Observable.combineLatest
 
@@ -175,17 +177,16 @@ function makeTopToolBar(state){
     })
     .map(flatten)*/
 
-
   //icons = [<div>Foo</div>, <div>Bar</div>]
-  console.log('icons',icons)
+  //{icons} this should work, but does not in snabdom
 
-  return <div className="topToolbar">
-    {icons}
-    {icons[0][0]}
-    <section className="notifications">
-      {notifications}
-    </section>
-  </div>
+  //const foo = h('div', {attrs:{"data-node": 'foo'}}, ['foo','bar','baz'])
+
+  /*{icons[0][0]}
+  {icons[0][1]}*/
+
+  const notificationsBlock = h('section.notifications', [notifications])
+  return h('div.topToolbar', flatten([notificationsBlock, icons]))
 }
 
 
@@ -202,25 +203,23 @@ function renderUiElements(uiElements){
   const customWidgets = state.settings.toolSets
     .map(tool => widgets[tool])
     .filter(exists)
-    .map(widgetMaker=> widgetMaker(state, uiElements) )
+    .map(widgetMaker=> widgetMaker(state, uiElements))
+    console.log('customWidgets', customWidgets)
+    console.log('toolSets', state.settings.toolSets)
 
+  //this should work but does not (nested arrays) {customWidgets}
 
-  return <div className="jam" >
-    {progressBar}
+  const topToolbar = makeTopToolBar(state)
+  const bottomToolBar = h('section#bottomToolBar', [settings, help, fsToggler])
 
-    <section id='bottomToolBar'>
-      {settings}
-      {help}
-      {fsToggler}
-    </section>
+  return h('div.jam', flatten([
+    progressBar,
+    gl,
 
-    {gl}
-
-    {customWidgets}
-
-    {makeTopToolBar(state)}
-
-  </div>
+    topToolbar,
+    bottomToolBar,
+    customWidgets
+  ]))
 }
 
 function renderAnnotWidgets(state, uiElements){
