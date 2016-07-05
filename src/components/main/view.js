@@ -13,6 +13,8 @@ import {renderScalingUi} from '../EntityInfos/scaling'
 import {renderRotatingUi} from '../EntityInfos/rotating'
 import {renderMirroringUi} from '../EntityInfos/mirroring'
 
+import {flatten} from 'ramda'
+
 /*
 function renderWebglError(){
   return (
@@ -164,12 +166,22 @@ function makeTopToolBar(state){
     'bom': undefined
   }
 
-  const icons = state.settings.toolSets
+  let icons = state.settings.toolSets
     .map(toolSet => iconSets[toolSet])
     .filter(exists)
+    /*.map(function(data){
+      console.log('data',data, flatten(data))
+      return data
+    })
+    .map(flatten)*/
+
+
+  //icons = [<div>Foo</div>, <div>Bar</div>]
+  console.log('icons',icons)
 
   return <div className="topToolbar">
     {icons}
+    {icons[0][0]}
     <section className="notifications">
       {notifications}
     </section>

@@ -43,7 +43,7 @@ export default function tooltipIconBtn (options) {
       {subItemsIndicator}
     </button>
 
-  let innerContent
+  let innerContent = ''
   if (content !== undefined && toggled) {
     innerContent = <div
       className={Class('popOver', `popOver-${contentPosition}`, {'active-content': toggled, arrowOffset: arrow})}>
