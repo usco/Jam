@@ -171,19 +171,8 @@ function makeTopToolBar(state){
   let icons = state.settings.toolSets
     .map(toolSet => iconSets[toolSet])
     .filter(exists)
-    /*.map(function(data){
-      console.log('data',data, flatten(data))
-      return data
-    })
-    .map(flatten)*/
 
-  //icons = [<div>Foo</div>, <div>Bar</div>]
   //{icons} this should work, but does not in snabdom
-
-  //const foo = h('div', {attrs:{"data-node": 'foo'}}, ['foo','bar','baz'])
-
-  /*{icons[0][0]}
-  {icons[0][1]}*/
 
   const notificationsBlock = h('section.notifications', [notifications])
   return h('div.topToolbar', flatten([notificationsBlock, icons]))
