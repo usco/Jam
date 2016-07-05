@@ -1,4 +1,4 @@
-
+import { h } from '@cycle/dom'
 import {html} from 'snabbdom-jsx'
 import { formatNumberTo } from '../../utils/formatters'
 
@@ -21,12 +21,34 @@ export function transformInputs (options) {
     .map(function (axisName, index) {
       const value = formatNumberTo(values[index], precision)
       const valuePercent = valuePercents[index]
-      const percentGroup = showPercents ? <span className='percentGroup'>
+      const percentGroup = showPercents ? h('span.percentGroup', [
+        h(`input#${axisName}-scale-pcent`,
+          { props: {type: 'number', lang: 'en', className: 'transformsInputPercent percent', value: valuePercent, step: stepPercents},
+            attrs: {'data-transform': `${fieldName}_${index}`}
+          }),
+        h('span.unit', ['%'])
+      ]) : ''
+
+      /*<span className='percentGroup'>
         <input id={`${axisName}-scale-pcent`} type='number' lang='en' value={valuePercent} step={stepPercents}
           className='transformsInputPercent percent' attributes={{ 'data-transform': `${fieldName}_${index}` }} />
         <span className='unit'>%</span>
-      </span> : ''
-      return <span className={`axisData ${axisName}-axis`}>
+      </span> : ''*/
+      return h('span', {props: {className: `axisData ${axisName}-axis`}}, [
+        h('span.valueGroup', [
+          h('span.axisName', [axisName.toUpperCase()]),
+          h(`input#${axisName}-scale`,
+            { key: 'foo' + index + Math.random(),
+              props: {type: 'number', lang: 'en', className: 'transformsInput value', value, step},
+              attrs: {'data-transform': `${fieldName}_${index}`}
+            }),
+          h('span.unit', [unit])
+        ]),
+        percentGroup
+      ])
+
+
+      /*<span className={`axisData ${axisName}-axis`}>
         <span className='valueGroup'>
           <span className='axisName'>{axisName.toUpperCase()}</span>
           <input id={`${axisName}-scale`} key={'foo'+index+Math.random()} type='number' lang='en' value={value} step={step}
@@ -34,6 +56,6 @@ export function transformInputs (options) {
           <span className='unit'>{unit}</span>
         </span>
         {percentGroup}
-      </span>
+      </span>*/
     })
 }
