@@ -67,7 +67,7 @@ export function renderMirroringUi (state) {
   </span>
 
   return tooltipIconBtn({toggled: mirrorModeToggled, icon: mainIcon, klass: 'toMirrorMode',
-      tooltip: 'mirror', tooltipPos: 'bottom', content: subTools})
+      tooltip: 'mirror', tooltipPos: 'bottom', content: subTools, subItems: true})
 }
 
 export function view (state$) {
