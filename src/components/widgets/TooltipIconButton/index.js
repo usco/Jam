@@ -1,4 +1,4 @@
-
+import { h } from '@cycle/dom'
 import { html } from 'snabbdom-jsx'
 import Class from 'classnames'
 import assign from 'fast.js/object/assign'//faster object.assign
@@ -35,13 +35,25 @@ export default function tooltipIconBtn (options) {
   const borderNotch = arrow ? <b className='border-notch notch'></b> : ''
   const notch = arrow ? <b className='notch'></b> : ''
 
-  const button = <button
+  const button = h('button', {
+      props: {
+        disabled: disabledCondition,
+        className: Class(klass, `tooltip-${tooltipPos}`, {active: toggled})
+      },
+      attrs: getToolTip(tooltip, toggled)
+      },
+    [
+      h('span', {props: {innerHTML: icon}}),
+      subItemsIndicator
+    ])
+
+    /*<button
       disabled={disabledCondition}
       className={Class(klass, `tooltip-${tooltipPos}`, {active: toggled})}
       attributes={getToolTip(tooltip, toggled)}>
       <span innerHTML={icon}/>
       {subItemsIndicator}
-    </button>
+    </button>*/
 
   let innerContent = ''
   if (content !== undefined && toggled) {

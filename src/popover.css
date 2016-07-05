@@ -30,11 +30,11 @@ Chrome, Safari, Opera */
 
 .subItemsIndicator{
   position: absolute;
-    bottom: 1;
-    right: 0;
-    border-bottom: 8px solid rgb(0, 0, 0);
-    border-top: 8px solid rgba(0, 0, 0, 0);
-    border-left: 8px solid rgba(0, 0, 0, 0);
+  bottom: 2;
+  right: 2;
+  border-bottom: 8px solid rgb(0, 0, 0);
+  border-top: 8px solid rgba(0, 0, 0, 0);
+  border-left: 8px solid rgba(0, 0, 0, 0);
   /* border-right: 10px solid rgba(0, 0, 0, 0); */
   /* border-bottom: 10px solid rgb(0, 0, 0); */
 }
