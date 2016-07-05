@@ -1,6 +1,6 @@
 
 import {html} from 'snabbdom-jsx'
-import tooltipIconBtn from '../widgets/TooltipIconButton'
+import Menu from '../widgets/Menu'
 import checkbox from '../widgets/Checkbox'
 import {transformInputs} from './helpers'
 
@@ -50,7 +50,7 @@ export function renderRotatingUi (state) {
     </div>
   </span>
 
-  return tooltipIconBtn({toggled: rotateModeToggled, icon: mainIcon, klass: 'toRotateMode',
+  return Menu({toggled: rotateModeToggled, icon: mainIcon, klass: 'toRotateMode',
     tooltip: 'rotate', tooltipPos: 'bottom', content: subTools})
 }
 

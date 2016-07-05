@@ -8,7 +8,7 @@ const combineLatest = Rx.Observable.combineLatest
 import {combineLatestObj} from '../../utils/obsUtils'
 import {exists} from '../../utils/utils'
 
-import tooltipIconBtn from '../widgets/TooltipIconButton'
+import Menu from '../widgets/Menu'
 
 import {renderMovingUi} from '../EntityInfos/moving'
 import {renderScalingUi} from '../EntityInfos/scaling'
@@ -130,28 +130,28 @@ function makeTopToolBar(state){
     </section>,
 
     <section>
-      {tooltipIconBtn({icon: duplicateIconSvg, klass: 'duplicate',
+      {Menu({icon: duplicateIconSvg, klass: 'duplicate',
         tooltip: 'duplicate', tooltipPos: 'bottom', disabledCondition: !toggleControls})}
 
-      {tooltipIconBtn({icon: deleteIconSvg, klass: 'delete',
+      {Menu({icon: deleteIconSvg, klass: 'delete',
         tooltip: 'delete', tooltipPos: 'bottom', disabledCondition: !toggleControls})}
     </section>
   ]
 
   const annotIcons = [<section>
-      {tooltipIconBtn({toggled: activeTool === 'addNote', icon: addNoteIconSvg, klass: 'addNote',
+      {Menu({toggled: activeTool === 'addNote', icon: addNoteIconSvg, klass: 'addNote',
         tooltip: 'add note', tooltipPos: 'bottom'})}
 
-      {tooltipIconBtn({toggled: activeTool === 'measureDistance', icon: measureDistanceIconSvg, klass: 'measureDistance',
+      {Menu({toggled: activeTool === 'measureDistance', icon: measureDistanceIconSvg, klass: 'measureDistance',
         tooltip: 'measure distance', tooltipPos: 'bottom'})}
 
-      {tooltipIconBtn({toggled: activeTool === 'measureThickness', icon: measureThicknessIconSvg, klass: 'measureThickness',
+      {Menu({toggled: activeTool === 'measureThickness', icon: measureThicknessIconSvg, klass: 'measureThickness',
         tooltip: 'measure thickness', tooltipPos: 'bottom'})}
 
-      {tooltipIconBtn({toggled: activeTool === 'measureDiameter', icon: measureDiameterIconSvg, klass: 'measureDiameter',
+      {Menu({toggled: activeTool === 'measureDiameter', icon: measureDiameterIconSvg, klass: 'measureDiameter',
         tooltip: 'measure diameter', tooltipPos: 'bottom'})}
 
-      {tooltipIconBtn({toggled: activeTool === 'measureAngle', icon: measureAngleIconSvg, klass: 'measureAngle',
+      {Menu({toggled: activeTool === 'measureAngle', icon: measureAngleIconSvg, klass: 'measureAngle',
         tooltip: 'measure angle', tooltipPos: 'bottom'})}
     </section>]
 

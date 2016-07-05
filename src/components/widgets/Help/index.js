@@ -1,7 +1,7 @@
 
 import { html } from 'snabbdom-jsx'
 import Class from 'classnames'
-import tooltipIconBtn from '../TooltipIconButton'
+import Menu from '../Menu'
 
 import Rx from 'rx'
 const fromEvent = Rx.Observable.fromEvent
@@ -68,7 +68,7 @@ function view (state$) {
       </section>
 
     return <div className='help'>
-      {tooltipIconBtn({toggled, icon: helpIconSvg, klass: 'containerToggler helpToggler',
+      {Menu({toggled, icon: helpIconSvg, klass: 'containerToggler helpToggler',
        tooltip: 'help', tooltipPos: 'top', content, contentPosition: 'top', arrow: false})}
      </div>
   })

@@ -1,6 +1,6 @@
 
 import {html} from 'snabbdom-jsx'
-import tooltipIconBtn from '../widgets/TooltipIconButton'
+import Menu from '../widgets/Menu'
 import checkbox from '../widgets/Checkbox'
 import {transformInputs} from './helpers'
 
@@ -55,7 +55,7 @@ export function renderScalingUi (state) {
     </div>
   </span>
 
-  return tooltipIconBtn({toggled: scaleModeToggled, size: 'large', icon: mainIcon, klass: 'toScaleMode',
+  return Menu({toggled: scaleModeToggled, size: 'large', icon: mainIcon, klass: 'toScaleMode',
     tooltip: 'scale', tooltipPos: 'bottom', content: subTools})
 }
 

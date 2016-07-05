@@ -2,7 +2,7 @@ import { h } from '@cycle/dom'
 import { html } from 'snabbdom-jsx'
 import Class from 'classnames'
 import { prepend } from 'ramda'
-import tooltipIconBtn from '../widgets/TooltipIconButton'
+import Menu from '../widgets/Menu'
 import checkbox from '../widgets/Checkbox'
 
 import { generateUUID } from '../../utils/utils'
@@ -27,7 +27,7 @@ export default function view (state$) {
         <button className='bom-as-text' value='bom-as-text'>Export as plain text</button>
       </span>
 
-      const exportButton = tooltipIconBtn(true
+      const exportButton = Menu(true
         , exportIconSvg, 'exportBOMData', 'export', 'bottom', false, exportSubItems)*/
       const exportButtons =
         h('span', [
@@ -317,7 +317,7 @@ export default function view (state$) {
 
       return (
         <div className={Class('bom', {readOnly})}>
-          {tooltipIconBtn({toggled, icon: getIcon('bomToggler'), klass: 'containerToggler bomToggler',
+          {Menu({toggled, icon: getIcon('bomToggler'), klass: 'containerToggler bomToggler',
           tooltip: 'bom/list of parts', tooltipPos: 'bottom', content, contentPosition: 'bottom', arrow: false})}
         </div>
       )

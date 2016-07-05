@@ -1,7 +1,7 @@
 
 import { html } from 'snabbdom-jsx'
 import Class from 'classnames'
-import tooltipIconBtn from '../widgets/TooltipIconButton'
+import Menu from '../widgets/Menu'
 import checkbox from '../widgets/Checkbox'
 
 export default function view (state$) {
@@ -51,7 +51,7 @@ export default function view (state$) {
 
     return (
     <div className='settings'>
-      {tooltipIconBtn({toggled, icon, klass: 'containerToggler settingsToggler', tooltip: 'settings', tooltipPos: 'top',
+      {Menu({toggled, icon, klass: 'containerToggler settingsToggler', tooltip: 'settings', tooltipPos: 'top',
         content, contentPosition: 'top', arrow: false
       })}
 

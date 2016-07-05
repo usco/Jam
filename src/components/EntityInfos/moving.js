@@ -1,6 +1,6 @@
 import {html} from 'snabbdom-jsx'
 
-import tooltipIconBtn from '../widgets/TooltipIconButton'
+import Menu from '../widgets/Menu'
 import checkbox from '../widgets/Checkbox'
 import {transformInputs} from './helpers'
 
@@ -47,7 +47,7 @@ export function renderMovingUi (state) {
     </div>
   </span>
 
-  return tooltipIconBtn({toggled: translateModeToggled, icon: mainIcon, klass: 'toTranslateMode',
+  return Menu({toggled: translateModeToggled, icon: mainIcon, klass: 'toTranslateMode',
      tooltip: 'move', tooltipPos: 'bottom', content: subTools})
 }
 

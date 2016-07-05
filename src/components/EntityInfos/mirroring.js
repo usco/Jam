@@ -1,6 +1,6 @@
 
 import {html} from 'snabbdom-jsx'
-import tooltipIconBtn from '../widgets/TooltipIconButton'
+import Menu from '../widgets/Menu'
 
 const mainIcon = `<svg width="22px" height="26px" viewBox="0 0 22 26" version="1.1" class="icon"
 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -66,7 +66,7 @@ export function renderMirroringUi (state) {
     <button className='mirror-z' value='mirror-z'><span innerHTML={mirrorZIcon}/></button>
   </span>
 
-  return tooltipIconBtn({toggled: mirrorModeToggled, icon: mainIcon, klass: 'toMirrorMode',
+  return Menu({toggled: mirrorModeToggled, icon: mainIcon, klass: 'toMirrorMode',
       tooltip: 'mirror', tooltipPos: 'bottom', content: subTools, subItems: true})
 }
 

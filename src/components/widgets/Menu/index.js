@@ -11,7 +11,7 @@ function getToolTip (tooltip, toggleCondition) {
   }
 }
 
-export default function tooltipIconBtn (options) {
+export default function Menu (options) {
   const defaults = {
     toggled: false,
     disabledCondition: false,
