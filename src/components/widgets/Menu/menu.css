@@ -39,7 +39,7 @@ Chrome, Safari, Opera */
   /* border-bottom: 10px solid rgb(0, 0, 0); */
 }
 
-.popOver {
+.menu {
   /*
   padding: 10px 0px;
   margin-top: 10px;*/
@@ -52,11 +52,11 @@ Chrome, Safari, Opera */
   font-size: 0.8em;
 }
 
-.popOver input[type=checkbox]{
+.menu input[type=checkbox]{
   margin-right: 10px;
 }
 
-.popOver button{
+.menu button{
   padding: 10px
 }
 
@@ -69,7 +69,7 @@ Chrome, Safari, Opera */
   cursor: pointer;
 }
 
-.popOver.active-content{
+.menu.active-content{
   text-align: center;
   display: block;
 
@@ -80,7 +80,7 @@ Chrome, Safari, Opera */
   animation-timing-function: ease-in-out;
 }
 
-.popOver-bottom .notch {
+.menu-bottom .notch {
     position: absolute;
     top: -10px;
     left: 17px;
@@ -100,35 +100,35 @@ Chrome, Safari, Opera */
     _border-left-color: pink;
     _filter: chroma(color=pink);
 }
-.popOver-bottom .border-notch { border-bottom-color: #dddddd; top: -11px}
+.menu-bottom .border-notch { border-bottom-color: #dddddd; top: -11px}
 
 /*animation for bottom variant*/
-.popOver-bottom.active-content{
+.menu-bottom.active-content{
   -webkit-animation-name: dropInEffect-fromTop; /* Chrome, Safari, Opera */
   animation-name: dropInEffect-fromTop;
 }
 
 /* left */
-.popOver-left {
+.menu-left {
   top: 0%;
   bottom: auto;
   right: 120%;
 }
 
 /* right*/
-.popOver-right {
+.menu-right {
   top: -8;
   bottom: auto;
   left: 52;
 }
 
-.popOver-right.arrowOffset{
+.menu-right.arrowOffset{
   top: 0%;
   bottom: auto;
   left: 120%;
 }
 
-.popOver-right .notch {
+.menu-right .notch {
   position: absolute;
   top: 10px;
   left: -20px;
@@ -141,32 +141,32 @@ Chrome, Safari, Opera */
   width: 0;
   height: 0;
 }
-.popOver-right .border-notch {
+.menu-right .border-notch {
   border-left: 8px solid transparent;
   border-right: 11px solid #dddddd;
   border-top: 12px solid transparent;
 }
 
 /* animation for right variant*/
-.popOver-right.active-content{
+.menu-right.active-content{
   -webkit-animation-name: dropInEffect-fromLeft; /* Chrome, Safari, Opera */
   animation-name: dropInEffect-fromLeft;
 }
 
 /* top */
-.popOver-top {
+.menu-top {
 
   right: calc(0% + 2px);
   bottom: calc(200% + 4px);
 }
 
-.popOver-top.arrowOffset{
+.menu-top.arrowOffset{
   top: -35;
   bottom: auto;
   left: -100;
 }
 
-.popOver-top .notch {
+.menu-top .notch {
   position: absolute;
   top: 10px;
   left: -20px;
@@ -179,13 +179,13 @@ Chrome, Safari, Opera */
   width: 0;
   height: 0;
 }
-.popOver-top .border-notch {
+.menu-top .border-notch {
   border-left: 8px solid transparent;
   border-right: 11px solid #dddddd;
   border-top: 12px solid transparent;
 }
 
-.popOver-top.active-content{
+.menu-top.active-content{
   -webkit-animation-name: dropInEffect-fromBottom; /* Chrome, Safari, Opera */
   animation-name: dropInEffect-fromBottom;
 }
@@ -205,18 +205,18 @@ Chrome, Safari, Opera */
 }
 
 /* bottom */
-.popOver-bottom {
+.menu-bottom {
   right: 20;
   top: 60;
 }
 
-.popOver-bottom.arrowOffset{
+.menu-bottom.arrowOffset{
   top: -35;
   bottom: auto;
   left: -100;
 }
 
-.popOver-bottom .notch {
+.menu-bottom .notch {
   position: absolute;
   top: 10px;
   left: -20px;
@@ -229,13 +229,13 @@ Chrome, Safari, Opera */
   width: 0;
   height: 0;
 }
-.popOver-bottom .border-notch {
+.menu-bottom .border-notch {
   border-left: 8px solid transparent;
   border-right: 11px solid #dddddd;
   border-top: 12px solid transparent;
 }
 
-.popOver-bottom.active-content{
+.menu-bottom.active-content{
   -webkit-animation-name: dropInEffect-fromTop; /* Chrome, Safari, Opera */
   animation-name: dropInEffect-fromTop;
 }
