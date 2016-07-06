@@ -17,6 +17,12 @@ import {renderMirroringUi} from '../EntityInfos/mirroring'
 
 import {flatten} from 'ramda'
 
+require('./app.css')
+require('./tooltips.css')
+require('./topToolbar.css')
+require('./bottomToolBar.css')
+
+
 /*
 function renderWebglError(){
   return (
@@ -155,12 +161,6 @@ function makeTopToolBar(state){
         tooltip: 'measure angle', tooltipPos: 'bottom'})}
     </section>]
 
-  /*if(state.settings.appMode === "viewer"){
-    return
-  }else{
-     return <div className="topToolbar titlebar">
-    </div>
-  }*/
   const iconSets = {
     'view': viewIcons,
     'edit': editIcons,

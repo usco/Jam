@@ -1,8 +1,3 @@
-require('./app.css')
-require('./tooltips.css')
-require('./topToolbar.css')
-require('./bottomToolBar.css')
-
 import {run} from '@cycle/rx-run'
 
 import { makeDOMDriver } from '@cycle/dom'

@@ -1,4 +1,3 @@
-require('../../app.css')
 import Rx from 'rx'
 const {just} = Rx.Observable
 
