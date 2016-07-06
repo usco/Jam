@@ -40,7 +40,7 @@ export function renderMovingUi (state) {
       {transformInputs({fieldName: 'pos', unit: 'mm', step: transformStep, values, precision})}
     </div>
     <div className='optionsGroup'>
-      <label className='popOverContent'>
+      <label className='menuContent'>
         {checkbox({id: 'snapTranslation', className: 'snapTranslation', checked: state.settings.snapRotation})}
         snap translation
       </label>

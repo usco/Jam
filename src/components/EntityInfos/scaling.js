@@ -44,11 +44,11 @@ export function renderScalingUi (state) {
     </div>
 
     <div className='optionsGroup'>
-      <label className='popOverContent'>
+      <label className='menuContent'>
         {checkbox({id: 'snapScaling', className: 'snapScaling', checked: state.settings.snapScaling})}
         snap scaling
       </label>
-      <label className='popOverContent'>
+      <label className='menuContent'>
         {checkbox({id: 'uniformScaling', className: 'uniformScaling', checked: state.settings.uniformScaling})}
         uniform scaling
       </label>

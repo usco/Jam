@@ -6,7 +6,6 @@ require('./topToolbar.css')
 require('./bottomToolBar.css')
 require('./help.css')
 require('./fullScreenToggler.css')
-require('./popover.css')
 
 import {run} from '@cycle/rx-run'
 

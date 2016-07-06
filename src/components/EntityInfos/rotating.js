@@ -43,7 +43,7 @@ export function renderRotatingUi (state) {
       {transformInputs({fieldName: 'rot', unit: '°', step: transformStep, values, precision})}
     </div>
     <div className='optionsGroup'>
-      <label className='popOverContent'>
+      <label className='menuContent'>
         {checkbox({id: 'snapRotation', className: 'snapRotation', checked: state.settings.snapRotation})}
         snap rotation
       </label>
