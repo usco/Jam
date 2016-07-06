@@ -1,8 +1,8 @@
-
 import { html } from 'snabbdom-jsx'
 import Class from 'classnames'
 import Menu from '../widgets/Menu'
 import checkbox from '../widgets/Checkbox'
+require('./settings.css')
 
 export default function view (state$) {
   return state$.map(function ({settings, toggled}) {

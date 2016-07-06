@@ -4,6 +4,8 @@ import Class from 'classnames'
 import { prepend } from 'ramda'
 import Menu from '../widgets/Menu'
 import checkbox from '../widgets/Checkbox'
+require('./bom.css')
+
 
 import { generateUUID } from '../../utils/utils'
 

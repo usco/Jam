@@ -1,12 +1,11 @@
-
 import { html } from 'snabbdom-jsx'
 import Class from 'classnames'
 import Menu from '../Menu'
-
 import Rx from 'rx'
 const fromEvent = Rx.Observable.fromEvent
-
 import { combineLatestObj } from '../../../utils/obsUtils'
+
+require('./help.css')
 
 function intent (DOM) {
   // any outside taps close the settings

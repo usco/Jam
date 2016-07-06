@@ -1,8 +1,9 @@
-
 import { html } from 'snabbdom-jsx'
 import { equals } from 'ramda'
-
 import Menu from '../widgets/Menu'
+
+require('./comments.css')
+
 
 function renderCommentsList (comments) {
   const iconSvg = `<svg class='icon' version='1.1' id='Pencil' xmlns='http://www.w3.org/2000/svg' x='0px' y='0px'

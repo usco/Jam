@@ -1,6 +1,7 @@
-
 import { html } from 'snabbdom-jsx'
 import screenfull from 'screenfull'
+require('./fullScreenToggler.css')
+
 
 function intent ({DOM}) {
   const toggle$ = DOM.select('.fullScreenToggler').events('click')
