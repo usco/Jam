@@ -1,7 +1,10 @@
 import { h } from '@cycle/dom'
 import { html } from 'snabbdom-jsx'
 import Class from 'classnames'
-import assign from 'fast.js/object/assign'//faster object.assign
+import assign from 'fast.js/object/assign'// faster object.assign
+
+import style from './menu.css'
+//require('./menu.css')
 
 function getToolTip (tooltip, toggleCondition) {
   if (!toggleCondition) {
