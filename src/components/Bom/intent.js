@@ -136,6 +136,7 @@ export default function intent (DOM) {
     , checkEntry$
     , entryOptionChange$
   )
+  .filter(x => x.id !== undefined)
   .tap(e=>console.log('editEntry',e))
 
   const toggle$ = DOM.select('.bomToggler')
