@@ -57,13 +57,12 @@ const mirrorZIcon = `<svg width="29px" height="24px" viewBox="0 0 29 24" class='
 
 export function renderMirroringUi (state) {
   const activeTool = state.settings.activeTool
-
   const mirrorModeToggled = activeTool === 'mirror'
 
   const subTools = <span>
-    <button className='mirror-x' value='mirror-x'><span innerHTML={mirrorXIcon}/></button>
-    <button className='mirror-y' value='mirror-y'><span innerHTML={mirrorYIcon}/></button>
-    <button className='mirror-z' value='mirror-z'><span innerHTML={mirrorZIcon}/></button>
+    {Menu({icon: mirrorXIcon, klass: 'mirror-x', tooltip: 'mirror along x axis', tooltipPos: 'bottom'})}
+    {Menu({icon: mirrorYIcon, klass: 'mirror-y', tooltip: 'mirror along y axis', tooltipPos: 'bottom'})}
+    {Menu({icon: mirrorZIcon, klass: 'mirror-z', tooltip: 'mirror along z axis', tooltipPos: 'bottom'})}
   </span>
 
   return Menu({toggled: mirrorModeToggled, icon: mainIcon, klass: 'toMirrorMode',
