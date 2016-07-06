@@ -19,6 +19,8 @@ export default function intent (DOM, params) {
   const toggleSnapScaling$ = DOM.select('.menuContent .snapScaling').events('change').map(checked)
   const toggleUniformScaling$ = DOM.select('.menuContent .uniformScaling').events('change').map(checked)
   const toggleSnapRotation$ = DOM.select('.menuContent .snapRotation').events('change').map(checked)
+  const toggleSnapTranslation$ = DOM.select('.menuContent .snapTranslation').events('change').map(checked)
+
 
   // const toggleAutoSelectNewEntities$ = Rx.Observable.just(true) //TODO: make settable
   // tools
@@ -60,6 +62,7 @@ export default function intent (DOM, params) {
     toggleShowAnnot$,
     toggleSnapScaling$,
     toggleUniformScaling$,
-    toggleSnapRotation$
+    toggleSnapRotation$,
+    toggleSnapTranslation$
   }
 }

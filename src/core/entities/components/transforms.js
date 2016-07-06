@@ -11,6 +11,7 @@ export function makeTransformsSystem (actions) {
     sca: [ 1, 1, 1 ]
   }
   const snapDefaults = {
+    pos: 0.1, // snap translation snaps to 0.1 units 
     rot: 10, // snap rotation snaps to tens of degrees
     sca: 0.1 // snap scaling snaps to tens of percentages
   }
@@ -109,9 +110,11 @@ export function makeTransformsSystem (actions) {
   }
 
   function applySnapStates (id, transformation, settings) {
-    let {uniformScaling, snapScaling, snapRotation} = settings
+    console.log('applySnapStates')
+    let {uniformScaling, snapScaling, snapRotation, snapTranslation} = settings
     if (uniformScaling) { transformation.sca = applyUniformScaling(transformation.sca) }
     if (snapScaling) { transformation.sca = applySnapping(transformation.sca, snapDefaults.sca) }
+    if (snapTranslation) { transformation.pos = applySnapping(transformation.pos, snapDefaults.pos) }
     if (snapRotation) { transformation.rot = applySnapping(transformation.rot, snapDefaults.rot, (2 * Math.PI)) }
     return transformation
   }
