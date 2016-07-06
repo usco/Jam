@@ -16,7 +16,7 @@ import {renderRotatingUi} from '../EntityInfos/rotating'
 import {renderMirroringUi} from '../EntityInfos/mirroring'
 
 import {renderMeasurementsUi} from './measurements'
-import {flatten} from 'ramda'
+import {flatten, uniq} from 'ramda'
 
 require('./app.css')
 require('./leftToolbar.css')
@@ -73,9 +73,7 @@ version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/
     </g>
 </svg>`
 
-
-
-function makeLeftToolbar(state){
+function renderLeftToolbar (state) {
   const selections = state.selections
   const activeTool = state.settings.activeTool
   const toggleControls = (selections && selections.instIds.length > 0)
@@ -98,7 +96,6 @@ function makeLeftToolbar(state){
         tooltip: 'delete', tooltipPos: 'bottom', disabledCondition: !toggleControls})}
     </section>
   ]
-
   const annotIcons = [<section>{renderMeasurementsUi(state)}</section>]
 
   const iconSets = {
@@ -115,56 +112,56 @@ function makeLeftToolbar(state){
   return h('section#leftToolbar', flatten([icons]))
 }
 
+function renderRightToolbar (state, {bom}) {
+  const widgetSets = {
+    'bom': bom
+  }
+
+  const widgetsNames = uniq(flatten(state.settings.toolSets
+    .map(toolSet => widgetNamesByToolSet(toolSet)).filter(exists)
+  ))
+  const widgets = widgetsNames.map(wName => widgetSets[wName])
+
+  return h('section#rightToolbar', widgets)
+}
+
 function renderUiElements(uiElements){
   const {state, settings, fsToggler, bom, gl, entityInfos, progressBar, help} = uiElements
 
-  const widgets = {
-    'view': renderViewWidgets,
-    'edit': renderEditWidgets,
-    'annotate': renderAnnotWidgets,
-    'bom': renderBomWidgets
+  const widgetsMapping = {
+    //'comments': comments,
+    'entityInfos': entityInfos,
+    'bom' : bom
   }
 
-  const customWidgets = state.settings.toolSets
-    .map(tool => widgets[tool])
-    .filter(exists)
-    .map(widgetMaker=> widgetMaker(state, uiElements))
-    //TODO: get rid of this, only used for bom
+  const widgetsNames = uniq(flatten(state.settings.toolSets
+    .map(toolSet => widgetNamesByToolSet(toolSet)).filter(exists)
+  ))
+  const widgets = widgetsNames.map(wName => widgetsMapping[wName])
 
-  const leftToolbar = makeLeftToolbar(state)
+  const leftToolbar = renderLeftToolbar(state)
+  const rightToolbar = renderRightToolbar(state, {bom})
   const bottomToolBar = h('section#bottomToolBar', [settings, help, fsToggler])
-  const topToolbar = h('section#topToolBar', [ h('section.notifications', [state.notifications]) ])
+  const topToolbar = h('section#topToolBar', [ h('section.notifications', [state.notifications]), progressBar ])
 
   return h('div.jam', flatten([
-    progressBar,
     gl,
 
     leftToolbar,
+    rightToolbar,
     topToolbar,
-    bottomToolBar,
-
-    customWidgets
+    bottomToolBar
   ]))
 }
 
-function renderAnnotWidgets (state, uiElements) {
-  let {comments} = uiElements
-  return [comments]
-}
-
-function renderEditWidgets (state, uiElements) {
-  let { entityInfos, bom } = uiElements
-  return [entityInfos, bom]
-}
-
-function renderBomWidgets (state, uiElements) {
-  let { bom } = uiElements
-  return [bom]
-}
-
-function renderViewWidgets (state, uiElements) {
-  let {} = uiElements
-  return []
+function widgetNamesByToolSet (toolset) {
+  const mappings = {
+    'view': [],
+    'bom' : ['bom'],
+    'edit': ['entityInfos', 'bom'],
+    'annot': ['comments']
+  }
+  return mappings[toolset]
 }
 
 export default function view(state$, settings$, fsToggler$, bom$

@@ -1,5 +1,129 @@
 /*entity infos*/
 
+
+
+
+.transformsGroup{
+  display: flex;
+  flex-direction: column;
+  padding: 10px;
+}
+
+.transformsGroup .axisData{
+  display: flex;
+  padding: 2px;
+  align-items: center;
+}
+
+.transformsGroup input[type=number]{
+  color:#828282;
+  background: white;
+  border: none;
+}
+.transformsGroup .percent {
+  color: #828282;
+  width: 50px;
+  padding: 4;
+}
+
+.transformsGroup .value {
+  color: #636363;
+  width: 80px;
+  padding: 4;
+}
+
+.transformsGroup .valueGroup{
+  border: 1px solid red;
+  margin-right: 10px;
+}
+
+.transformsGroup .valueGroup label{
+  color: white;
+  padding: 5 12 5 12;
+  background-color: red;
+  display: inline-block;
+}
+
+.transformsGroup .valueGroup .axisName{
+  color: white;
+  padding: 5 12 5 12;
+  background-color: red;
+  display: inline-block;
+}
+
+.transformsGroup .percentGroup {
+  border: 1px solid red;
+  padding: 3.5px;
+}
+
+/* color overrids per axis, for axis color codes */
+/* x axis*/
+.transformsGroup .x-axis .valueGroup {
+  border-color: #ed8d00;
+}
+.transformsGroup .x-axis .percentGroup {
+  border-color: #ed8d00;
+}
+.transformsGroup .x-axis .valueGroup label{
+  background-color: #ed8d00;
+}
+.transformsGroup .x-axis .valueGroup .axisName{
+  background-color: #ed8d00;
+}
+/* y axis*/
+.transformsGroup .y-axis .valueGroup {
+  border-color: #89c718;
+}
+.transformsGroup .y-axis .percentGroup {
+  border-color: #89c718;
+}
+.transformsGroup .y-axis .valueGroup label{
+  background-color: #89c718;
+}
+.transformsGroup .y-axis .valueGroup .axisName{
+  background-color: #89c718;
+}
+/* z axis*/
+.transformsGroup .z-axis .valueGroup {
+  border-color: #5bc3fa;
+}
+.transformsGroup .z-axis .percentGroup {
+  border-color: #5bc3fa;
+}
+.transformsGroup .z-axis .valueGroup label{
+  background-color: #5bc3fa;
+}
+.transformsGroup .z-axis .valueGroup .axisName{
+  background-color: #5bc3fa;
+}
+
+.transformsGroup .unit{
+  color: #aaa;
+  padding: 0 10 0 0;
+  display: inline-block;
+}
+
+.optionsGroup{
+  display: flex;
+}
+
+.movingSubTools{
+  width: 190px;
+  display: block;
+}
+
+.rotationSubTools{
+  width: 165px;
+  display: block;
+}
+
+.scalingSubTools{
+  width: 270px;
+  display: block;
+}
+
+
+/* TODO: remove, deprecated
 .toolbarBottom{
   font-size: 13px;
   position: absolute;
@@ -46,7 +170,7 @@
   line-height: 0.8em;
   font-size: 0.8em;
   font-family: inherit;
-}
+}*/
 
 /*.tooolbarBottom */input[type=color]{
   width: 24px;
