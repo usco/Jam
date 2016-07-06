@@ -125,7 +125,7 @@ function renderRightToolbar (state, {bom}) {
   return h('section#rightToolbar', widgets)
 }
 
-function renderUiElements(uiElements){
+function renderUiElements (uiElements) {
   const {state, settings, fsToggler, bom, gl, entityInfos, progressBar, help} = uiElements
 
   const widgetsMapping = {
@@ -140,7 +140,7 @@ function renderUiElements(uiElements){
   const widgets = widgetsNames.map(wName => widgetsMapping[wName])
 
   const leftToolbar = renderLeftToolbar(state)
-  const rightToolbar = renderRightToolbar(state, {bom})
+  const rightToolbar = renderRightToolbar(state, uiElements)
   const bottomToolBar = h('section#bottomToolBar', [settings, help, fsToggler])
   const topToolbar = h('section#topToolBar', [ h('section.notifications', [state.notifications]), progressBar ])
 
@@ -168,7 +168,5 @@ export default function view(state$, settings$, fsToggler$, bom$
   , gl$, entityInfos$, comment$, progressBar$, help$) {
 
   return combineLatestObj({state$, settings$, fsToggler$, bom$, gl$, entityInfos$, comment$, progressBar$, help$})
-    .map(uiElements => {
-      return renderUiElements(uiElements)
-    })
+    .map(renderUiElements)
 }
