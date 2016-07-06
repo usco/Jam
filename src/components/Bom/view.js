@@ -300,7 +300,7 @@ export default function view (state$) {
       // THIS PART ACTUALLY RETURNS THE BOM
       let content
       let header = getHeaderRow()
-      let adder = !readOnly ? getAdderRow(getFieldsArray('_adder')) : null
+      let adder = !readOnly ? getAdderRow(getFieldsArray('_adder')) : ''
       if(adder) adder = adder[0] // FIXME hack, snabdom
 
       let body = getTableBody(getFieldsArray('_adder', false))
