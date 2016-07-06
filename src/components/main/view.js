@@ -15,6 +15,7 @@ import {renderScalingUi} from '../EntityInfos/scaling'
 import {renderRotatingUi} from '../EntityInfos/rotating'
 import {renderMirroringUi} from '../EntityInfos/mirroring'
 
+import {renderMeasurementsUi} from './measurements'
 import {flatten} from 'ramda'
 
 require('./app.css')
@@ -69,51 +70,7 @@ version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/
     </g>
 </svg>`
 
-const addNoteIconSvg = `<svg version="1.1" id="Flag" xmlns="http://www.w3.org/2000/svg"
-  width="16" height="16" x="0px" y="0px" viewBox="0 0 20 20" enable-background="new 0 0 20 20" class="icon">
-<path d="M18.926,5.584c-9.339,13.568-6.142-0.26-14.037,6.357L6.684,19H4.665L1,4.59l1.85-0.664
-  c8.849-6.471,4.228,5.82,15.637,1.254C18.851,5.033,19.142,5.27,18.926,5.584z"/>
-</svg>`
 
-const measureDistanceIconSvg = `<svg version="1.1" id="Ruler" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"
- width="16" height="16" x="0px" y="0px" viewBox="0 0 20 20" enable-background="new 0 0 20 20" class="icon">
-<path d="M14.249,0.438L0.438,14.251c-0.584,0.584-0.584,1.538,0.002,2.124l3.185,3.187c0.584,0.584,1.541,0.586,2.124,0.002
-  L19.562,5.751c0.584-0.585,0.584-1.541,0-2.125l-3.186-3.188C15.789-0.148,14.834-0.145,14.249,0.438z M3.929,15.312L3.17,16.071
-  l-1.896-1.897l0.759-0.759L3.929,15.312z M6.965,15.312l-0.759,0.759l-3.415-3.415l0.759-0.76L6.965,15.312z M6.965,12.276
-  l-0.759,0.759l-1.898-1.896l0.76-0.76L6.965,12.276z M8.483,10.758l-0.759,0.759L5.828,9.621l0.759-0.76L8.483,10.758z
-   M11.518,10.758l-0.759,0.759L7.345,8.103l0.759-0.759L11.518,10.758z M11.518,7.723l-0.759,0.759L8.863,6.586l0.759-0.759
-  L11.518,7.723z M13.036,6.206l-0.759,0.759L10.38,5.068l0.759-0.759L13.036,6.206z M16.072,6.206l-0.76,0.759L11.898,3.55
-  l0.759-0.76L16.072,6.206z M16.071,3.171l-0.759,0.759l-1.896-1.898l0.759-0.758L16.071,3.171z"/>
-</svg>`
-
-const measureThicknessIconSvg = `<svg version="1.1" id="Vertical_align_middle" xmlns="http://www.w3.org/2000/svg"
-   width="16" height="16" x="0px" y="0px" viewBox="0 0 20 20" enable-background="new 0 0 20 20" xml:space="preserve" class="icon">
-<path fill="#FFFFFF" d="M10,12l-3,3h2v4h2v-4h2L10,12z M13,5h-2V1H9v4H7l3,3L13,5z M18,10c0-0.553-0.048-1-0.6-1H2.6
-  C2.048,9,2,9.447,2,10c0,0.551,0.048,1,0.6,1h14.8C17.952,11,18,10.551,18,10z"/>
-</svg>`
-
-const measureDiameterIconSvg = `<svg version="1.1"   xmlns="http://www.w3.org/2000/svg"
-  width="22px" height="22px" viewBox="0 0 22 22" class="icon">
-    <title>Untitled</title>
-    <desc>Created with Sketch.</desc>
-    <defs></defs>
-    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
-        <g id="Page-1-+-Oval-17" sketch:type="MSLayerGroup" transform="translate(1.000000, 1.000000)">
-            <path d="M17,10 L14,7 L14,9 L10,9 L10,11 L14,11 L14,13 L17,10 L17,10 Z M6,13 L6,11 L10,11 L10,9 L6,9 L6,7 L3,10 L6,13 L6,13 Z" id="Page-1" fill="#000000" sketch:type="MSShapeGroup" transform="translate(10.000000, 10.000000) rotate(-315.000000) translate(-10.000000, -10.000000) "></path>
-            <circle id="Oval-17" stroke="#000000" stroke-width="2" sketch:type="MSShapeGroup" cx="10" cy="10" r="10"></circle>
-        </g>
-    </g>
-</svg>`
-
-const measureAngleIconSvg = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg"
-  width="18px" height="18px" viewBox="0 0 18 18" class="icon">
-    <title>Untitled</title>
-    <desc>Created with Sketch.</desc>
-    <defs></defs>
-    <g id="Page-1" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd" sketch:type="MSPage">
-        <polygon id="Triangle-1" stroke="#000000" stroke-width="3" sketch:type="MSShapeGroup" points="0 0 18 18 0 18 "></polygon>
-    </g>
-</svg>`
 
 function makeTopToolBar(state){
   const selections = state.selections
@@ -144,23 +101,8 @@ function makeTopToolBar(state){
     </section>
   ]
 
-  const annotIcons = [<section>
-      {Menu({toggled: activeTool === 'addNote', icon: addNoteIconSvg, klass: 'addNote',
-        tooltip: 'add note', tooltipPos: 'bottom'})}
-
-      {Menu({toggled: activeTool === 'measureDistance', icon: measureDistanceIconSvg, klass: 'measureDistance',
-        tooltip: 'measure distance', tooltipPos: 'bottom'})}
-
-      {Menu({toggled: activeTool === 'measureThickness', icon: measureThicknessIconSvg, klass: 'measureThickness',
-        tooltip: 'measure thickness', tooltipPos: 'bottom'})}
-
-      {Menu({toggled: activeTool === 'measureDiameter', icon: measureDiameterIconSvg, klass: 'measureDiameter',
-        tooltip: 'measure diameter', tooltipPos: 'bottom'})}
-
-      {Menu({toggled: activeTool === 'measureAngle', icon: measureAngleIconSvg, klass: 'measureAngle',
-        tooltip: 'measure angle', tooltipPos: 'bottom'})}
-    </section>]
-
+  const annotIcons = [<section>{renderMeasurementsUi(state)}</section>]
+  
   const iconSets = {
     'view': viewIcons,
     'edit': editIcons,

@@ -28,17 +28,20 @@ export default function intent (DOM, params) {
 
   let keyUps$ = Rx.Observable.fromEvent(document, 'keyup') // DOM.select(":root").events("keyup")
     .filter(isValidElementEvent) // stop for input, select, and textarea etc
+
   const setActiveTool$ = merge(
     DOM.select('.toTranslateMode').events('click').map('translate'),
     DOM.select('.toRotateMode').events('click').map('rotate'),
     DOM.select('.toScaleMode').events('click').map('scale'),
     DOM.select('.toMirrorMode').events('click').map('mirror'),
 
-    DOM.select('.addNote').events('click').map('addNote'),
-    DOM.select('.measureDistance').events('click').map('measureDistance'),
-    DOM.select('.measureDiameter').events('click').map('measureDiameter'),
-    DOM.select('.measureThickness').events('click').map('measureThickness'),
-    DOM.select('.measureAngle').events('click').map('measureAngle'),
+    DOM.select('.toMeasureMode').events('click').map('measure'),
+    // sub items of measureMode
+      DOM.select('.addNote').events('click').map('addNote'),
+      DOM.select('.measureDistance').events('click').map('measureDistance'),
+      DOM.select('.measureDiameter').events('click').map('measureDiameter'),
+      DOM.select('.measureThickness').events('click').map('measureThickness'),
+      DOM.select('.measureAngle').events('click').map('measureAngle'),
 
     keyUps$.map(e => keycodes[e.keyCode]).filter(k => k === 'm').map('translate'),
     keyUps$.map(e => keycodes[e.keyCode]).filter(k => k === 't').map('translate'),
