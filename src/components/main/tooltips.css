@@ -1,3 +1,10 @@
+/*-----------------*/
+.toolTips .icon{ /* FIXME : is this still used ?*/
+  margin: -10px 0px;
+}
+/*other tooltips from:
+http://cbracco.me/a-simple-css-tooltip/
+*/
 /* Base styles for the element that has a tooltip */
 [data-tooltip],
 .tooltip {

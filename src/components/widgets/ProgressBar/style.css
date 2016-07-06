@@ -1,0 +1,13 @@
+/*progressbar*/
+.progressBar{
+  height: 5px;
+  width: 100%;
+  position: absolute;
+  top: 0px;
+  left: 0px;
+}
+.progressBar .fill{
+  background: rgb(0, 178, 255);
+  height: 100%;
+  position: absolute;
+}

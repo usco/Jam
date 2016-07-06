@@ -48,6 +48,16 @@ export function EntityInfosWrapper (state$, DOM) {
   }
   const props$ = makeEntityInfosProps(state$)
 
+  /*const props$ = state$.map(function(state){
+
+    const data = state.selections.instIds.reduce(function (acc, id) {
+      acc['transforms'].push(state.transforms[id])
+      acc['meta'].push(state.meta[id])
+      return acc
+    }, {transforms: [], meta: [], settings})
+    return assign({}, state, {__data: data})
+  })*/
+  
   // entity infos
   return EntityInfos({DOM, props$})
 }

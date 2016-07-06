@@ -1,0 +1,29 @@
+/*design card wrapper overlay*/
+.designCardWrapper{
+}
+
+.designCard{
+  position: absolute;
+  max-height: 90%;
+  color: #f5f5f5;
+  padding: 10px;
+  margin: 10px;
+  font-size: 0.8em;
+  background: #60c4f8;
+  z-index: 1;
+}
+.designCard h1{
+  padding: 5px;
+  padding-bottom: 10px;
+  font-weight: bold;
+  margin: 0px;
+}
+
+.designCard section{
+  margin: 5px;
+}
+
+.designCard .version{
+  font-size: 0.8em;
+  padding: 10px;
+}

@@ -36,7 +36,7 @@ export function renderRotatingUi (state) {
   let { transforms } = data
   if (transforms.length > 0) transforms = transforms[0]
 
-  const values = (transforms.rot || [0, 0, 0]).map(toDegree)//convert to degrees
+  const values = (transforms.rot || [0, 0, 0]).map(toDegree)// convert to degrees
 
   const subTools = <span className='rotationSubTools'>
     <div className='transformsGroup'>

@@ -19,10 +19,13 @@ import {renderMeasurementsUi} from './measurements'
 import {flatten} from 'ramda'
 
 require('./app.css')
-require('./tooltips.css')
+require('./leftToolbar.css')
 require('./topToolbar.css')
 require('./bottomToolBar.css')
 
+require('./tooltips.css')
+require('./notifications.css')
+require('../widgets/icon/style.css')
 
 /*
 function renderWebglError(){
@@ -40,7 +43,7 @@ function renderWebglError(){
   )
 }*/
 
-const duplicateIconSvg = `<svg width="27px" height="27px" viewBox="0 0 27 27" data-icon="duplicate" class="icon"
+const duplicateIcon = `<svg width="27px" height="27px" viewBox="0 0 27 27" data-icon="duplicate" class="icon"
 version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
     <title>duplicate</title>
@@ -55,7 +58,7 @@ version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/
 </svg>`
 
 
-const deleteIconSvg = `<svg width="27px" height="27px" viewBox="0 0 27 27" class='icon'
+const deleteIcon = `<svg width="27px" height="27px" viewBox="0 0 27 27" class='icon'
 version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
     <title>remove</title>
@@ -72,15 +75,10 @@ version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/
 
 
 
-function makeTopToolBar(state){
+function makeLeftToolbar(state){
   const selections = state.selections
   const activeTool = state.settings.activeTool
   const toggleControls = (selections && selections.instIds.length > 0)
-
-  const measureDistanceModeToggled = activeTool === 'rotate'
-  const measureThicknessModeToggled = activeTool === 'scale'
-
-  const notifications = state.notifications
 
   const viewIcons = []
 
@@ -93,16 +91,16 @@ function makeTopToolBar(state){
     </section>,
 
     <section>
-      {Menu({icon: duplicateIconSvg, klass: 'duplicate',
+      {Menu({icon: duplicateIcon, klass: 'duplicate',
         tooltip: 'duplicate', tooltipPos: 'bottom', disabledCondition: !toggleControls})}
 
-      {Menu({icon: deleteIconSvg, klass: 'delete',
+      {Menu({icon: deleteIcon, klass: 'delete',
         tooltip: 'delete', tooltipPos: 'bottom', disabledCondition: !toggleControls})}
     </section>
   ]
 
   const annotIcons = [<section>{renderMeasurementsUi(state)}</section>]
-  
+
   const iconSets = {
     'view': viewIcons,
     'edit': editIcons,
@@ -114,12 +112,8 @@ function makeTopToolBar(state){
     .map(toolSet => iconSets[toolSet])
     .filter(exists)
 
-  //{icons} this should work, but does not in snabdom
-
-  const notificationsBlock = h('section.notifications', [notifications])
-  return h('div.topToolbar', flatten([notificationsBlock, icons]))
+  return h('section#leftToolbar', flatten([icons]))
 }
-
 
 function renderUiElements(uiElements){
   const {state, settings, fsToggler, bom, gl, entityInfos, progressBar, help} = uiElements
@@ -135,40 +129,40 @@ function renderUiElements(uiElements){
     .map(tool => widgets[tool])
     .filter(exists)
     .map(widgetMaker=> widgetMaker(state, uiElements))
-    console.log('customWidgets', customWidgets)
-    console.log('toolSets', state.settings.toolSets)
+    //TODO: get rid of this, only used for bom
 
-  //this should work but does not (nested arrays) {customWidgets}
-
-  const topToolbar = makeTopToolBar(state)
+  const leftToolbar = makeLeftToolbar(state)
   const bottomToolBar = h('section#bottomToolBar', [settings, help, fsToggler])
+  const topToolbar = h('section#topToolBar', [ h('section.notifications', [state.notifications]) ])
 
   return h('div.jam', flatten([
     progressBar,
     gl,
 
+    leftToolbar,
     topToolbar,
     bottomToolBar,
+
     customWidgets
   ]))
 }
 
-function renderAnnotWidgets(state, uiElements){
+function renderAnnotWidgets (state, uiElements) {
   let {comments} = uiElements
   return [comments]
 }
 
-function renderEditWidgets(state, uiElements){
+function renderEditWidgets (state, uiElements) {
   let { entityInfos, bom } = uiElements
   return [entityInfos, bom]
 }
 
-function renderBomWidgets(state, uiElements){
+function renderBomWidgets (state, uiElements) {
   let { bom } = uiElements
   return [bom]
 }
 
-function renderViewWidgets(state, uiElements){
+function renderViewWidgets (state, uiElements) {
   let {} = uiElements
   return []
 }
@@ -176,8 +170,7 @@ function renderViewWidgets(state, uiElements){
 export default function view(state$, settings$, fsToggler$, bom$
   , gl$, entityInfos$, comment$, progressBar$, help$) {
 
-  return combineLatestObj({state$, settings$, fsToggler$, bom$
-  , gl$, entityInfos$, comment$, progressBar$, help$})
+  return combineLatestObj({state$, settings$, fsToggler$, bom$, gl$, entityInfos$, comment$, progressBar$, help$})
     .map(uiElements => {
       return renderUiElements(uiElements)
     })

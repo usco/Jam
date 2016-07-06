@@ -1,4 +1,5 @@
 import { html } from 'snabbdom-jsx'
+require('./style.css')
 
 export default function checkbox ({id, value, checked, name, className, disabled}) {
   return <div className='checkbox' disabled={disabled}>

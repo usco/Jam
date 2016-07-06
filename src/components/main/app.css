@@ -3,7 +3,6 @@ youmagine highlight blackish(old): #555555;
 youmagine highlight blue: #5bc3fa;
 youmagine base gray : #F5F5F5;
 
-
 ultimaker site pale blue(not used for now):#f5f5f5:
 */
 
@@ -18,8 +17,8 @@ body{
 #jamRoot/*external wrapper aka "where to put Jam into"*/
 {
   font-family: 'Open Sans', sans-serif;
-  /*-webkit-transition: opacity 0.5s ease-in;
-  opacity:1;*/
+  -webkit-transition: opacity 0.5s ease-in;
+  opacity:1;
 
   overflow:hidden;
 
@@ -105,8 +104,6 @@ button[disabled=disabled]:hover, button:disabled:hover{
   fill:lightgray;
 }
 
-
-
 /*button for toggling menus*/
 .containerToggler{
   width: 50px;
@@ -189,145 +186,6 @@ button[disabled=disabled]:hover, button:disabled:hover{
 }
 
 /*//////////////*/
-/*entity infos*/
-
-.toolbarBottom{
-  font-size: 13px;
-  position: absolute;
-  bottom: 0px;
-  left: 50px;
-  background: white;
-  width: 100%;
-  padding: 10px;
-}
-
-.nameInput {
-  width: 200px !important;
-  max-width: none !important;
-  font-weight: 700;
-}
-
-.toolbarBottom input[type=text]{
-  box-sizing:border-box;
-  -moz-box-sizing:border-box;
-
-  border: none;
-  border-width: 0px;
-
-
-  max-width: 150px;
-  border: none;
-  line-height: 0.8em;
-  font-size: 0.8em;
-  font-family: inherit;
-
-  text-overflow: ellipsis;
-}
-
-.toolbarBottom input[type=number]{
-  box-sizing:border-box;
-  -moz-box-sizing:border-box;
-
-  border: none;
-  border-width: 0px;
-
-  width:10em;
-  max-width: 50px;
-  border: none;
-  line-height: 0.8em;
-  font-size: 0.8em;
-  font-family: inherit;
-}
-
-/*.tooolbarBottom */input[type=color]{
-  width: 24px;
-  margin: 0;
-  border: 0px;
-  background: none;
-  padding: 0px;
-  height: 20px;
-}
-
-input[type=color]:focus{
-  outline: none;
-}
-
-.toolbarBottom input[type=text]:focus{
-  outline: none;
-}
-
-.toolbarBottom input[type=number]:focus{
-  outline: none;
-}
-
-.entityInfos .icon{
-  width: 16px;
-  height: 16px;
-  top: 4px;
-  position: relative;
-  padding: 0;
-}
-
-.entityInfos .icon path{
-  fill:#989898;
-}
-
-.entityInfos .icon:hover path{
-  background:none;
-  color:none;
-  fill:#989898;
-}
-
-
-.entityInfos .transformInput{
-  padding: 7 0 0 13px;
-}
-
-
-.color{
-  width: 24px;
-  margin: 0;
-  border: 0px;
-  padding: 0px;
-  height: 20px;
-  display: inline;
-  outline: none;
-
-      position: static;
-    float: left;
-    bottom: 0px;
-    left: 0px;
-}
-
-.colorPicker{
-
-}
-
-.colorPicker .body{
-  width: 150px;
-  height: 90px;
-  position: absolute;
-  bottom: 35px;
-  border: 1px solid #D8D8D8;
-  padding: 5px;
-}
-
-.colorPicker .body .mainGradient{
-  height: 70px;
-  width: 100%;
-  margin: 2px;
-}
-
-.colorPicker .body .smallGradient{
-  height: 20px;
-  width: 100%;
-  margin: 2px;
-  background: linear-gradient(to right, red, orange, yellow, green, blue, indigo, violet);
-
-}
-
-
-
 
 /*//////////////////*/
 /*spinner/loader*/
@@ -376,73 +234,7 @@ input[type=color]:focus{
   bottom: 48px;
 }
 
-
-
-
-
 /*//////////////*/
-/*design card wrapper overlay*/
-.designCardWrapper{
-}
-
-.designCard{
-  position: absolute;
-  max-height: 90%;
-  color: #f5f5f5;
-  padding: 10px;
-  margin: 10px;
-  font-size: 0.8em;
-  background: #60c4f8;
-  z-index: 1;
-}
-.designCard h1{
-  padding: 5px;
-  padding-bottom: 10px;
-  font-weight: bold;
-  margin: 0px;
-}
-
-.designCard section{
-  margin: 5px;
-}
-
-.designCard .version{
-  font-size: 0.8em;
-  padding: 10px;
-}
-
-
-.foo{
-  position: absolute;
-  right: 0px;
-  top:240px;
-}
-
-
-.icon{
-  /*width: 24px;
-  height: 24px;
-  padding: 4px;*/
-  width: 20px;
-  height: 20px;
-  padding: 8px;
-
-  /*stroke: #60C4F8;
-  stroke-width: 2;*/
-}
-
-/*ICONS*/
-
-.icon path{
-  fill:#dddddd;
-}
-
-.icon:hover path{
-  fill:#60C4F8;
-}
-
-
-/*----------------*/
 
 .glView{
   width: 100%;
@@ -568,29 +360,6 @@ div.largeIcon{
   color:rgb(194, 194, 194);
 }
 
-/*-----------------*/
-.toolTips .icon{
-  margin: -10px 0px;
-}
-
-/*progressbar*/
-.progressBar{
-  height: 5px;
-  width: 100%;
-  position: absolute;
-  top: 0px;
-  left: 0px;
-}
-.progressBar .fill{
-  background: rgb(0, 178, 255);
-  height: 100%;
-  position: absolute;
-}
-
-/*other tooltips from:
-http://cbracco.me/a-simple-css-tooltip/
-*/
-
 .transformsGroup{
   display: flex;
   flex-direction: column;
@@ -685,7 +454,6 @@ http://cbracco.me/a-simple-css-tooltip/
   background-color: #5bc3fa;
 }
 
-
 .transformsGroup .unit{
   color: #aaa;
   padding: 0 10 0 0;
@@ -694,81 +462,6 @@ http://cbracco.me/a-simple-css-tooltip/
 
 .optionsGroup{
   display: flex;
-}
-
-
-.checkbox{
-  width: 28px;
-  height: 28px;
-  top: 0px;/*-4px;*/
-  background: white;
-  position: relative;
-  padding: 0;
-  margin: 0;
-  margin-right: 10px;
-  display: inline-block;
-  border: 1px solid #E5E5E5;
-}
-.checkbox input[type=checkbox] {
-	visibility: hidden;
-}
-
-.checkbox label {
-  cursor: pointer;
-  position: absolute;
-  width: 20px;
-  height: 20px;
-  left: 4px;
-  top: 4px;
-}
-
-.checkbox label:after {
-  -ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=0)";
-	filter: alpha(opacity=0);
-	opacity: 0;
-	content: '';
-	position: absolute;
-	width: 9px;
-	height: 5px;
-	background: transparent;
-	top: 4px;
-	left: 4px;
-	border: 3px solid black;
-	border-top: none;
-	border-right: none;
-
-	-webkit-transform: rotate(-45deg);
-	-moz-transform: rotate(-45deg);
-	-o-transform: rotate(-45deg);
-	-ms-transform: rotate(-45deg);
-	transform: rotate(-45deg);
-
-}
-
-.checkbox label:hover::after {
-	-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=30)";
-	filter: alpha(opacity=30);
-	opacity: 0.3;
-}
-
-.checkbox input[type=checkbox]:checked + label:after {
-	-ms-filter: "progid:DXImageTransform.Microsoft.Alpha(Opacity=100)";
-	filter: alpha(opacity=100);
-	opacity: 1;
-}
-
-#test{
-  position: absolute;
-  z-index: 10;
-  left: 100;
-  top: 300;
-}
-
-.notifications{
-  color: #A5A5A5;
-  font-size: 0.7em;
-  margin-top: -10px;
-  vertical-align: text-top;
 }
 
 .movingSubTools{
@@ -784,4 +477,12 @@ http://cbracco.me/a-simple-css-tooltip/
 .scalingSubTools{
   width: 270px;
   display: block;
+}
+
+
+#test{
+  position: absolute;
+  z-index: 10;
+  left: 100;
+  top: 300;
 }
