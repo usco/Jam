@@ -191,6 +191,7 @@ export default function view (state$) {
       }
 
       function getInputField (row, name) {
+        //FIXME: data attributes should be added to these directly
         const placeholder = row.hasOwnProperty('_adder') ? 'f.e:velcro, nuts, bolts' : 'not specified'
         const isDynamic = row.dynamic // row['_qtyOffset'] !== 0 ? true: false //are we dealing with a 'dynamic' entry ie from a 3d file
         const disabled = (isDynamic && (name === 'phys_qty' || name === 'unit')) || readOnly// if readony or if we have a dynamic entry called phys_qty, disable
