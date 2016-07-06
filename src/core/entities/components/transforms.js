@@ -11,7 +11,7 @@ export function makeTransformsSystem (actions) {
     sca: [ 1, 1, 1 ]
   }
   const snapDefaults = {
-    pos: 0.1, // snap translation snaps to 0.1 units 
+    pos: 0.1, // snap translation snaps to 0.1 units
     rot: 10, // snap rotation snaps to tens of degrees
     sca: 0.1 // snap scaling snaps to tens of percentages
   }
