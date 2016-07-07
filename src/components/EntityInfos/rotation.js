@@ -7,7 +7,7 @@ import {transformInputs} from './helpers'
 import { toDegree } from '../../utils/formatters'
 
 
-const mainIcon = `<svg width="25px" height="24px" viewBox="0 0 25 24" class='icon'
+const icon = `<svg width="25px" height="24px" viewBox="0 0 25 24" class='icon'
 version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
     <title>rotate</title>
@@ -18,10 +18,10 @@ version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/
     </g>
 </svg>`
 
-export function renderRotatingUi (state) {
+export function renderRotationUi (state) {
   const settings = state.settings
   const activeTool = state.settings.activeTool
-  const rotateModeToggled = activeTool === 'rotate'
+  const toggled = activeTool === 'rotate'
 
   const snapDefaults = 10 // snap rotation snaps to tens of degrees
   const transformStep = settings.snapRotation ? snapDefaults : 0.5
@@ -50,10 +50,10 @@ export function renderRotatingUi (state) {
     </div>
   </span>
 
-  return Menu({toggled: rotateModeToggled, icon: mainIcon, klass: 'toRotateMode',
+  return Menu({toggled, icon, klass: 'toRotateMode',
     tooltip: 'rotate', tooltipPos: 'bottom', content: subTools})
 }
 
 export function view (state$) {
-  return state$.map(renderRotatingUi)
+  return state$.map(renderRotationUi)
 }

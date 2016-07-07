@@ -10,9 +10,9 @@ import {exists} from '../../utils/utils'
 
 import Menu from '../widgets/Menu'
 
-import {renderMovingUi} from '../EntityInfos/moving'
-import {renderScalingUi} from '../EntityInfos/scaling'
-import {renderRotatingUi} from '../EntityInfos/rotating'
+import {renderPositionUi} from '../EntityInfos/position'
+import {renderRotationUi} from '../EntityInfos/rotation'
+import {renderScaleUi} from '../EntityInfos/scale'
 import {renderMirroringUi} from '../EntityInfos/mirroring'
 
 import {renderMeasurementsUi} from './measurements'
@@ -82,9 +82,9 @@ function renderLeftToolbar (state) {
 
   const editIcons = [
     <section>
-      {renderMovingUi(state)}
-      {renderRotatingUi(state)}
-      {renderScalingUi(state)}
+      {renderPositionUi(state)}
+      {renderRotationUi(state)}
+      {renderScaleUi(state)}
       {renderMirroringUi(state)}
     </section>,
 

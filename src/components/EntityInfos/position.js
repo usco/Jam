@@ -5,7 +5,7 @@ import checkbox from '../widgets/Checkbox'
 import {transformInputs} from './helpers'
 
 
-const mainIcon = `<svg width="29px" height="29px" viewBox="0 0 29 29" class='icon'
+const icon = `<svg width="29px" height="29px" viewBox="0 0 29 29" class='icon'
 version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
     <title>move</title>
@@ -16,10 +16,10 @@ version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/
     </g>
 </svg>`
 
-export function renderMovingUi (state) {
+export function renderPositionUi (state) {
   const settings = state.settings
   const activeTool = settings.activeTool
-  const translateModeToggled = activeTool === 'translate'
+  const toggled = activeTool === 'translate'
 
   const transformStep = 0.1
   const precision = 2
@@ -47,10 +47,10 @@ export function renderMovingUi (state) {
     </div>
   </span>
 
-  return Menu({toggled: translateModeToggled, icon: mainIcon, klass: 'toTranslateMode',
+  return Menu({toggled, icon, klass: 'toTranslateMode',
      tooltip: 'move', tooltipPos: 'bottom', content: subTools})
 }
 
 export function view (state$) {
-  return state$.map(renderMovingUi)
+  return state$.map(renderPositionUi)
 }
