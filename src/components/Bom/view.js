@@ -75,7 +75,7 @@ export default function view (state$) {
 
       function getAdderRow (adderFieldsArray) {
         return adderFieldsArray.map(function (row, index) {
-          const placeholder = 'f.e:velcro, nuts, bolts'
+          const placeholder = row.hasOwnProperty('_adder') ? 'f.e:velcro, nuts, bolts' : 'not specified'
           let cells = getCells(row, placeholder)
           const adder = h('tr.adderRow', cells)
             /*  <tr className='adderRow'>
@@ -132,7 +132,7 @@ export default function view (state$) {
         }
       }
 
-      function getCells (row) {
+      function getCells (row, placeholder) {
         const baseClassName = row.hasOwnProperty('_adder') ? 'adder cell' : 'bomEntry cell'
         let cells = fieldNames.map(function (name) {
           const columnName = 'column' + fieldNames.indexOf(name)
@@ -140,7 +140,7 @@ export default function view (state$) {
           let cellToolTip
           cellToolTip = readOnly ? undefined : cellToolTip // if the field is disabled do not add any extra toolTip
 
-          let value = getInputField(row, name)
+          let value = getInputField(row, name, placeholder)
           return h('td',
             {props: {className: `${baseClassName} ${columnName} ${name}`},
             attrs: {'data-name': name, 'data-id': row.id}}, [value])
@@ -190,9 +190,8 @@ export default function view (state$) {
         }
       }
 
-      function getInputField (row, name) {
-        //FIXME: data attributes should be added to these directly
-        const placeholder = row.hasOwnProperty('_adder') ? 'f.e:velcro, nuts, bolts' : 'not specified'
+      function getInputField (row, name, placeholder) {
+        //FIXME: data attributes should be added to these directly?
         const isDynamic = row.dynamic // row['_qtyOffset'] !== 0 ? true: false //are we dealing with a 'dynamic' entry ie from a 3d file
         const disabled = (isDynamic && (name === 'phys_qty' || name === 'unit')) || readOnly// if readony or if we have a dynamic entry called phys_qty, disable
         const dataValue = (isDynamic && name === 'phys_qty') ? null : row[name]
@@ -282,31 +281,31 @@ export default function view (state$) {
         }
       }
 
-      function getFieldsArray (property, include = true) {
+      function getFieldsArray (entries, property, include = true) {
         // this function can also exclude by property by calling fillFieldsArray('property', false)
         // add editable row for new entries before all the rest
         const uiEntries = readOnly ? entries : prepend(newEntryValues, entries)
-        let array = []
-        uiEntries.map(function (row, index) {
+        const fieldsArray = uiEntries.map(function (row, index) {
+          const valid = include && row.hasOwnProperty(property)
+          //if( valid || !valid )
           if (include && row.hasOwnProperty(property)) {
-            array.push(row)
+            return row
           }
           if (!include && !row.hasOwnProperty(property)) {
-            array.push(row)
+            return row
           }
         })
-        return array
+        .filter(x => x !== undefined)
+        return fieldsArray
       }
 
       // THIS PART ACTUALLY RETURNS THE BOM
       let content
       let header = getHeaderRow()
-      let adder = !readOnly ? getAdderRow(getFieldsArray('_adder')) : ''
+      let adder = !readOnly ? getAdderRow([newEntryValues]) : ''
       if(adder) adder = adder[0] // FIXME hack, snabdom
 
-      let body = getTableBody(getFieldsArray('_adder', false))
-        //console.log('entries', entries, entries.length)
-        //style={`height: ${(entries.length)*42+60}px`}
+      let body = getTableBody(getFieldsArray(entries, '_adder', false))
         content =
           <div className={Class('tableContainer', {toggled})}>
             <table id='tableheader'>

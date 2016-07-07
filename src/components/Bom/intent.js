@@ -62,6 +62,7 @@ export default function intent (DOM) {
       e.preventDefault()
       return false
     })
+    .share()
     .tap(e=>console.log('addEntryTapped'))
     // .map(e=>getFormResults(e.target))
 
@@ -77,16 +78,17 @@ export default function intent (DOM) {
     printable$: DOM.select('.bom .adder [name="printable"]').events('change')
       .map(e => e.target.checked).startWith(false)
   })
-    .merge(addEntryTapped$.map(({name: '', qty: 0, phys_qty: 0, unit: 'EA', printable: false})).delay(10)) // FIXME AWFULL HACK
+    .share()
 
-  const addEntry$ = addEntryTapped$ // newEntryValues$
+  const addEntry$ = addEntryTapped$
     .withLatestFrom(newEntryValues$, (_, data) => data)
     .filter(data => data.name !== '')
     .map(function (data) { // inject extra data
       return mergeData({}, data, {id: generateUUID()})
     })
-    .share() // VERY important, you don't want duplicate uuid generation etc
     .tap(e=>console.log("raw addEntry data",e))
+    .share() // VERY important, you don't want duplicate uuid generation etc
+
     //  const addEntry$ = getFieldValues({name:'', qty:0, phys_qty:0, unit:'EA', printable:false}, DOM, '.bom .adder', addEntryTapped$)
 
   DOM.select('.textInput').events('keydown')

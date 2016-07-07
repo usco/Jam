@@ -71,12 +71,12 @@ export default function model (props$, actions) {
     const newEntryDefaults = {
       name: '',
       qty: 0,
-      _qtyOffset: 0,// this is for "dynamic" entities only , and should be disregarded when saving the bom
+      _qtyOffset: 0, // this is for "dynamic" entities only , and should be disregarded when saving the bom
       phys_qty: 0,
       version: '0.0.1',
       unit: 'EA',
       printable: false,
-      _adder: true,// special flag for adder
+      _adder: true, // special flag for adder
       id: generateUUID() // this is a what allows forcing the dom to refresh
     }
     return newEntryDefaults
@@ -85,6 +85,7 @@ export default function model (props$, actions) {
   const newEntryValues$ = actions.addEntry$
     .map(e => (makeNewEntryDefaults()))
     .startWith(makeNewEntryDefaults())
+    .tap(e=>console.log('reseting add entry field to', e))
 
   return combineLatestObj({entries$: sortedEntries$, selectedEntries$, fieldNames$, sortFieldName$, sortablesDirection$, editableFields$, fieldDescriptions$, fieldTypes$, units$,
   newEntryValues$, toggled$, removeEntryRequested$, readOnly$})
