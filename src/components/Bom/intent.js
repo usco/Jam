@@ -32,7 +32,7 @@ export default function intent (DOM) {
   const removeEntryRequest$ = DOM.select('.bom .removeBomEntry').events('click')
     .tap(e => e.stopPropagation())
     .map(function (e) {
-      const actualTarget = e.target.dataset
+      const actualTarget = e.currentTarget.dataset
       return {
         id: actualTarget.id
       }
@@ -136,7 +136,6 @@ export default function intent (DOM) {
     , checkEntry$
     , entryOptionChange$
   )
-  .filter(x => x.id !== undefined)
   .tap(e=>console.log('editEntry',e))
 
   const toggle$ = DOM.select('.bomToggler')
