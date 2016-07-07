@@ -122,6 +122,57 @@
   display: block;
 }
 
+.nameAndColorSubTools{
+  width: 270px;
+  display: block;
+  padding: 10px;
+}
+
+.nameAndColorSubTools input[type=text] {
+  text-overflow: ellipsis;
+  font-size: 0.8em !important;
+  margin-left: 5px;
+}
+
+.nameAndColorSubTools label {
+  padding: 5px;
+  background: #cacaca;
+  color: white;
+  width:20%;
+}
+
+.nameAndColorSubTools span{
+  display: inline-flex;
+  width: 100%;
+  margin-top: 4px;
+}
+
+.nameAndColorSubTools .inputWrapper{
+  width: 80%;
+  border: 1px solid #cacaca !important;
+  padding: 0;
+  margin: 0;
+}
+
+.nameAndColorSubTools input[type=color]{
+  width: 100%;
+  /*margin: 0;
+  border: 0px;
+  background: none;
+  padding: 0px;
+  height: 26px;*/
+
+  opacity: 0;
+   display: block;
+   height: 22px;
+   border: none;
+}
+
+.nameAndColorSubTools input[type=color]:focus{
+  outline: none;
+}
+
+
 
 /* TODO: remove, deprecated
 .toolbarBottom{
@@ -171,19 +222,6 @@
   font-size: 0.8em;
   font-family: inherit;
 }*/
-
-/*.tooolbarBottom */input[type=color]{
-  width: 24px;
-  margin: 0;
-  border: 0px;
-  background: none;
-  padding: 0px;
-  height: 20px;
-}
-
-input[type=color]:focus{
-  outline: none;
-}
 
 .toolbarBottom input[type=text]:focus{
   outline: none;

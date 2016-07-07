@@ -10,6 +10,7 @@ import {exists} from '../../utils/utils'
 
 import Menu from '../widgets/Menu'
 
+import {renderNameAndColorUi} from '../EntityInfos/nameAndColor'
 import {renderPositionUi} from '../EntityInfos/position'
 import {renderRotationUi} from '../EntityInfos/rotation'
 import {renderScaleUi} from '../EntityInfos/scale'
@@ -82,6 +83,7 @@ function renderLeftToolbar (state) {
 
   const editIcons = [
     <section>
+      {renderNameAndColorUi(state)}
       {renderPositionUi(state)}
       {renderRotationUi(state)}
       {renderScaleUi(state)}
