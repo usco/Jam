@@ -30,6 +30,7 @@ export default function intent (DOM, params) {
     .filter(isValidElementEvent) // stop for input, select, and textarea etc
 
   const setActiveTool$ = merge(
+    DOM.select('.toNameAndColorMode').events('click').map('nameAndColor'),
     DOM.select('.toTranslateMode').events('click').map('translate'),
     DOM.select('.toRotateMode').events('click').map('rotate'),
     DOM.select('.toScaleMode').events('click').map('scale'),
