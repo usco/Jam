@@ -1,4 +1,4 @@
-
+require('./style.css')
 import Rx from 'rx'
 const {just} = Rx.Observable
 import { html } from 'snabbdom-jsx'
