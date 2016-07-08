@@ -112,10 +112,12 @@ export function makeTransformsSystem (actions) {
   function applySnapStates (id, transformation, settings) {
     console.log('applySnapStates')
     let {uniformScaling, snapScaling, snapRotation, snapTranslation} = settings
+
     if (uniformScaling) { transformation.sca = applyUniformScaling(transformation.sca) }
     if (snapScaling) { transformation.sca = applySnapping(transformation.sca, snapDefaults.sca) }
     if (snapTranslation) { transformation.pos = applySnapping(transformation.pos, snapDefaults.pos) }
     if (snapRotation) { transformation.rot = applySnapping(transformation.rot, snapDefaults.rot, (2 * Math.PI)) }
+
     return transformation
   }
 

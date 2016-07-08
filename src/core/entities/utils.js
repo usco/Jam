@@ -1,6 +1,6 @@
 import Rx from 'rx'
 const merge = Rx.Observable.merge
-import { generateUUID } from '../../utils/utils'
+import { generateUUID, toArray } from '../../utils/utils'
 import { mergeData } from '../../utils/modelUtils'
 
 // function to add extra data to all entity component actions
@@ -130,9 +130,11 @@ export function remapTransformActions (entityActions, componentBase$, currentSel
   const updateComponents$ = entityActions.updateComponent$
     .filter(u => u.target === 'transforms')
     .pluck('data')
-    .withLatestFrom(currentSelections$.map(s => s.map(s => s.id)),settings$, function (transforms, instIds, settings) {
-      return instIds.map(function (instId) {
-        return {id: instId, value: transforms, settings}
+    .map(toArray)// we always expect arrays of data
+    .withLatestFrom(currentSelections$.map(s => s.map(s => s.id)), settings$, function (transforms, instIds, settings) {
+      // if there is a mismatch between transforms & selections count, use the first transform
+      return instIds.map(function (instId, index) {
+        return {id: instId, value: transforms[index] || transforms[0], settings}
       })
     })
 

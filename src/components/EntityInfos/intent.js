@@ -59,12 +59,15 @@ export default function intent (DOM) {
       console.log('there', val, idx)
 
       return {val, trans, idx: parseInt(idx, 10)}
+      //return {}
     })
     .filter(exists)
     .filter(data => isNumber(data.val))
     .distinctUntilChanged()
     // .debounce(20)
     .shareReplay(1)
+
+    //output[changed.trans][changed.idx] = changed.val
 
   const changeMeta$ = merge(
     changeName$.map(function (value) { return {name: value} })

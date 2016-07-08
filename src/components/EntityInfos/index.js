@@ -3,15 +3,15 @@ import { combineLatestObj, exists } from '../../utils/obsUtils'
 // import Comments from '../Comments'
 import view from './view'
 import intent from './intent'
+import assign from 'fast.js/object/assign' // faster object.assign
 
-////////
+// //////
 function model (props$, actions) {
-  let comments$ = props$.pluck('comments').filter(exists).startWith(undefined)
-  let meta$ = props$.pluck('meta').filter(exists).startWith(undefined)
-  let transforms$ = props$.pluck('transforms').filter(exists).startWith(undefined)
-  let settings$ = props$.pluck('settings').filter(exists).startWith(undefined)
-
-  return combineLatestObj({meta$, transforms$, comments$, settings$})
+  return props$.map(function (props) {
+    const {comments, meta, transforms, settings} = props
+    return {comments, meta, transforms, settings}
+  })
+    .startWith({comments: undefined,meta: undefined, transforms: undefined, settings: undefined})
     .distinctUntilChanged()
     .shareReplay(1)
 }
@@ -20,18 +20,17 @@ function model (props$, actions) {
 function refineActions (props$, actions) {
   const transforms$ = props$.pluck('transforms')
     .filter(exists)
-    .map(e => e[0])
-    .filter(exists)
 
   const changeTransforms$ = actions.changeTransforms$
     .withLatestFrom(transforms$, function (changed, transforms) {
-      // let bla = assign({},transforms) // this does not create a new instance huh WHY????
-      // let output = mergeData(transforms) //not working either ????
-      let output = JSON.parse(JSON.stringify(transforms))
-
-      output[changed.trans][changed.idx] = changed.val
-      console.log('output', output)
-      return output
+      return transforms.map(function(transform){
+        // let output = assign({},transforms) // this does not create a new instance huh WHY????
+        // let output = mergeData(transforms) // not working either ????
+        let output = JSON.parse(JSON.stringify(transform))
+        output[changed.trans][changed.idx] = changed.val
+        console.log('output', output)
+        return output
+      })
     })
   return {
     changeMeta$: actions.changeMeta$,
@@ -50,7 +49,6 @@ function EntityInfos ({DOM, props$}, name = '') {
     events: {
       changeMeta$,
       changeTransforms$
-    // addComment$
     }
   }
 }
