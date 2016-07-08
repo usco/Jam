@@ -6,14 +6,8 @@ import { html } from 'snabbdom-jsx'
 import { formatNumberTo, absSizeFromBBox, toDegree } from '../../utils/formatters'
 import { isEmpty } from '../../utils/utils'
 // //////
-import ColorPicker from '../widgets/ColorPicker'
 import assign from 'fast.js/object/assign' // faster object.assign
 
-export function colorPickerWrapper (state$, DOM) {
-  const props$ = just({color: '#FF00FF'})
-
-  return ColorPicker({DOM, props$})
-}
 
 function absSizeInput (entity, controlsStep, numberPrecision, changeHandler) {
   /* display / control object transforms: posistion,rotation,scale etc

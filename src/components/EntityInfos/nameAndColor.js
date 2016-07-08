@@ -30,7 +30,6 @@ export function renderNameAndColorUi (state) {
 
   const meta = data.meta.length > 0 ? data.meta[0] : data.meta
 
-  console.log('meta', meta)
   const subTools = <span className='nameAndColorSubTools'>
     <div className='formGroup'>
       <span>
