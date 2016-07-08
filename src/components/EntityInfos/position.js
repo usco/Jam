@@ -4,6 +4,8 @@ import Menu from '../widgets/Menu'
 import checkbox from '../widgets/Checkbox'
 import {transformInputs} from './helpers'
 
+import {pluck} from 'ramda'
+
 
 const icon = `<svg width="29px" height="29px" viewBox="0 0 29 29" class='icon'
 version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -32,6 +34,15 @@ export function renderPositionUi (state) {
 
   let { transforms } = data
   if (transforms.length > 0) transforms = transforms[0]
+
+  // compute the average position
+  const avgPosition = pluck('pos')(data.transforms)
+    .reduce(function (acc, cur) {
+      if(!acc) return cur
+      return [acc[0] + cur[0], acc[1] + cur[1], acc[2] + cur[2]].map(x => x * 0.5)
+    }, undefined)
+
+  console.log('avgPosition', avgPosition)
 
   const values = transforms.pos || [0, 0, 0]
 
