@@ -25,7 +25,7 @@ export function transformInputs (options) {
         h(`input#${axisName}-scale-pcent`,
           { key: `${fieldName}-${axisName}-${index}-percent`, // VERY important, without this, unexpected controls
             props: {type: 'number', lang: 'en', className: 'transformsInputPercent percent', value: valuePercent, step: stepPercents},
-            attrs: {'data-transform': `${fieldName}_${index}`}
+            attrs: {'data-transform': `${fieldName}_${index}_percent`}
           }),
         h('span.unit', ['%'])
       ]) : ''
@@ -38,7 +38,7 @@ export function transformInputs (options) {
       return h('span', {props: {className: `axisData ${axisName}-axis`}}, [
         h('span.valueGroup', [
           h('span.axisName', [axisName.toUpperCase()]),
-          h(`input#${axisName}-scale`,
+          h(`input#${axisName}-${fieldName}`,
             { key: `${fieldName}-${axisName}-${index}`, // VERY important, without this, unexpected controls
               props: {type: 'number', lang: 'en', className: 'transformsInput value', value, step},
               attrs: {'data-transform': `${fieldName}_${index}`}

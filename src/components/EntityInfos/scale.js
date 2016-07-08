@@ -23,8 +23,8 @@ export function renderScaleUi (state) {
   const activeTool = settings.activeTool
   const toggled = activeTool === 'scale'
 
-  const snapDefaults = 10 // snap scaling snaps to tens of percentages
-  const transformStep = settings.snapScaling ? snapDefaults : 0.01
+  const snapDefaults = 0.1 // snap scaling snaps to tens of percentages
+  const transformStep = settings.snapScaling ? snapDefaults : 0.1
   const precision = 2
 
   const data = state.selections.instIds.reduce(function (acc, id) {
