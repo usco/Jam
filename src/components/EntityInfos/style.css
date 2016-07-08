@@ -20,6 +20,13 @@
   background: white;
   border: none;
 }
+
+.transformsGroup input[type=number]:disabled{
+  color: lightgray;
+}
+
+
+
 .transformsGroup .percent {
   color: #828282;
   width: 50px;

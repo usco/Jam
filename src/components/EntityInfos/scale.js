@@ -26,21 +26,43 @@ export function renderScaleUi (state) {
   const snapDefaults = 0.1 // snap scaling snaps to tens of percentages
   const transformStep = settings.snapScaling ? snapDefaults : 0.1
   const precision = 2
+  const min = 0.01
 
   const data = state.selections.instIds.reduce(function (acc, id) {
     acc['transforms'].push(state.transforms[id])
     acc['meta'].push(state.meta[id])
+    acc['bounds'].push(state.meshes[id])
     return acc
-  }, {transforms: [], meta: [], settings})
+  }, {transforms: [], meta: [], bounds: [], settings}) // FIXME: should be based on bounds component, not meshes
 
-  let { transforms } = data
+  let { transforms, bounds } = data
   if (transforms.length > 0) transforms = transforms[0]
+  if (bounds.length >= 0){
+    if(bounds.length > 0){
+      bounds = bounds[0]
+    }
+    try{
+      const bbox = bounds.geometry.boundingBox
+      const bsph = bounds.geometry.boundingSphere
+      bounds = {
+        dia: bounds.geometry.boundingSphere.radius * 2,
+        center: bounds.geometry.boundingSphere.center.toArray(),
+        min: bounds.geometry.boundingBox.min.toArray(),
+        max: bounds.geometry.boundingBox.max.toArray(),
+        //size: bounds.geometry.boundingBox.max.sub(bounds.geometry.boundingBox.min).toArray()
+      }
+      bounds.size = [bounds.max[0] - bounds.min[0], bounds.max[1] - bounds.min[1], bounds.max[2] - bounds.min[2]]
+      //bound.size = bound.size.map((x, index) => x * transforms.sca[index])
+    }catch(error){}
+  }
 
   const valuePercents = (transforms.sca || [0, 0, 0]).map(x => x * 100)
+  const values = (bounds.size  || [0,0,0]).map((x, index) => x * valuePercents[index]/100)
 
   const subTools = <span className='scalingSubTools'>
     <div className='transformsGroup'>
-      {transformInputs({fieldName: 'sca', unit: 'mm', showPercents: true, step: transformStep, valuePercents, precision})}
+      {transformInputs({fieldName: 'sca', unit: 'mm', showPercents: true, step: transformStep, values, valuePercents, precision, min,
+      disabled: true})}
     </div>
 
     <div className='optionsGroup'>

@@ -25,20 +25,36 @@ export default function intent (DOM) {
     .shareReplay(1)
 
 
-  const changeTransforms$ = merge(
+    const changeTransforms$ = merge(
     DOM.select('.transformsInput').events('change'),
-    DOM.select('.transformsInput').events('blur')
-    //DOM.select('.transformsInput').events('input')
+    DOM.select('.transformsInput').events('blur'),
+    DOM.select('.transformsInput').events('input'),
+
+    //special one for scaling
+    DOM.select('.transformsInputPercent').events('change'),
+    DOM.select('.transformsInputPercent').events('blur'),
+    DOM.select('.transformsInputPercent').events('input')
   )
     .map(function (e) {
       let val = parseFloat(e.target.value)
-      let dtrans = e.target.attributes['data-transform'].value
-      let [trans, idx] = dtrans.split('_')
+      const attributes = e.target.dataset
+      let dtrans = attributes.transform
+      let [trans, idx, extra] = dtrans.split('_')
       if (trans === 'rot') { // convert rotated values back from degrees to radians
         val = toRadian(val)
       }
+
       if(trans === 'sca') {
-        val = val / 100
+        if(extra === 'percent'){
+          val = val / 100
+          console.log('scale',val, extra)
+        }
+        else{
+          return undefined
+        }
+      }
+      if(trans === 'pos') {
+        //we are dealing with offsets, NOT absolute positions
       }
       console.log('there', val, idx)
 

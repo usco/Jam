@@ -9,13 +9,17 @@ export function transformInputs (options) {
     values: [0, 0, 0],
     step: 0.1,
     precision: 2,
+    min: Number.NEGATIVE_INFINITY,
+    disabled: false,
 
     valuePercents: [0, 0, 0],
     stepPercents: 1,
     showPercents: false,
+    disabledPercents: false,
+
     axes: ['x', 'y', 'z']
   }
-  const {fieldName, unit, values, step, precision, valuePercents, stepPercents, showPercents, axes} = Object.assign({}, defaults, options)
+  const {fieldName, unit, values, step, precision, min, disabled, valuePercents, stepPercents, showPercents, disabledPercents, axes} = Object.assign({}, defaults, options)
 
   return axes
     .map(function (axisName, index) {
@@ -24,7 +28,7 @@ export function transformInputs (options) {
       const percentGroup = showPercents ? h('span.percentGroup', [
         h(`input#${axisName}-scale-pcent`,
           { key: `${fieldName}-${axisName}-${index}-percent`, // VERY important, without this, unexpected controls
-            props: {type: 'number', lang: 'en', className: 'transformsInputPercent percent', value: valuePercent, step: stepPercents},
+            props: {type: 'number', lang: 'en', className: 'transformsInputPercent percent', value: valuePercent, step: stepPercents, disabled: disabledPercents},
             attrs: {'data-transform': `${fieldName}_${index}_percent`}
           }),
         h('span.unit', ['%'])
@@ -40,7 +44,7 @@ export function transformInputs (options) {
           h('span.axisName', [axisName.toUpperCase()]),
           h(`input#${axisName}-${fieldName}`,
             { key: `${fieldName}-${axisName}-${index}`, // VERY important, without this, unexpected controls
-              props: {type: 'number', lang: 'en', className: 'transformsInput value', value, step},
+              props: {type: 'number', lang: 'en', className: 'transformsInput value', value, step, disabled},
               attrs: {'data-transform': `${fieldName}_${index}`}
             }),
           h('span.unit', [unit])
