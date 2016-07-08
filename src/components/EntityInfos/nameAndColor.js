@@ -28,7 +28,8 @@ export function renderNameAndColorUi (state) {
     return acc
   }, {transforms: [], meta: [], settings})
 
-  const meta = data.meta.length > 0 ? data.meta[0] : data.meta
+  let meta = data.meta.length > 0 ? data.meta[0] : data.meta
+  meta = meta || {name: undefined, color: '#FFFFFF'}
 
   const subTools = <span className='nameAndColorSubTools'>
     <div className='formGroup'>
