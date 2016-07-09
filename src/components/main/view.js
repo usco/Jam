@@ -16,6 +16,8 @@ import {renderRotationUi} from '../EntityInfos/rotation'
 import {renderScaleUi} from '../EntityInfos/scale'
 import {renderMirroringUi} from '../EntityInfos/mirroring'
 
+import renderProgressBar from '../widgets/ProgressBar'
+
 import {renderMeasurementsUi} from './measurements'
 import {flatten, uniq} from 'ramda'
 
@@ -127,8 +129,13 @@ function renderRightToolbar (state, {bom}) {
   return h('section#rightToolbar', widgets)
 }
 
+function renderTopToolbar (state) {
+  const progressBar = renderProgressBar({progress: state.operationsInProgress * 100})
+  return h('section#topToolBar', [ h('section.notifications', [state.notifications]), progressBar ])
+}
+
 function renderUiElements (uiElements) {
-  const {state, settings, fsToggler, bom, gl, entityInfos, progressBar, help} = uiElements
+  const {state, settings, fsToggler, bom, gl, entityInfos, help} = uiElements
 
   const widgetsMapping = {
     //'comments': comments,
@@ -144,7 +151,7 @@ function renderUiElements (uiElements) {
   const leftToolbar = renderLeftToolbar(state)
   const rightToolbar = renderRightToolbar(state, uiElements)
   const bottomToolBar = h('section#bottomToolBar', [settings, help, fsToggler])
-  const topToolbar = h('section#topToolBar', [ h('section.notifications', [state.notifications]), progressBar ])
+  const topToolbar = renderTopToolbar(state)
 
   return h('div.jam', flatten([
     gl,
@@ -167,8 +174,8 @@ function widgetNamesByToolSet (toolset) {
 }
 
 export default function view(state$, settings$, fsToggler$, bom$
-  , gl$, entityInfos$, comment$, progressBar$, help$) {
+  , gl$, entityInfos$, comment$, help$) {
 
-  return combineLatestObj({state$, settings$, fsToggler$, bom$, gl$, entityInfos$, comment$, progressBar$, help$})
+  return combineLatestObj({state$, settings$, fsToggler$, bom$, gl$, entityInfos$, comment$, help$})
     .map(renderUiElements)
 }

@@ -28,15 +28,13 @@ export default function main (sources) {
   const comments = CommentsWrapper(state$, DOM)
   const gl = GLWrapper(state$, sources)
   const bom = BOMWrapper(state$, DOM)
-  const progressBar = progressBarWrapper(state$, DOM)
-
   const settingsC = Settings({DOM, props$: state$})
   const fsToggler = FullScreenToggler({DOM})
   const help = Help({DOM, props$: state$})
 
   // outputs
   const vtree$ = view(state$, settingsC.DOM, fsToggler.DOM, bom.DOM, gl.DOM
-    , entityInfos.DOM, comments.DOM, progressBar.DOM, help.DOM)
+    , entityInfos.DOM, comments.DOM, help.DOM)
   const events$ = just({
     gl: gl.events,
     entityInfos: entityInfos.events,

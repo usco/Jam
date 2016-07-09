@@ -57,7 +57,7 @@ export function EntityInfosWrapper (state$, DOM) {
     }, {transforms: [], meta: [], settings})
     return assign({}, state, {__data: data})
   })*/
-  
+
   // entity infos
   return EntityInfos({DOM, props$})
 }
@@ -176,39 +176,4 @@ export function CommentsWrapper (state$, DOM) {
   })
 
   return Comments({DOM, props$})
-}
-
-export function progressBarWrapper (state$, DOM) {
-  // const props$ = just({progress:0.32})
-
-  const props$ = state$.distinctUntilChanged()
-    .pluck('operationsInProgress')
-    .filter(exists)
-    // .pluck("totalProgress")
-    .distinctUntilChanged(null, equals)
-    // .do(e=>console.log("operationsInProgress",e))
-    .map(progress => progress * 100)
-    .map(function (progress) {
-      // console.log("progress",progress)
-      return {progress}
-    })
-    // .pluck("resource")
-    /* .map(function(resource){
-      let progress = 0
-      //FIXME: horrid
-      if(resource.fetched && resource.loaded){
-        progress = 100
-      }
-      else
-      {
-        console.log("resource.fetchProgress",resource.fetchProgress)
-        progress = resource.fetchProgress
-      }
-      return {progress}
-    })*/
-    .startWith({progress: 100})
-    // props$
-    // .subscribe(e=>console.log("remoteOperations",e))
-
-  return ProgressBar({DOM, props$})
 }
