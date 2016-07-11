@@ -38,6 +38,7 @@ export default function intent (DOM) {
     .map(function (e) {
       let val = parseFloat(e.target.value)
       const attributes = e.target.dataset
+      console.log('attributes', attributes)
       let dtrans = attributes.transform
       let [trans, idx, extra] = dtrans.split('_')
       if (trans === 'rot') { // convert rotated values back from degrees to radians

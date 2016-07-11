@@ -29,10 +29,11 @@ export function renderPositionUi (state) {
   const data = state.selections.instIds.reduce(function (acc, id) {
     acc['transforms'].push(state.transforms[id])
     acc['meta'].push(state.meta[id])
+    acc['ids'].push(id)
     return acc
-  }, {transforms: [], meta: [], settings})
+  }, {transforms: [], meta: [], settings, ids: []})
 
-  let { transforms } = data
+  let { transforms, ids } = data
   if (transforms.length > 0) transforms = transforms[0]
 
   // compute the average position
