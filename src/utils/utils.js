@@ -66,7 +66,7 @@ export function isValidUrl (url) {
       + "(/[0-9a-z_!~*'().;?:@&=+$,%#-]+)+/?)$"
    var re=new RegExp(strRegex)
    return re.test(url)*/
-  var regexp = /(ftp|http|https|localhost):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/
+  var regexp = /(file|ftp|http|https|localhost):\/\/(\w+:{0,1}\w*@)?(\S+)(:[0-9]+)?(\/|\/([\w#!:.?+=&%@!\-\/]))?/
   return regexp.test(url)
 }
 
