@@ -22,7 +22,6 @@ import ProgressBar from '../widgets/ProgressBar'
    }
  })*/
 export function EntityInfosWrapper (state$, DOM) {
-  // .distinctUntilChanged(state => state.value)
 
   function makeEntityInfosProps (state$) {
     const selectedInstIds$ = state$

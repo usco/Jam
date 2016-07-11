@@ -13,9 +13,9 @@ import model from './model'
 import view from './view'
 
 import api from '../../core/api/api'
-import formatDataForYMStorage from './formatDataForYMStorage'
-import formatDataForLocalStorage from './formatDataForLocalStorage'
-import formatDataForFileStorage from './formatDataForFileStorage'
+import formatDataForYMStorage from './dataFormating/formatDataForYMStorage'
+import formatDataForLocalStorage from './dataFormating/formatDataForLocalStorage'
+import formatDataForFileStorage from './dataFormating/formatDataForFileStorage'
 
 export default function main (sources) {
   const {DOM} = sources
