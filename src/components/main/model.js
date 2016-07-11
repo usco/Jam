@@ -52,9 +52,9 @@ export default function model (props$, actions, sources) {
   entityActions = remapEntityActions(entityActions, proxySelections$)
 
   const metaActions = remapMetaActions(entityActions, componentBase$, proxySelections$, addAnnotations$)
-  const meshActions = remapMeshActions(entityActions, componentBase$, proxySelections$)
-  const transformActions = remapTransformActions(entityActions, componentBase$, proxySelections$, settings$)
-  const boundActions = remapBoundsActions(entityActions, componentBase$, proxySelections$)
+  const meshActions = remapMeshActions(entityActions, componentBase$)
+  const transformActions = remapTransformActions(entityActions, componentBase$, settings$)
+  const boundActions = remapBoundsActions(entityActions, componentBase$)
 
   const {meta$} = makeMetaSystem(metaActions)
   const {meshes$} = makeMeshSystem(meshActions)
