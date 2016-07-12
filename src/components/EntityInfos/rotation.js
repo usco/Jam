@@ -40,7 +40,7 @@ export function renderRotationUi (state) {
 
   const subTools = <span className='rotationSubTools'>
     <div className='transformsGroup'>
-      {transformInputs({fieldName: 'rot', unit: '°', step: transformStep, values, precision})}
+      {transformInputs({fieldName: 'rot', unit: 'deg', step: transformStep, values, precision})}
     </div>
     <div className='optionsGroup'>
       <label className='menuContent'>
