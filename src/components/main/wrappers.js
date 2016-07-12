@@ -32,16 +32,18 @@ export function EntityInfosWrapper (state$, DOM) {
 
     return selectedInstIds$
       .combineLatest(state$, function (ids, state) {
-        let transforms = ids.map(function (id) {
+        const transforms = ids.map(function (id) {
           return state.transforms[id]
         })
 
-        let meta = ids.map(function (id) {
+        const meta = ids.map(function (id) {
           return state.meta[id]
         })
 
+        const selections = ids
 
-        return {transforms, meta, settings: state.settings}
+
+        return {transforms, meta, settings: state.settings, selections}
       })
       .shareReplay(1)
   }
