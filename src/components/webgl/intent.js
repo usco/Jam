@@ -136,8 +136,8 @@ export default function intent (sources, data) {
   const selectionsTransforms$ = fromEvent(transformControls, 'objectChange')
     .map(targetObject)
     .map(function (t) {
-
       return {
+        id: t.userData.entity.id,
         pos: t.position.toArray().slice(0, 3),
         rot: t.rotation.toArray().slice(0, 3),
         sca: t.scale.toArray().slice(0, 3).map((val,index) => (t.flipped && t.flipped[index] === 1)? val * -1: val)//to handle negative scaling/mirrored data, as the transformControls always return values >0

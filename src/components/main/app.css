@@ -1,0 +1,329 @@
+/*
+youmagine highlight blackish(old): #555555;
+youmagine highlight blue: #5bc3fa;
+youmagine base gray : #F5F5F5;
+
+ultimaker site pale blue(not used for now):#f5f5f5:
+*/
+
+body{
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  padding: 0;
+  margin: 0;
+}
+
+#jamRoot/*external wrapper aka "where to put Jam into"*/
+{
+  font-family: 'Open Sans', sans-serif;
+  -webkit-transition: opacity 0.5s ease-in;
+  opacity:1;
+
+  overflow:hidden;
+
+  /*make things unselectable, cross browser*/
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  -khtml-user-select: none;
+  -moz-user-select: none;
+  -ms-user-select: none;
+  user-select: none;
+
+  width: 100%;
+  height: 100%;
+}
+
+.jam {
+  /*background-color: #fff;#f5f5f5;
+  z-index: 9999;*/
+   position: absolute;
+  top: 0px;
+  left: 0px;
+  width: 100%;
+}
+
+.jam input[type=text]{
+  background-color: rgba(244, 244, 244, 0.25); /*#fff; #f5f5f5;*/
+}
+.jam input[type=number]{
+  background-color: rgba(244, 244, 244, 0.25); /*#fff; #f5f5f5;*/
+}
+
+/*without this we get red outlines in number inputs*/
+:invalid {
+  box-shadow: none;
+}
+
+:-moz-submit-invalid {
+  box-shadow: none;
+}
+
+:-moz-ui-invalid {
+  box-shadow:none;
+}
+
+button path{fill:#555555!important;}
+button:focus {outline:0;}
+/*button:focus path{fill:white!important;}
+button:focus {background:#555555; outline:0;}*/
+
+button {
+  /*margin: 0 10px 0 0;*/
+  line-height: 1.8;
+  appearance: none;
+  box-shadow: none;
+  border-radius: 0;
+  border: 0;
+  background: #F5F5F5;
+  padding: 0;
+
+  cursor: pointer;
+}
+
+button:hover:enabled{
+  background: #5bc3fa;/*#555555;*/
+}
+
+button:enabled:hover path{
+  fill:white !important;
+  stroke: white ! important;
+}
+
+button:enabled:hover svg *{
+  fill:white;
+}
+
+button[disabled=disabled], button:disabled svg *{
+  fill:lightgray;
+  stroke: lightgray;
+}
+
+button[disabled=disabled]:hover, button:disabled:hover{
+  stroke: lightgray;
+  fill:lightgray;
+}
+
+/*button for toggling menus*/
+.containerToggler{
+  width: 50px;
+  height: 50px;
+  margin: 2px;
+  background: rgba(0,0,0,0);
+}
+
+/*//////////////*/
+/*generic styling*/
+.fadesIn{
+  opacity: 0;
+  transition: opacity 0.4s ease-in;
+  -ms-transition: opacity 0.4s ease-in;
+  -moz-transition: opacity 0.4s ease-in;
+  -webkit-transition: opacity 0.4s ease-in;
+}
+
+.fadesOut{
+  opacity: 1;
+  transition: opacity 0.4s ease-out;
+  -ms-transition: opacity 0.4s ease-out;
+  -moz-transition: opacity 0.4s ease-out;
+  -webkit-transition: opacity 0.4s ease-out;
+}
+
+.visible{
+  opacity: 1;
+}
+
+/* used mainly for statefull ui containers (open containers)*/
+.active{
+  background: #5bc3fa;
+  fill:white !important;
+}
+
+.active path{
+  fill:white !important;
+}
+
+.active svg *{
+  fill:white;
+}
+
+/*//////////////////*/
+/*spinner/loader*/
+@keyframes spinner {
+    to {transform: rotate(360deg);}
+}
+
+@-webkit-keyframes spinner {
+    to {-webkit-transform: rotate(360deg);}
+}
+
+.spinner {
+    min-width: 30px;
+    min-height: 30px;
+}
+
+.spinner:before {
+    content: 'Loading…';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 24px;
+    height: 24px;
+    margin-top: -13px;
+    margin-left: -13px;
+}
+
+.spinner:not(:required):before {
+    content: '';
+    border-radius: 50%;
+    border: 1px solid #ccc;
+    border-top-color: #03ade0;
+    animation: spinner .6s linear infinite;
+    -webkit-animation: spinner .6s linear infinite;
+}
+
+/*//////////////*/
+/*camview controls overlay*/
+.camViewControls{
+  position: absolute;
+  width: 256px;
+  height: 128px;
+  /*width: 20%;
+  height: 20%;*/
+  left: 0px;
+  bottom: 48px;
+}
+
+/*//////////////*/
+
+.glView{
+  width: 100%;
+  height: 100%;
+  cursor: default;
+}
+
+/*----------------*/
+/*//////////////////*/
+/*spinner/loader*/
+@keyframes spinner {
+    to {transform: rotate(360deg);}
+}
+
+@-webkit-keyframes spinner {
+    to {-webkit-transform: rotate(360deg);}
+}
+
+.spinner {
+    min-width: 30px;
+    min-height: 30px;
+}
+
+.spinner:before {
+    content: 'Loading…';
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 24px;
+    height: 24px;
+    margin-top: -13px;
+    margin-left: -13px;
+}
+
+.spinner:not(:required):before {
+    content: '';
+    border-radius: 50%;
+    border: 1px solid #ccc;
+    border-top-color: #03ade0;
+    animation: spinner .6s linear infinite;
+    -webkit-animation: spinner .6s linear infinite;
+}
+
+.loading{
+  opacity: 0 !important;
+}
+
+.visible{
+  opacity: 1!important;
+}
+
+.innerWrapper{
+    opacity: 0;
+    transition: opacity 1.0s ease-in-out;
+   -moz-transition: opacity 1.0s ease-in-out;
+   -webkit-transition: opacity 1.0s ease-in-out;
+}
+
+
+.mainError{
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 25%;
+
+  color: #3d6179;
+
+}
+
+ a {
+      color: #3d6179;
+    }
+
+    a:hover {
+      text-decoration: none;
+    }
+
+.mainError{
+  /*position: absolute;
+  top: 50%;
+  width: 100%;
+  left: 0;*/
+
+  text-align: center;
+}
+.mainError h1{
+  font-size: 1.5em;
+  margin-bottom: 40px;
+  line-height: 1.5em;
+  font-weight: 600;
+}
+
+div.container-heading {
+  max-width: 80%;
+  margin: 40px auto;
+  border-bottom: 1px solid #efefef;
+  padding: 0 10px 0 10px;
+}
+
+div.container-text {
+  max-width: 90%;
+  margin: 40px auto;
+  padding: 0 10px 0 10px;
+}
+
+div.largeIcon{
+    margin: 80px auto 80px auto;
+  width: 80px;
+  height: 80px;
+  text-align: center;
+}
+
+/*-----------------*/
+.debugDisplay{
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+/*-----------------*/
+
+.textInput.placeholder{
+  color:rgb(194, 194, 194);
+}
+
+#test{
+  position: absolute;
+  z-index: 10;
+  left: 100;
+  top: 300;
+}

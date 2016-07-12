@@ -1,6 +1,6 @@
 import Rx from 'rx'
 const merge = Rx.Observable.merge
-import { generateUUID } from '../../utils/utils'
+import { generateUUID, toArray } from '../../utils/utils'
 import { mergeData } from '../../utils/modelUtils'
 
 // function to add extra data to all entity component actions
@@ -68,8 +68,6 @@ export function remapMetaActions (entityActions, componentBase$, currentSelectio
   ).share()
   // .tap(e=>console.log("creating meta component",e))
 
-  const removeComponents$ = entityActions.deleteInstances$
-
   const updateComponents$ = entityActions.updateComponent$
     .filter(u => u.target === 'meta')
     .pluck('data')
@@ -79,19 +77,17 @@ export function remapMetaActions (entityActions, componentBase$, currentSelectio
       })
     })
 
-  const duplicateComponents$ = entityActions.duplicateInstances$
-
   return {
     createComponents$,
     updateComponents$,
-    duplicateComponents$,
-    removeComponents$,
+    duplicateComponents$: entityActions.duplicateInstances$,
+    removeComponents$: entityActions.deleteInstances$,
     clearDesign$: entityActions.clearDesign$
   }
 }
 
 // function to add extra data to mesh component actions
-export function remapMeshActions (entityActions, componentBase$, currentSelections$) {
+export function remapMeshActions (entityActions, componentBase$) {
   const createComponents$ = componentBase$
     .filter(c => c.length > 0)
     .map(function (datas) {
@@ -102,19 +98,16 @@ export function remapMeshActions (entityActions, componentBase$, currentSelectio
     .merge(entityActions.createMeshComponents$) // not infered
     // .tap(e=>console.log("creating mesh component",e))
 
-  const removeComponents$ = entityActions.deleteInstances$
-  const duplicateComponents$ = entityActions.duplicateInstances$
-
   return {
     createComponents$,
-    duplicateComponents$,
-    removeComponents$,
+    duplicateComponents$: entityActions.duplicateInstances$,
+    removeComponents$: entityActions.deleteInstances$,
     clearDesign$: entityActions.clearDesign$
   }
 }
 
 // function to add extra data to transform component actions
-export function remapTransformActions (entityActions, componentBase$, currentSelections$, settings$) {
+export function remapTransformActions (entityActions, componentBase$, settings$) {
   const createComponents$ = componentBase$
     .filter(c => c.length > 0)
     .map(function (datas) {
@@ -125,31 +118,34 @@ export function remapTransformActions (entityActions, componentBase$, currentSel
     .merge(entityActions.createTransformComponents$)
     // .tap(e=>console.log("creating transforms component",e))
 
-  const removeComponents$ = entityActions.deleteInstances$
-
   const updateComponents$ = entityActions.updateComponent$
     .filter(u => u.target === 'transforms')
     .pluck('data')
-    .withLatestFrom(currentSelections$.map(s => s.map(s => s.id)),settings$, function (transforms, instIds, settings) {
-      return instIds.map(function (instId) {
-        return {id: instId, value: transforms, settings}
+    .map(toArray)// we always expect arrays of data
+    .withLatestFrom(settings$, function (transforms, settings) {
+      return transforms.map(function (transform, index) {
+        return {id: transform.id, value: transform || transforms[0], settings}
       })
     })
 
-  const duplicateComponents$ = entityActions.duplicateInstances$
+    /*.withLatestFrom(settings$, function (transforms, settings) {
+        return transforms.map(function (transform, index) {
+          return {id: transform.id, value: transform.value || transforms[0].value, settings}
+        })
+      })*/
 
   return {
     createComponents$,
     updateComponents$,
     mirrorComponents$: entityActions.mirrorInstances$,
-    duplicateComponents$,
-    removeComponents$,
+    duplicateComponents$: entityActions.duplicateInstances$,
+    removeComponents$: entityActions.deleteInstances$,
     clearDesign$: entityActions.clearDesign$
   }
 }
 
 // function to add extra data to bounds component actions
-export function remapBoundsActions (entityActions, componentBase$, currentSelections$) {
+export function remapBoundsActions (entityActions, componentBase$) {
   const createComponents$ = componentBase$
     .filter(c => c.length > 0)
     .map(function (datas) {
@@ -158,14 +154,10 @@ export function remapBoundsActions (entityActions, componentBase$, currentSelect
       })
     })
 
-  const removeComponents$ = entityActions.deleteInstances$
-
-  const duplicateComponents$ = entityActions.duplicateInstances$
-
   return {
     createComponents$,
-    duplicateComponents$,
-    removeComponents$,
+    duplicateComponents$: entityActions.duplicateInstances$,
+    removeComponents$: entityActions.deleteInstances$,
     clearDesign$: entityActions.clearDesign$
   }
 }

@@ -1,5 +1,4 @@
-require('./app.css')
-import Cycle from '@cycle/core'
+import {run} from '@cycle/rx-run'
 
 import { makeDOMDriver } from '@cycle/dom'
 import postMessageDriver from './drivers/postMessageDriver'
@@ -62,4 +61,4 @@ if (mode === 'production') {
   console.warn = function () {}
 }
 
-Cycle.run(main, drivers)
+run(main, drivers)

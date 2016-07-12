@@ -1,0 +1,254 @@
+/* Coming in from the top
+Chrome, Safari, Opera */
+@-webkit-keyframes dropInEffect-fromTop {
+    0%   {opacity: 0; height: 0; margin-top: -20px;}
+    90% {margin-top: 2px;}
+    100% {opacity: 1; height: auto; margin-top: 0px;}
+}
+@keyframes dropInEffect-fromTop {
+  0%   {opacity: 0; height: 0; margin-top: -20px;}
+  90% {margin-top: 2px;}
+  100% {opacity: 1; height: auto; margin-top: 0px;}
+}
+
+/* Coming in from the left
+Chrome, Safari, Opera */
+@-webkit-keyframes dropInEffect-fromLeft {
+    0%   {opacity: 0; height: 0; margin-left: -20px;}
+    90% {margin-left: 2px;}
+    100% {opacity: 1; height: auto; margin-left: 0px;}
+}
+@keyframes dropInEffect-fromLeft {
+  0%   {opacity: 0; height: 0; margin-left: -20px;}
+  90% {margin-left: 2px;}
+  100% {opacity: 1; height: auto; margin-left: 0px;}
+}
+
+.toolTipButtonContainer{
+  position: relative;
+}
+
+.subItemsIndicator{
+  position: absolute;
+  bottom: 2;
+  right: 2;
+  border-bottom: 8px solid rgb(0, 0, 0);
+  border-top: 8px solid rgba(0, 0, 0, 0);
+  border-left: 8px solid rgba(0, 0, 0, 0);
+  /* border-right: 10px solid rgba(0, 0, 0, 0); */
+  /* border-bottom: 10px solid rgb(0, 0, 0); */
+}
+
+.menu {
+  /*
+  padding: 10px 0px;
+  margin-top: 10px;*/
+
+  display: none;
+  position: absolute;
+  z-index: 999;
+  background-color: white;
+  border: 1px solid #dddddd;
+  font-size: 0.8em;
+}
+
+.menu input[type=checkbox]{
+  margin-right: 10px;
+}
+
+.menu button{
+  padding: 10px
+}
+
+.menuContent{
+  display: block;
+  float: left;
+  margin: 2px 10px;
+  clear: both;
+  font-size: 0.8em;
+  cursor: pointer;
+}
+
+.menu.active-content{
+  text-align: center;
+  display: block;
+
+  -webkit-animation-duration: 0.2s; /* Chrome, Safari, Opera */
+  -webkit-animation-timing-function: ease-in-out; /* Chrome, Safari, Opera */
+
+  animation-duration: 0.2s;
+  animation-timing-function: ease-in-out;
+}
+
+.menu-bottom .notch {
+    position: absolute;
+    top: -10px;
+    left: 17px;
+    margin: 0;
+    border-top: 0;
+    border-left: 10px solid transparent;
+    border-right: 10px solid transparent;
+    border-bottom: 10px solid white;
+    padding: 0;
+    width: 0;
+    height: 0;
+    /* ie6 height fix */
+    font-size: 0;
+    line-height: 0;
+     /* ie6 transparent fix */
+    _border-right-color: pink;
+    _border-left-color: pink;
+    _filter: chroma(color=pink);
+}
+.menu-bottom .border-notch { border-bottom-color: #dddddd; top: -11px}
+
+/*animation for bottom variant*/
+.menu-bottom.active-content{
+  -webkit-animation-name: dropInEffect-fromTop; /* Chrome, Safari, Opera */
+  animation-name: dropInEffect-fromTop;
+}
+
+/* left */
+.menu-left {
+  top: 0%;
+  bottom: auto;
+  right: 120%;
+}
+
+/* right*/
+.menu-right {
+  top: -8;
+  bottom: auto;
+  left: 52;
+}
+
+.menu-right.arrowOffset{
+  top: 0%;
+  bottom: auto;
+  left: 120%;
+}
+
+.menu-right .notch {
+  position: absolute;
+  top: 10px;
+  left: -20px;
+  margin: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid white;
+  border-bottom: 10px solid transparent;
+  border-top: 10px solid transparent;
+  padding: 0;
+  width: 0;
+  height: 0;
+}
+.menu-right .border-notch {
+  border-left: 8px solid transparent;
+  border-right: 11px solid #dddddd;
+  border-top: 12px solid transparent;
+}
+
+/* animation for right variant*/
+.menu-right.active-content{
+  -webkit-animation-name: dropInEffect-fromLeft; /* Chrome, Safari, Opera */
+  animation-name: dropInEffect-fromLeft;
+}
+
+/* top */
+.menu-top {
+
+  right: calc(0% + 2px);
+  bottom: calc(200% + 4px);
+}
+
+.menu-top.arrowOffset{
+  top: -35;
+  bottom: auto;
+  left: -100;
+}
+
+.menu-top .notch {
+  position: absolute;
+  top: 10px;
+  left: -20px;
+  margin: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid white;
+  border-bottom: 10px solid transparent;
+  border-top: 10px solid transparent;
+  padding: 0;
+  width: 0;
+  height: 0;
+}
+.menu-top .border-notch {
+  border-left: 8px solid transparent;
+  border-right: 11px solid #dddddd;
+  border-top: 12px solid transparent;
+}
+
+.menu-top.active-content{
+  -webkit-animation-name: dropInEffect-fromBottom; /* Chrome, Safari, Opera */
+  animation-name: dropInEffect-fromBottom;
+}
+/* animation for top variant*/
+
+/*Coming in from the bottom
+Chrome, Safari, Opera */
+@-webkit-keyframes dropInEffect-fromBottom {
+  0%   {opacity: 0; height: 0; margin-bottom: -20px;}
+  90% {margin-bottom: 2px;}
+  100% {opacity: 1; height: auto; margin-bottom: 0px;}
+}
+@keyframes dropInEffect-fromBottom {
+  0%   {opacity: 0; height: 0; margin-bottom: -20px;}
+  90% {margin-bottom: 2px;}
+  100% {opacity: 1; height: auto; margin-bottom: 0px;}
+}
+
+/* bottom */
+.menu-bottom {
+  right: 20;
+  top: 60;
+}
+
+.menu-bottom.arrowOffset{
+  top: -35;
+  bottom: auto;
+  left: -100;
+}
+
+.menu-bottom .notch {
+  position: absolute;
+  top: 10px;
+  left: -20px;
+  margin: 0;
+  border-left: 10px solid transparent;
+  border-right: 10px solid white;
+  border-bottom: 10px solid transparent;
+  border-top: 10px solid transparent;
+  padding: 0;
+  width: 0;
+  height: 0;
+}
+.menu-bottom .border-notch {
+  border-left: 8px solid transparent;
+  border-right: 11px solid #dddddd;
+  border-top: 12px solid transparent;
+}
+
+.menu-bottom.active-content{
+  -webkit-animation-name: dropInEffect-fromTop; /* Chrome, Safari, Opera */
+  animation-name: dropInEffect-fromTop;
+}
+
+/*Coming in from the top
+Chrome, Safari, Opera */
+@-webkit-keyframes dropInEffect-fromTop {
+  0%   {opacity: 0; height: 0; margin-top: -20px;}
+  90% {margin-top: 2px;}
+  100% {opacity: 1; height: auto; margin-top: 0px;}
+}
+@keyframes dropInEffect-fromTop {
+  0%   {opacity: 0; height: 0; margin-top: -20px;}
+  90% {margin-top: 2px;}
+  100% {opacity: 1; height: auto; margin-top: 0px;}
+}

@@ -1,8 +1,8 @@
 import Rx from 'rx'
 const {merge, just} = Rx.Observable
 import { equals, contains, head } from 'ramda'
-import { exists } from '../../utils/utils'
-import { combineLatestObj } from '../../utils/obsUtils'
+import { exists } from '../../../utils/utils'
+import { combineLatestObj } from '../../../utils/obsUtils'
 
 export default function formatDataForYMStorage ({sources, state$}) {
   const apiEndpoint$ = sources.addressbar.get('apiEndpoint')

@@ -22,7 +22,6 @@ import ProgressBar from '../widgets/ProgressBar'
    }
  })*/
 export function EntityInfosWrapper (state$, DOM) {
-  // .distinctUntilChanged(state => state.value)
 
   function makeEntityInfosProps (state$) {
     const selectedInstIds$ = state$
@@ -33,20 +32,32 @@ export function EntityInfosWrapper (state$, DOM) {
 
     return selectedInstIds$
       .combineLatest(state$, function (ids, state) {
-        let transforms = ids.map(function (id) {
+        const transforms = ids.map(function (id) {
           return state.transforms[id]
         })
 
-        let meta = ids.map(function (id) {
+        const meta = ids.map(function (id) {
           return state.meta[id]
         })
 
+        const selections = ids
 
-        return {transforms, meta, settings: state.settings}
+
+        return {transforms, meta, settings: state.settings, selections}
       })
       .shareReplay(1)
   }
   const props$ = makeEntityInfosProps(state$)
+
+  /*const props$ = state$.map(function(state){
+
+    const data = state.selections.instIds.reduce(function (acc, id) {
+      acc['transforms'].push(state.transforms[id])
+      acc['meta'].push(state.meta[id])
+      return acc
+    }, {transforms: [], meta: [], settings})
+    return assign({}, state, {__data: data})
+  })*/
 
   // entity infos
   return EntityInfos({DOM, props$})
@@ -166,39 +177,4 @@ export function CommentsWrapper (state$, DOM) {
   })
 
   return Comments({DOM, props$})
-}
-
-export function progressBarWrapper (state$, DOM) {
-  // const props$ = just({progress:0.32})
-
-  const props$ = state$.distinctUntilChanged()
-    .pluck('operationsInProgress')
-    .filter(exists)
-    // .pluck("totalProgress")
-    .distinctUntilChanged(null, equals)
-    // .do(e=>console.log("operationsInProgress",e))
-    .map(progress => progress * 100)
-    .map(function (progress) {
-      // console.log("progress",progress)
-      return {progress}
-    })
-    // .pluck("resource")
-    /* .map(function(resource){
-      let progress = 0
-      //FIXME: horrid
-      if(resource.fetched && resource.loaded){
-        progress = 100
-      }
-      else
-      {
-        console.log("resource.fetchProgress",resource.fetchProgress)
-        progress = resource.fetchProgress
-      }
-      return {progress}
-    })*/
-    .startWith({progress: 100})
-    // props$
-    // .subscribe(e=>console.log("remoteOperations",e))
-
-  return ProgressBar({DOM, props$})
 }

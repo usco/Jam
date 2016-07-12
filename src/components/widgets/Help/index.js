@@ -1,12 +1,11 @@
-/** @jsx hJSX */
-import { hJSX } from '@cycle/dom'
+import { html } from 'snabbdom-jsx'
 import Class from 'classnames'
-import tooltipIconBtn from '../TooltipIconButton'
-
+import Menu from '../Menu'
 import Rx from 'rx'
 const fromEvent = Rx.Observable.fromEvent
-
 import { combineLatestObj } from '../../../utils/obsUtils'
+
+require('./help.css')
 
 function intent (DOM) {
   // any outside taps close the settings
@@ -35,48 +34,42 @@ function model (props$, actions) {
 }
 
 function view (state$) {
-  const helpIconSvg = `<svg version='1.1' id='Help' xmlns='http://www.w3.org/2000/svg'
-    width='16' height='16' x='0px' y='0px' viewBox='0 0 20 20' enable-background='new 0 0 20 20' class='icon'>
-    <g>
-      <path fill='#FFFFFF' d='M14.09,2.233C12.95,1.411,11.518,1,9.794,1C8.483,1,7.376,1.289,6.477,1.868
-        C5.05,2.774,4.292,4.313,4.2,6.483h3.307c0-0.633,0.185-1.24,0.553-1.828c0.369-0.586,0.995-0.879,1.878-0.879
-        c0.898,0,1.517,0.238,1.854,0.713C12.131,4.966,12.3,5.493,12.3,6.071c0,0.504-0.252,0.965-0.557,1.383
-        c-0.167,0.244-0.387,0.469-0.661,0.674c0,0-1.793,1.15-2.58,2.074c-0.456,0.535-0.497,1.338-0.538,2.488
-        c-0.002,0.082,0.029,0.252,0.315,0.252c0.287,0,2.316,0,2.571,0c0.256,0,0.309-0.189,0.312-0.274
-        c0.018-0.418,0.064-0.633,0.141-0.875c0.144-0.457,0.538-0.855,0.979-1.199l0.91-0.627c0.822-0.641,1.477-1.166,1.767-1.578
-        c0.494-0.676,0.842-1.51,0.842-2.5C15.8,4.274,15.23,3.057,14.09,2.233z M9.741,14.924c-1.139-0.035-2.079,0.754-2.115,1.99
-        c-0.035,1.234,0.858,2.051,1.998,2.084c1.189,0.035,2.104-0.727,2.141-1.963C11.799,15.799,10.931,14.959,9.741,14.924z'/>
+  const helpIconSvg = `<svg width="12px" height="19px" viewBox="0 0 12 19" class='icon'
+  version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+    <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
+    <title>help</title>
+    <desc>Created with Sketch.</desc>
+    <defs></defs>
+    <g id="icons" stroke="none" stroke-width="1" fill="none" fill-rule="evenodd">
+        <path d="M6,1.42108547e-14 C2.69142857,1.42108547e-14 0,2.77582739 0,6.18742 C0,6.66684952 0.384,7.05595173 0.857142857,7.05595173 C1.33028571,7.05595173 1.71428571,6.66684952 1.71428571,6.18742 C1.71428571,3.77463887 3.67714286,1.73706345 6,1.73706345 C8.36228571,1.73706345 10.2857143,3.66172975 10.2857143,6.02761017 C10.2857143,8.39175352 8.36228571,10.3164198 6,10.3164198 C5.52685714,10.3164198 5.14285714,10.705522 5.14285714,11.1849515 L5.14285714,13.3545438 C5.14285714,13.8339733 5.52685714,14.2230755 6,14.2230755 C6.47314286,14.2230755 6.85714286,13.8339733 6.85714286,13.3545438 L6.85714286,11.992686 C9.76114286,11.5740538 12,9.05878588 12,6.02761017 C12,2.70287073 9.30857143,1.42108547e-14 6,1.42108547e-14 Z M6,19 C6.94677386,19 7.71428571,18.2222902 7.71428571,17.2629366 C7.71428571,16.3035829 6.94677386,15.5258731 6,15.5258731 C5.05322614,15.5258731 4.28571429,16.3035829 4.28571429,17.2629366 C4.28571429,18.2222902 5.05322614,19 6,19 Z" id="help" fill="#000000"></path>
     </g>
-    </svg>`
+</svg>`
 
   return state$.map(function ({toggled, appVersion}) {
-    let content
-
-    if (toggled) {
-      content = <section className={Class('content', {toggled: toggled})}>
-                  <ul>
-                    <li>
-                      Click/tap and drag to rotate.
-                    </li>
-                    <li>
-                      Mouse wheel to zoom.
-                    </li>
-                    <li>
-                      Single click/tap to select items.
-                    </li>
-                    <li>
-                      Double click/tap to zoom on points/objects.
-                    </li>
-                  </ul>
-                  <span className='appVersion'>Jam version {appVersion}</span>
-                </section>
-    }
+    const  content = <section className={Class('content', {toggled: toggled})}>
+        <span className='helpItems'>
+          <ul>
+            <li>
+              Click/tap and drag to rotate.
+            </li>
+            <li>
+              Mouse wheel to zoom.
+            </li>
+            <li>
+              Single click/tap to select items.
+            </li>
+            <li>
+              Double click/tap to zoom on points/objects.
+            </li>
+          </ul>
+        </span>
+        <span className='appVersion'>Jam version {appVersion}</span>
+      </section>
 
     return <div className='help'>
-             {tooltipIconBtn(toggled
-                , helpIconSvg, 'helpToggler', 'help', 'top')}
-             {content}
-           </div>
+      {Menu({toggled, icon: helpIconSvg, klass: 'containerToggler helpToggler',
+       tooltip: 'help', tooltipPos: 'top', content, contentPosition: 'top', arrow: false})}
+     </div>
   })
 }
 

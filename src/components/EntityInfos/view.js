@@ -1,19 +1,13 @@
-/** @jsx hJSX */
+require('./style.css')
 import Rx from 'rx'
 const {just} = Rx.Observable
-import { hJSX } from '@cycle/dom'
+import { html } from 'snabbdom-jsx'
 
 import { formatNumberTo, absSizeFromBBox, toDegree } from '../../utils/formatters'
 import { isEmpty } from '../../utils/utils'
 // //////
-import ColorPicker from '../widgets/ColorPicker'
 import assign from 'fast.js/object/assign' // faster object.assign
 
-export function colorPickerWrapper (state$, DOM) {
-  const props$ = just({color: '#FF00FF'})
-
-  return ColorPicker({DOM, props$})
-}
 
 function absSizeInput (entity, controlsStep, numberPrecision, changeHandler) {
   /* display / control object transforms: posistion,rotation,scale etc
@@ -216,7 +210,9 @@ export default function view (state$, colorPicker) {
 
     // console.log('meta,transforms',meta,transforms)
 
-    return <div className='toolBarBottom entityInfos'>
+    return ''
+
+    const res = <div className='toolBarBottom entityInfos'>
              {colorInput(meta)}
              {nameInput(meta)}
              {transformInputs(transforms, 'pos', undefined, getControlStep('pos', settings), numberPrecision)}

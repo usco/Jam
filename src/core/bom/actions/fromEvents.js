@@ -9,7 +9,6 @@ export default function intent (events, params) {
     /* .map(function(data){//inject extra data
       return mergeData({},data,{id:generateUUID()})
     })*/
-    .tap(e => console.log())
     .map(data => ({id: data.id, data})) // convert data structure to something the BOM model can deal with
     .map(toArray)
 

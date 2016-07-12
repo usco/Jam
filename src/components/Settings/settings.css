@@ -1,0 +1,33 @@
+/*//////////////////*/
+.settings{
+  z-index: 2;
+}
+
+.settings .settingEntry{
+  padding: 6px;
+  text-align: justify;
+}
+
+.settings .content {
+  background: white;
+  font-size: 0.8em;
+  width: 200px;
+}
+
+
+/*.settings #toggler{
+  float: right;
+  display: block;
+}
+
+.settings .toggler{
+  border: 1px solid white;
+}
+
+.settings button{
+  border: none;
+  padding: 0;
+}
+
+.settings button:focus {outline:0;}
+.settings button:focus path{fill:#60C4F8;}*/

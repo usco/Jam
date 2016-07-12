@@ -1,12 +1,11 @@
-/** @jsx hJSX */
-import Cycle from '@cycle/core'
+
 import Rx from 'rx'
-import {hJSX} from '@cycle/dom'
+import {html} from 'snabbdom-jsx'
 import Class from "classnames"
 const fromEvent = Rx.Observable.fromEvent
 
 const combineLatest = Rx.Observable.combineLatest
-const just = Rx.Observable.just 
+const just = Rx.Observable.just
 import {combineLatestObj} from '../../../utils/obsUtils'
 import {exists} from '../../../utils/utils'
 import {equals} from 'ramda'
@@ -20,7 +19,7 @@ function intent({DOM}){
       return document.querySelector(".color").contains(target)
     })
     .filter(x=>(x===false))//we only care if it was clicked outside, not in
-    .do(e=>console.log("outsideTaps")) 
+    .do(e=>console.log("outsideTaps"))
 
   const toggled$  = DOM.select(".color").events("click")
     .map(true)
@@ -39,7 +38,7 @@ function model(props$, actions){
   const color$   = props$.pluck("color")
   const toggled$ = just(true)//actions.toggled$
 
-  
+
   return combineLatestObj({
     toggled$
     ,color$
@@ -47,7 +46,7 @@ function model(props$, actions){
   .distinctUntilChanged(null,equals)
   .shareReplay(1)
   .do(e=>console.log("model for colorPicker",e))
-  
+
   //return just({color:"#FF0000"})
 }
 
@@ -72,13 +71,13 @@ function view(state$) {
       const bigGradientStyle = `background:  linear-gradient( 45deg, ${startColorBig}, ${endColorBig} )`
 
       const compact = <span className='colorpicker'>
-        <span className='color' attributes={ {style:inputStyle} }/> 
+        <span className='color' attributes={ {style:inputStyle} }/>
       </span>
 
       const full    = <span className='colorpicker'>
-        <span className='color'  attributes={ {style:inputStyle} }/> 
+        <span className='color'  attributes={ {style:inputStyle} }/>
 
-        <div className='body'> 
+        <div className='body'>
           <div className='mainGradient'  attributes={{style:bigGradientStyle}} />
           <div className='smallGradient' />
         </div>

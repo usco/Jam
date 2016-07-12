@@ -2,9 +2,8 @@ import THREE from 'three'
 import TWEEN from 'tween.js'
 import Detector from './deps/Detector.js'
 
-/** @jsx hJSX */
 import Rx from 'rx'
-import { hJSX } from '@cycle/dom'
+import { h } from '@cycle/dom'
 
 let fromEvent = Rx.Observable.fromEvent
 let merge = Rx.Observable.merge
@@ -448,14 +447,15 @@ function GLView ({drivers, props$}) {
     .forEach(e => e)
 
   // we do not want to change our container (DOM) but the contents (gl)
-  const gLWidgeHelper = new GLWidgeHelper(configure)
-  // new GLWidgeHelper(configure)}
-  // gLWidgeHelper.setup()
-
   const vtree$ = Rx.Observable.just(
-    <div className='glView'>
-      {gLWidgeHelper}
-    </div>
+    h('div.glView', [
+      h('div.container', {
+        //key: someUniqueKey,
+        hook: {
+          insert: (vnode) => { console.log('vnode', vnode); configure(vnode.elm) } //movie.elmHeight = vnode.elm.offsetHeight;
+        }
+      })
+    ])
   )
 
   // screencapture test
@@ -496,35 +496,6 @@ function GLView ({drivers, props$}) {
       selectedMeshes$: actions.selectMeshes$
     }
   }
-}
-
-function GLWidgeHelper (configureFn, configCallback) {
-  // console.log('creating GLWidgeHelper')
-  this.type = 'Widget'
-  this.configureFn = configureFn
-  this.configCallback = configCallback
-}
-
-GLWidgeHelper.prototype.setup = function () {
-  this.configureFn(this.elem, this.configCallback)
-}
-
-GLWidgeHelper.prototype.init = function () {
-  // console.log('init GLWidgeHelper',this.elem)
-  // if(!this.elem)//in weird cases, this gets called for SOME ?? reason
-  // {
-  let elem = document.createElement('div')
-  elem.className = 'container'
-  this.elem = elem
-  this.setup()
-  // }
-
-  return this.elem
-}
-
-GLWidgeHelper.prototype.update = function (prev, elem) {
-  // console.log('update GLWidgeHelper' )
-  this.elem = this.elem || prev.elem
 }
 
 export default GLView

@@ -16,11 +16,14 @@ export default function bomIntent (sources, entityTypes$, metaActions, entityAct
     .filter(e => e.length > 0)
     .tap(e => console.log('type added', e))
     .map(function (typeDatas) {
-      return typeDatas.map(function ({id, name}) {
-        // const data = {id, name, qty:0, phys_qty:0, version:"0.0.1", unit:"QA", printable:true}
-        const data = {id, name}
-        return {id, data}
-      })
+      return typeDatas
+        .filter(x => x.id !== undefined)// we can only deal with data with actual ids
+        .map(function ({id, name}) {
+          // const data = {id, name, qty:0, phys_qty:0, version:"0.0.1", unit:"QA", printable:true}
+          const data = {id, name}
+          return {id, data}
+        })
+
     })
 
   const removeBomEntries$ = typeChanges$

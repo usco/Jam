@@ -1,0 +1,296 @@
+/*//////////////*/
+/*bom view*/
+
+.bom{
+  /*position: absolute;
+  padding: 10px 20px;
+  min-width: 550px;
+  top: 0px;
+  right: 0px;
+  bottom: 54px;*/
+  height: auto;
+  cursor: default;
+  font-weight: 600;
+  font-size: .9em;
+}
+
+.bom .bomToggler{
+  float: right;
+  margin: 0;
+  top: 10px;
+  right: 20px;
+  position: absolute;
+}
+
+.bom .toolTipButtonContainer{
+  position: inherit;
+}
+
+.bom .tableContainer{
+  /*tposition: absolute;
+  op: 60px;
+  right: 20px;*/
+  height: calc(100% - 132px);
+  pointer-events: none;
+}
+
+
+.bom table{
+  font-size: 13px;
+  border-collapse: collapse;
+  background: white;
+  width: 100%;
+}
+
+.bom .column0{ width: 40% }
+.bom .column1{ width: 10% }
+.bom .column2{ width: 15% }
+.bom .column3{ width: 10% }
+.bom .column4{ width: 15% }
+.bom .column5{ width: 10% }
+
+.bom #tableheader{
+  cursor: pointer;
+  border: 1px solid #F7F6F6;
+  pointer-events: auto;
+}
+
+.bom #tablebody{
+  max-height: 80%;
+  overflow-x: hidden;
+  overflow-y: auto;
+  border: 1px solid #F7F6F6;
+  border-top: 0px;
+  pointer-events: auto;
+  position: absolute;
+}
+
+
+.bom tr:hover{
+   background-color: #F4F4F4;
+   color: black;
+   font-weight: bold;
+}
+
+.bom tr:hover input{
+  font-weight: bold;
+}
+
+.bom tr.selected{
+   background-color: #5bc3fa;/*#484848;*/
+   color:white;
+}
+
+.bom .adderRow td{
+  border: 1px solid #F7F6F6;
+}
+
+.bom td.column0, .bom th.column4 {
+  text-align: left;
+}.readOnly th.column4 { text-align: center; }
+
+.bom .cell{
+  vertical-align: middle;
+  text-align: center;
+  padding: 5 5 5 5;
+}
+
+
+.bom .directionArrow{
+  font-size: 0.6em;
+}
+.bom .directionArrow .asc:after {
+    content: "▲";
+    /*
+    &#x25B2;
+     ▼
+    */
+}
+.bom .directionArrow .desc:after {
+    content: "▼";
+    /*
+    &#x25B2;
+     ▼
+    */
+}
+.bom .directionArrow .neut:after{
+  content: "⬍";
+  font-size: 12px;
+}
+
+.bom input[type=text]{
+  border: none;
+  background: none;
+  color: #555555;
+  font-family: 'Open Sans', sans-serif;
+  padding-left: 3px;
+}
+
+.bom tr.selected input[type=text]{
+  border: none;
+  background: none;
+  color: white;
+}
+
+.bom tr.selected input[type=checkbox]{
+}
+
+.bom .name input[type=text]{
+  min-width: 150px;
+  text-overflow: ellipsis;
+}
+.bom .qty input[type=number]{
+  width: 50px;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  border: none;
+  border-width: 0px;
+  width: 10em;
+  max-width: 50px;
+  border: none;
+  line-height: 0.8em;
+  font-size: 0.8em;
+  font-family: inherit;
+}
+
+.bom tr.selected input[type=number]{
+  color:white;
+}
+
+.bom .phys_qty input[type=number]{
+  width: 50px;
+  box-sizing: border-box;
+  -moz-box-sizing: border-box;
+  border: none;
+  border-width: 0px;
+  width: 10em;
+  max-width: 50px;
+  border: none;
+  line-height: 0.8em;
+  font-size: 0.8em;
+  font-family: inherit;
+}
+
+.bom .adder{
+  font-style: italic;
+  color: #827D7D;
+}
+
+.bom .adder td {
+  border-collapse: separate;
+  border: 1px solid #EFEFEF !important;
+}
+
+.bom .adder input[type=text]{
+  color:#827D7D;
+  font-style: italic!important;
+}
+/* do not group these rules */
+.bom .adder *::-webkit-input-placeholder {
+    color: #827D7D;
+    font-style: italic!important;
+}
+.bom .adder *:-moz-placeholder {
+    /* FF 4-18 */
+    color: #827D7D;
+    font-style: italic!important;
+}
+.bom .adder *::-moz-placeholder {
+    /* FF 19+ */
+    color: #827D7D;
+    font-style: italic!important;
+}
+.bom .adder *:-ms-input-placeholder {
+    /* IE 10+ */
+    color: #827D7D;
+    font-style: italic!important;
+}
+
+.bom .adder button{
+  color: white;
+  padding: 2 5 2 5;
+  background: #5fc5fb;
+  margin: 0;
+}
+
+.bom .bomEntry button{
+  margin: 0;
+}
+
+.bom .bomEntry button{
+  background: rgba(245, 245, 245, 0)
+}
+.bom .bomEntry button .icon{
+  background: rgba(245, 245, 245, 0)
+}
+
+/*.bom .bomEntry button .icon path{
+  fill: rgba(0, 0, 0, 0)!important;
+}*/
+
+.bom .bomEntry button:hover .icon{
+  /*background: #F4F4F4;*/
+  background: #5bc3fa;
+}
+
+.bom .bomEntry button:hover .icon path{
+  /*background: white;*/
+  /*fill:black !important;*/
+}
+
+/*removal*/
+.bom .removeBomEntry{
+  color:red;
+  padding: 1px;
+}
+.bom .removal {
+  height: 42px;
+}
+
+.bom .removal span{
+  padding: 5 5 5 5;
+  font-size: 11px;
+}
+
+.bom .removal button{
+  color: white;
+  padding: 2 5 2 5;
+  background: #5fc5fb;
+}
+
+.bom tr select:disabled{
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  text-indent: 1px;
+  text-overflow: '';
+  background: rgba(0, 0, 0, 0);
+  color: black;
+  border: none;
+}
+
+.bom tr input[type=number]:disabled{
+  color: black;
+  background: rgba(0, 0, 0, 0);
+}
+
+.bom tr.selected select:disabled{
+  color:white;
+}
+.bom tr.selected input[type=number]:disabled{
+  color:white;
+}
+
+.bom .export button{
+  padding: 0 2px 0px 2px;
+  margin: 0 2px 0 0;
+}
+
+/* for smaller checkbox
+.bom .checkbox{
+  width: 20px;
+  height: 20px;
+}
+.bom .checkbox label{
+  left: 0px;
+  top: 0px;
+}*/

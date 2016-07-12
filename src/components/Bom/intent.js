@@ -8,7 +8,7 @@ export default function intent (DOM) {
 
   const entryTaps$ = DOM.select('.bom .normal').events('click', true) // capture == true
     .tap(e => e.stopPropagation())
-    .map(e => e.currentTarget.dataset.id)
+    .map(e => e.target.dataset.id)
 
   const entryMultiTaps$ = entryTaps$
     .buffer(entryTaps$.debounce(250))
@@ -26,7 +26,6 @@ export default function intent (DOM) {
     .tap(e => console.log('entryDoubleTapped', e))
     //.shareReplay(1)
 
-
   const headerTapped$ = DOM.select('.headerCell').events('click', true)
     .tap(e => e.stopPropagation())
 
@@ -42,7 +41,7 @@ export default function intent (DOM) {
   const removeEntryRequestCancel$ = DOM.select('.bom .removal .cancel').events('click')
     .tap(e => e.stopPropagation())
     .map(function (e) {
-      const actualTarget = e.currentTarget.dataset
+      const actualTarget = e.target.dataset
       return {
         id: actualTarget.id
       }
@@ -51,7 +50,7 @@ export default function intent (DOM) {
   const removeEntry$ = DOM.select('.bom .removal .confirm').events('click') // DOM.select('.bom .removeBomEntry').events('click')
     .tap(e => e.stopPropagation())
     .map(function (e) {
-      const actualTarget = e.currentTarget.dataset
+      const actualTarget = e.target.dataset
       return {
         id: actualTarget.id
       }
@@ -63,6 +62,8 @@ export default function intent (DOM) {
       e.preventDefault()
       return false
     })
+    .share()
+    .tap(e=>console.log('addEntryTapped'))
     // .map(e=>getFormResults(e.target))
 
   const newEntryValues$ = combineLatestObj({
@@ -77,16 +78,17 @@ export default function intent (DOM) {
     printable$: DOM.select('.bom .adder [name="printable"]').events('change')
       .map(e => e.target.checked).startWith(false)
   })
-    .merge(addEntryTapped$.map(({name: '', qty: 0, phys_qty: 0, unit: 'EA', printable: false})).delay(10)) // FIXME AWFULL HACK
+    .share()
 
-  const addEntry$ = addEntryTapped$ // newEntryValues$
+  const addEntry$ = addEntryTapped$
     .withLatestFrom(newEntryValues$, (_, data) => data)
     .filter(data => data.name !== '')
     .map(function (data) { // inject extra data
       return mergeData({}, data, {id: generateUUID()})
     })
+    .tap(e=>console.log("raw addEntry data",e))
     .share() // VERY important, you don't want duplicate uuid generation etc
-    // .tap(e=>console.log("raw addEntry data",e))
+
     //  const addEntry$ = getFieldValues({name:'', qty:0, phys_qty:0, unit:'EA', printable:false}, DOM, '.bom .adder', addEntryTapped$)
 
   DOM.select('.textInput').events('keydown')
@@ -100,7 +102,7 @@ export default function intent (DOM) {
       return false
     })
     .map(function (e) {
-      const actualTarget = e.currentTarget.parentElement.dataset
+      const actualTarget = e.target.parentElement.dataset
       return {
         id: actualTarget.id,
         attrName: actualTarget.name,
@@ -111,18 +113,19 @@ export default function intent (DOM) {
   const checkEntry$ = DOM.select('.bom .normal input[type=checkbox]').events('change')
     .tap(e => e.stopPropagation())
     .map(function (e) {
-      const actualTarget = e.currentTarget.parentElement.dataset
+      const actualTarget = e.target.parentElement.parentElement.dataset
       return {
         id: actualTarget.id,
         attrName: actualTarget.name,
         value: e.target.checked
       }
     })
+    .tap(e=>console.log('checkboxing entry',e))
 
   const entryOptionChange$ = DOM.select('.bom .normal select').events('change')
     .do(e => e.stopPropagation())
     .map(function (e) {
-      const actualTarget = e.currentTarget.parentElement.dataset
+      const actualTarget = e.target.parentElement.dataset
       return {
         id: actualTarget.id,
         attrName: actualTarget.name,
@@ -135,6 +138,7 @@ export default function intent (DOM) {
     , checkEntry$
     , entryOptionChange$
   )
+  .tap(e=>console.log('editEntry',e))
 
   const toggle$ = DOM.select('.bomToggler')
     .events('click') // toggle should be scoped?

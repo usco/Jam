@@ -65,6 +65,11 @@ function toggleSnapRotation (state, input) {
   return output
 }
 
+function toggleSnapTranslation (state, input) {
+  console.log('toggleSnapTranslation', input)
+  return mergeData(state, {snapTranslation: input})
+}
+
 function setActiveTool (state, input) {
   console.log('setting activeTool', input)
   let output = mergeData(state, {activeTool: input})
@@ -135,13 +140,15 @@ function settings (actions, source) {
     autoSave: false,
     autoLoad: true,
 
+    //transforms
     snapScaling: true,
     uniformScaling: true,
-    snapRotation: true
+    snapRotation: true,
+    snapTranslation: true
   }
 
   let updateFns = {setAllValues, toggleShowGrid, toggleAutoRotate,
-    toggleSnapScaling, toggleUniformScaling, toggleSnapRotation,
+    toggleSnapScaling, toggleUniformScaling, toggleSnapRotation, toggleSnapTranslation,
     setActiveTool, setAppMode, setToolsets, setAutoSave, setAutoLoad}
   return makeModel(defaults, updateFns, actions, source)
 }

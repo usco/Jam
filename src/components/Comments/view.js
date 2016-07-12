@@ -1,8 +1,9 @@
-/** @jsx hJSX */
-import { hJSX } from '@cycle/dom'
+import { html } from 'snabbdom-jsx'
 import { equals } from 'ramda'
+import Menu from '../widgets/Menu'
 
-import tooltipIconBtn from '../widgets/TooltipIconButton'
+require('./comments.css')
+
 
 function renderCommentsList (comments) {
   const iconSvg = `<svg class='icon' version='1.1' id='Pencil' xmlns='http://www.w3.org/2000/svg' x='0px' y='0px'
@@ -113,7 +114,7 @@ function renderComments (toggled, comments, entity, newCommentContent) {
 
   return (
   <div className='comments'>
-    {tooltipIconBtn(toggled
+    {Menu(toggled
        , iconSvg, 'commentsToggler', 'comments', 'top')}
     {commentDetails}
   </div>

@@ -1,5 +1,5 @@
 import { pick } from 'ramda'
-import { remapJson } from '../../utils/utils'
+import { remapJson } from '../../../utils/utils'
 
 export default function formatDataForFileStorage ({sources, state$}, bom) {
   const fieldNames = [ 'part_uuid', 'name', 'qty', 'phys_qty', 'unit', 'printable' ] // , 'version' ]

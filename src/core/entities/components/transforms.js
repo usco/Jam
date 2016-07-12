@@ -1,3 +1,5 @@
+import {pluck} from 'ramda'
+
 import { createComponents, removeComponents, duplicateComponents, makeActionsFromApiFns } from './common'
 import { makeModel, mergeData } from '../../../utils/modelUtils'
 // //Transforms//////
@@ -11,6 +13,7 @@ export function makeTransformsSystem (actions) {
     sca: [ 1, 1, 1 ]
   }
   const snapDefaults = {
+    pos: 0.1, // snap translation snaps to 0.1 units
     rot: 10, // snap rotation snaps to tens of degrees
     sca: 0.1 // snap scaling snaps to tens of percentages
   }
@@ -109,20 +112,33 @@ export function makeTransformsSystem (actions) {
   }
 
   function applySnapStates (id, transformation, settings) {
-    let {uniformScaling, snapScaling, snapRotation} = settings
+    console.log('applySnapStates', transformation)
+    let {uniformScaling, snapScaling, snapRotation, snapTranslation} = settings
+
     if (uniformScaling) { transformation.sca = applyUniformScaling(transformation.sca) }
     if (snapScaling) { transformation.sca = applySnapping(transformation.sca, snapDefaults.sca) }
+    if (snapTranslation) { transformation.pos = applySnapping(transformation.pos, snapDefaults.pos) }
     if (snapRotation) { transformation.rot = applySnapping(transformation.rot, snapDefaults.rot, (2 * Math.PI)) }
+
     return transformation
   }
 
   function updateComponents (state, inputs) {
-    console.log('updating transforms', inputs)
+    /*console.log('updating transforms', inputs)
+    const currentAvg = pluck('pos')(transforms)
+      .reduce(function (acc, cur) {
+        if(!acc) return cur
+        return [acc[0] + cur[0], acc[1] + cur[1], acc[2] + cur[2]].map(x => x * 0.5)
+      }, undefined)*/
+
     return inputs.reduce(function (state, input) {
+
       state = mergeData({}, state)
       let {id} = input
       let transformation = input.value || transformDefaults
       state[id] = applySnapStates(input.id, transformation, input.settings)
+      //state[id]['pos'] = [ state[id]['pos'][0] +input.value[0], state[id]['pos'][1] +input.value[1], state[id]['pos'][2] +input.value[2]]
+      //console.log('updating data of component', id)
       return state
     }, state)
   }
