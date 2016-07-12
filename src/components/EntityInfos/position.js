@@ -43,9 +43,7 @@ export function renderPositionUi (state) {
       return [acc[0] + cur[0], acc[1] + cur[1], acc[2] + cur[2]].map(x => x * 0.5)
     }, undefined)
 
-  console.log('avgPosition', avgPosition)
-
-  const values = transforms.pos || [0, 0, 0]
+  const values = avgPosition || [0, 0, 0]
 
   const subTools = <span className='movingSubTools'>
     <div className='transformsGroup'>

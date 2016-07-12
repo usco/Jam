@@ -128,11 +128,17 @@ export function remapTransformActions (entityActions, componentBase$, settings$)
       })
     })
 
+    /*.withLatestFrom(settings$, function (transforms, settings) {
+        return transforms.map(function (transform, index) {
+          return {id: transform.id, value: transform.value || transforms[0].value, settings}
+        })
+      })*/
+
   return {
     createComponents$,
     updateComponents$,
     mirrorComponents$: entityActions.mirrorInstances$,
-    duplicateComponents$:  entityActions.duplicateInstances$,
+    duplicateComponents$: entityActions.duplicateInstances$,
     removeComponents$: entityActions.deleteInstances$,
     clearDesign$: entityActions.clearDesign$
   }

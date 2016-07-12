@@ -1,3 +1,5 @@
+import {pluck} from 'ramda'
+
 import { createComponents, removeComponents, duplicateComponents, makeActionsFromApiFns } from './common'
 import { makeModel, mergeData } from '../../../utils/modelUtils'
 // //Transforms//////
@@ -110,7 +112,7 @@ export function makeTransformsSystem (actions) {
   }
 
   function applySnapStates (id, transformation, settings) {
-    console.log('applySnapStates')
+    console.log('applySnapStates', transformation)
     let {uniformScaling, snapScaling, snapRotation, snapTranslation} = settings
 
     if (uniformScaling) { transformation.sca = applyUniformScaling(transformation.sca) }
@@ -122,12 +124,21 @@ export function makeTransformsSystem (actions) {
   }
 
   function updateComponents (state, inputs) {
-    console.log('updating transforms', inputs)
+    /*console.log('updating transforms', inputs)
+    const currentAvg = pluck('pos')(transforms)
+      .reduce(function (acc, cur) {
+        if(!acc) return cur
+        return [acc[0] + cur[0], acc[1] + cur[1], acc[2] + cur[2]].map(x => x * 0.5)
+      }, undefined)*/
+
     return inputs.reduce(function (state, input) {
+
       state = mergeData({}, state)
       let {id} = input
       let transformation = input.value || transformDefaults
       state[id] = applySnapStates(input.id, transformation, input.settings)
+      //state[id]['pos'] = [ state[id]['pos'][0] +input.value[0], state[id]['pos'][1] +input.value[1], state[id]['pos'][2] +input.value[2]]
+      //console.log('updating data of component', id)
       return state
     }, state)
   }
