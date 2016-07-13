@@ -28,8 +28,6 @@ function refineActions (props$, actions) {
     //.filter(exists)
 
   const changeTransformsBase$ = actions.changeTransforms$
-    .tap(e=>console.log('changeTransforms',e))
-    //.combineLatest(selections$)
     .withLatestFrom(transforms$, selections$, function (changed, transforms, selections) {
       let _transforms = JSON.parse(JSON.stringify(transforms)) // FIXME : this is needed because of mutation bug
       let avg = pluck(changed.trans)(_transforms)
@@ -45,7 +43,6 @@ function refineActions (props$, actions) {
     })
     .filter(x=> x.value !== undefined)
     .share()
-
 
   const selectionTransforms$ =
     selections$.distinctUntilChanged()
@@ -102,10 +99,11 @@ function refineActions (props$, actions) {
         return {value: diff, trans, id}
       })
     })
+    .tap(e=>console.log('input FIRST',e))
   }
 
   const changeTransforms$ = combiner(changeTransformsF$)
-  
+
   return {
     changeMeta$: actions.changeMeta$,
     changeTransforms$

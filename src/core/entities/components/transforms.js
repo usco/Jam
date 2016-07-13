@@ -111,34 +111,33 @@ export function makeTransformsSystem (actions) {
     return transformValues
   }
 
-  function applySnapStates (id, transformation, settings) {
+  function applySnapStates (transformationType, transformation, settings) {
     console.log('applySnapStates', transformation)
     let {uniformScaling, snapScaling, snapRotation, snapTranslation} = settings
 
-    if (uniformScaling) { transformation.sca = applyUniformScaling(transformation.sca) }
-    if (snapScaling) { transformation.sca = applySnapping(transformation.sca, snapDefaults.sca) }
-    if (snapTranslation) { transformation.pos = applySnapping(transformation.pos, snapDefaults.pos) }
-    if (snapRotation) { transformation.rot = applySnapping(transformation.rot, snapDefaults.rot, (2 * Math.PI)) }
-
+    if (uniformScaling && transformationType === 'sca') { transformation = applyUniformScaling(transformation) }
+    if (snapScaling && transformationType === 'sca') { transformation = applySnapping(transformation, snapDefaults[transformationType]) }
+    if (snapTranslation && transformationType === 'pos') { transformation = applySnapping(transformation, snapDefaults[transformationType]) }
+    if (snapRotation && transformationType === 'rot') { transformation = applySnapping(transformation, snapDefaults[transformationType], (2 * Math.PI)) }
+    console.log('output',transformation)
     return transformation
   }
 
   function updateComponents (state, inputs) {
-    /*console.log('updating transforms', inputs)
-    const currentAvg = pluck('pos')(transforms)
-      .reduce(function (acc, cur) {
-        if(!acc) return cur
-        return [acc[0] + cur[0], acc[1] + cur[1], acc[2] + cur[2]].map(x => x * 0.5)
-      }, undefined)*/
-
     return inputs.reduce(function (state, input) {
 
       state = mergeData({}, state)
       let {id} = input
-      let transformation = input.value || transformDefaults
-      //state[id] = applySnapStates(input.id, transformation, input.settings)
-      state[id]['pos'] = [ state[id]['pos'][0] +input.value[0], state[id]['pos'][1] +input.value[1], state[id]['pos'][2] +input.value[2]]
-      //console.log('updating data of component', id)
+
+
+      const transformation = input.value.map(function (value, index) {
+        return state[id][input.trans][index] + value
+      }) || transformDefaults
+
+      console.log('input',input,transformation)
+
+      state[id][input.trans] = applySnapStates(input.trans, transformation, input.settings)
+
       return state
     }, state)
   }

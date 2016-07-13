@@ -129,7 +129,8 @@ export function remapTransformActions (entityActions, componentBase$, settings$)
     })*/
     .withLatestFrom(settings$, function (transforms, settings) {
       return transforms.map(function (transform, index) {
-        return {id: transform.id, value: transform.value || transforms[0].value, settings}
+        return mergeData({}, transform, {settings})
+        //return {id: transform.id, value: transform.value || transforms[0].value, settings}
       })
     })
 
