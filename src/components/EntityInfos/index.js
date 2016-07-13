@@ -24,40 +24,94 @@ function refineActions (props$, actions) {
   const transforms$ = props$.pluck('transforms')
     .filter(exists)
 
-  /*
   const changeTransformsBase$ = actions.changeTransforms$
-    .withLatestFrom(transforms$, selections$, function (changed, transforms) {
+    .tap(e=>console.log('changeTransforms',e))
+    //.combineLatest(selections$)
+    .withLatestFrom(transforms$, selections$, function (changed, transforms, selections) {
       let _transforms = JSON.parse(JSON.stringify(transforms)) // FIXME : this is needed because of mutation bug
-
       let avg = pluck(changed.trans)(_transforms)
         .reduce(function (acc, cur) {
           if(!acc) return cur
           return [acc[0] + cur[0], acc[1] + cur[1], acc[2] + cur[2]].map(x => x * 0.5)
         }, undefined)
-      avg[changed.idx] = changed.val
-      return {value: avg, trans: changed.trans, id: changed.idx}
-    })//.merge(selections$.distinctUntilChanged().map(x => ({ value:[0,0,0] }) ))
 
-  const firstDiff$ = actions.changeTransforms$
-    .take(1)
-    .map( function (changed) {
-      let diff = [0, 0, 0]
-      diff[changed.idx] = changed.val
-      return {value: diff, trans: changed.trans, id: changed.idx}
+      if(avg){
+        avg[changed.idx] = changed.val
+      }
+      return {value:avg, trans:changed.trans, id:changed.idx, ids: selections}
+    })
+    .filter(x=> x.value !== undefined)
+    .share()
+
+  const selectionTransforms$ =
+    selections$.distinctUntilChanged()
+    .withLatestFrom(changeTransformsBase$, transforms$, function(selections, data, transforms){
+      let _transforms = JSON.parse(JSON.stringify(transforms)) // FIXME : this is needed because of mutation bug
+      let avg = pluck(data.trans)(_transforms)
+        .reduce(function (acc, cur) {
+          if(!acc) return cur
+          return [acc[0] + cur[0], acc[1] + cur[1], acc[2] + cur[2]].map(x => x * 0.5)
+        }, undefined)
+
+      const res = assign({}, data, {value: avg, cmd: 'reset'})
+      return res
     })
 
-  const changeTransformsBasePos$ = changeTransformsBase$
-    .filter(({trans}) => trans === 'pos')
+  const changeTransformsF$ = changeTransformsBase$.merge(selectionTransforms$)
 
-  const changeTransformsBaseRot$ = changeTransformsBase$
-    .filter(({trans}) => trans === 'rot')
 
-  const changeTransforms$ = changeTransformsBase$
+  function combiner (stream) {
+    return stream.scan(function(acc, changed){
+      //console.log('acc', acc, changed)
+      if(!acc){
+        let diff = [0, 0, 0]
+        diff[changed.id] = changed.value[changed.id]
+        return [{diff, value: changed.value, trans: changed.trans, ids: changed.ids}]
+      }else{
+        if(changed.cmd === 'reset') {
+        //const currentSelections = JSON.stringify(changed.ids)
+        //const prevSelections = JSON.stringify(acc[0].ids)
+        //if(currentSelections !== prevSelections){//selection changed, reset
+          console.log('selection changed, reseting')
+          let diff = [0, 0, 0]
+          //diff[changed.id] = changed.value[changed.id]
+          console.log('diff', diff, 'new', changed.value)
+          return [{diff, value: changed.value, trans: changed.trans, ids: changed.ids}]
+        }
+
+        if( acc.length < 2 ){ // adding a new one
+          acc.push(changed)
+        }
+        if(acc.length === 2){
+          const [first, second] = acc
+          const diff = [second.value[0] - first.value[0], second.value[1] - first.value[1], second.value[2] - first.value[2]]
+           console.log('diff', diff, 'old', first.value, 'new', second.value)
+          return [{diff, value: second.value, trans: second.trans, ids: second.ids}]
+        }
+      }
+    }, undefined)
+    .filter(x => x.length === 1)
+    .map(x=> x[0])
+    //.tap(e=>console.log('res',e.diff, e))
+    .map(function(data){
+      const {diff, trans, ids} = data
+      return ids.map(function(id){
+        return {value: diff, trans, id}
+      })
+    })
+    //.tap(e=>console.log('res2',e))
+
+  }
+
+
+
+  const changeTransforms$ = combiner(changeTransformsF$)
+  /*changeTransformsBase$
     .bufferWithCount(2,1)
     .map(function(buffer){
       const [first, second] = buffer
       const diff = [second.value[0] - first.value[0], second.value[1] - first.value[1], second.value[2] - first.value[2]]
-      console.log('diff', diff, 'old', first.value, 'new', second.value)
+      //console.log('diff', diff, 'old', first.value, 'new', second.value)
       return {value: diff, trans: second.trans, id: second.id}
     })
     .merge(firstDiff$)
@@ -66,9 +120,9 @@ function refineActions (props$, actions) {
       return selections.map(function(id, index){
         return assign({},diff,{id})
       })
-    })
-  */
-  const changeTransforms$ = actions.changeTransforms$
+    })*/
+
+  /*const changeTransforms$ = actions.changeTransforms$
     .tap(e=>console.log('changeTransforms',e))
     .withLatestFrom(transforms$, selections$, function (changed, transforms, selections) {
       return transforms.map(function(transform){
@@ -81,7 +135,7 @@ function refineActions (props$, actions) {
 
         return output
       })
-    })
+    })*/
 
   return {
     changeMeta$: actions.changeMeta$,

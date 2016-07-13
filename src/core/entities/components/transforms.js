@@ -136,8 +136,8 @@ export function makeTransformsSystem (actions) {
       state = mergeData({}, state)
       let {id} = input
       let transformation = input.value || transformDefaults
-      state[id] = applySnapStates(input.id, transformation, input.settings)
-      //state[id]['pos'] = [ state[id]['pos'][0] +input.value[0], state[id]['pos'][1] +input.value[1], state[id]['pos'][2] +input.value[2]]
+      //state[id] = applySnapStates(input.id, transformation, input.settings)
+      state[id]['pos'] = [ state[id]['pos'][0] +input.value[0], state[id]['pos'][1] +input.value[1], state[id]['pos'][2] +input.value[2]]
       //console.log('updating data of component', id)
       return state
     }, state)
