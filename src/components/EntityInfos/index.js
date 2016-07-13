@@ -23,6 +23,9 @@ function refineActions (props$, actions) {
   const selections$ = props$.pluck('selections')
   const transforms$ = props$.pluck('transforms')
     .filter(exists)
+  const activeTool$ = props$.pluck('settings','activeTool')
+    .distinctUntilChanged()
+    //.filter(exists)
 
   const changeTransformsBase$ = actions.changeTransforms$
     .tap(e=>console.log('changeTransforms',e))
@@ -43,39 +46,40 @@ function refineActions (props$, actions) {
     .filter(x=> x.value !== undefined)
     .share()
 
+
   const selectionTransforms$ =
     selections$.distinctUntilChanged()
-    .withLatestFrom(changeTransformsBase$, transforms$, function(selections, data, transforms){
+    .withLatestFrom(transforms$, (selections, transforms) => ({selections, transforms}))
+    .combineLatest(activeTool$, function ({selections, transforms}, activeTool) {
+      const trans = {'translate': 'pos', 'rotate': 'rot', 'scale': 'sca'}[activeTool]
       let _transforms = JSON.parse(JSON.stringify(transforms)) // FIXME : this is needed because of mutation bug
-      let avg = pluck(data.trans)(_transforms)
+      let avg = pluck(trans)(_transforms)
         .reduce(function (acc, cur) {
           if(!acc) return cur
           return [acc[0] + cur[0], acc[1] + cur[1], acc[2] + cur[2]].map(x => x * 0.5)
         }, undefined)
-
-      const res = assign({}, data, {value: avg, cmd: 'reset'})
-      return res
+      return {value: avg, trans: trans, ids: selections, cmd: 'reset'}
     })
+    .filter(x=> x.value !== undefined && x.trans !== undefined)
 
   const changeTransformsF$ = changeTransformsBase$.merge(selectionTransforms$)
 
 
   function combiner (stream) {
     return stream.scan(function(acc, changed){
-      //console.log('acc', acc, changed)
       if(!acc){
         let diff = [0, 0, 0]
-        diff[changed.id] = changed.value[changed.id]
+        if(changed.id){
+          diff[changed.id] = changed.value[changed.id]
+        }
+        console.log('diff', diff, 'new', changed.value)
         return [{diff, value: changed.value, trans: changed.trans, ids: changed.ids}]
       }else{
         if(changed.cmd === 'reset') {
-        //const currentSelections = JSON.stringify(changed.ids)
-        //const prevSelections = JSON.stringify(acc[0].ids)
-        //if(currentSelections !== prevSelections){//selection changed, reset
-          console.log('selection changed, reseting')
+          //selection changed, reset
+          //console.log('selection changed, reseting')
           let diff = [0, 0, 0]
-          //diff[changed.id] = changed.value[changed.id]
-          console.log('diff', diff, 'new', changed.value)
+          //console.log('diff', diff, 'new', changed.value)
           return [{diff, value: changed.value, trans: changed.trans, ids: changed.ids}]
         }
 
@@ -92,51 +96,16 @@ function refineActions (props$, actions) {
     }, undefined)
     .filter(x => x.length === 1)
     .map(x=> x[0])
-    //.tap(e=>console.log('res',e.diff, e))
     .map(function(data){
       const {diff, trans, ids} = data
       return ids.map(function(id){
         return {value: diff, trans, id}
       })
     })
-    //.tap(e=>console.log('res2',e))
-
   }
 
-
-
   const changeTransforms$ = combiner(changeTransformsF$)
-  /*changeTransformsBase$
-    .bufferWithCount(2,1)
-    .map(function(buffer){
-      const [first, second] = buffer
-      const diff = [second.value[0] - first.value[0], second.value[1] - first.value[1], second.value[2] - first.value[2]]
-      //console.log('diff', diff, 'old', first.value, 'new', second.value)
-      return {value: diff, trans: second.trans, id: second.id}
-    })
-    .merge(firstDiff$)
-
-    .withLatestFrom(selections$, function(diff, selections){
-      return selections.map(function(id, index){
-        return assign({},diff,{id})
-      })
-    })*/
-
-  /*const changeTransforms$ = actions.changeTransforms$
-    .tap(e=>console.log('changeTransforms',e))
-    .withLatestFrom(transforms$, selections$, function (changed, transforms, selections) {
-      return transforms.map(function(transform){
-        // let output = assign({},transforms) // this does not create a new instance huh WHY????
-        // let output = mergeData(transforms) // not working either ????
-        let output = JSON.parse(JSON.stringify(transform))
-        output[changed.trans][changed.idx] = changed.val
-        output.id = selections[0]
-        console.log(output.id,changed.idx)
-
-        return output
-      })
-    })*/
-
+  
   return {
     changeMeta$: actions.changeMeta$,
     changeTransforms$
