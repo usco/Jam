@@ -59,8 +59,8 @@ function reverseSelections (intents, idsMapper$) {
     .distinctUntilChanged(null, equals)
 
   return {
-    selectEntities$: selectEntities$.distinctUntilChanged(null, equals),
-    selectBomEntries$: selectBomEntries$.distinctUntilChanged(null, equals),
+    selectEntities$: selectEntities$,//.distinctUntilChanged(null, equals),
+    selectBomEntries$: selectBomEntries$,//.distinctUntilChanged(null, equals),
     focusOnEntities$
   }
 }
