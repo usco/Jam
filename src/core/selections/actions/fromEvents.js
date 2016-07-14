@@ -1,3 +1,4 @@
+import Rx from 'rx'
 import { toArray, exists } from '../../../utils/utils'
 import { hasEntity, getEntity } from '../../../utils/entityUtils'
 import { flatten, equals, pluck } from 'ramda'
@@ -37,7 +38,8 @@ function reverseSelections (intents, idsMapper$) {
     // .do(e=>console.log("reversing instance selections to selectBomEntries"))
     .withLatestFrom(idsMapper$, function (entityIds, idsMapper) {
       return {
-        ids: flatten(entityIds.map(id => idsMapper.typeUidFromInstUid[id])).filter(exists)
+        ids: flatten(entityIds.map(id => idsMapper.typeUidFromInstUid[id])).filter(exists),
+        idsMapper
       }
     })
     .merge(intents.selectBomEntries$.map(x => ({ ids: pluck('id')(x) })))
@@ -47,17 +49,43 @@ function reverseSelections (intents, idsMapper$) {
     .selectBomEntries$
     // .do(e=>console.log("reversing BOM selections to selectEntities"))
     .withLatestFrom(idsMapper$, function (bomIds, idsMapper) {
-      console.log('bomIds', bomIds)
       return {
         //if the bom entrys are already selected we want to UNSELECT
-        ids: bomIds[0].selected? [] : flatten(bomIds.map(({id}) => idsMapper.instUidFromTypeUid[id])).filter(exists),
+        ids: bomIds[0].selected ? [] : flatten(bomIds.map(({id}) => idsMapper.instUidFromTypeUid[id])).filter(exists),
         override: true,
+        idsMapper
       }
     })
     // .do(e=>console.log("selectedEntities",e))
-    .merge(intents.selectEntities$.map(x => ({ ids: x })))
+    //.merge(intents.selectEntities$.map(x => ({ ids: x })))
+    .merge( intents.selectEntities$.withLatestFrom(idsMapper$,function(ids, idsMapper){
+      return {
+        ids,
+        idsMapper
+      }
+    }))
 
 
+  ///////////
+  const selectBomEntries2$ = intents.selectBomEntries$.withLatestFrom(idsMapper$, function (ids, idsMapper) {
+      return {
+        ids: pluck('id')(ids),
+        idsMapper,
+        type: 'types'
+      }
+    })
+
+
+
+  const selectEntities2$ = intents.selectEntities$.withLatestFrom(idsMapper$, function (ids, idsMapper) {
+      return {
+        ids,
+        idsMapper,
+        type: 'instances'
+      }
+    })
+
+  const selectInstancesAndTypes$ = selectEntities2$.merge(selectBomEntries2$)
 
 
   const focusOnEntities$ = intents
@@ -68,8 +96,9 @@ function reverseSelections (intents, idsMapper$) {
     .distinctUntilChanged(null, equals)
 
   return {
-    selectEntities$: selectEntities$,//.distinctUntilChanged(null, equals),
-    selectBomEntries$: selectBomEntries$,//.distinctUntilChanged(null, equals),
-    focusOnEntities$
+    selectEntities$: Rx.Observable.never(),//selectEntities$,//.distinctUntilChanged(null, equals),
+    selectBomEntries$: Rx.Observable.never(),//selectBomEntries$,//.distinctUntilChanged(null, equals),
+    focusOnEntities$,
+    selectInstancesAndTypes$
   }
 }
