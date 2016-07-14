@@ -341,8 +341,9 @@ function GLView ({drivers, props$}) {
     })
 
   // experimenting with selections effects
+  //FIXME : use data, not mesh level things
   outlineSelections$
-    .pluck('selectedMeshes')
+    .pluck('selectedMeshesFromSelections')
     .distinctUntilChanged()
     .filter(exists)
     .forEach(function (selectedMeshes) {

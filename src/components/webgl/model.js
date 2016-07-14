@@ -151,6 +151,7 @@ export default function model (props$, actions) {
         })
     })
     .distinctUntilChanged()
+    .startWith([])
     .shareReplay(1)
 
   const selectedMeshes$ = actions.selectMeshes$ // these are only selections made WITHIN the GL view
@@ -184,6 +185,7 @@ export default function model (props$, actions) {
   return combineLatestObj({
     items$,
     selectedMeshes$,
+    selectedMeshesFromSelections$,
     focusedMeshesFromFocusedEntities$
   })
 }
