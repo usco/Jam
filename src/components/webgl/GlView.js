@@ -64,7 +64,7 @@ function setupPostProcess (camera, renderer, scene) {
   let uniforms = {
     offset: {
       type: 'f',
-      value: 0.4
+      value: 0.9
     },
     color: {
       type: 'c',
