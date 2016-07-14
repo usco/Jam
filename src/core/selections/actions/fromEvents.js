@@ -1,6 +1,6 @@
 import { toArray, exists } from '../../../utils/utils'
 import { hasEntity, getEntity } from '../../../utils/entityUtils'
-import { flatten, equals } from 'ramda'
+import { flatten, equals, pluck } from 'ramda'
 
 export default function intent (events, params) {
   const {idsMapper$} = params
@@ -36,20 +36,29 @@ function reverseSelections (intents, idsMapper$) {
     .selectEntities$
     // .do(e=>console.log("reversing instance selections to selectBomEntries"))
     .withLatestFrom(idsMapper$, function (entityIds, idsMapper) {
-      return flatten(entityIds.map(id => idsMapper.typeUidFromInstUid[id])).filter(exists)
+      return {
+        ids: flatten(entityIds.map(id => idsMapper.typeUidFromInstUid[id])).filter(exists)
+      }
     })
-    // .do(e=>console.log("selectedBomEntries",e))
-    .merge(intents.selectBomEntries$)
+    .merge(intents.selectBomEntries$.map(x => ({ ids: pluck('id')(x) })))
 
   // select entities from bom entries
   const selectEntities$ = intents
     .selectBomEntries$
     // .do(e=>console.log("reversing BOM selections to selectEntities"))
     .withLatestFrom(idsMapper$, function (bomIds, idsMapper) {
-      return flatten(bomIds.map(id => idsMapper.instUidFromTypeUid[id])).filter(exists)
+      console.log('bomIds', bomIds)
+      return {
+        //if the bom entrys are already selected we want to UNSELECT
+        ids: bomIds[0].selected? [] : flatten(bomIds.map(({id}) => idsMapper.instUidFromTypeUid[id])).filter(exists),
+        override: true,
+      }
     })
     // .do(e=>console.log("selectedEntities",e))
-    .merge(intents.selectEntities$)
+    .merge(intents.selectEntities$.map(x => ({ ids: x })))
+
+
+
 
   const focusOnEntities$ = intents
     .focusOnEntities$

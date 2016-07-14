@@ -1,10 +1,22 @@
 import { toArray } from '../../utils/utils'
 import { makeModel, mergeData } from '../../utils/modelUtils'
 
-import {without} from 'ramda'
+import { without, pluck } from 'ramda'
 
-function multiSelectionHelper(state, input){
-  const newSelections = toArray(input)
+
+/*rules:
+  - tap instance to select it, tap the same one to unselect it (basic multi select)
+  - tap bom entry/part to select it, tap the same one to unselect it (basic multi select)
+
+  - taping in 'empty space' unselects all
+
+  - even a single selected instance selects the whole part (bom entry) (can only unselect bom entry if there are no more selected instances)
+  - taping a bom entry selects all instances regardless of previous instance selections (override)
+
+*/
+function multiSelectionHelper(state, input, fullState){
+  const {ids, override} = input
+  const newSelections = toArray(ids)
   const existingSelections = state
 
   const nSelect = new Set(newSelections)
@@ -13,20 +25,28 @@ function multiSelectionHelper(state, input){
   const intersection = new Set([...nSelect].filter(x => oSelect.has(x)))
 
   //intersections are the ones we do NOT want
-  const newState = newSelections.length === 0 ? [] : without([...intersection], [...union])
+  let newState = []
+  if(newSelections.length !== 0){
+    if(override){
+      newState = newSelections
+    }else{
+      newState = without([...intersection], [...union])
+    }
+  }
+  //const newState = newSelections.length === 0 ? [] : without([...intersection], [...union])
   return newState
 }
 
 function selectEntities (state, input) {
-  // console.info("selecting entitites",input)
-  const newState = multiSelectionHelper(state.instIds, input)
+  console.info("selecting instances",input)
+  const newState = multiSelectionHelper(state.instIds, input, state)
   console.log('selected instances', newState)
   return mergeData(state, {instIds: newState})
 }
 
 function selectBomEntries (state, input) {
-  // log.info("selecting types",sBomIds)
-  const newState = multiSelectionHelper(state.bomIds, input)
+  console.info("selecting types", input)
+  const newState = multiSelectionHelper(state.bomIds, input, state)
   console.log('selected parts', newState)
 
   return mergeData(state, {bomIds: newState})
