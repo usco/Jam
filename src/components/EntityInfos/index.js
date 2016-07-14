@@ -5,7 +5,7 @@ import view from './view'
 import intent from './intent'
 import assign from 'fast.js/object/assign' // faster object.assign
 
-import {pluck} from 'ramda'
+import {pluck, head} from 'ramda'
 
 //
 function model (props$, actions) {
@@ -23,9 +23,8 @@ function refineActions (props$, actions) {
   const selections$ = props$.pluck('selections')
   const transforms$ = props$.pluck('transforms')
     .filter(exists)
-  const activeTool$ = props$.pluck('settings','activeTool')
+  const activeTool$ = props$.pluck('settings', 'activeTool')
     .distinctUntilChanged()
-    //.filter(exists)
 
   const changeTransformsBase$ = actions.changeTransforms$
     .withLatestFrom(transforms$, selections$, function (changed, transforms, selections) {
@@ -39,7 +38,7 @@ function refineActions (props$, actions) {
       if(avg){
         avg[changed.idx] = changed.val
       }
-      return {value:avg, trans:changed.trans, id:changed.idx, ids: selections}
+      return {value: avg, trans: changed.trans, id: changed.idx, ids: selections}
     })
     .filter(x=> x.value !== undefined)
     .share()
@@ -63,36 +62,36 @@ function refineActions (props$, actions) {
 
 
   function combiner (stream) {
-    return stream.scan(function(acc, changed){
-      if(!acc){
+    return stream.scan(function (acc, changed) {
+      if(!acc) {
         let diff = [0, 0, 0]
-        if(changed.id){
+        if(changed.id) {
           diff[changed.id] = changed.value[changed.id]
         }
-        console.log('diff', diff, 'new', changed.value)
+        //console.log('diff', diff, 'new', changed.value)
         return [{diff, value: changed.value, trans: changed.trans, ids: changed.ids}]
       }else{
-        if(changed.cmd === 'reset') {
-          //selection changed, reset
+        if(changed.cmd === 'reset')// selection changed, reset
+        {
           //console.log('selection changed, reseting')
           let diff = [0, 0, 0]
           //console.log('diff', diff, 'new', changed.value)
           return [{diff, value: changed.value, trans: changed.trans, ids: changed.ids}]
         }
 
-        if( acc.length < 2 ){ // adding a new one
+        if(acc.length < 2) { // adding a new one
           acc.push(changed)
         }
-        if(acc.length === 2){
+        if(acc.length === 2) {
           const [first, second] = acc
           const diff = [second.value[0] - first.value[0], second.value[1] - first.value[1], second.value[2] - first.value[2]]
-           console.log('diff', diff, 'old', first.value, 'new', second.value)
+          //console.log('diff', diff, 'old', first.value, 'new', second.value)
           return [{diff, value: second.value, trans: second.trans, ids: second.ids}]
         }
       }
     }, undefined)
     .filter(x => x.length === 1)
-    .map(x=> x[0])
+    .map(head)
     .map(function(data){
       const {diff, trans, ids} = data
       return ids.map(function(id){
