@@ -5,6 +5,7 @@ import checkbox from '../widgets/Checkbox'
 import {transformInputs} from './helpers'
 
 import { toDegree } from '../../utils/formatters'
+import {pluck} from 'ramda'
 
 
 const icon = `<svg width="25px" height="24px" viewBox="0 0 25 24" class='icon'
@@ -36,7 +37,14 @@ export function renderRotationUi (state) {
   let { transforms } = data
   if (transforms.length > 0) transforms = transforms[0]
 
-  const values = (transforms.rot || [0, 0, 0]).map(toDegree)// convert to degrees
+  // compute the average rotation
+  const avg= pluck('rot')(data.transforms)
+    .reduce(function (acc, cur) {
+      if(!acc) return cur
+      return [acc[0] + cur[0], acc[1] + cur[1], acc[2] + cur[2]].map(x => x * 0.5)
+    }, undefined)
+
+  const values = (avg || [0, 0, 0]).map(toDegree)// convert to degrees
 
   const subTools = <span className='rotationSubTools'>
     <div className='transformsGroup'>
