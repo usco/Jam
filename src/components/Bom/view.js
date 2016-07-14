@@ -134,6 +134,8 @@ export default function view (state$) {
 
       function getCells (row, placeholder) {
         const baseClassName = row.hasOwnProperty('_adder') ? 'adder cell' : 'bomEntry cell'
+        const selected = selectedEntries.indexOf(row.id) > -1
+        
         let cells = fieldNames.map(function (name) {
           const columnName = 'column' + fieldNames.indexOf(name)
 
@@ -143,7 +145,7 @@ export default function view (state$) {
           let value = getInputField(row, name, placeholder)
           return h('td',
             {props: {className: `${baseClassName} ${columnName} ${name}`},
-            attrs: {'data-name': name, 'data-id': row.id}}, [value])
+            attrs: {'data-name': name, 'data-id': row.id, 'data-selected': selected}}, [value])
 
           /*(<td className={`${baseClassName} ${columnName} ${name}`} attributes={{'data-name': name, 'data-id': row.id}}>
                     {value}

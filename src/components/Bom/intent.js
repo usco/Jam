@@ -2,13 +2,13 @@ import Rx from 'rx'
 const { merge } = Rx.Observable
 import { combineLatestObj } from '../../utils/obsUtils'
 import { mergeData } from '../../utils/modelUtils'
-import { generateUUID } from '../../utils/utils'
+import { generateUUID, stringToBoolean } from '../../utils/utils'
 
 export default function intent (DOM) {
 
   const entryTaps$ = DOM.select('.bom .normal').events('click', true) // capture == true
     .tap(e => e.stopPropagation())
-    .map(e => e.target.dataset.id)
+    .map(e => ({id: e.target.dataset.id, selected: stringToBoolean(e.target.dataset.selected)}))
 
   const entryMultiTaps$ = entryTaps$
     .buffer(entryTaps$.debounce(250))
