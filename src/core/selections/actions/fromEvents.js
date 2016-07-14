@@ -4,8 +4,6 @@ import { hasEntity, getEntity } from '../../../utils/entityUtils'
 import { flatten, equals, pluck } from 'ramda'
 
 export default function intent (events, params) {
-  const {idsMapper$} = params
-
   const selectEntities$ = events.select('gl').events('selectedMeshes$')
     .map(extractEntities)
     .map(toArray)
@@ -23,14 +21,16 @@ export default function intent (events, params) {
     selectEntities$,
     selectBomEntries$,
     focusOnEntities$
-  }, idsMapper$)
+  }, params)
 }
 
 function extractEntities (data) {
   return data.filter(hasEntity).map(getEntity).map(e => e.id)
 }
 
-function reverseSelections (intents, idsMapper$) {
+function reverseSelections (intents, params) {
+  const {idsMapper$, removeTypes$, removeInstances$} = params
+
   // what we want is actually typeUid!
   // select bom entries from entities
   const selectBomEntries$ = intents
@@ -75,8 +75,6 @@ function reverseSelections (intents, idsMapper$) {
       }
     })
 
-
-
   const selectEntities2$ = intents.selectEntities$.withLatestFrom(idsMapper$, function (ids, idsMapper) {
       return {
         ids,
@@ -96,9 +94,9 @@ function reverseSelections (intents, idsMapper$) {
     .distinctUntilChanged(null, equals)
 
   return {
-    selectEntities$: Rx.Observable.never(),//selectEntities$,//.distinctUntilChanged(null, equals),
-    selectBomEntries$: Rx.Observable.never(),//selectBomEntries$,//.distinctUntilChanged(null, equals),
     focusOnEntities$,
-    selectInstancesAndTypes$
+    selectInstancesAndTypes$,
+    removeInstances$:removeInstances$.tap(e=>console.log('mlkmkll',e)),
+    removeTypes$
   }
 }
