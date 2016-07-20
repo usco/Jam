@@ -127,32 +127,24 @@ export function makeTransformsSystem (actions) {
 
   function updateComponents (state, inputs) {
 
-    const currentStateFlat = inputs.map(function(input){
-      return state[input.id]
-    })
+    const currentStateFlat = inputs.map((input) => state[input.id])
 
     const transform = head(inputs)['trans']
-    console.log('transform', transform)
     const currentAvg = pluck(transform)(currentStateFlat)
       .reduce(function (acc, cur) {
         if(!acc) return cur
         return [acc[0] + cur[0], acc[1] + cur[1], acc[2] + cur[2]].map(x => x * 0.5)
       }, undefined)
-    console.log('currentAvg', currentAvg)
 
     return inputs.reduce(function (state, input) {
-
       state = mergeData({}, state)
       let {id} = input
 
       const diff = [input.value[0] - currentAvg[0], input.value[1] - currentAvg[1], input.value[2] - currentAvg[2]]
-      console.log('diff', diff)
 
       const transformation = diff.map(function (value, index) {
         return state[id][input.trans][index] + value
       }) || transformDefaults
-
-      console.log('input',input,transformation)
 
       state[id][input.trans] = applySnapStates(input.trans, transformation, input.settings)
 
