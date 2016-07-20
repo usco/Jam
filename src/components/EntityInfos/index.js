@@ -38,12 +38,20 @@ function refineActions (props$, actions) {
       if(avg){
         avg[changed.idx] = changed.val
       }
-      return {value: avg, trans: changed.trans, id: changed.idx, ids: selections}
+      //return {value: avg, trans: changed.trans, id: changed.idx, ids: selections}
+      return {value: avg, trans: changed.trans, ids: selections}
     })
     .filter(x=> x.value !== undefined)
+    .map(function(data){
+      const {value, trans, ids} = data
+      return ids.map(function(id){
+        return {value: value, trans, id}
+      })
+    })
     .share()
+    .tap(e=>console.log('transforms',e))
 
-  const selectionTransforms$ =
+  /*const selectionTransforms$ =
     selections$.distinctUntilChanged()
     .withLatestFrom(transforms$, (selections, transforms) => ({selections, transforms}))
     .combineLatest(activeTool$, function ({selections, transforms}, activeTool) {
@@ -101,7 +109,8 @@ function refineActions (props$, actions) {
     .tap(e=>console.log('input FIRST',e))
   }
 
-  const changeTransforms$ = combiner(changeTransformsF$)
+  const changeTransforms$ = combiner(changeTransformsF$)*/
+  const changeTransforms$ = changeTransformsBase$
 
   return {
     changeMeta$: actions.changeMeta$,
