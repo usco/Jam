@@ -11,6 +11,9 @@ import { toArray } from '../../utils/utils'
 
 import { getCoordsFromPosSizeRect } from './deps/Selector'
 
+import {pluck, head} from 'ramda'
+
+
 // get original data +  picking infos
 function addPickingInfos (inStream$, containerResizes$, camera, scene) {
   return inStream$
@@ -45,7 +48,7 @@ function objectAndPosition (pickingInfo) {
 
 export default function intent (sources, data) {
   let {DOM} = sources
-  let {camera, scene, transformControls} = data
+  let {camera, scene, transformControls, props$, settings$} = data
 
   const windowResizes$ = windowResizes(1) // get from intents/interactions ?
   const elementResizes$ = elementResizes('.container', 1)
@@ -132,10 +135,31 @@ export default function intent (sources, data) {
   let filteredInteractions$ = {dragMoves$: fDragMoves$, zooms$}
 
 
+  const selections$ = props$.pluck('selections').startWith([]).filter(exists).distinctUntilChanged()
+    .map(x=>x.map(y=>y.id))//we just need the ids
+  const activeTool$ = settings$.pluck('activeTool').startWith(undefined).distinctUntilChanged()
+
+
   // stream of transformations done on the current selection
   const selectionsTransforms$ = fromEvent(transformControls, 'objectChange')
+    //.tap(e=>console.log('sdfsdf',e))
     .map(targetObject)
-    .map(function (t) {
+    .withLatestFrom(selections$, activeTool$, function (t, selections, activeTool) {
+      const transform = {'translate': 'pos', 'rotate': 'rot', 'scale': 'sca'}[activeTool]
+      //changed.trans
+      /*const transforms = []
+        let avg = pluck(transform)(transforms)
+        .reduce(function (acc, cur) {
+          if(!acc) return cur
+          return [acc[0] + cur[0], acc[1] + cur[1], acc[2] + cur[2]].map(x => x * 0.5)
+        }, undefined)*/
+      const avg = {
+        pos: t.position.toArray().slice(0, 3),
+        rot: t.rotation.toArray().slice(0, 3),
+        sca: t.scale.toArray().slice(0, 3).map((val,index) => (t.flipped && t.flipped[index] === 1)? val * -1: val)//to handle negative scaling/mirrored data, as the transformControls always return values >0
+      }[transform]
+      return {value: avg, trans: transform, ids: selections}
+
       return {
         id: t.userData.entity.id,
         pos: t.position.toArray().slice(0, 3),
@@ -143,6 +167,14 @@ export default function intent (sources, data) {
         sca: t.scale.toArray().slice(0, 3).map((val,index) => (t.flipped && t.flipped[index] === 1)? val * -1: val)//to handle negative scaling/mirrored data, as the transformControls always return values >0
       }
     })
+    .map(function(data){
+      const {value, trans, ids} = data
+      return ids.map(function(id){
+        return {value: value, trans, id}
+      })
+    })
+    //return {value: avg, trans: changed.trans, ids: selections}
+
 
   return {
     userAction$,

@@ -166,7 +166,7 @@ function GLView ({drivers, props$}) {
   let grid = new LabeledGrid(200, 200, 10, config.cameras[0].up)
   let shadowPlane = new ShadowPlane(2000, 2000, null, config.cameras[0].up)
 
-  const actions = intent({DOM, events: drivers.events}, {camera, scene, transformControls})
+  const actions = intent({DOM, events: drivers.events}, {camera, scene, transformControls, props$, settings$})
   const state$ = model(props$, actions)
 
   // FIXME: proxies for now, not sure how to deal with them
