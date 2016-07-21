@@ -90,8 +90,8 @@ export default function intent (sources, data) {
     .shareReplay(1)
   const longTapsWPicking$ = addPickingInfos(longTaps$, windowResizes$, camera, scene)
     .withLatestFrom(tControlsActive$, function (longTaps, tCActive) { // disable long taps in case we are manipulating an object
-      if (longTaps) return undefined
-      return tCActive
+      if (tCActive) return undefined
+      return longTaps
     })
     .filter(exists)
     .shareReplay(1)
