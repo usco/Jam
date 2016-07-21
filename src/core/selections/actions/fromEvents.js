@@ -17,10 +17,17 @@ export default function intent (events, params) {
     .map(toArray)
     .shareReplay(1)
 
+  const setMultiSelectMode$ = events.select('gl').events('longTaps$').tap(e=>console.log('fsf',e))
+    .merge(events.select('bom').events('entryLongTapped$'))
+    .map(e=>true)
+    .shareReplay(1)
+    //.forEach(e=>console.log('setMultiSelectMode', e))
+
   return reverseSelections({
     selectEntities$,
     selectBomEntries$,
-    focusOnEntities$
+    focusOnEntities$,
+    setMultiSelectMode$
   }, params)
 }
 
@@ -97,6 +104,7 @@ function reverseSelections (intents, params) {
     focusOnEntities$,
     selectInstancesAndTypes$,
     removeInstances$:removeInstances$.tap(e=>console.log('mlkmkll',e)),
-    removeTypes$
+    removeTypes$,
+    setMultiSelectMode$: intents.setMultiSelectMode$
   }
 }

@@ -59,7 +59,7 @@ function multiSelectionHelper2(state, input){
   let newTypesBaseStates
   if(input.type === 'instances')
   {
-    newInstancesBaseStates = multiSelectionHelper(state, 'instIds', input)
+    newInstancesBaseStates = state.multiSelect ? multiSelectionHelper(state, 'instIds', input) : input.ids
     const selectedTypesByInstances = newInstancesBaseStates.reduce(function (acc, id) {
       if (input.idsMapper) {
         acc.push(input.idsMapper.typeUidFromInstUid[id])
@@ -71,7 +71,7 @@ function multiSelectionHelper2(state, input){
     newTypesBaseStates = multiSelectionHelper(state, 'bomIds', {ids: selectedTypesByInstances, override: true})
   }
   if(input.type === 'types'){
-    newTypesBaseStates = multiSelectionHelper(state, 'bomIds', input)
+    newTypesBaseStates = state.multiSelect ? multiSelectionHelper(state, 'bomIds', input) : input.ids
     const selectedInstancesByTypes = newTypesBaseStates.reduce(function (acc, id) {
       if (input.idsMapper) {
         const foo = input.idsMapper.instUidFromTypeUid[id]
@@ -84,10 +84,16 @@ function multiSelectionHelper2(state, input){
     newInstancesBaseStates = multiSelectionHelper(state, 'bomIds', {ids: flatten(selectedInstancesByTypes), override: true})
   }
 
+  const instIds = newInstancesBaseStates ? newInstancesBaseStates.filter(exists) : state.instIds
+  const bomIds = newTypesBaseStates ? newTypesBaseStates.filter(exists) : state.bomIds
+  const multiSelect = state.multiSelect && instIds.length > 0
+
   const newState = {
-    instIds: newInstancesBaseStates ? newInstancesBaseStates.filter(exists) : state.instIds,
-    bomIds: newTypesBaseStates ? newTypesBaseStates.filter(exists) : state.bomIds
+    instIds,
+    bomIds,
+    multiSelect
   }
+
   return newState
 }
 
@@ -128,6 +134,11 @@ function removeTypes (state, input) {
   return mergeData(state, {bomIds, instIds})
 }
 
+function setMultiSelectMode (state, input) {
+  console.log('setting multiSelect', input)
+  return mergeData(state, {multiSelect: input})
+}
+
 function focusOnEntities (state, input) {
   //console.info('focusing on entitites', input)
   return mergeData(state, {focusInstIds: toArray(input)})
@@ -138,7 +149,8 @@ function selections (actions, source) {
     instIds: [],
     bomIds: [],
     // for focusing (!== selection)
-    focusInstIds: []
+    focusInstIds: [],
+    multiSelect: false
   }
 
   let updateFns = {
@@ -147,6 +159,8 @@ function selections (actions, source) {
     selectInstancesAndTypes,
     removeInstances,
     removeTypes,
+
+    setMultiSelectMode,
 
     focusOnEntities
   }
