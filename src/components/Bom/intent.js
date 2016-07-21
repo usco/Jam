@@ -26,6 +26,21 @@ export default function intent (DOM) {
     .tap(e => console.log('entryDoubleTapped', e))
     //.shareReplay(1)
 
+  const entryLongTapped$ = DOM.select('.bom .normal').events('mousedown', true)
+    .flatMap( function(downEvent) {
+      console.log('here')
+      return Rx.Observable.amb(
+        [
+          // Skip if we get a movement before a mouse up
+          DOM.select('.bom').events('mousemove', true)
+            .take(1).flatMap(x => empty()).timeInterval(),
+          DOM.select('.bom .normal').events('mouseup', true).take(1).timeInterval()
+        ])
+    })
+    .filter(e => e.interval > 250)
+    //entryLongTapped$.forEach(e=>e)
+
+
   const headerTapped$ = DOM.select('.headerCell').events('click', true)
     .tap(e => e.stopPropagation())
 
@@ -156,6 +171,7 @@ export default function intent (DOM) {
   return {
     entryTapped$,
     entryDoubleTapped$,
+    entryLongTapped$,
     headerTapped$,
 
     addEntry$,
