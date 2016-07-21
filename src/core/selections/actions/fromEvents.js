@@ -1,7 +1,7 @@
 import Rx from 'rx'
-import { toArray, exists } from '../../../utils/utils'
+import { toArray, exists, stringToBoolean } from '../../../utils/utils'
 import { hasEntity, getEntity } from '../../../utils/entityUtils'
-import { flatten, equals, pluck } from 'ramda'
+import { head, flatten, equals, pluck } from 'ramda'
 
 export default function intent (events, params) {
   const selectEntities$ = events.select('gl').events('selectedMeshes$')
@@ -17,8 +17,19 @@ export default function intent (events, params) {
     .map(toArray)
     .shareReplay(1)
 
-  const setMultiSelectMode$ = events.select('gl').events('longTaps$').tap(e=>console.log('fsf',e))
-    .merge(events.select('bom').events('entryLongTapped$'))
+  const setMultiSelectMode$ = events.select('gl').events('longTaps$')
+    .map((event) => event.detail.pickingInfos)
+    .filter((pickingInfos) => pickingInfos.length > 0).map(head)
+    .filter(exists)
+    .pluck('object').filter(hasEntity).map(getEntity).map(e => e.id)
+    .merge(
+      events.select('bom').events('entryLongTapped$')
+      .pluck('value')
+      .filter(exists)
+      .filter(x=> x.target && x.target.dataset && Object.keys(x.target.dataset).length > 0)
+      .map(e => ({id: e.target.dataset.id, selected: stringToBoolean(e.target.dataset.selected)}))
+    )//.tap(e=>console.log('fsf',e)))
+
     .map(e=>true)
     .shareReplay(1)
     //.forEach(e=>console.log('setMultiSelectMode', e))

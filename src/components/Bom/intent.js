@@ -2,7 +2,7 @@ import Rx from 'rx'
 const { merge } = Rx.Observable
 import { combineLatestObj } from '../../utils/obsUtils'
 import { mergeData } from '../../utils/modelUtils'
-import { generateUUID, stringToBoolean } from '../../utils/utils'
+import { generateUUID, stringToBoolean, exists } from '../../utils/utils'
 
 export default function intent (DOM) {
 
@@ -26,20 +26,25 @@ export default function intent (DOM) {
     .tap(e => console.log('entryDoubleTapped', e))
     //.shareReplay(1)
 
-  const entryLongTapped$ = DOM.select('.bom .normal').events('mousedown', true)
-    .flatMap( function(downEvent) {
-      console.log('here')
-      return Rx.Observable.amb(
-        [
-          // Skip if we get a movement before a mouse up
-          DOM.select('.bom').events('mousemove', true)
-            .take(1).flatMap(x => empty()).timeInterval(),
-          DOM.select('.bom .normal').events('mouseup', true).take(1).timeInterval()
-        ])
-    })
-    .filter(e => e.interval > 250)
-    //entryLongTapped$.forEach(e=>e)
 
+    const entryLongTapped$ = DOM.select('.bom .normal').events('mousedown', true)
+      .flatMap( function(downEvent) {
+        return Rx.Observable.amb(
+          [
+            // Skip if we get a movement before a mouse up
+            DOM.select('.bom').events('mousemove', true)
+              .take(1).flatMap(x => Rx.Observable.empty()).timeInterval(),
+            // also if there was some other event: FIXME : convoluted
+            /*merge(
+            editEntry$,
+            exportAsText$,
+            exportAsJson$
+          ).timeInterval(),*/
+            DOM.select('.bom .normal').events('mouseup', true).take(1).timeInterval()
+          ])
+      })
+      .filter(e => e.interval > 250)
+    
 
   const headerTapped$ = DOM.select('.headerCell').events('click', true)
     .tap(e => e.stopPropagation())
@@ -167,6 +172,8 @@ export default function intent (DOM) {
   const exportAsText$ = DOM.select('.bom-as-text')
     .events('click')
     .tap(e=>console.log('exportAsText'))
+
+
 
   return {
     entryTapped$,
