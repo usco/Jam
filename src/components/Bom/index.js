@@ -12,6 +12,7 @@ export default function Bom ({DOM, props$}) {
     events: {
       entryTapped$: actions.entryTapped$,
       entryDoubleTapped$: actions.entryDoubleTapped$,
+      entryLongTapped$: actions.entryLongTapped$,
       editEntry$: actions.editEntry$,
       addEntry$: actions.addEntry$,
       removeEntry$: actions.removeEntry$

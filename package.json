@@ -6,6 +6,8 @@
   "scripts": {
     "mocha": "mocha --compilers js:babel-core/register './src/**/*.spec.js' --recursive ",
     "test": "npm run mocha",
+    "test2": "ava './src/**/*.spec.js' --require babel-register --watch --verbose",
+    "test3": "ava './src/core/entities/components/*._spec.js' --require babel-register --verbose",
     "test-browser": "testem",
     "lint": "standard src/**/*.js",
     "start": "NODE_ENV=dev MODE=test node server.js",
@@ -23,6 +25,7 @@
   "license": "AGPL-3.0",
   "repository": "usco/Jam",
   "devDependencies": {
+    "ava": "^0.15.2",
     "babel-cli": "^6.3.15",
     "babel-core": "^6.2.1",
     "babel-loader": "^6.1.0",
@@ -64,7 +67,7 @@
     "loglevel": "^1.2.0",
     "o-validator": "^1.0.1",
     "pngjs": "^2.2.0",
-    "ramda": "^0.18.0",
+    "ramda": "^0.21.0",
     "rx": "^4.0.7",
     "rx-dom": "^5.0.3",
     "screenfull": "^3.0.0",

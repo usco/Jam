@@ -1,10 +1,9 @@
-import { toArray, exists } from '../../../utils/utils'
+import Rx from 'rx'
+import { toArray, exists, stringToBoolean } from '../../../utils/utils'
 import { hasEntity, getEntity } from '../../../utils/entityUtils'
-import { flatten, equals } from 'ramda'
+import { head, flatten, equals, pluck } from 'ramda'
 
 export default function intent (events, params) {
-  const {idsMapper$} = params
-
   const selectEntities$ = events.select('gl').events('selectedMeshes$')
     .map(extractEntities)
     .map(toArray)
@@ -18,38 +17,92 @@ export default function intent (events, params) {
     .map(toArray)
     .shareReplay(1)
 
+  const setMultiSelectMode$ = events.select('gl').events('longTaps$')
+    .map((event) => event.detail.pickingInfos)
+    .filter((pickingInfos) => pickingInfos.length > 0).map(head)
+    .filter(exists)
+    .pluck('object').filter(hasEntity).map(getEntity).map(e => e.id)
+    .merge(
+      events.select('bom').events('entryLongTapped$')
+      .pluck('value')
+      .filter(exists)
+      .filter(x=> x.target && x.target.dataset && Object.keys(x.target.dataset).length > 0)
+      .map(e => ({id: e.target.dataset.id, selected: stringToBoolean(e.target.dataset.selected)}))
+    )//.tap(e=>console.log('fsf',e)))
+
+    .map(e=>true)
+    .shareReplay(1)
+    //.forEach(e=>console.log('setMultiSelectMode', e))
+
   return reverseSelections({
     selectEntities$,
     selectBomEntries$,
-    focusOnEntities$
-  }, idsMapper$)
+    focusOnEntities$,
+    setMultiSelectMode$
+  }, params)
 }
 
 function extractEntities (data) {
   return data.filter(hasEntity).map(getEntity).map(e => e.id)
 }
 
-function reverseSelections (intents, idsMapper$) {
+function reverseSelections (intents, params) {
+  const {idsMapper$, removeTypes$, removeInstances$} = params
+
   // what we want is actually typeUid!
   // select bom entries from entities
   const selectBomEntries$ = intents
     .selectEntities$
     // .do(e=>console.log("reversing instance selections to selectBomEntries"))
     .withLatestFrom(idsMapper$, function (entityIds, idsMapper) {
-      return flatten(entityIds.map(id => idsMapper.typeUidFromInstUid[id])).filter(exists)
+      return {
+        ids: flatten(entityIds.map(id => idsMapper.typeUidFromInstUid[id])).filter(exists),
+        idsMapper
+      }
     })
-    // .do(e=>console.log("selectedBomEntries",e))
-    .merge(intents.selectBomEntries$)
+    .merge(intents.selectBomEntries$.map(x => ({ ids: pluck('id')(x) })))
 
   // select entities from bom entries
   const selectEntities$ = intents
     .selectBomEntries$
     // .do(e=>console.log("reversing BOM selections to selectEntities"))
     .withLatestFrom(idsMapper$, function (bomIds, idsMapper) {
-      return flatten(bomIds.map(id => idsMapper.instUidFromTypeUid[id])).filter(exists)
+      return {
+        //if the bom entrys are already selected we want to UNSELECT
+        ids: bomIds[0].selected ? [] : flatten(bomIds.map(({id}) => idsMapper.instUidFromTypeUid[id])).filter(exists),
+        override: true,
+        idsMapper
+      }
     })
     // .do(e=>console.log("selectedEntities",e))
-    .merge(intents.selectEntities$)
+    //.merge(intents.selectEntities$.map(x => ({ ids: x })))
+    .merge( intents.selectEntities$.withLatestFrom(idsMapper$,function(ids, idsMapper){
+      return {
+        ids,
+        idsMapper
+      }
+    }))
+
+
+  ///////////
+  const selectBomEntries2$ = intents.selectBomEntries$.withLatestFrom(idsMapper$, function (ids, idsMapper) {
+      return {
+        ids: pluck('id')(ids),
+        idsMapper,
+        type: 'types'
+      }
+    })
+
+  const selectEntities2$ = intents.selectEntities$.withLatestFrom(idsMapper$, function (ids, idsMapper) {
+      return {
+        ids,
+        idsMapper,
+        type: 'instances'
+      }
+    })
+
+  const selectInstancesAndTypes$ = selectEntities2$.merge(selectBomEntries2$)
+
 
   const focusOnEntities$ = intents
     .focusOnEntities$
@@ -59,8 +112,10 @@ function reverseSelections (intents, idsMapper$) {
     .distinctUntilChanged(null, equals)
 
   return {
-    selectEntities$: selectEntities$.distinctUntilChanged(null, equals),
-    selectBomEntries$: selectBomEntries$.distinctUntilChanged(null, equals),
-    focusOnEntities$
+    focusOnEntities$,
+    selectInstancesAndTypes$,
+    removeInstances$:removeInstances$.tap(e=>console.log('mlkmkll',e)),
+    removeTypes$,
+    setMultiSelectMode$: intents.setMultiSelectMode$
   }
 }

@@ -122,17 +122,17 @@ export function remapTransformActions (entityActions, componentBase$, settings$)
     .filter(u => u.target === 'transforms')
     .pluck('data')
     .map(toArray)// we always expect arrays of data
-    .withLatestFrom(settings$, function (transforms, settings) {
+    /*.withLatestFrom(settings$, function (transforms, settings) {
       return transforms.map(function (transform, index) {
         return {id: transform.id, value: transform || transforms[0], settings}
       })
+    })*/
+    .withLatestFrom(settings$, function (transforms, settings) {
+      return transforms.map(function (transform, index) {
+        return mergeData({}, transform, {settings})
+        //return {id: transform.id, value: transform.value || transforms[0].value, settings}
+      })
     })
-
-    /*.withLatestFrom(settings$, function (transforms, settings) {
-        return transforms.map(function (transform, index) {
-          return {id: transform.id, value: transform.value || transforms[0].value, settings}
-        })
-      })*/
 
   return {
     createComponents$,

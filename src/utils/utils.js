@@ -98,6 +98,7 @@ export function generateUUID () {
 
 // convert a string to a boolean
 export function stringToBoolean (string) {
+  if(!string) return string
   switch (string.toLowerCase().trim()) {
     case 'true': case 'yes': case '1': return true
     case 'false': case 'no': case '0': case null: return false

@@ -37,13 +37,13 @@ export function renderPositionUi (state) {
   if (transforms.length > 0) transforms = transforms[0]
 
   // compute the average position
-  const avgPosition = pluck('pos')(data.transforms)
+  const avg= pluck('pos')(data.transforms)
     .reduce(function (acc, cur) {
       if(!acc) return cur
       return [acc[0] + cur[0], acc[1] + cur[1], acc[2] + cur[2]].map(x => x * 0.5)
     }, undefined)
 
-  const values = avgPosition || [0, 0, 0]
+  const values = avg || [0, 0, 0]
 
   const subTools = <span className='movingSubTools'>
     <div className='transformsGroup'>

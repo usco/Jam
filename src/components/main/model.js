@@ -50,6 +50,7 @@ export default function model (props$, actions, sources) {
   const proxySelections$ = new Rx.ReplaySubject(1)
 
   entityActions = remapEntityActions(entityActions, proxySelections$)
+  console.log('entityActions', entityActions)
 
   const metaActions = remapMetaActions(entityActions, componentBase$, proxySelections$, addAnnotations$)
   const meshActions = remapMeshActions(entityActions, componentBase$)
@@ -63,8 +64,9 @@ export default function model (props$, actions, sources) {
 
   // selections => only for real time view
   const typesInstancesRegistry$ = makeTypeInstanceMapping(meta$, types$)
-  const selections$ = selections(selectionsIntents(sources, {idsMapper$: typesInstancesRegistry$}))
-    .merge(metaActions.removeComponents$.map(a => ({instIds: [], bomIds: []}))) // after an instance is removed, unselect
+  const selections$ = selections(selectionsIntents(sources,
+    {idsMapper$: typesInstancesRegistry$, removeInstances$: entityActions.deleteInstances$, removeTypes$: entityActions.removeTypes$}))
+    //.merge(entityActions.deleteInstances$.map(a => ({instIds: [], bomIds: []}))) // after an instance is removed, unselect
 
   const currentSelections$ = selections$
     .withLatestFrom(typesInstancesRegistry$, function (selections, registry) {

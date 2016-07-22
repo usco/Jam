@@ -11,6 +11,9 @@ import { toArray } from '../../utils/utils'
 
 import { getCoordsFromPosSizeRect } from './deps/Selector'
 
+import { pluck, head, values } from 'ramda'
+
+
 // get original data +  picking infos
 function addPickingInfos (inStream$, containerResizes$, camera, scene) {
   return inStream$
@@ -45,7 +48,7 @@ function objectAndPosition (pickingInfo) {
 
 export default function intent (sources, data) {
   let {DOM} = sources
-  let {camera, scene, transformControls} = data
+  let {camera, scene, transformControls, props$, settings$} = data
 
   const windowResizes$ = windowResizes(1) // get from intents/interactions ?
   const elementResizes$ = elementResizes('.container', 1)
@@ -87,8 +90,8 @@ export default function intent (sources, data) {
     .shareReplay(1)
   const longTapsWPicking$ = addPickingInfos(longTaps$, windowResizes$, camera, scene)
     .withLatestFrom(tControlsActive$, function (longTaps, tCActive) { // disable long taps in case we are manipulating an object
-      if (longTaps) return undefined
-      return tCActive
+      if (tCActive) return undefined
+      return longTaps
     })
     .filter(exists)
     .shareReplay(1)
@@ -132,16 +135,61 @@ export default function intent (sources, data) {
   let filteredInteractions$ = {dragMoves$: fDragMoves$, zooms$}
 
 
+  const selections$ = props$.pluck('selections').startWith([]).filter(exists).distinctUntilChanged()
+    .map(x => x.map(y => y.id))// we just need the ids
+  const transforms$ = props$.pluck('meshes')//.withLatestFrom(selections$,function(transforms, selections))
+  const activeTool$ = settings$.pluck('activeTool').startWith(undefined).distinctUntilChanged()
+
+
   // stream of transformations done on the current selection
   const selectionsTransforms$ = fromEvent(transformControls, 'objectChange')
+    //.tap(e=>console.log('sdfsdf',e))
     .map(targetObject)
-    .map(function (t) {
-      return {
-        id: t.userData.entity.id,
-        pos: t.position.toArray().slice(0, 3),
-        rot: t.rotation.toArray().slice(0, 3),
-        sca: t.scale.toArray().slice(0, 3).map((val,index) => (t.flipped && t.flipped[index] === 1)? val * -1: val)//to handle negative scaling/mirrored data, as the transformControls always return values >0
+    .withLatestFrom(selections$, activeTool$, transforms$, function (t, selections, activeTool, _transforms) {
+      const transform = {'translate': 'pos', 'rotate': 'rot', 'scale': 'sca'}[activeTool]
+
+      /*FIXME: horrid, we have to deal with transforms on the meshes (horrors of OOP  & mutability)
+      //FIXME: also we need to do this whole thing since only ONE object is actually transformed
+      by transformcontrols, so we first compute the average of all mesh positions, then we get the
+      position of the updated position, do a difference between the avg & modified one, and add it to the changed value
+      HORRIBLY Convoluted, but will not be the case anymore with regl/functional opengl/webgl
+      */
+      function valueMap(mesh, transform){
+        const mapper = {
+        pos: mesh.position.toArray().slice(0, 3),
+        rot: mesh.rotation.toArray().slice(0, 3),
+        sca: mesh.scale.toArray().slice(0, 3).map((val,index) => (mesh.flipped && mesh.flipped[index] === 1) ? val * -1: val)//to handle negative scaling/mirrored data, as the transformControls always return values >0
+        }
+        return mapper[transform]
       }
+
+      //FIXME : only needed if data storage is a hash
+      _transforms = selections
+        .map((input) => _transforms[input]) // get only needed ones
+        .map(function (mesh) {
+          let res = {}
+          res[transform] = valueMap(mesh, transform)
+          return res
+        })
+
+      const avg = pluck(transform)(_transforms)
+        .reduce(function (acc, cur) {
+          if(!acc) return cur
+          return [acc[0] + cur[0], acc[1] + cur[1], acc[2] + cur[2]].map(x => x * 0.5)
+        }, undefined)
+
+      const tranformedValue = valueMap(t, transform)
+      const diff = [avg[0] - tranformedValue[0], avg[1] - tranformedValue[1], avg[2] - tranformedValue[2]]
+      const value = [ diff[0] + tranformedValue[0], diff[1] + tranformedValue[1], diff[2] + tranformedValue[2]]
+
+      //const realValue =
+      return {value, trans: transform, ids: selections}
+    })
+    .map(function (data) { // format data so that we have an array of changes, by id
+      const {value, trans, ids} = data
+      return ids.map(function (id) {
+        return {value: value, trans, id}
+      })
     })
 
   return {
