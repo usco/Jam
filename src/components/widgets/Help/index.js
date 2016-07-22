@@ -61,6 +61,13 @@ function view (state$) {
             <li>
               Double click/tap to zoom on points/objects.
             </li>
+            <li>
+              Long press/click on objects to start multi selection: (ie longpress on an object,
+              then select any additional objects/ unselect them via single click/tap)
+            </li>
+            <li>
+              Click/tap outside of any object in the 3d view to clear all selections
+            </li>
           </ul>
         </span>
         <span className='appVersion'>Jam version {appVersion}</span>
