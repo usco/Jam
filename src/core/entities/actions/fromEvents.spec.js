@@ -1,29 +1,27 @@
-import assert from 'assert'
+import test from 'ava'
 import Rx from 'rx'
 const {just} = Rx.Observable
 import fromEvents from './fromEvents'
 
-describe('actionsFromEvents (entities)', () => {
-  it('should return the correct hash of actions', function () {
-    this.timeout(5000)
+test('actionsFromEvents (entities): should return the correct hash of actions', t => {
+  //this.timeout(5000)
 
-    const mockEventDriver = function () {
-      return {
-        select: () => ({events: () => just('')})
-      }
+  const mockEventDriver = function () {
+    return {
+      select: () => ({events: () => just('')})
     }
-    const events = mockEventDriver()
+  }
+  const events = mockEventDriver()
 
-    const actions = fromEvents(events)
+  const actions = fromEvents(events)
 
-    const expActions = [
-      'addTypes$',
-      'removeTypes$',
-      'deleteInstances$',
-      'updateComponent$',
-      'createAnnotationStep$'
-    ]
+  const expActions = [
+    'addTypes$',
+    'removeTypes$',
+    'deleteInstances$',
+    'updateComponent$',
+    'createAnnotationStep$'
+  ]
 
-    assert.deepEqual(Object.keys(actions), expActions)
-  })
+  t.deepEqual(Object.keys(actions), expActions)
 })

@@ -1,4 +1,4 @@
-import assert from 'assert'
+
 import { extractChangesBetweenArrays } from './diffPatchUtils'
 
 describe('diffPatchUtils', function () {
@@ -11,7 +11,7 @@ describe('diffPatchUtils', function () {
       const expChanges = {'added': [{name: 'bar'}], 'removed': [], 'changed': [], 'upserted': []}
 
       console.log('changes', changes)
-      assert.deepEqual(changes, expChanges)
+      t.deepEqual(changes, expChanges)
     })
 
     it('should determine if there was a removal', function () {
@@ -21,7 +21,7 @@ describe('diffPatchUtils', function () {
       const changes = extractChangesBetweenArrays(previous, current)
       const expChanges = {'added': [], 'removed': [{name: 'bar'}], 'changed': [], 'upserted': []}
 
-      assert.deepEqual(changes, expChanges)
+      t.deepEqual(changes, expChanges)
     })
 
     /* it("should determine if there was an update", function() {

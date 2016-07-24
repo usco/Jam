@@ -1,4 +1,4 @@
-import assert from 'assert'
+
 import Rx from 'rx'
 import { postMessageDriver } from './postMessageDriver'
 
@@ -21,7 +21,7 @@ import { postMessageDriver } from './postMessageDriver'
       window.removeEventListener('message', resultChecker)
 
       assert.equal(message, 864)
-      done()
+      t.end()
     }
 
     window.addEventListener('message', resultChecker, false)

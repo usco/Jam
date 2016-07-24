@@ -1,50 +1,48 @@
-import assert from 'assert'
+import test from 'ava'
 import Rx from 'rx'
 const {just} = Rx.Observable
 import fromEvents from './fromEvents'
 
 function mockEventsDriver () {
   return {
-    select: () => ({events: () => just({id: 9, stuff: 'fakeData'}) })
+    select: () => ({ events: () => just({id: 9, stuff: 'fakeData'}) })
   }
 }
 
-describe('actionsFromEvents (BOM)', () => {
-  it('should return the correct hash of actions', function () {
-    const events = mockEventsDriver()
-    const actions = fromEvents(events)
+test('actionsFromEvents (BOM): should return the correct hash of actions', t => {
+  const events = mockEventsDriver()
+  const actions = fromEvents(events)
 
-    const expActions = [
-      'updateBomEntries$',
-      'upsertBomEntries$'
-    ]
+  const expActions = [
+    'updateBomEntries$',
+    'upsertBomEntries$'
+  ]
 
-    assert.deepEqual(Object.keys(actions), expActions)
-  })
+  t.deepEqual(Object.keys(actions), expActions)
+})
 
-  it('should output correct data from its returned actions: (upsertBomEntries)', function (done) {
-    const events = mockEventsDriver()
-    const actions = fromEvents(events)
+test.cb('actionsFromEvents (BOM): should output correct data from its returned actions: (upsertBomEntries)', t => {
+  const events = mockEventsDriver()
+  const actions = fromEvents(events)
 
-    const expData = [{ id: 9, data: { id: 9, stuff: 'fakeData' } }]
+  const expData = [{ id: 9, data: { id: 9, stuff: 'fakeData' } }]
 
-    actions.upsertBomEntries$
-      .forEach(function (data) {
-        assert.deepEqual(data, expData)
-        done()
-      })
-  })
+  actions.upsertBomEntries$
+    .forEach(function (data) {
+      t.deepEqual(data, expData)
+      t.end()
+    })
+})
 
-  it('should output correct data from its returned actions: (updateBomEntries)', function (done) {
-    const events = mockEventsDriver()
-    const actions = fromEvents(events)
+test.cb('actionsFromEvents (BOM): should output correct data from its returned actions: (updateBomEntries)', t => {
+  const events = mockEventsDriver()
+  const actions = fromEvents(events)
 
-    const expData = [ { id: 9, stuff: 'fakeData' } ]
+  const expData = [ { id: 9, stuff: 'fakeData' } ]
 
-    actions.updateBomEntries$
-      .forEach(function (data) {
-        assert.deepEqual(data, expData)
-        done()
-      })
-  })
+  actions.updateBomEntries$
+    .forEach(function (data) {
+      t.deepEqual(data, expData)
+      t.end()
+    })
 })

@@ -1,4 +1,4 @@
-import assert from 'assert'
+import test from 'ava'
 import path from 'path'
 import fs from 'fs'
 import Jimp from 'jimp'
@@ -21,7 +21,7 @@ function rmSync (uri) {
   }
 }
 
-describe('server side renderer', function () {
+test('server side renderer', t => {
   // FIXME: can only be run locally (webgl support needed), commented out for now for travisCI
   // see https://github.com/stackgl/headless-gl/blob/master/.travis.yml
 
@@ -55,7 +55,7 @@ describe('server side renderer', function () {
         rmSync(outputPath)
       }).catch(function () {
         rmSync(outputPath)
-        assert.fail('Files are not identical', expImagePath, outputPath)
+        t.fail('Files are not identical', expImagePath, outputPath)
       })
   })
 
@@ -88,7 +88,7 @@ describe('server side renderer', function () {
         rmSync(outputPath)
       }).catch(function () {
         rmSync(outputPath)
-        assert.fail('Files are not identical', expImagePath, outputPath)
+        t.fail('Files are not identical', expImagePath, outputPath)
       })
   })
 
@@ -122,7 +122,7 @@ describe('server side renderer', function () {
         rmSync(outputPath)
       }).catch(function () {
         rmSync(outputPath)
-        assert.fail('Files are not identical', expImagePath, outputPath)
+        t.fail('Files are not identical', expImagePath, outputPath)
       })
   })
 
@@ -156,7 +156,7 @@ describe('server side renderer', function () {
         rmSync(outputPath)
       }).catch(function () {
         rmSync(outputPath)
-        assert.fail('Files are not identical', expImagePath, outputPath)
+        t.fail('Files are not identical', expImagePath, outputPath)
       })
   })*/
 })
