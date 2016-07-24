@@ -42,7 +42,7 @@ test('server side renderer', t => {
 
     const cmd = `babel-node ${jamPath} ${inputPath} ${resolution} ${outputPath} `
     require('child_process').execSync(cmd, {stdio: [0, 1, 2]})
-    // assert.strictEqual(meshSource[0], 'fakeModel.stl')
+    // t.deepEqual(meshSource[0], 'fakeModel.stl')
     assert.equal(true, existsSync(outputPath))
 
     return Promise.all([Jimp.read(expImagePath), Jimp.read(outputPath)])

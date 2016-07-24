@@ -5,9 +5,8 @@
   "main": "index.js",
   "scripts": {
     "mocha": "mocha --compilers js:babel-core/register './src/**/*.spec.js' --recursive ",
-    "test": "npm run mocha",
+    "test": "ava './src/**/*.spec.js' --require babel-register --verbose",
     "test2": "ava './src/**/*.spec.js' --require babel-register --watch --verbose",
-    "test3": "ava './src/core/**/*.spec.js' --require babel-register --verbose",
     "test-browser": "testem",
     "lint": "standard src/**/*.js",
     "start": "NODE_ENV=dev MODE=test node server.js",
