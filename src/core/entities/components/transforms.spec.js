@@ -131,7 +131,7 @@ test('transforms:updateComponents:scaling(basic, uniform, snapping)', t => {
     0: {
       pos: [0, 0, 0],
       rot: [0, 0, 0],
-      sca: [22.5, 22.5, 22.5] // FIXME : not 100% sure , shout it actually be 22.4 ? 
+      sca: [22.5, 22.5, 22.5] // FIXME : not 100% sure , shout it actually be 22.4 ?
     }
   }
 
@@ -140,7 +140,7 @@ test('transforms:updateComponents:scaling(basic, uniform, snapping)', t => {
 
 test('transforms:updateComponents:rotation(basic, snapping)', t => {
   const inputs = [
-    {id: 0, trans: 'rot', value: [0, 22.4, 0], settings: {snapRotation: true}}
+    {id: 0, trans: 'rot', value: [0, Math.PI / 2 + 2, 0], settings: {snapRotation: true}}
   ]
 
   const transformDefaults = {
@@ -161,7 +161,7 @@ test('transforms:updateComponents:rotation(basic, snapping)', t => {
   const expState = {
     0: {
       pos: [0, 0, 0],
-      rot: [0, 20, 0],
+      rot: [0, 3.490658503988659, 0], // FIXME: DOUBLE CHECK !! seems fishy
       sca: [1, 1, 1]
     }
   }

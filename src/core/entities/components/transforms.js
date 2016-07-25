@@ -6,12 +6,13 @@ import { makeModel, mergeData } from '../../../utils/modelUtils'
 
 function applySnapping (transformValues, stepSize, mapValue = undefined) {
   // applies snapping for both rotation and scaling
-  // maps the rotationtransformValues from tau (2 * pi) to degrees and back
+  // maps the rotationtransformValues from to degrees and back
   let numberToRoundTo = 1 / stepSize
   for (let i = 0; i < transformValues.length; i++) {
-    if (mapValue) { transformValues[i] = transformValues[i] * 360 / mapValue }
-    let roundedNumber = Math.round(transformValues[i] * numberToRoundTo) / numberToRoundTo
-    if (mapValue) { roundedNumber = roundedNumber / 360 * mapValue }
+    let roundedNumber = transformValues[i]
+    roundedNumber = mapValue ? roundedNumber * (180 / Math.PI) : roundedNumber
+    roundedNumber = Math.round(roundedNumber * numberToRoundTo) / numberToRoundTo
+    if (mapValue) { roundedNumber = roundedNumber * (Math.PI / 180) }
     transformValues[i] = roundedNumber
   }
   return transformValues

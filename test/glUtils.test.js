@@ -1,4 +1,4 @@
-import assert from 'assert'
+
 import THREE from 'three'
 import {
   getEntryExitThickness,
