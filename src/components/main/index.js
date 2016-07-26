@@ -41,6 +41,7 @@ export default function main (sources) {
     bom: bom.events,
     comments: comments.events})
 
+  // to postMessage
   const postMsg$ = api(actions, state$).postMsg$
 
   // localStorage
@@ -49,7 +50,6 @@ export default function main (sources) {
   const ymStorage$ = formatDataForYMStorage({sources, state$})
   // save file to user hdd
   const fileStorage$ = formatDataForFileStorage({sources, state$}, bom)
-
 
   // return anything you want to output to sources
   return {

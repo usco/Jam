@@ -55,12 +55,19 @@ export default function model (props$, actions, sources) {
   const metaActions = remapMetaActions(entityActions, componentBase$, proxySelections$, addAnnotations$)
   const meshActions = remapMeshActions(entityActions, componentBase$)
   const transformActions = remapTransformActions(entityActions, componentBase$, settings$)
-  const boundActions = remapBoundsActions(entityActions, componentBase$)
+  const boundActions = remapBoundsActions(entityActions, componentBase$, settings$)
 
   const {meta$} = makeMetaSystem(metaActions)
   const {meshes$} = makeMeshSystem(meshActions)
   const {transforms$} = makeTransformsSystem(transformActions)
   const {bounds$} = makeBoundingSystem(boundActions)
+  const entityComponents$ = combineLatestObj({
+    meta$,
+    transforms$,
+    meshes$,
+    types$,
+    bounds$
+  })
 
   // selections => only for real time view
   const typesInstancesRegistry$ = makeTypeInstanceMapping(meta$, types$)
@@ -103,10 +110,9 @@ export default function model (props$, actions, sources) {
     .startWith(undefined)
     .distinctUntilChanged()
 
-  // ////other data
+  // other data
   const appData$ = sources.appMeta
 
-  //
   const visualResources$ = actions.visualResources.startWith([])
     //.forEach(e=>console.log('visualResources',e))
 
@@ -115,11 +121,14 @@ export default function model (props$, actions, sources) {
     selections$,
     bom$,
     comments$,
-    // entity components
+
+    // entity components: TODO: seperate to a sub state
     meta$,
     transforms$,
     meshes$,
     types$,
+    bounds$,
+
     // app level data, meta data , settings etc
     operationsInProgress$,
     notifications$,
