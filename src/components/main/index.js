@@ -5,6 +5,7 @@ const {just} = Rx.Observable
 import Settings from '../../components/Settings'
 import FullScreenToggler from '../../components/widgets/FullScreenToggler/index'
 import Help from '../../components/widgets/Help'
+import FeatureTour from '../../components/widgets/FeatureTour/index'
 
 import { EntityInfosWrapper, BOMWrapper, GLWrapper, CommentsWrapper, progressBarWrapper } from '../../components/main/wrappers'
 
@@ -31,10 +32,11 @@ export default function main (sources) {
   const settingsC = Settings({DOM, props$: state$})
   const fsToggler = FullScreenToggler({DOM})
   const help = Help({DOM, props$: state$})
+  const featureTour = FeatureTour({DOM, props$: state$})
 
   // outputs
   const vtree$ = view(state$, settingsC.DOM, fsToggler.DOM, bom.DOM, gl.DOM
-    , entityInfos.DOM, comments.DOM, help.DOM)
+    , entityInfos.DOM, comments.DOM, help.DOM, featureTour.DOM)
   const events$ = just({
     gl: gl.events,
     entityInfos: entityInfos.events,
@@ -49,7 +51,6 @@ export default function main (sources) {
   const ymStorage$ = formatDataForYMStorage({sources, state$})
   // save file to user hdd
   const fileStorage$ = formatDataForFileStorage({sources, state$}, bom)
-
 
   // return anything you want to output to sources
   return {
