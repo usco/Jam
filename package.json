@@ -59,6 +59,7 @@
     "fast.js": "^0.1.1",
     "gl": "^2.1.5",
     "glView-helpers": "usco/glView-helpers",
+    "hopscotch": "^0.2.6",
     "jsondiffpatch": "^0.1.41",
     "log-minim": "usco/log-minim",
     "loglevel": "^1.2.0",
