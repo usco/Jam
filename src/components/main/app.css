@@ -257,6 +257,12 @@ button[disabled=disabled]:hover, button:disabled:hover{
   opacity: 1!important;
 }
 
+#overlayContainer{
+  position: absolute;
+  top: 20%;
+  left: 50%;
+}
+
 .innerWrapper{
     opacity: 0;
     transition: opacity 1.0s ease-in-out;
