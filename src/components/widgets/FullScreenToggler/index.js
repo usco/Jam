@@ -23,7 +23,7 @@ function view (state$) {
       let icon
       if (!screenfull.isFullscreen) {
         icon = `
-        <svg width="25px" height="25px" viewBox="0 0 25 25" class='icon'
+        <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 25 25" class='icon'
               version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
         <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
         <title>fullscreen</title>
@@ -34,7 +34,7 @@ function view (state$) {
         </g>
       </svg>`
       } else {
-        icon = `<svg width="25px" height="25px" viewBox="0 0 25 25" class='icon'
+        icon = `<svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 25 25" class='icon'
         version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
           <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
           <title>normal-screen</title>

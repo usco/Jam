@@ -7,7 +7,7 @@ import {transformInputs} from './helpers'
 import { absSizeFromBBox } from '../../utils/formatters'
 
 
-const icon = `<svg width="24px" height="21px" viewBox="0 0 24 21" class='icon'
+const icon = `<svg viewBox="0 0 24 21" preserveAspectRatio="xMidYMid meet" class='icon'
 version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
     <title>scale</title>

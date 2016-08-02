@@ -2,7 +2,7 @@ import {html} from 'snabbdom-jsx'
 import Menu from '../widgets/Menu'
 import checkbox from '../widgets/Checkbox'
 
-const icon = `<svg width="23px" height="24px" viewBox="0 0 23 24" class='icon'
+const icon = `<svg viewBox="0 0 23 24" preserveAspectRatio="xMidYMid meet" class='icon'
 version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
     <title>color</title>

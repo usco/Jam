@@ -46,7 +46,7 @@ function renderWebglError(){
   )
 }*/
 
-const duplicateIcon = `<svg width="27px" height="27px" viewBox="0 0 27 27" data-icon="duplicate" class="icon"
+const duplicateIcon = `<svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 27 27" data-icon="duplicate" class="icon"
 version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
     <title>duplicate</title>
@@ -61,7 +61,7 @@ version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/
 </svg>`
 
 
-const deleteIcon = `<svg width="27px" height="27px" viewBox="0 0 27 27" class='icon'
+const deleteIcon = `<svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 27 27" class='icon'
 version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
     <title>remove</title>

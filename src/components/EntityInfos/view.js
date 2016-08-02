@@ -111,19 +111,18 @@ function colorInput (meta) {
 
 // TODO : this is a duplicate, refactor
 const translateIconSvg = `<svg xmlns='http://www.w3.org/2000/svg' version='1.1'
-  width='16' height='16' data-icon='move' viewBox='0 0 16 16' class='icon'>
+  preserveAspectRatio="xMidYMid meet" data-icon='move' viewBox='0 0 16 16' class='icon'>
   <path d='M8 0l-3 3h2v4h-4v-2l-3 3 3 3v-2h4v4h-2l2 2 1 1 1-1 2-2h-2v-4h4v2l3-3-3-3v2h-4v-4h2l-3-3z' />
 </svg>`
 
 const rotateIconSvg = `<svg version='1.1' id='CCW' xmlns='http://www.w3.org/2000/svg' x='0px' y='0px'
-  width='16' height='16' data-icon='rotate' viewBox='0 0 20 20' class='icon'>
+  preserveAspectRatio="xMidYMid meet" data-icon='rotate' viewBox='0 0 20 20' class='icon'>
   <path d='M0.685,10h2.372V9.795c0.108-4.434,3.724-7.996,8.169-7.996c4.515,0,8.174,3.672,8.174,8.201s-3.659,8.199-8.174,8.199
   c-1.898,0-3.645-0.65-5.033-1.738l1.406-1.504c1.016,0.748,2.27,1.193,3.627,1.193c3.386,0,6.131-2.754,6.131-6.15
   c0-3.396-2.745-6.15-6.131-6.15c-3.317,0-6.018,2.643-6.125,5.945V10h2.672l-3.494,3.894L0.685,10z'/>
 </svg>`
 
-const scaleIconSvg = `<svg
-  width='16px' height='16px' viewBox='0 0 16 16' version='1.1' xmlns='http://www.w3.org/2000/svg' class='icon'>
+const scaleIconSvg = `<svg preserveAspectRatio="xMidYMid meet" viewBox='0 0 16 16' version='1.1' xmlns='http://www.w3.org/2000/svg' class='icon'>
     <!-- Generator: Sketch 3.4 (15575) - http://www.bohemiancoding.com/sketch -->
     <title>Untitled</title>
     <desc>Created with Sketch.</desc>
