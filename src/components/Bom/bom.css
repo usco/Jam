@@ -258,6 +258,7 @@
   color: white;
   padding: 2 5 2 5;
   background: #5fc5fb;
+  margin-right: 3px;
 }
 
 .bom tr select:disabled{
