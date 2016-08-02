@@ -12,11 +12,7 @@ export function forceTextEllipsis (element) {
 
 export function easyElipsedTextSelection (element) {
   // when the element has an overflow, you automatically select the last position when you click it for editing
-  console.log('hijs hier')
-  console.log(element.offsetWidth)
-  console.log(element.scrollWidth)
   if (element.offsetWidth < element.scrollWidth) {
-    console.log('hijs groter')
     element.setSelectionRange(element.value.length, element.value.length)
   }
 }

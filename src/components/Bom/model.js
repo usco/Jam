@@ -5,8 +5,11 @@ function sortBy (fieldName) {
   return function (a, b) {
     let A = a[fieldName]
     let B = b[fieldName]
-    if (typeof A === 'string' || A instanceof String) {
-      // first change strings to lowercase because else all capital letters go first.
+    // convert numbers presented as strings into actual numbers
+    A = isNaN(Number(A)) ? A : Number(A)
+    B = isNaN(Number(B)) ? B : Number(B)
+    if (typeof A === 'string') {
+      // change strings to lowercase because else all capital letters go first.
       A = A.toLowerCase()
       B = B.toLowerCase()
     }
