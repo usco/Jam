@@ -47,7 +47,7 @@ export function renderPositionUi (state) {
 
   const subTools = <span className='movingSubTools'>
     <div className='transformsGroup'>
-      {transformInputs({fieldName: 'pos', unit: '', step: transformStep, values, precision})}
+      {transformInputs({fieldName: 'pos', step: transformStep, values, precision})}
     </div>
     <div className='optionsGroup'>
       <label className='menuContent'>

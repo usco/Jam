@@ -61,7 +61,7 @@ export function renderScaleUi (state) {
 
   const subTools = <span className='scalingSubTools'>
     <div className='transformsGroup'>
-      {transformInputs({fieldName: 'sca', unit: '', showPercents: true, step: transformStep, values, valuePercents, precision, min,
+      {transformInputs({fieldName: 'sca', showPercents: true, step: transformStep, values, valuePercents, precision, min,
       disabled: true})}
     </div>
 
