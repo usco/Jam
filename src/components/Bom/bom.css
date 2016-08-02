@@ -138,6 +138,8 @@
 .bom .name input[type=text]{
   min-width: 150px;
   text-overflow: ellipsis;
+  white-space: nowrap;
+  overflow: hidden;
 }
 .bom .qty input[type=number]{
   width: 50px;

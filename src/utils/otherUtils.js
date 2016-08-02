@@ -4,6 +4,23 @@ export function first (input) {
   return input[0]
 }
 
+export function forceTextEllipsis (element) {
+  // forces to show the ellipsis again when a text input element for example goes out of focus or is edited
+  element.setSelectionRange(0, 0)
+  element.blur()
+}
+
+export function easyElipsedTextSelection (element) {
+  // when the element has an overflow, you automatically select the last position when you click it for editing
+  console.log('hijs hier')
+  console.log(element.offsetWidth)
+  console.log(element.scrollWidth)
+  if (element.offsetWidth < element.scrollWidth) {
+    console.log('hijs groter')
+    element.setSelectionRange(element.value.length, element.value.length)
+  }
+}
+
 export function flipValue__ (newValue, oldValue) {
   let val = newValue
   let outValue = (oldValue === newValue ? undefined : newValue)

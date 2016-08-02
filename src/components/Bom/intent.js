@@ -3,6 +3,7 @@ const { merge } = Rx.Observable
 import { combineLatestObj } from '../../utils/obsUtils'
 import { mergeData } from '../../utils/modelUtils'
 import { generateUUID, stringToBoolean, exists } from '../../utils/utils'
+import { forceTextEllipsis, easyElipsedTextSelection } from '../../utils/otherUtils'
 
 export default function intent (DOM) {
 
@@ -112,8 +113,11 @@ export default function intent (DOM) {
 
     //  const addEntry$ = getFieldValues({name:'', qty:0, phys_qty:0, unit:'EA', printable:false}, DOM, '.bom .adder', addEntryTapped$)
 
-  DOM.select('.textInput').events('keydown')
-    .forEach(e => console.log('keydown', e))
+  DOM.select('.bomTextInput').events('blur')
+    .forEach(e => forceTextEllipsis(e.target))
+
+  DOM.select('.bomTextInput').events('click')
+    .forEach(e => easyElipsedTextSelection(e.target))
 
   const changeEntryValue$ = DOM.select('.bom .normal input[type=text]').events('change')
     .merge(DOM.select('.bom .normal input[type=number]').events('change'))
