@@ -59,7 +59,7 @@ export function renderScaleUi (state) {
   const valuePercents = (transforms.sca || [0, 0, 0]).map(x => x * 100)
   const values = (bounds.size  || [0,0,0]).map((x, index) => x * valuePercents[index]/100)
 
-  const subTools = <span className='scalingSubTools'>
+  const subTools = <span className='scalingSubTools twoColumns'>
     <div className='transformsGroup'>
       {transformInputs({fieldName: 'sca', showPercents: true, step: transformStep, values, valuePercents, precision, min,
       disabled: true})}

@@ -63,14 +63,16 @@ Chrome, Safari, Opera */
 .menuContent{
   display: block;
   float: left;
-  margin: 2px 10px;
-  clear: both;
   font-size: 0.8em;
   cursor: pointer;
+  width: 50%;
+}
+
+.menuContent .checkbox{
+  margin-right: 5px;
 }
 
 .menu.active-content{
-  text-align: center;
   display: block;
 
   -webkit-animation-duration: 0.2s; /* Chrome, Safari, Opera */
