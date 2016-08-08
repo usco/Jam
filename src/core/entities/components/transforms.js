@@ -60,7 +60,7 @@ function applySnapAndUniformScaling (transformDefaults, transformationType, tran
 }
 
 export function mirrorComponents (transformDefaults, state, inputs) {
-  console.log('mirroring transforms', inputs)
+  // console.log('mirroring transforms', inputs)
 
   return inputs.reduce(function (state, input) {
     let {id} = input

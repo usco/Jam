@@ -31,17 +31,18 @@ export function renderScaleUi (state) {
   const data = state.selections.instIds.reduce(function (acc, id) {
     acc['transforms'].push(state.transforms[id])
     acc['meta'].push(state.meta[id])
-    acc['bounds'].push(state.meshes[id])
+    acc['bounds'].push(state.bounds[id])// .meshes[id])
     return acc
   }, {transforms: [], meta: [], bounds: [], settings}) // FIXME: should be based on bounds component, not meshes
 
   let { transforms, bounds } = data
   if (transforms.length > 0) transforms = transforms[0]
-  if (bounds.length >= 0){
-    if(bounds.length > 0){
+
+  if (bounds.length >= 0) {
+    if(bounds.length > 0) {
       bounds = bounds[0]
     }
-    try{
+    try{/*
       const bbox = bounds.geometry.boundingBox
       const bsph = bounds.geometry.boundingSphere
       bounds = {
@@ -52,16 +53,18 @@ export function renderScaleUi (state) {
         //size: bounds.geometry.boundingBox.max.sub(bounds.geometry.boundingBox.min).toArray()
       }
       bounds.size = [bounds.max[0] - bounds.min[0], bounds.max[1] - bounds.min[1], bounds.max[2] - bounds.min[2]]
-      //bound.size = bound.size.map((x, index) => x * transforms.sca[index])
+      //bound.size = bound.size.map((x, index) => x * transforms.sca[index])*/
+      bounds.size = [bounds.max[0] - bounds.min[0], bounds.max[1] - bounds.min[1], bounds.max[2] - bounds.min[2]]
     }catch(error){}
   }
 
   const valuePercents = (transforms.sca || [0, 0, 0]).map(x => x * 100)
   const values = (bounds.size  || [0,0,0]).map((x, index) => x * valuePercents[index]/100)
 
+//extraKlasses:['absScaling']
   const subTools = <span className='scalingSubTools twoColumns'>
     <div className='transformsGroup'>
-      {transformInputs({fieldName: 'sca', showPercents: true, step: transformStep, values, valuePercents, precision, min,
+      {transformInputs({fieldName: 'sca', unit: '', showPercents: true, step: transformStep, values, valuePercents, precision, min,
       disabled: true})}
     </div>
 

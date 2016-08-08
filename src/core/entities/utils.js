@@ -154,8 +154,11 @@ export function remapBoundsActions (entityActions, componentBase$, settings$) {
     })
 
   //FIXME : duplicate of the 'transforms' one
-  const updateComponents$ = entityActions.updateComponent$
-    .filter(u => u.target === 'transforms')
+  entityActions.changeBounds$.forEach(e=>e)
+  console.log('entityActions',entityActions)
+  const updateComponents$ = entityActions.changeBounds$
+    .tap(e=>console.log('updateComponents',e))
+    /*.filter(u => u.target === 'transforms')
     .pluck('data')
     .map(toArray)// we always expect arrays of data
     .withLatestFrom(settings$, function (transforms, settings) {
@@ -163,7 +166,7 @@ export function remapBoundsActions (entityActions, componentBase$, settings$) {
       return transforms.map(function (transform, index) {
         return mergeData({}, transform, {settings})
       })
-    })
+    })*/
 
   return {
     createComponents$,

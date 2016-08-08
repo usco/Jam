@@ -123,8 +123,10 @@ function refineActions (props$, actions) {
 
   return {
     changeMeta$: actions.changeMeta$,
+    changeBounds$: actions.changeBounds$,
     changeTransforms$,
     resetScaling$
+
   }
 }
 
@@ -137,6 +139,7 @@ function EntityInfos ({DOM, props$}, name = '') {
     DOM: vtree$,
     events: {
       changeMeta$,
+      changeBounds$,
       changeTransforms$,
       resetScaling$
     }

@@ -4,6 +4,7 @@ import { formatNumberTo } from '../../utils/formatters'
 
 export function transformInputs (options) {
   const defaults = {
+    extraKlasses: [],
     fieldName: 'pos',
     unit: 'mm',
     values: [0, 0, 0],
@@ -19,7 +20,7 @@ export function transformInputs (options) {
 
     axes: ['x', 'y', 'z']
   }
-  const {fieldName, unit, values, step, precision, min, disabled, valuePercents, stepPercents, showPercents, disabledPercents, axes} = Object.assign({}, defaults, options)
+  const {extraKlasses, fieldName, unit, values, step, precision, min, disabled, valuePercents, stepPercents, showPercents, disabledPercents, axes} = Object.assign({}, defaults, options)
 
   return axes
     .map(function (axisName, index) {
@@ -44,7 +45,7 @@ export function transformInputs (options) {
           h('span.axisName', [axisName.toUpperCase()]),
           h(`input#${axisName}-${fieldName}`,
             { key: `${fieldName}-${axisName}-${index}`, // VERY important, without this, unexpected controls
-              props: {type: 'number', lang: 'en', className: 'transformsInput value', value, step, disabled},
+              props: {type: 'number', lang: 'en', className: 'transformsInput value '+extraKlasses.map(x=>' '+x), value, step, disabled},
               attrs: {'data-transform': `${fieldName}_${index}`}
             }),
           h('span.unit', [unit])

@@ -1,5 +1,5 @@
 import test from 'ava'
-import { updateComponents, resetScaling } from './transforms'
+import { updateComponents, resetScaling, mirrorComponents } from './transforms'
 
 test('transforms:updateComponents:translation(basic)', t => {
   const inputs = [
@@ -194,6 +194,38 @@ test('transforms:resetScaling', t => {
       pos: [0, 0, 0],
       rot: [0, 0, 0],
       sca: [1, 1, 1]
+    }
+  }
+
+  t.deepEqual(newState, expState)
+})
+
+
+test('transforms:updateComponents:mirroring', t => {
+  const inputs = [
+    {id: 0, axis: 1, settings: {}}
+  ]
+
+  const transformDefaults = {
+    pos: [ 0, 0, 0 ],
+    rot: [ 0, 0, 0 ],
+    sca: [ 1, 1, 1 ]
+  }
+
+  const currentState = {
+    0: {
+      pos: [0, 0, 0],
+      rot: [0, 0, 0],
+      sca: [1, 5.2, 1]
+    }
+  }
+
+  const newState = mirrorComponents(transformDefaults, currentState, inputs)
+  const expState = {
+    0: {
+      pos: [0, 0, 0],
+      rot: [0, 0, 0], // FIXME: DOUBLE CHECK !! seems fishy
+      sca: [1, -5.2, 1]
     }
   }
 
