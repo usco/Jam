@@ -34,7 +34,7 @@ function model (props$, actions) {
 }
 
 function view (state$) {
-  const helpIconSvg = `<svg preserveAspectRatio="xMidYMid meet" width="50%" height="auto" viewBox="0 0 12 19" class='icon'
+  const helpIconSvg = `<svg preserveAspectRatio="xMidYMid meet" width="50%" viewBox="0 0 12 19" class='icon'
   version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
     <title>help</title>
