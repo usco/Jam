@@ -7,7 +7,7 @@ import {transformInputs} from './helpers'
 import {pluck} from 'ramda'
 
 
-const icon = `<svg width="29px" height="29px" viewBox="0 0 29 29" class='icon'
+const icon = `<svg viewBox="0 0 29 29" preserveAspectRatio="xMidYMid meet" class='icon'
 version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
     <title>move</title>
@@ -47,7 +47,7 @@ export function renderPositionUi (state) {
 
   const subTools = <span className='movingSubTools'>
     <div className='transformsGroup'>
-      {transformInputs({fieldName: 'pos', unit: '', step: transformStep, values, precision})}
+      {transformInputs({fieldName: 'pos', step: transformStep, values, precision})}
     </div>
     <div className='optionsGroup'>
       <label className='menuContent'>

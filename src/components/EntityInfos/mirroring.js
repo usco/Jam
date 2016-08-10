@@ -2,7 +2,7 @@
 import {html} from 'snabbdom-jsx'
 import Menu from '../widgets/Menu'
 
-const mainIcon = `<svg width="22px" height="26px" viewBox="0 0 22 26" version="1.1" class="icon"
+const mainIcon = `<svg viewBox="0 0 22 26" version="1.1" preserveAspectRatio="xMidYMid meet" class="icon"
 xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
     <title>mirror</title>
@@ -13,7 +13,7 @@ xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     </g>
 </svg>`
 
-const mirrorXIcon = `<svg width="24px" height="28px" viewBox="0 0 24 28" class='icon'
+const mirrorXIcon = `<svg viewBox="0 0 24 28" preserveAspectRatio="xMidYMid meet" class='icon'
 version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
     <title>mirror-x</title>
@@ -27,7 +27,7 @@ version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/
     </g>
 </svg>`
 
-const mirrorYIcon = `<svg width="24px" height="28px" viewBox="0 0 24 28" class='icon'
+const mirrorYIcon = `<svg viewBox="0 0 24 28" preserveAspectRatio="xMidYMid meet" class='icon'
 version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
     <title>mirror-y</title>
@@ -41,7 +41,7 @@ version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/
     </g>
 </svg>`
 
-const mirrorZIcon = `<svg width="29px" height="24px" viewBox="0 0 29 24" class='icon'
+const mirrorZIcon = `<svg viewBox="0 0 29 24" preserveAspectRatio="xMidYMid meet" class='icon'
  version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
     <title>mirror-z</title>

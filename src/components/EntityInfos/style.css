@@ -1,18 +1,23 @@
 /*entity infos*/
-
-
-
-
-.transformsGroup{
-  display: flex;
-  flex-direction: column;
+.movingSubTools, .rotationSubTools, .scalingSubTools{
+  width: 180px;
+  display: block;
   padding: 10px;
 }
 
+.scalingSubTools{
+  width: 240px;
+}
+
+.transformsGroup{
+  width: 100%;
+  display: inline-block;
+  margin-bottom: 10px;
+}
+
 .transformsGroup .axisData{
-  display: flex;
-  padding: 2px;
-  align-items: center;
+  display: inline-block;
+  margin-bottom: 3px;
 }
 
 .transformsGroup input[type=number]{
@@ -25,23 +30,22 @@
   color: lightgray;
 }
 
-
-
 .transformsGroup .percent {
   color: #828282;
-  width: 50px;
-  padding: 4;
+  width: 78%;
+  padding: 5px;
 }
 
 .transformsGroup .value {
   color: #636363;
-  width: 80px;
-  padding: 4;
+  width: 60%;
+  padding: 4px;;
+  padding-left: 6px;
 }
 
 .transformsGroup .valueGroup{
   border: 1px solid red;
-  margin-right: 10px;
+  display: block;
 }
 
 .transformsGroup .valueGroup label{
@@ -60,7 +64,6 @@
 
 .transformsGroup .percentGroup {
   border: 1px solid red;
-  padding: 3.5px;
 }
 
 /* color overrids per axis, for axis color codes */
@@ -106,27 +109,25 @@
 
 .transformsGroup .unit{
   color: #aaa;
-  padding: 0 10 0 0;
+  padding: 0;
   display: inline-block;
 }
 
 .optionsGroup{
-  display: flex;
+  width: 100%;
+  display: inline-block;
+  white-space: nowrap;
+  clear: both;
 }
 
-.movingSubTools{
-  width: 190px;
-  display: block;
+.twoColumns .valueGroup{
+  width: 60%;
+  float: left;
 }
 
-.rotationSubTools{
-  width: 180px;
-  display: block;
-}
-
-.scalingSubTools{
-  width: 270px;
-  display: block;
+.twoColumns .percentGroup{
+  width: 35%;
+  float: right;
 }
 
 .nameAndColorSubTools{

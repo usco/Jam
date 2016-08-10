@@ -1,7 +1,7 @@
 import {html} from 'snabbdom-jsx'
 import Menu from '../widgets/Menu'
 
-const mainIcon = `<svg width="23px" height="23px" viewBox="0 0 23 23" class='icon'
+const mainIcon = `<svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 23 23" class='icon'
 version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
     <title>measurement</title>
@@ -27,12 +27,12 @@ version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/
 
 
 const addNoteIcon = `<svg version="1.1" id="Flag" xmlns="http://www.w3.org/2000/svg"
-  width="16" height="16" x="0px" y="0px" viewBox="0 0 20 20" enable-background="new 0 0 20 20" class="icon">
+  preserveAspectRatio="xMidYMid meet" x="0px" y="0px" viewBox="0 0 20 20" enable-background="new 0 0 20 20" class="icon">
 <path d="M18.926,5.584c-9.339,13.568-6.142-0.26-14.037,6.357L6.684,19H4.665L1,4.59l1.85-0.664
   c8.849-6.471,4.228,5.82,15.637,1.254C18.851,5.033,19.142,5.27,18.926,5.584z"/>
 </svg>`
 
-const measureDistanceIcon = `<svg width="24px" height="24px" viewBox="0 0 24 24" class='icon'
+const measureDistanceIcon = `<svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 24 24" class='icon'
 version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
     <title>ruler</title>
@@ -43,7 +43,7 @@ version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/
     </g>
 </svg>`
 
-const measureThicknessIcon = `<svg width="25px" height="25px" viewBox="0 0 25 25" class='icon'
+const measureThicknessIcon = `<svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 25 25" class='icon'
 version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
     <title>thickness</title>
@@ -54,7 +54,7 @@ version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/
     </g>
 </svg>`
 
-const measureDiameterIcon = `<svg width="22px" height="23px" viewBox="0 0 22 23" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
+const measureDiameterIcon = `<svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 22 23" version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
     <title>diameter</title>
     <desc>Created with Sketch.</desc>
@@ -68,7 +68,7 @@ const measureDiameterIcon = `<svg width="22px" height="23px" viewBox="0 0 22 23"
 </svg>`
 
 const measureAngleIcon = `<svg version="1.1" xmlns="http://www.w3.org/2000/svg"
-  width="18px" height="18px" viewBox="0 0 18 18" class="icon">
+    preserveAspectRatio="xMidYMid meet"viewBox="0 0 18 18" class="icon">
     <title>Untitled</title>
     <desc>Created with Sketch.</desc>
     <defs></defs>

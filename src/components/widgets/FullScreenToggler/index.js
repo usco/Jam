@@ -1,4 +1,5 @@
 import { html } from 'snabbdom-jsx'
+import Menu from '../Menu'
 import screenfull from 'screenfull'
 require('./fullScreenToggler.css')
 
@@ -18,12 +19,11 @@ function view (state$) {
       if (screenfull.enabled) {
         screenfull.toggle()
       }
-
-      let fullScreenTogglerImg = null
-
+      let tooltip = toggle ? 'exit fullscreen' : 'fullscreen'
+      let icon
       if (!screenfull.isFullscreen) {
-        fullScreenTogglerImg = `
-        <svg width="25px" height="25px" viewBox="0 0 25 25" class='icon'
+        icon = `
+        <svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 25 25" class='icon'
               version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
         <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
         <title>fullscreen</title>
@@ -34,7 +34,7 @@ function view (state$) {
         </g>
       </svg>`
       } else {
-        fullScreenTogglerImg = `<svg width="25px" height="25px" viewBox="0 0 25 25" class='icon'
+        icon = `<svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 25 25" class='icon'
         version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
           <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
           <title>normal-screen</title>
@@ -45,13 +45,7 @@ function view (state$) {
           </g>
       </svg>`
       }
-
-      return (
-      <div className='fullScreenToggler'>
-        <button className='containerToggler' innerHTML={fullScreenTogglerImg}>
-        </button>
-      </div>
-      )
+      return Menu({toggle, icon, klass: 'fullScreenToggler containerToggler', tooltip: tooltip, tooltipPos: 'top'})
     })
 }
 

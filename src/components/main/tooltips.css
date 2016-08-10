@@ -95,7 +95,7 @@ http://cbracco.me/a-simple-css-tooltip/
 .tooltip:before,
 .tooltip-top:before {
   margin-left: -6px;
-  margin-bottom: -12px;
+  margin-bottom: -11px;
   border-top-color: #000;
   border-top-color: hsla(0, 0%, 20%, 0.9);
 }
@@ -159,7 +159,7 @@ http://cbracco.me/a-simple-css-tooltip/
 }
 
 .tooltip-bottom:before {
-  margin-top: -12px;
+  margin-top: -11px;
   margin-bottom: 0;
   border-top-color: transparent;
   border-bottom-color: #000;

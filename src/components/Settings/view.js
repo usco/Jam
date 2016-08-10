@@ -33,7 +33,7 @@ export default function view (state$) {
     </section>
 
 
-    const icon = `<svg width="23px" height="22px" viewBox="0 0 23 22" class='icon'
+    const icon = `<svg preserveAspectRatio="xMidYMid meet" viewBox="0 0 23 22" class='icon'
     version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
     <!-- Generator: Sketch 3.8.3 (29802) - http://www.bohemiancoding.com/sketch -->
     <title>settings</title>
