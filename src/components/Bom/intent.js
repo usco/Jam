@@ -27,7 +27,6 @@ export default function intent (DOM) {
     .tap(e => console.log('entryDoubleTapped', e))
     //.shareReplay(1)
 
-
     const entryLongTapped$ = DOM.select('.bom .normal').events('mousedown', true)
       .flatMap( function(downEvent) {
         return Rx.Observable.amb(
@@ -120,6 +119,7 @@ export default function intent (DOM) {
     .forEach(e => easyElipsedTextSelection(e.target))
 
   const changeEntryValue$ = DOM.select('.bom .normal input[type=text]').events('change')
+    .tap(e=>forceTextEllipsis(e.target))
     .merge(DOM.select('.bom .normal input[type=number]').events('change'))
     .tap(e => e.stopPropagation())
     .tap(function (e) {
@@ -127,7 +127,7 @@ export default function intent (DOM) {
       return false
     })
     .map(function (e) {
-      forceTextEllipsis(e.target)
+      //forceTextEllipsis(e.target)
       const actualTarget = e.target.parentElement.dataset
       return {
         id: actualTarget.id,

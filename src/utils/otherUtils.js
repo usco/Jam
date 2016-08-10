@@ -4,14 +4,14 @@ export function first (input) {
   return input[0]
 }
 
+// forces to show the ellipsis again when a text input element for example goes out of focus or is edited
 export function forceTextEllipsis (element) {
-  // forces to show the ellipsis again when a text input element for example goes out of focus or is edited
   element.setSelectionRange(0, 0)
   element.blur()
 }
 
+// when the element has an overflow, you automatically select the last position when you click it for editing
 export function easyElipsedTextSelection (element) {
-  // when the element has an overflow, you automatically select the last position when you click it for editing
   if (element.offsetWidth < element.scrollWidth) {
     element.setSelectionRange(element.value.length, element.value.length)
   }
