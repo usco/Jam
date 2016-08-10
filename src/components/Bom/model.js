@@ -3,10 +3,20 @@ import { exists, combineLatestObj } from '../../utils/obsUtils'
 
 function sortBy (fieldName) {
   return function (a, b) {
-    if (a[fieldName] > b[fieldName]) {
+    let A = a[fieldName]
+    let B = b[fieldName]
+    // convert numbers presented as strings into actual numbers
+    A = isNaN(Number(A)) ? A : Number(A)
+    B = isNaN(Number(B)) ? B : Number(B)
+    if (typeof A === 'string') {
+      // change strings to lowercase because else all capital letters go first.
+      A = A.toLowerCase()
+      B = B.toLowerCase()
+    }
+    if (A > B) {
       return 1
     }
-    if (a[fieldName] < b[fieldName]) {
+    if (A < B) {
       return -1
     }
     // a must be equal to b

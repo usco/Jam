@@ -135,7 +135,7 @@ export default function view (state$) {
       function getCells (row, placeholder) {
         const baseClassName = row.hasOwnProperty('_adder') ? 'adder cell' : 'bomEntry cell'
         const selected = selectedEntries.indexOf(row.id) > -1
-        
+
         let cells = fieldNames.map(function (name) {
           const columnName = 'column' + fieldNames.indexOf(name)
 
@@ -197,6 +197,7 @@ export default function view (state$) {
         const isDynamic = row.dynamic // row['_qtyOffset'] !== 0 ? true: false //are we dealing with a 'dynamic' entry ie from a 3d file
         const disabled = (isDynamic && (name === 'phys_qty' || name === 'unit')) || readOnly// if readony or if we have a dynamic entry called phys_qty, disable
         const dataValue = (isDynamic && name === 'phys_qty') ? null : row[name]
+        const className = row._adder !== undefined ? 'adderTextInput' : 'bomTextInput'
 
         switch (fieldTypes[name]) {
           case 'text':
@@ -205,6 +206,7 @@ export default function view (state$) {
                       value={dataValue}
                       name={name}
                       placeholder={placeholder}
+                      className={className}
                       disabled={disabled} />
           case 'number':
             const steps = (name === 'qty') ? 1 : 0.01

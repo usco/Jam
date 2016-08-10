@@ -3,6 +3,7 @@ const { merge } = Rx.Observable
 import { combineLatestObj } from '../../utils/obsUtils'
 import { mergeData } from '../../utils/modelUtils'
 import { generateUUID, stringToBoolean, exists } from '../../utils/utils'
+import { forceTextEllipsis, easyElipsedTextSelection } from '../../utils/otherUtils'
 
 export default function intent (DOM) {
 
@@ -26,7 +27,6 @@ export default function intent (DOM) {
     .tap(e => console.log('entryDoubleTapped', e))
     //.shareReplay(1)
 
-
     const entryLongTapped$ = DOM.select('.bom .normal').events('mousedown', true)
       .flatMap( function(downEvent) {
         return Rx.Observable.amb(
@@ -44,7 +44,7 @@ export default function intent (DOM) {
           ])
       })
       .filter(e => e.interval > 250)
-    
+
 
   const headerTapped$ = DOM.select('.headerCell').events('click', true)
     .tap(e => e.stopPropagation())
@@ -104,6 +104,7 @@ export default function intent (DOM) {
     .withLatestFrom(newEntryValues$, (_, data) => data)
     .filter(data => data.name !== '')
     .map(function (data) { // inject extra data
+      document.querySelector('.adderTextInput').value = '' // clears the inputfield value so it uses the default placeholder again
       return mergeData({}, data, {id: generateUUID()})
     })
     .tap(e=>console.log("raw addEntry data",e))
@@ -111,10 +112,14 @@ export default function intent (DOM) {
 
     //  const addEntry$ = getFieldValues({name:'', qty:0, phys_qty:0, unit:'EA', printable:false}, DOM, '.bom .adder', addEntryTapped$)
 
-  DOM.select('.textInput').events('keydown')
-    .forEach(e => console.log('keydown', e))
+  DOM.select('.bomTextInput').events('blur')
+    .forEach(e => forceTextEllipsis(e.target))
+
+  DOM.select('.bomTextInput').events('click')
+    .forEach(e => easyElipsedTextSelection(e.target))
 
   const changeEntryValue$ = DOM.select('.bom .normal input[type=text]').events('change')
+    .tap(e=>forceTextEllipsis(e.target))
     .merge(DOM.select('.bom .normal input[type=number]').events('change'))
     .tap(e => e.stopPropagation())
     .tap(function (e) {
@@ -122,6 +127,7 @@ export default function intent (DOM) {
       return false
     })
     .map(function (e) {
+      //forceTextEllipsis(e.target)
       const actualTarget = e.target.parentElement.dataset
       return {
         id: actualTarget.id,
