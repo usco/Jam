@@ -31,11 +31,23 @@ export function remapEntityActions (entityActions, currentSelections$) {
     })
     .share()
 
+  const resetScalingComponents$ = entityActions.resetScalingComponents$
+    .withLatestFrom(currentSelections$, function (resetScalingInfos, selections) {
+      if (resetScalingInfos === undefined) { // delete by id, based on selections
+        return selections
+      } else { // delete by typeUid, based on input data
+        return resetScalingInfos
+      }
+    })
+    .tap(e => console.log('I am going to reset scale instances', e))
+    .share()
+
   return mergeData(entityActions,
     {
       duplicateInstances$,
       deleteInstances$,
-      mirrorInstances$
+      mirrorInstances$,
+      resetScalingComponents$
     })
 }
 
@@ -107,7 +119,7 @@ export function remapMeshActions (entityActions, componentBase$) {
 }
 
 // function to add extra data to transform component actions
-export function remapTransformActions (entityActions, componentBase$, settings$) {
+export function remapTransformActions (entityActions, componentBase$, settings$, currentSelections$) {
   const createComponents$ = componentBase$
     .filter(c => c.length > 0)
     .map(function (datas) {
@@ -134,9 +146,26 @@ export function remapTransformActions (entityActions, componentBase$, settings$)
       })
     })
 
+  //const resetScalingComponents$ = entityActions.resetScalingComponents$
+    //.filter(u => u.target === 'transforms')
+    //.pluck('data')
+    //.map(toArray)// we always expect arrays of data
+    /*.withLatestFrom(settings$, function (transforms, settings) {
+      return transforms.map(function (transform, index) {
+        return {id: transform.id, value: transform || transforms[0], settings}
+      })
+    })*/
+    //.withLatestFrom(settings$, function (transforms, settings) {
+      //return transforms.map(function (transform, index) {
+        //return mergeData({}, transform, {settings})
+        //return {id: transform.id, value: transform.value || transforms[0].value, settings}
+      //})
+    //})
+
   return {
     createComponents$,
     updateComponents$,
+    //resetScalingComponents$: entityActions.resetScalingComponents$,
     mirrorComponents$: entityActions.mirrorInstances$,
     duplicateComponents$: entityActions.duplicateInstances$,
     removeComponents$: entityActions.deleteInstances$,

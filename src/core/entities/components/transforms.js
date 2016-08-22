@@ -59,6 +59,8 @@ function applySnapAndUniformScaling (transformDefaults, transformationType, tran
   return transformation
 }
 
+
+
 export function mirrorComponents (transformDefaults, state, inputs) {
   console.log('mirroring transforms', inputs)
 
@@ -77,6 +79,27 @@ export function mirrorComponents (transformDefaults, state, inputs) {
     return state
   }, state)
 }
+
+export function resetScalingComponents (state, inputs) {
+  console.log('it does somethin', state)
+  console.log('it does somethin', inputs)
+
+  return inputs.reduce(function (state, input) {
+    let {id} = input
+
+    let sca = state[id].sca.map(d => d) // DO NOT REMOVE ! a lot of code relies on diffing, and if you mutate the original scale, it breaks !
+    sca[input.axis] *= -1
+
+    let orig = state[id] || transformDefaults
+
+    state = mergeData({}, state)
+    // FIXME big hack, use mutability
+    state[id] = mergeData({}, orig, {sca})
+
+    return state
+  }, state)
+}
+
 
 export function updateComponents (transformDefaults, state, inputs) {
   const currentStateFlat = inputs.map((input) => state[input.id])
@@ -153,6 +176,7 @@ export function makeTransformsSystem (actions) {
     updateRotation,
     updatePosition,
     updateScale,
+    resetScalingComponents: resetScalingComponents.bind(null, transformDefaults),
     mirrorComponents: mirrorComponents.bind(null, transformDefaults),
     updateComponents: updateComponents.bind(null, transformDefaults),
     createComponents: createComponents.bind(null, transformDefaults),
