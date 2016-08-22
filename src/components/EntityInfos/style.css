@@ -1,18 +1,29 @@
 /*entity infos*/
 .movingSubTools, .rotationSubTools, .scalingSubTools{
-  width: 180px;
+  width: 200px;
   display: block;
-  padding: 10px;
 }
 
 .scalingSubTools{
-  width: 240px;
+  width: 260px;
 }
 
 .transformsGroup{
-  width: 100%;
+  width: 180px;
   display: inline-block;
-  margin-bottom: 10px;
+  margin: 10px;
+}
+
+.optionsGroup{
+  width: 180px;
+  display: inline-block;
+  white-space: nowrap;
+  clear: both;
+  margin: 0 10px 10px 10px;
+}
+
+.scalingSubTools .transformsGroup, .scalingSubTools .optionsGroup, .scalingSubTools .defaultsGroup{
+  width: 240px;
 }
 
 .transformsGroup .axisData{
@@ -113,13 +124,6 @@
   display: inline-block;
 }
 
-.optionsGroup{
-  width: 100%;
-  display: inline-block;
-  white-space: nowrap;
-  clear: both;
-}
-
 .twoColumns .valueGroup{
   width: 60%;
   float: left;
@@ -128,6 +132,13 @@
 .twoColumns .percentGroup{
   width: 35%;
   float: right;
+}
+
+.defaultsGroup{
+  padding: 15px 10px;
+  display: block;
+  border-top: 1px solid #dddddd;
+  text-align: right;
 }
 
 .nameAndColorSubTools{
@@ -261,7 +272,6 @@
 .entityInfos .transformInput{
   padding: 7 0 0 13px;
 }
-
 
 .color{
   width: 24px;

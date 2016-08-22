@@ -37,7 +37,7 @@ body{
 .jam {
   /*background-color: #fff;#f5f5f5;
   z-index: 9999;*/
-   position: absolute;
+  position: absolute;
   top: 0px;
   left: 0px;
   width: 100%;
@@ -61,6 +61,13 @@ body{
 
 :-moz-ui-invalid {
   box-shadow:none;
+}
+
+.textLink{
+  font-size: 0.8em;
+  color: #5bc3fa;
+  text-decoration: underline;
+  cursor:pointer;
 }
 
 button path{fill:#555555!important;}

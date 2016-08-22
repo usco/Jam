@@ -75,6 +75,12 @@ export function renderScaleUi (state) {
         uniform scaling
       </label>
     </div>
+
+    <div className='defaultsGroup'>
+      <label className='resetScaling'>
+        <a className='textLink'>Reset Scaling</a>
+      </label>
+    </div>
   </span>
 
   return Menu({toggled, icon, klass: 'toScaleMode',
