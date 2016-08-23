@@ -20,7 +20,8 @@ test('actionsFromEvents (entities): should return the correct hash of actions', 
     'removeTypes$',
     'deleteInstances$',
     'updateComponent$',
-    'createAnnotationStep$'
+    'createAnnotationStep$',
+    'resetScaling$'
   ]
 
   t.deepEqual(Object.keys(actions), expActions)

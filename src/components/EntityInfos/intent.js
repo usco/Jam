@@ -122,8 +122,11 @@ export default function intent (DOM) {
     , changeColor$.map(function (value) { return {color: value} })
   )
 
+  const resetScaling$ = DOM.select('.resetScaling').events('click')
+
   return {
     changeMeta$,
-    changeTransforms$
+    changeTransforms$,
+    resetScaling$
   }
 }

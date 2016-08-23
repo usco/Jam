@@ -107,7 +107,7 @@ export function remapMeshActions (entityActions, componentBase$) {
 }
 
 // function to add extra data to transform component actions
-export function remapTransformActions (entityActions, componentBase$, settings$) {
+export function remapTransformActions (entityActions, componentBase$, settings$, currentSelections$) {
   const createComponents$ = componentBase$
     .filter(c => c.length > 0)
     .map(function (datas) {
@@ -137,6 +137,7 @@ export function remapTransformActions (entityActions, componentBase$, settings$)
   return {
     createComponents$,
     updateComponents$,
+    resetScaling$: entityActions.resetScaling$,
     mirrorComponents$: entityActions.mirrorInstances$,
     duplicateComponents$: entityActions.duplicateInstances$,
     removeComponents$: entityActions.deleteInstances$,

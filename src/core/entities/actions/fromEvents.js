@@ -26,6 +26,10 @@ export default function intent (events, params) {
     , updateTransformComponent$
   )
 
+  const resetScaling$ = events
+    .select('entityInfos')
+    .events('resetScaling$')
+
   // measurements & annotations
   const shortSingleTaps$ = events
     .select('gl').events('shortSingleTaps$')
@@ -63,6 +67,7 @@ export default function intent (events, params) {
     removeTypes$,
     deleteInstances$,
     updateComponent$,
-    createAnnotationStep$
+    createAnnotationStep$,
+    resetScaling$
   }
 }

@@ -78,6 +78,24 @@ export function mirrorComponents (transformDefaults, state, inputs) {
   }, state)
 }
 
+export function resetScaling (transformDefaults, state, inputs) {
+  return inputs.reduce(function (state, input) {
+    let {id} = input
+
+    let sca = state[id].sca.map(d => d) // DO NOT REMOVE ! a lot of code relies on diffing, and if you mutate the original scale, it breaks !
+    sca = transformDefaults.sca
+
+    let orig = state[id] || transformDefaults
+
+    state = mergeData({}, state)
+    // FIXME big hack, use mutability
+    state[id] = mergeData({}, orig, {sca})
+
+    return state
+  }, state)
+}
+
+
 export function updateComponents (transformDefaults, state, inputs) {
   const currentStateFlat = inputs.map((input) => state[input.id])
 
@@ -153,6 +171,7 @@ export function makeTransformsSystem (actions) {
     updateRotation,
     updatePosition,
     updateScale,
+    resetScaling: resetScaling.bind(null, transformDefaults),
     mirrorComponents: mirrorComponents.bind(null, transformDefaults),
     updateComponents: updateComponents.bind(null, transformDefaults),
     createComponents: createComponents.bind(null, transformDefaults),
