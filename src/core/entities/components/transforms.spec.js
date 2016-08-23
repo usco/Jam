@@ -1,5 +1,5 @@
 import test from 'ava'
-import { updateComponents } from './transforms'
+import { updateComponents, resetScaling } from './transforms'
 
 test('transforms:updateComponents:translation(basic)', t => {
   const inputs = [
@@ -162,6 +162,37 @@ test('transforms:updateComponents:rotation(basic, snapping)', t => {
     0: {
       pos: [0, 0, 0],
       rot: [0, 3.490658503988659, 0], // FIXME: DOUBLE CHECK !! seems fishy
+      sca: [1, 1, 1]
+    }
+  }
+
+  t.deepEqual(newState, expState)
+})
+
+test('transforms:resetScaling', t => {
+  const inputs = [
+    {id: 0}
+  ]
+
+  const transformDefaults = {
+    pos: [ 0, 0, 0 ],
+    rot: [ 0, 0, 0 ],
+    sca: [ 1, 1, 1 ]
+  }
+
+  const currentState = {
+    0: {
+      pos: [0, 0, 0],
+      rot: [0, 0, 0],
+      sca: [1.8, 0.2, 7]
+    }
+  }
+
+  const newState = resetScaling(transformDefaults, currentState, inputs)
+  const expState = {
+    0: {
+      pos: [0, 0, 0],
+      rot: [0, 0, 0],
       sca: [1, 1, 1]
     }
   }
