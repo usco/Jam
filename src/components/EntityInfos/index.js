@@ -118,7 +118,6 @@ function refineActions (props$, actions) {
       .filter(exists)
       .map(function(data){
         const {ids} = data
-        console.log('i was here')
         return ids.map(id => ({id}))
       })
 
