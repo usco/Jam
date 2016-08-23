@@ -111,15 +111,26 @@ function refineActions (props$, actions) {
 
   const changeTransforms$ = combiner(changeTransformsF$)*/
   const changeTransforms$ = changeTransformsBase$
+  const resetScaling$ = actions.resetScaling$
+      .withLatestFrom(selections$, function (_, selections) {
+        return {ids: selections}
+      })
+      .filter(exists)
+      .map(function(data){
+        const {ids} = data
+        console.log('i was here')
+        return ids.map(id => ({id}))
+      })
 
   return {
     changeMeta$: actions.changeMeta$,
-    changeTransforms$
+    changeTransforms$,
+    resetScaling$
   }
 }
 
 function EntityInfos ({DOM, props$}, name = '') {
-  const {changeMeta$, changeTransforms$} = refineActions(props$, intent(DOM))
+  const {changeMeta$, changeTransforms$, resetScaling$} = refineActions(props$, intent(DOM))
   const state$ = model(props$)
   const vtree$ = view(state$)
 
@@ -127,7 +138,8 @@ function EntityInfos ({DOM, props$}, name = '') {
     DOM: vtree$,
     events: {
       changeMeta$,
-      changeTransforms$
+      changeTransforms$,
+      resetScaling$
     }
   }
 }

@@ -80,7 +80,7 @@ export function mirrorComponents (transformDefaults, state, inputs) {
   }, state)
 }
 
-export function resetScalingComponents (state, inputs) {
+export function resetScaling (transformDefaults, state, inputs) {
   console.log('it does somethin', state)
   console.log('it does somethin', inputs)
 
@@ -88,7 +88,7 @@ export function resetScalingComponents (state, inputs) {
     let {id} = input
 
     let sca = state[id].sca.map(d => d) // DO NOT REMOVE ! a lot of code relies on diffing, and if you mutate the original scale, it breaks !
-    sca[input.axis] *= -1
+    sca = transformDefaults.sca
 
     let orig = state[id] || transformDefaults
 
@@ -176,7 +176,7 @@ export function makeTransformsSystem (actions) {
     updateRotation,
     updatePosition,
     updateScale,
-    resetScalingComponents: resetScalingComponents.bind(null, transformDefaults),
+    resetScaling: resetScaling.bind(null, transformDefaults),
     mirrorComponents: mirrorComponents.bind(null, transformDefaults),
     updateComponents: updateComponents.bind(null, transformDefaults),
     createComponents: createComponents.bind(null, transformDefaults),

@@ -31,23 +31,11 @@ export function remapEntityActions (entityActions, currentSelections$) {
     })
     .share()
 
-  const resetScalingComponents$ = entityActions.resetScalingComponents$
-    .withLatestFrom(currentSelections$, function (resetScalingInfos, selections) {
-      if (resetScalingInfos === undefined) { // delete by id, based on selections
-        return selections
-      } else { // delete by typeUid, based on input data
-        return resetScalingInfos
-      }
-    })
-    .tap(e => console.log('I am going to reset scale instances', e))
-    .share()
-
   return mergeData(entityActions,
     {
       duplicateInstances$,
       deleteInstances$,
-      mirrorInstances$,
-      resetScalingComponents$
+      mirrorInstances$
     })
 }
 
@@ -165,7 +153,7 @@ export function remapTransformActions (entityActions, componentBase$, settings$,
   return {
     createComponents$,
     updateComponents$,
-    //resetScalingComponents$: entityActions.resetScalingComponents$,
+    resetScaling$: entityActions.resetScaling$,
     mirrorComponents$: entityActions.mirrorInstances$,
     duplicateComponents$: entityActions.duplicateInstances$,
     removeComponents$: entityActions.deleteInstances$,
