@@ -25,7 +25,7 @@ export const presets = {
   controls: [
     {
       up: [0, 0, 1],
-      rotateSpeed: 2.0,
+      rotateSpeed: 0.7,
       panSpeed: 2.0,
       zoomSpeed: 2.0,
       autoRotate: {

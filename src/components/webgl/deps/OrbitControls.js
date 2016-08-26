@@ -159,7 +159,7 @@ var OrbitControls = function ( object, domElement, upVector ) {
             //fireDeActivated()
           }
 
-          camState.thetaDelta /= 1.5
+          camState.thetaDelta /= 1.9
           camState.phiDelta /= 1.5
           camState.scale = 1
         }
