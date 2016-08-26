@@ -163,7 +163,7 @@ function GLView ({drivers, props$}) {
   let controls = makeControls(config.controls[0]) // create 'orbit' controls
   let transformControls = new TransformControls(camera)
 
-  let grid = new LabeledGrid(200, 200, 10, config.cameras[0].up)
+  let grid = new LabeledGrid(215, 215, 10, config.cameras[0].up)
   let shadowPlane = new ShadowPlane(2000, 2000, null, config.cameras[0].up)
 
   const actions = intent({DOM, events: drivers.events}, {camera, scene, transformControls, props$, settings$})

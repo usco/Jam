@@ -349,7 +349,7 @@ export function pointerInteractions (baseInteractions) {
   // drag move interactions (continuously firing)
   const dragMoves$ = merge(
     drags3(mouseDowns$, mouseUps$, mouseMoves$, longPressDelay, deltaSqr),
-    touchDrags(touchStart$, touchEnd$, touchMoves$).throttle(60).tap(e=>console.log('foo'))
+    touchDrags(touchStart$, touchEnd$, touchMoves$).throttle(40).tap(e=>console.log('foo'))
   )
     .takeUntil(longTaps$).repeat() // no drag moves if there is a context action already taking place
 
