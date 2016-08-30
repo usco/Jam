@@ -1,6 +1,7 @@
 import {html} from 'snabbdom-jsx'
 import Menu from '../widgets/Menu'
 import checkbox from '../widgets/Checkbox'
+import FallbackPicker from '../widgets/ColorPicker/fallbackPicker.js'
 
 const icon = `<svg viewBox="0 0 23 24" preserveAspectRatio="xMidYMid meet" class='icon'
 version="1.1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink">
@@ -31,6 +32,17 @@ export function renderNameAndColorUi (state) {
   let meta = data.meta.length > 0 ? data.meta[0] : data.meta
   meta = meta || {name: undefined, color: '#FFFFFF'}
 
+  function getFallbackPicker () {
+    // first check whether the browser supports html5 color input, if not load the fallback picker
+    if (document.getElementById('colorInput')) {
+      let element = document.getElementById('colorInput')
+      if (element.type === 'text') { // non supporting browsers set the input type to text instead of color
+        return FallbackPicker()
+      }
+    }
+    return ''
+  }
+
   const subTools = <span className='nameAndColorSubTools'>
     <div className='formGroup'>
       <span>
@@ -43,9 +55,10 @@ export function renderNameAndColorUi (state) {
       <span>
         <label htmlfor='entityColor' > Color: </label>
         <span className='inputWrapper' style={{'backgroundColor':meta.color}} >
-          <input type='color' name='entityColor' value={meta.color} className='colorInput'/>
+          <input type='color' name='entityColor' value={meta.color} className='colorInput' id= 'colorInput' />
         </span>
       </span>
+      {getFallbackPicker()}
     </div>
   </span>
 
