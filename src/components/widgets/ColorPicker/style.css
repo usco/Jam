@@ -3,7 +3,7 @@
   margin-top: 20px;
 }
 
-.colorPickerSquare{
+.fallbackPickerSquare{
   display: inline-block;
   margin-bottom: 5px;
   width: calc(12.5%);

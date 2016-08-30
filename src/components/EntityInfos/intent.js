@@ -24,7 +24,7 @@ export default function intent (DOM) {
     .debounce(20)
     .shareReplay(1)
   .merge(
-    DOM.select('.colorPickerSquare')
+    DOM.select('.fallbackPickerSquare')
     .events('click').map(e => e.target.dataset.color))
 
   /*const baseStream$ = merge(

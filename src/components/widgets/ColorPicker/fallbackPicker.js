@@ -52,7 +52,7 @@ export default function FallbackPicker () {
 
   const colorGrid = getColors()
     .map(function(color){
-      return h('div.colorPickerSquare',{style:{backgroundColor:color},attrs: {'data-color': color}},[])
+      return h('div.fallbackPickerSquare',{style:{backgroundColor:color},attrs: {'data-color': color}},[])
     })
 
   const picker = <div className='colorGridWrapper'>
