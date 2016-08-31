@@ -38,7 +38,6 @@ function view (state$) {
 
       // this is nescessary to fix an initial calculation bug in hopscotch
       if (parseInt(document.querySelector('.hopscotch-bubble').style.left) < 0) {
-        console.log('hij is kleiner dan 0')
         document.querySelector('.hopscotch-bubble').style.left = '25%'
       }
     }
