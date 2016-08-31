@@ -58,27 +58,79 @@
   display: none;
 }
 
-.hopscotch-bubble-arrow, .hopscotch-bubble-arrow-border{
+.hopscotch-bubble-arrow-container {
   position: absolute;
-  top: -8px;
-  left: 17px;
-  margin: 0;
-  border-top: 0;
-  border-left: 10px solid transparent;
-  border-right: 10px solid transparent;
-  border-bottom: 10px solid white;
-  padding: 0;
+  width: 15px;
+  height: 15px;
+}
+.hopscotch-bubble-arrow-container .hopscotch-bubble-arrow,
+.hopscotch-bubble-arrow-container .hopscotch-bubble-arrow-border {
   width: 0;
   height: 0;
-  /* ie6 height fix */
-  font-size: 0;
-  line-height: 0;
-   /* ie6 transparent fix */
-  _border-right-color: pink;
-  _border-left-color: pink;
-  _filter: chroma(color=pink);
 }
-
-.hopscotch-bubble-arrow-border{
-  border-bottom-color: #dddddd; top: -9px;
+.hopscotch-bubble-arrow-container.up {
+  top: -15px;
+  left: 7px;
+}
+.hopscotch-bubble-arrow-container.up .hopscotch-bubble-arrow {
+  border-bottom: 15px solid #fff;
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+  position: relative;
+  top: -14px;
+}
+.hopscotch-bubble-arrow-container.up .hopscotch-bubble-arrow-border {
+  border-bottom: 15px solid #dddddd;
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+}
+.hopscotch-bubble-arrow-container.down {
+  bottom: -15px;
+  left: 7px;
+}
+.hopscotch-bubble-arrow-container.down .hopscotch-bubble-arrow {
+  border-top: 15px solid #fff;
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+  position: relative;
+  bottom: 16px;
+}
+.hopscotch-bubble-arrow-container.down .hopscotch-bubble-arrow-border {
+  border-top: 15px solid #dddddd;
+  border-left: 15px solid transparent;
+  border-right: 15px solid transparent;
+}
+.hopscotch-bubble-arrow-container.left {
+  top: 10px;
+  left: -15px;
+}
+.hopscotch-bubble-arrow-container.left .hopscotch-bubble-arrow {
+  border-bottom: 15px solid transparent;
+  border-right: 15px solid #fff;
+  border-top: 15px solid transparent;
+  position: relative;
+  left: 1px;
+  top: -30px;
+}
+.hopscotch-bubble-arrow-container.left .hopscotch-bubble-arrow-border {
+  border-right: 15px solid #dddddd;
+  border-bottom: 15px solid transparent;
+  border-top: 15px solid transparent;
+}
+.hopscotch-bubble-arrow-container.right {
+  top: 10px;
+  right: -15px;
+}
+.hopscotch-bubble-arrow-container.right .hopscotch-bubble-arrow {
+  border-bottom: 15px solid transparent;
+  border-left: 15px solid #fff;
+  border-top: 15px solid transparent;
+  position: relative;
+  right: 1px;
+  top: -30px;
+}
+.hopscotch-bubble-arrow-container.right .hopscotch-bubble-arrow-border {
+  border-left: 15px solid #dddddd;
+  border-bottom: 15px solid transparent;
+  border-top: 15px solid transparent;
 }

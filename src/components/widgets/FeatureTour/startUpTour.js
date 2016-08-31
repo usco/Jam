@@ -1,41 +1,47 @@
 export default function startUpTour () {
   const imagePath = './src/components/widgets/FeatureTour/images/'
+  // look here on how to position the bubbles: http://linkedin.github.io/hopscotch/
+  // if the bubble goes off the screen by how it is positoned relative to the target,
+  // use xOffset, yOffseten and arrowOffset to position it within the screen again.
   const content = {
     id: 'startupTour',
     showPrevButton: true,
     bubbleWidth: 450,
+    // it's very important to clear the state on close and on end. Don't remove this.
     onClose: ['clearState'],
     onEnd: ['clearState'],
     steps: [
       {
         title: 'Welcome at the first-run tour of JAM.',
-        content: `<img src='${imagePath}bunny.jpg' class='featureTourImage imageLeft'><p>The purpose of this tour is to show you how to make the best use of JAM.</p>`,
+        content: `<img src='${imagePath}bunny.jpg' class='featureTourImage imageLeft'><p>The purpose of this tour is to show you how to make the best use of JAM. This is a callout</p>`,
         target: document.querySelector('#overlayContainer'),
         placement: 'bottom',
         xOffset: 'center',
         arrowOffset: 'center',
+        // use the hideArrow helper to hide the arrow and create a call out.
         onShow: ['hideArrow']
       },
       {
         title: 'Assemblies',
-        content: `<img src='${imagePath}solar_system.jpg' class='featureTourImage imageRight'>You can use JAM to make assemblies. In an assembly you put your parts together as they would be in real life. This way other people can see what the end result looks like and as a bonus other people can see how to put it together themselves. `,
+        content: `<img src='${imagePath}solar_system.jpg' class='featureTourImage imageRight'>You can use JAM to make assemblies. In an assembly you put your parts together as they would be in real life. This way other people can see what the end result looks like and as a bonus other people can see how to put it together themselves. placement bottom, xoffset center `,
         target: document.querySelector('#overlayContainer'),
         placement: 'bottom',
         xOffset: 'center',
-        arrowOffset: 'center',
-        onShow: ['hideArrow']
+        arrowOffset: 'center'
       },
       {
         title: 'My content',
-        content: '(this step only shows when no model is loaded) First let’s load a model by dragging it into JAM or click here to load an example model.',
-        target: document.querySelector('.bomtoggler'),
-        placement: 'left'
+        content: 'placement right (this step only shows when no model is loaded) First let’s load a model by dragging it into JAM or click here to load an example model.',
+        target: document.querySelector('.toMirrorMode'),
+        placement: 'right'
       },
       {
         title: 'My content',
-        content: 'You select a part by clicking it. When a part is selected, it has a thick black outline. Unselect the part by clicking it again.',
-        target: document.querySelector('.bomtoggler'),
-        placement: 'left'
+        content: 'placement top, xoffset right You select a part by clicking it. When a part is selected, it has a thick black outline. Unselect the part by clicking it again.',
+        target: document.querySelector('.settingsToggler'),
+        placement: 'top',
+        xOffset: -425,
+        arrowOffset: 425
       },
       {
         title: 'My content',

@@ -68,12 +68,10 @@ function view (state$) {
             <li>
               Click/tap outside of any object in the 3d view to clear all selections
             </li>
-            <li>
-              <button className='startUpTourButton'>
-                Click
-                <span className='linkInText'> here </span>
-                to take the startup tour again.
-              </button>
+            <li className='startUpTourLink'>
+              <a className='textLink'>
+                Click here to take the startup tour.
+              </a>
             </li>
           </ul>
         </span>

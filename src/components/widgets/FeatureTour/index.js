@@ -3,37 +3,44 @@ import { h } from '@cycle/dom'
 import startUpTour from './startUpTour.js'
 import hopscotch from 'hopscotch'
 require('./featureTour.css')
+import rx from 'Rx'
 
 function intent (DOM) {
-  var toggle$ = DOM.select('.startUpTourButton').events('click')
-    .map(true)
-    .startWith(false)
-  return {toggle$}
+  const closeSelection = new rx.ReplaySubject()
+  hopscotch.registerHelper('clearState', function () {
+    closeSelection.onNext(false)
+  })
+
+  let selected$ = DOM.select('.startUpTourLink').events('click')
+      .map(true)
+      .startWith(false)
+      .merge(closeSelection)
+  return {selected$}
 }
 
 function model (props$, actions) {
-  const toggle$ = actions.toggle$.startWith(false)
+  const selected$ = actions.selected$.startWith(false)
   const firstRun$ = props$.map(e => false) // needs to change later
-  return combineLatestObj({toggle$, firstRun$})
+  return combineLatestObj({selected$, firstRun$})
 }
 
 function view (state$) {
   return state$.map(function (state) {
-    let active = state.toggle || state.firstRun
+    let active = state.selected || state.firstRun
+    // you can also use this to load other feature tours then just the startup tour
     let tour = startUpTour()
 
     hopscotch.registerHelper('hideArrow', function () {
       document.querySelector('.hopscotch-bubble-arrow-container').className += ' hidden'
     })
-    hopscotch.registerHelper('clearState', function () {
-      active = false
-      tour = undefined
-    })
-
     if (active) {
       hopscotch.startTour(tour)
+
       // this is nescessary to fix an initial calculation bug in hopscotch
-      document.querySelector('.hopscotch-bubble').style.left = '25%'
+      if (parseInt(document.querySelector('.hopscotch-bubble').style.left) < 0) {
+        console.log('hij is kleiner dan 0')
+        document.querySelector('.hopscotch-bubble').style.left = '25%'
+      }
     }
   })
 }
