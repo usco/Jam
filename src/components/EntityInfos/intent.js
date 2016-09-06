@@ -23,6 +23,9 @@ export default function intent (DOM) {
     .distinctUntilChanged()
     .debounce(20)
     .shareReplay(1)
+  .merge(
+    DOM.select('.fallbackPickerSquare')
+    .events('click').map(e => e.target.dataset.color))
 
   /*const baseStream$ = merge(
       DOM.select('.transformsInput').events('change'),
