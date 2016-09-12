@@ -1,4 +1,4 @@
-import { pluck, head } from 'ramda'
+import { pluck, head, assocPath } from 'ramda'
 
 import { createComponents, removeComponents, duplicateComponents, makeActionsFromApiFns } from './common'
 import { makeModel, mergeData } from '../../../utils/modelUtils'
@@ -116,9 +116,8 @@ export function updateComponents (transformDefaults, state, inputs) {
       return state[id][input.trans][index] + value
     }) || transformDefaults
 
-    state[id][input.trans] = applySnapAndUniformScaling(transformDefaults, input.trans, transformation, input.settings)
-    //console.log('state', state, input)
-    return state
+    const updateTransformation = applySnapAndUniformScaling(transformDefaults, input.trans, transformation, input.settings)
+    return assocPath([id, input.trans], updateTransformation, state)
   }, state)
 }
 
