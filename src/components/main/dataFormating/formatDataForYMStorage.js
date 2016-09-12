@@ -48,8 +48,8 @@ export default function formatDataForYMStorage ({sources, state$}) {
 
   // OUTPUT to ym
   const bomToYm = state$.pluck('bom')
-  const entityMetaToYm = state$.pluck('meta')
-  const entityTransformsToYm = state$.pluck('transforms')
+  const entityMetaToYm = state$.pluck('meta').distinctUntilChanged().shareReplay(1)
+  const entityTransformsToYm = state$.pluck('transforms').distinctUntilChanged(null, equals).shareReplay(1)//
   const entitymeshesToYm = state$.pluck('meshes')
   const parts = state$.pluck('types')
   const design = state$.pluck('design')
@@ -100,6 +100,7 @@ export default function formatDataForYMStorage ({sources, state$}) {
 
   const ymStorage$ = merge(queryDesignExists$, saveDesigntoYm$, loadDesignFromYm$)
     .distinctUntilChanged(null, equals)
+
 
   return ymStorage$
 }
