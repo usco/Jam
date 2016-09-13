@@ -59,23 +59,21 @@ function applySnapAndUniformScaling (transformDefaults, transformationType, tran
   return transformation
 }
 
+//mirror on given axis
 export function mirrorComponents (transformDefaults, state, inputs) {
-  // console.log('mirroring transforms', inputs)
   return inputs.reduce(function (state, input) {
-    let {id} = input
-
-    let updatedScale = Object.assign([], transformDefaults.sca, state[id].sca)
+    let updatedScale = Object.assign([], transformDefaults.sca, state[input.id].sca)
     updatedScale[input.axis] *= -1 // mirroring is just inverting scale on the given axis
 
-    return assocPath([id, 'sca'], updatedScale, state) // return updated state
+    return assocPath([input.id, 'sca'], updatedScale, state) // return updated state
   }, state)
 }
 
+//reset scaling to default
 export function resetScaling (transformDefaults, state, inputs) {
   return inputs.reduce(function (state, input) {
-    let {id} = input
     const updatedScale = Object.assign([], transformDefaults.sca)
-    return assocPath([id, 'sca'], updatedScale, state) // return updated state
+    return assocPath([input.id, 'sca'], updatedScale, state) // return updated state
   }, state)
 }
 

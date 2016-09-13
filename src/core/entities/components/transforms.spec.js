@@ -200,7 +200,6 @@ test('transforms:resetScaling', t => {
   t.deepEqual(newState, expState)
 })
 
-
 test('transforms:updateComponents:mirroring', t => {
   const inputs = [
     {id: 0, axis: 1, settings: {}}
