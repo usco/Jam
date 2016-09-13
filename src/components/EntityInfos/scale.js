@@ -31,13 +31,14 @@ export function renderScaleUi (state) {
   const data = state.selections.instIds.reduce(function (acc, id) {
     acc['transforms'].push(state.transforms[id])
     acc['meta'].push(state.meta[id])
-    acc['bounds'].push(state.bounds[id])// .meshes[id])
+    acc['bounds'].push(state.bounds[id])
     return acc
   }, {transforms: [], meta: [], bounds: [], settings}) // FIXME: should be based on bounds component, not meshes
 
   let { transforms, bounds } = data
   if (transforms.length > 0) transforms = transforms[0]
 
+  //TODO: compute things based
   if (bounds.length >= 0) {
     if(bounds.length > 0) {
       bounds = bounds[0]
@@ -59,13 +60,13 @@ export function renderScaleUi (state) {
   }
 
   const valuePercents = (transforms.sca || [0, 0, 0]).map(x => x * 100)
-  const values = (bounds.size  || [0,0,0]).map((x, index) => x * valuePercents[index]/100)
+  const values = (bounds.size || [0, 0, 0]).map((x, index) => x * valuePercents[index] / 100)
 
-//extraKlasses:['absScaling']
+//
   const subTools = <span className='scalingSubTools twoColumns'>
     <div className='transformsGroup'>
       {transformInputs({fieldName: 'sca', unit: '', showPercents: true, step: transformStep, values, valuePercents, precision, min,
-      disabled: true})}
+      disabled: false, extraKlasses: ['absScaling'] })}
     </div>
 
     <div className='optionsGroup'>
