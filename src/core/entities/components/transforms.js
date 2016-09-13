@@ -61,46 +61,30 @@ function applySnapAndUniformScaling (transformDefaults, transformationType, tran
 
 export function mirrorComponents (transformDefaults, state, inputs) {
   // console.log('mirroring transforms', inputs)
-
   return inputs.reduce(function (state, input) {
     let {id} = input
 
-    let sca = state[id].sca.map(d => d) // DO NOT REMOVE ! a lot of code relies on diffing, and if you mutate the original scale, it breaks !
-    sca[input.axis] *= -1
+    let updatedScale = Object.assign([], transformDefaults.sca, state[id].sca)
+    updatedScale[input.axis] *= -1 // mirroring is just inverting scale on the given axis
 
-    let orig = state[id] || transformDefaults
-
-    state = mergeData({}, state)
-    // FIXME big hack, use mutability
-    state[id] = mergeData({}, orig, {sca})
-
-    return state
+    return assocPath([id, 'sca'], updatedScale, state) // return updated state
   }, state)
 }
 
 export function resetScaling (transformDefaults, state, inputs) {
   return inputs.reduce(function (state, input) {
     let {id} = input
-
-    let sca = state[id].sca.map(d => d) // DO NOT REMOVE ! a lot of code relies on diffing, and if you mutate the original scale, it breaks !
-    sca = transformDefaults.sca
-
-    let orig = state[id] || transformDefaults
-
-    state = mergeData({}, state)
-    // FIXME big hack, use mutability
-    state[id] = mergeData({}, orig, {sca})
-
-    return state
+    const updatedScale = Object.assign([], transformDefaults.sca)
+    return assocPath([id, 'sca'], updatedScale, state) // return updated state
   }, state)
 }
 
-
+//update any transform component (pos, rot, scale) does NOT mutate the original state
 export function updateComponents (transformDefaults, state, inputs) {
   const currentStateFlat = inputs.map((input) => state[input.id])
 
-  const transform = head(inputs)['trans']
-  const currentAvg = pluck(transform)(currentStateFlat)
+  const transform = head(inputs)['trans']// what transform do we want to update?
+  const currentAvg = pluck(transform)(currentStateFlat) //we compute the current average (multi selection)
     .reduce(function (acc, cur) {
       if (!acc) return cur
       return [acc[0] + cur[0], acc[1] + cur[1], acc[2] + cur[2]].map(x => x * 0.5)
@@ -110,14 +94,18 @@ export function updateComponents (transformDefaults, state, inputs) {
     state = mergeData({}, state)
     let {id} = input
 
+    //compute the diff between new average and old average
     const diff = [input.value[0] - currentAvg[0], input.value[1] - currentAvg[1], input.value[2] - currentAvg[2]]
 
+    //generate actual transformation
     const transformation = diff.map(function (value, index) {
       return state[id][input.trans][index] + value
     }) || transformDefaults
 
-    const updateTransformation = applySnapAndUniformScaling(transformDefaults, input.trans, transformation, input.settings)
-    return assocPath([id, input.trans], updateTransformation, state)
+    //apply any limits, snapping etc
+    const updatedTransformation = applySnapAndUniformScaling(transformDefaults, input.trans, transformation, input.settings)
+    //return updated state
+    return assocPath([id, input.trans], updatedTransformation, state)
   }, state)
 }
 
@@ -130,46 +118,7 @@ export function makeTransformsSystem (actions) {
     sca: [ 1, 1, 1 ]
   }
 
-  function updatePosition (state, input) {
-    console.log('updatePosition')
-    let id = input.id
-    let pos = input.value || [0, 0, Math.random()]
-    let orig = state[id] || transformDefaults
-
-    state = mergeData({}, state)
-    // FIXME big hack, use mutability
-    state[id] = mergeData({}, orig, {pos})
-    return state
-  }
-
-  function updateRotation (state, input) {
-    console.log('updateRotation')
-    let {id} = input
-    let rot = input.value || [0, 0, Math.random()]
-    let orig = state[id] || transformDefaults
-
-    state = mergeData({}, state)
-    // FIXME big hack, use mutability
-    state[id] = mergeData({}, orig, {rot})
-    return state
-  }
-
-  function updateScale (state, input) {
-    console.log('updateScale')
-    let {id} = input
-    let sca = input.value || [1, 1, Math.random()]
-    let orig = state[id] || transformDefaults
-
-    state = mergeData({}, state)
-    // FIXME big hack, use mutability
-    state[id] = mergeData({}, orig, {sca})
-    return state
-  }
-
   let updateFns = {
-    updateRotation,
-    updatePosition,
-    updateScale,
     resetScaling: resetScaling.bind(null, transformDefaults),
     mirrorComponents: mirrorComponents.bind(null, transformDefaults),
     updateComponents: updateComponents.bind(null, transformDefaults),
