@@ -135,6 +135,7 @@ export function remapTransformActions (entityActions, componentBase$, settings$,
     mirrorComponents$: entityActions.mirrorInstances$,
     duplicateComponents$: entityActions.duplicateInstances$,
     removeComponents$: entityActions.deleteInstances$,
+    changeBounds$: entityActions.changeBounds$,
     clearDesign$: entityActions.clearDesign$
   }
 }
@@ -149,15 +150,15 @@ export function remapBoundsActions (entityActions, componentBase$, settings$) {
         //bbox = Object.assign({},bbox)
         const min = [ bbox.min[0], bbox.min[1], bbox.min[2] ]
         const max = [ bbox.max[0], bbox.max[1], bbox.max[2] ]
-        return { id: instUid, value: {min, max} }
+        const size = [bbox.max[0] - bbox.min[0], bbox.max[1] - bbox.min[1], bbox.max[2] - bbox.min[2]]
+        return { id: instUid, value: {min, max,size} }
       })
     })
 
   //FIXME : duplicate of the 'transforms' one
   entityActions.changeBounds$.forEach(e=>e)
-  console.log('entityActions',entityActions)
   const updateComponents$ = entityActions.changeBounds$
-    .tap(e=>console.log('updateComponents',e))
+    //.tap(e=>console.log('updateComponents',e))
     /*.filter(u => u.target === 'transforms')
     .pluck('data')
     .map(toArray)// we always expect arrays of data
