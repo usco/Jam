@@ -8,7 +8,7 @@ import { makeModel } from '../../../utils/modelUtils'
 // some other system that you want to change the scale/mesh ?
 
 export function updateComponents (state, inputs) {
-  console.log('bounds: updateComponents', inputs)
+  //  console.log('bounds: updateComponents', state, inputs)
   const currentStateFlat = inputs.map((input) => state[input.id])
 
   const field = 'size'// what field do we want to update?
@@ -25,12 +25,13 @@ export function updateComponents (state, inputs) {
     const diff = [input.value[0] - currentAvg[0], input.value[1] - currentAvg[1], input.value[2] - currentAvg[2]]
 
     //generate actual transformation
-    const updatedTransformation = diff.map(function (value, index) {
-      return state[id]['size'][index] + value
+    const updatedField = diff.map(function (value, index) {
+      return state[id][field][index] + value
     }) //|| transformDefaults
 
+    //console.log('updatedTransformation', updatedTransformation)
     //return updated state
-    return assocPath([id, 'size'], updatedTransformation, state)
+    return assocPath([id, field], updatedField, state)
   }, state)
 }
 
@@ -41,6 +42,7 @@ export function makeBoundingSystem (actions) {
   const boundsDefaults = {
     min: [0, 0, 0],
     max: [0, 0, 0],
+    size: [0, 0, 0],
     dia: 0,
     center: [0, 0, 0]
   }
