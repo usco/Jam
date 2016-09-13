@@ -7,6 +7,11 @@ import assign from 'fast.js/object/assign' // faster object.assign
 
 import {pluck, head} from 'ramda'
 
+
+function reduceToAverage (acc, cur){
+  if(!acc) return cur
+  return [acc[0] + cur[0], acc[1] + cur[1], acc[2] + cur[2]].map(x => x * 0.5)
+}
 //
 function model (props$, actions) {
   return props$.map(function (props) {
@@ -29,26 +34,55 @@ function refineActions (props$, actions) {
   const activeTool$ = props$.pluck('settings', 'activeTool')
     .distinctUntilChanged()
 
-  bounds$.forEach(e=>console.log('GNAGNAbounds',e[0].min,e[0].max))
+  //bounds$.forEach(e=>console.log('GNAGNAbounds',e[0].min,e[0].max))
 
-  const boundsChange$ = actions.changeBounds$
-    .withLatestFrom(bounds$, transforms$, selections$, function (changed, bounds, transforms, selections) {
+  const changeBoundsBase$ = actions.changeBounds$
+    .withLatestFrom(bounds$, selections$, function (changed, bounds, selections) {
+      const currentAvg = pluck('size')(bounds)
+        .reduce(reduceToAverage, undefined)
 
-      let __currentAvg = pluck('size')(bounds)
+      let newValue = Object.assign([], currentAvg)
+      newValue[changed.idx] = changed.val
+      return {oldValue: currentAvg, value: newValue, ids: selections}
+    })
+    .shareReplay(1)
+
+  const changeBounds$ = changeBoundsBase$
+    .map(function(data){
+      const {value, ids} = data
+      return ids.map(function(id){
+        return {value, id}
+      })
+    })
+    .share()
+
+  const boundsChange$ = changeBoundsBase$
+    .withLatestFrom(bounds$, transforms$, selections$, function (changedBounds, bounds, transforms, selections) {
+      const currentAvg = changedBounds.oldValue
+      const newValue = changedBounds.value
+      const scaleAvg = pluck('sca')(transforms)
+        .reduce(reduceToAverage, undefined)
+
+      //console.log('currentAvg', currentAvg, 'newAvg', newValue)
+      //FIXME SCALE calculation is wrong, offseting everything
+      let diff = [newValue[0] - currentAvg[0], newValue[1] - currentAvg[1], newValue[2] - currentAvg[2]]
+      let scaleChange = [diff[0] /currentAvg[0], diff[1] / currentAvg[1], diff[2] / currentAvg[2]]
+        .map((x, idx)=>1+x)
+
+      console.log('diff',diff[0], newValue[0], currentAvg[0], scaleChange[0])
+      //return {value: [1,1,1], trans: 'sca', ids: selections}
+      return {value: scaleChange, trans: 'sca', ids: selections}
+    })
+
+    /*.withLatestFrom(bounds$, transforms$, selections$, function (changed, bounds, transforms, selections) {
+      console.log('bounds', bounds)
+      let currentAvg = pluck('size')(bounds)
         .reduce(function (acc, cur) {
           if(!acc) return cur
           return [acc[0] + cur[0], acc[1] + cur[1], acc[2] + cur[2]].map(x => x * 0.5)
         }, undefined)
 
-
-      //FIXME ; hack !!! we should be able to use the size directly
-      let currentAvg = bounds.map(function(bound){
-        return [bound.max[0] - bound.min[0], bound.max[1] - bound.min[1], bound.max[2] - bound.min[2]]
-      }).reduce(function (acc, cur) {
-        if(!acc) return cur
-        return [acc[0] + cur[0], acc[1] + cur[1], acc[2] + cur[2]].map(x => x * 0.5)
-      }, undefined)
-
+      console.log('currentAvg', currentAvg)
       let scaleAvg = pluck('sca')(transforms)
         .reduce(function (acc, cur) {
           if(!acc) return cur
@@ -61,31 +95,11 @@ function refineActions (props$, actions) {
       let scaleChange = [diff[0] /currentAvg[0], diff[1] / currentAvg[1], diff[2] / currentAvg[2]]
         .map((x, idx)=>x+scaleAvg[idx])
 
-      console.log('diff',diff[0], newValue[0], currentAvg[0])//, scaleAvg[0], scaleChange[0])
+      //console.log('diff',diff[0], newValue[0], currentAvg[0])//, scaleAvg[0], scaleChange[0])
 
       return {value: scaleChange, trans: 'sca', ids: selections}
-    })
+    })*/
     .tap(e=>console.log('scaleChange', e.value[0]))
-
-  const changeBounds$ = actions.changeBounds$
-    .withLatestFrom(bounds$, selections$, function (changed, bounds, selections) {
-      let currentAvg = pluck('size')(bounds)
-        .reduce(function (acc, cur) {
-          if(!acc) return cur
-          return [acc[0] + cur[0], acc[1] + cur[1], acc[2] + cur[2]].map(x => x * 0.5)
-        }, undefined)
-
-        let newValue = Object.assign([] ,currentAvg)
-        newValue[changed.idx] = changed.val
-        return {value: newValue, ids: selections}
-    })
-    .map(function(data){
-      const {value, ids} = data
-      return ids.map(function(id){
-        return {value, id}
-      })
-    })
-    .share()
 
   const changeTransformsBase$ = actions.changeTransforms$
     .withLatestFrom(transforms$, selections$, function (changed, transforms, selections) {
@@ -189,7 +203,6 @@ function refineActions (props$, actions) {
     changeBounds$,
     changeTransforms$,
     resetScaling$
-
   }
 }
 
