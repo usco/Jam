@@ -8,7 +8,9 @@ import { makeModel } from '../../../utils/modelUtils'
 // some other system that you want to change the scale/mesh ?
 
 export function updateComponents (state, inputs) {
-  //  console.log('bounds: updateComponents', state, inputs)
+    console.log('bounds: updateComponents', state, inputs)
+  //TODO: THIS IS NOT UPDATING STATE ON PURPOSE !!! do not change for now!!
+  return state
   const currentStateFlat = inputs.map((input) => state[input.id])
 
   const field = 'size'// what field do we want to update?
