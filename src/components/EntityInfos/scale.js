@@ -43,20 +43,6 @@ export function renderScaleUi (state) {
     if(bounds.length > 0) {
       bounds = bounds[0]
     }
-    try{/*
-      const bbox = bounds.geometry.boundingBox
-      const bsph = bounds.geometry.boundingSphere
-      bounds = {
-        dia: bounds.geometry.boundingSphere.radius * 2,
-        center: bounds.geometry.boundingSphere.center.toArray(),
-        min: bounds.geometry.boundingBox.min.toArray(),
-        max: bounds.geometry.boundingBox.max.toArray(),
-        //size: bounds.geometry.boundingBox.max.sub(bounds.geometry.boundingBox.min).toArray()
-      }
-      bounds.size = [bounds.max[0] - bounds.min[0], bounds.max[1] - bounds.min[1], bounds.max[2] - bounds.min[2]]
-      //bound.size = bound.size.map((x, index) => x * transforms.sca[index])*/
-      bounds.size = [bounds.max[0] - bounds.min[0], bounds.max[1] - bounds.min[1], bounds.max[2] - bounds.min[2]]
-    }catch(error){}
   }
 
   const valuePercents = (transforms.sca || [0, 0, 0]).map(x => x * 100)
