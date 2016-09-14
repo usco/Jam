@@ -77,12 +77,12 @@ export function resetScaling (transformDefaults, state, inputs) {
   }, state)
 }
 
-//update any transform component (pos, rot, scale) does NOT mutate the original state
+// update any transform component (pos, rot, scale) does NOT mutate the original state
 export function updateComponents (transformDefaults, state, inputs) {
   const currentStateFlat = inputs.map((input) => state[input.id])
 
   const transform = head(inputs)['trans']// what transform do we want to update?
-  const currentAvg = pluck(transform)(currentStateFlat) //we compute the current average (multi selection)
+  const currentAvg = pluck(transform)(currentStateFlat) // we compute the current average (multi selection)
     .reduce(function (acc, cur) {
       if (!acc) return cur
       return [acc[0] + cur[0], acc[1] + cur[1], acc[2] + cur[2]].map(x => x * 0.5)
@@ -90,20 +90,20 @@ export function updateComponents (transformDefaults, state, inputs) {
 
   return inputs.reduce(function (state, input) {
     state = mergeData({}, state)
-    let {id} = input
+    let {id, value, trans, settings} = input
 
     //compute the diff between new average and old average
-    const diff = [input.value[0] - currentAvg[0], input.value[1] - currentAvg[1], input.value[2] - currentAvg[2]]
+    const diff = [value[0] - currentAvg[0], value[1] - currentAvg[1], value[2] - currentAvg[2]]
 
     //generate actual transformation
     const transformation = diff.map(function (value, index) {
-      return state[id][input.trans][index] + value
+      return state[id][trans][index] + value
     }) || transformDefaults
 
     //apply any limits, snapping etc
-    const updatedTransformation = applySnapAndUniformScaling(transformDefaults, input.trans, transformation, input.settings)
+    const updatedTransformation = applySnapAndUniformScaling(transformDefaults, trans, transformation, settings)
     //return updated state
-    return assocPath([id, input.trans], updatedTransformation, state)
+    return assocPath([id, trans], updatedTransformation, state)
   }, state)
 }
 
@@ -116,7 +116,7 @@ export function makeTransformsSystem (actions) {
     sca: [ 1, 1, 1 ]
   }
 
-  let updateFns = {
+  const updateFns = {
     resetScaling: resetScaling.bind(null, transformDefaults),
     mirrorComponents: mirrorComponents.bind(null, transformDefaults),
     updateComponents: updateComponents.bind(null, transformDefaults),
@@ -125,9 +125,7 @@ export function makeTransformsSystem (actions) {
     removeComponents
   }
 
-  if (!actions) {
-    actions = makeActionsFromApiFns(updateFns)
-  }
+  actions = actions || makeActionsFromApiFns(updateFns)
 
   let transforms$ = makeModel(defaults, updateFns, actions)
 
