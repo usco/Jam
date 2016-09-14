@@ -87,7 +87,7 @@ function refineActions (props$, actions) {
     .map(spreadToAll(['value', 'trans']))
     .share()
 
-  const boundsChange$ = changeBoundsBase$
+  const scaleFromBounds$ = changeBoundsBase$
     .withLatestFrom(bounds$, transforms$, selections$, function (changedBounds, bounds, transforms, selections) {
       const currentAvg = changedBounds.oldValue
       const newValue = changedBounds.value
@@ -105,7 +105,7 @@ function refineActions (props$, actions) {
 
       return {value: avg, trans: changed.trans, ids: selections}
     })
-    .merge(boundsChange$)
+    .merge(scaleFromBounds$)
     .filter(x => x.value !== undefined)
     .map(spreadToAll(['value', 'trans']))
     .share()
