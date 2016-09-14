@@ -86,11 +86,9 @@ export default function intent (DOM) {
       //console.log('attributes', attributes)
       let dtrans = attributes.transform
       let [trans, idx, extra] = dtrans.split('_')
-      val = val / 100
-
       return {val, idx: parseInt(idx, 10)}
     })
-    .tap(e=>console.log('scaleTransforms',e))
+    //.tap(e=>console.log('changeBounds',e))
 
     const changeTransforms$ = merge(
     DOM.select('.transformsInput').events('change'),
