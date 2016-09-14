@@ -4,10 +4,10 @@ import { createComponents, removeComponents, duplicateComponents, makeActionsFro
 import { makeModel, mergeData } from '../../../utils/modelUtils'
 // //Transforms//////
 
+/* applies snapping for both rotation and scaling
+maps the rotationtransformValues from to degrees and back*/
 function applySnapping (transformValues, stepSize, mapValue = undefined) {
-  // applies snapping for both rotation and scaling
-  // maps the rotationtransformValues from to degrees and back
-  let numberToRoundTo = 1 / stepSize
+  const numberToRoundTo = 1 / stepSize
   for (let i = 0; i < transformValues.length; i++) {
     let roundedNumber = transformValues[i]
     roundedNumber = mapValue ? roundedNumber * (180 / Math.PI) : roundedNumber
@@ -18,28 +18,25 @@ function applySnapping (transformValues, stepSize, mapValue = undefined) {
   return transformValues
 }
 
+/*
+  sorts the values and sees which is different, because this is the changes
+  then applies the new value to all dimension in respect to the minus sign because this is added by mirroring
+*/
 function applyUniformScaling (transformDefaults, transformValues) {
-  // sorts the values and sees which is different, because this is the changes
-  // then applies the new value to all dimension in respect to the minussign because this is added by mirroring
   let sortedValues = JSON.parse(JSON.stringify(transformValues)) // deepcopy
-  sortedValues.forEach(function (part, i) {
-    if (sortedValues[i].isNaN) { transformValues = sortedValues = transformDefaults.sca } // safety catch
-    sortedValues[i] = Math.abs(part)
-  })
-  sortedValues = sortedValues.slice().sort()
+  if (sortedValues.length === 0 || !sortedValues[0] || sortedValues[0].isNaN) {
+    transformValues = sortedValues = transformDefaults.sca // safety catch
+  }
+  sortedValues = sortedValues.map(Math.abs).slice().sort()
   for (let i = 0; i < sortedValues.length; i++) {
     if (sortedValues[i] === sortedValues[i + 1]) {
       sortedValues.splice(i, 2)
     }
   }
-  let newValue = sortedValues[0]
-  for (let i = 0; i < transformValues.length; i++) {
-    if (transformValues[i] < 0) {
-      transformValues[i] = -(newValue)
-    } else {
-      transformValues[i] = newValue
-    }
-  }
+  const newValue = sortedValues[0]
+  transformValues = transformValues.map(function (value) {
+    return value < 0 ? -(newValue) : newValue
+  })
   return transformValues
 }
 
@@ -49,7 +46,7 @@ function applySnapAndUniformScaling (transformDefaults, transformationType, tran
     rot: 10, // snap rotation snaps to tens of degrees
     sca: 0.1 // snap scaling snaps to tens of percentages
   }
-  //console.log('applySnapAndUniformScaling', transformation)
+  // console.log('applySnapAndUniformScaling', transformation)
   let {uniformScaling, snapScaling, snapRotation, snapTranslation} = settings
 
   if (uniformScaling && transformationType === 'sca') { transformation = applyUniformScaling(transformDefaults, transformation) }
@@ -59,7 +56,7 @@ function applySnapAndUniformScaling (transformDefaults, transformationType, tran
   return transformation
 }
 
-//mirror on given axis
+// mirror on given axis
 export function mirrorComponents (transformDefaults, state, inputs) {
   return inputs.reduce(function (state, input) {
     let updatedScale = Object.assign([], transformDefaults.sca, state[input.id].sca)
@@ -69,7 +66,7 @@ export function mirrorComponents (transformDefaults, state, inputs) {
   }, state)
 }
 
-//reset scaling to default
+// reset scaling to default
 export function resetScaling (transformDefaults, state, inputs) {
   return inputs.reduce(function (state, input) {
     const updatedScale = Object.assign([], transformDefaults.sca)
@@ -81,7 +78,7 @@ export function resetScaling (transformDefaults, state, inputs) {
 export function updateComponents (transformDefaults, state, inputs) {
   const currentStateFlat = inputs.map((input) => state[input.id])
 
-  const transform = head(inputs)['trans']// what transform do we want to update?
+  const transform = head(inputs)['trans'] // what transform do we want to update?
   const currentAvg = pluck(transform)(currentStateFlat) // we compute the current average (multi selection)
     .reduce(function (acc, cur) {
       if (!acc) return cur
@@ -92,17 +89,17 @@ export function updateComponents (transformDefaults, state, inputs) {
     state = mergeData({}, state)
     let {id, value, trans, settings} = input
 
-    //compute the diff between new average and old average
+    // compute the diff between new average and old average
     const diff = [value[0] - currentAvg[0], value[1] - currentAvg[1], value[2] - currentAvg[2]]
 
-    //generate actual transformation
+    // generate actual transformation
     const transformation = diff.map(function (value, index) {
-      return state[id][trans][index] + value
-    }) || transformDefaults
+        return state[id][trans][index] + value
+      }) || transformDefaults
 
-    //apply any limits, snapping etc
+    // apply any limits, snapping etc
     const updatedTransformation = applySnapAndUniformScaling(transformDefaults, trans, transformation, settings)
-    //return updated state
+    // return updated state
     return assocPath([id, trans], updatedTransformation, state)
   }, state)
 }
@@ -122,8 +119,7 @@ export function makeTransformsSystem (actions) {
     updateComponents: updateComponents.bind(null, transformDefaults),
     createComponents: createComponents.bind(null, transformDefaults),
     duplicateComponents,
-    removeComponents
-  }
+  removeComponents}
 
   actions = actions || makeActionsFromApiFns(updateFns)
 
