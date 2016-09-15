@@ -40,10 +40,14 @@ export function EntityInfosWrapper (state$, DOM) {
           return state.meta[id]
         })
 
+        const bounds = ids.map(function (id) {
+          return state.bounds[id]
+        })
+
         const selections = ids
 
 
-        return {transforms, meta, settings: state.settings, selections}
+        return {transforms, bounds, meta, settings: state.settings, selections}
       })
       .shareReplay(1)
   }

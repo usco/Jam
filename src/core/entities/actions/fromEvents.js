@@ -62,12 +62,18 @@ export default function intent (events, params) {
     .map(data => ({id: data.id, meta: data})) // convert data structure to something the BOM model can deal with
     // .map(toArray)
 
+  const changeBounds$ = events
+    .select('entityInfos')
+    .events('changeBounds$')
+
+
   return {
     addTypes$,
     removeTypes$,
     deleteInstances$,
     updateComponent$,
     createAnnotationStep$,
-    resetScaling$
+    resetScaling$,
+    changeBounds$
   }
 }

@@ -122,15 +122,9 @@ export function remapTransformActions (entityActions, componentBase$, settings$,
     .filter(u => u.target === 'transforms')
     .pluck('data')
     .map(toArray)// we always expect arrays of data
-    /*.withLatestFrom(settings$, function (transforms, settings) {
-      return transforms.map(function (transform, index) {
-        return {id: transform.id, value: transform || transforms[0], settings}
-      })
-    })*/
     .withLatestFrom(settings$, function (transforms, settings) {
       return transforms.map(function (transform, index) {
         return mergeData({}, transform, {settings})
-        //return {id: transform.id, value: transform.value || transforms[0].value, settings}
       })
     })
 
@@ -141,22 +135,43 @@ export function remapTransformActions (entityActions, componentBase$, settings$,
     mirrorComponents$: entityActions.mirrorInstances$,
     duplicateComponents$: entityActions.duplicateInstances$,
     removeComponents$: entityActions.deleteInstances$,
+    changeBounds$: entityActions.changeBounds$,
     clearDesign$: entityActions.clearDesign$
   }
 }
 
 // function to add extra data to bounds component actions
-export function remapBoundsActions (entityActions, componentBase$) {
+export function remapBoundsActions (entityActions, componentBase$, settings$) {
   const createComponents$ = componentBase$
     .filter(c => c.length > 0)
     .map(function (datas) {
       return datas.map(function ({instUid, bbox}) {
-        return { id: instUid, value: bbox }
+        //const {min, max} = bbox // = [ bbox[0],
+        //bbox = Object.assign({},bbox)
+        const min = [ bbox.min[0], bbox.min[1], bbox.min[2] ]
+        const max = [ bbox.max[0], bbox.max[1], bbox.max[2] ]
+        const size = [bbox.max[0] - bbox.min[0], bbox.max[1] - bbox.min[1], bbox.max[2] - bbox.min[2]]
+        return { id: instUid, value: {min, max,size} }
       })
     })
 
+  //FIXME : duplicate of the 'transforms' one
+  entityActions.changeBounds$.forEach(e=>e)
+  const updateComponents$ = entityActions.changeBounds$
+    //.tap(e=>console.log('updateComponents',e))
+    /*.filter(u => u.target === 'transforms')
+    .pluck('data')
+    .map(toArray)// we always expect arrays of data
+    .withLatestFrom(settings$, function (transforms, settings) {
+      console.log('foo')
+      return transforms.map(function (transform, index) {
+        return mergeData({}, transform, {settings})
+      })
+    })*/
+
   return {
     createComponents$,
+    updateComponents$,
     duplicateComponents$: entityActions.duplicateInstances$,
     removeComponents$: entityActions.deleteInstances$,
     clearDesign$: entityActions.clearDesign$

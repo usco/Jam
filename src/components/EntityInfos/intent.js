@@ -75,6 +75,21 @@ export default function intent (DOM) {
       console.log('changeTransformsDiff',acc)
     })*/
 
+    const changeBounds$ = merge(
+      DOM.select('.absScaling').events('change'),
+      DOM.select('.absScaling').events('blur'),
+      DOM.select('.absScaling').events('input')
+    )
+    .map(function(e){
+      let val = parseFloat(e.target.value)
+      const attributes = e.target.dataset
+      //console.log('attributes', attributes)
+      let dtrans = attributes.transform
+      let [trans, idx, extra] = dtrans.split('_')
+      return {val, idx: parseInt(idx, 10)}
+    })
+    //.tap(e=>console.log('changeBounds',e))
+
     const changeTransforms$ = merge(
     DOM.select('.transformsInput').events('change'),
     DOM.select('.transformsInput').events('blur'),
@@ -130,6 +145,7 @@ export default function intent (DOM) {
   return {
     changeMeta$,
     changeTransforms$,
-    resetScaling$
+    resetScaling$,
+    changeBounds$
   }
 }

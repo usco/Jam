@@ -4,10 +4,10 @@ import { createComponents, removeComponents, duplicateComponents, makeActionsFro
 import { makeModel, mergeData } from '../../../utils/modelUtils'
 // //Transforms//////
 
+/* applies snapping for both rotation and scaling
+maps the rotationtransformValues from to degrees and back*/
 function applySnapping (transformValues, stepSize, mapValue = undefined) {
-  // applies snapping for both rotation and scaling
-  // maps the rotationtransformValues from to degrees and back
-  let numberToRoundTo = 1 / stepSize
+  const numberToRoundTo = 1 / stepSize
   for (let i = 0; i < transformValues.length; i++) {
     let roundedNumber = transformValues[i]
     roundedNumber = mapValue ? roundedNumber * (180 / Math.PI) : roundedNumber
@@ -18,28 +18,25 @@ function applySnapping (transformValues, stepSize, mapValue = undefined) {
   return transformValues
 }
 
+/*
+  sorts the values and sees which is different, because this is the changes
+  then applies the new value to all dimension in respect to the minus sign because this is added by mirroring
+*/
 function applyUniformScaling (transformDefaults, transformValues) {
-  // sorts the values and sees which is different, because this is the changes
-  // then applies the new value to all dimension in respect to the minussign because this is added by mirroring
   let sortedValues = JSON.parse(JSON.stringify(transformValues)) // deepcopy
-  sortedValues.forEach(function (part, i) {
-    if (sortedValues[i].isNaN) { transformValues = sortedValues = transformDefaults.sca } // safety catch
-    sortedValues[i] = Math.abs(part)
-  })
-  sortedValues = sortedValues.slice().sort()
+  if (sortedValues.length === 0 || sortedValues[0] === null || sortedValues[0] === undefined || sortedValues[0].isNaN) {
+    transformValues = sortedValues = transformDefaults.sca // safety catch
+  }
+  sortedValues = sortedValues.map(Math.abs).slice().sort()
   for (let i = 0; i < sortedValues.length; i++) {
     if (sortedValues[i] === sortedValues[i + 1]) {
       sortedValues.splice(i, 2)
     }
   }
-  let newValue = sortedValues[0]
-  for (let i = 0; i < transformValues.length; i++) {
-    if (transformValues[i] < 0) {
-      transformValues[i] = -(newValue)
-    } else {
-      transformValues[i] = newValue
-    }
-  }
+  const newValue = sortedValues[0]
+  transformValues = transformValues.map(function (value) {
+    return value < 0 ? -(newValue) : newValue
+  })
   return transformValues
 }
 
@@ -49,7 +46,7 @@ function applySnapAndUniformScaling (transformDefaults, transformationType, tran
     rot: 10, // snap rotation snaps to tens of degrees
     sca: 0.1 // snap scaling snaps to tens of percentages
   }
-  //console.log('applySnapAndUniformScaling', transformation)
+  // console.log('applySnapAndUniformScaling', transformation)
   let {uniformScaling, snapScaling, snapRotation, snapTranslation} = settings
 
   if (uniformScaling && transformationType === 'sca') { transformation = applyUniformScaling(transformDefaults, transformation) }
@@ -59,48 +56,30 @@ function applySnapAndUniformScaling (transformDefaults, transformationType, tran
   return transformation
 }
 
+// mirror on given axis
 export function mirrorComponents (transformDefaults, state, inputs) {
-  console.log('mirroring transforms', inputs)
-
   return inputs.reduce(function (state, input) {
-    let {id} = input
+    let updatedScale = Object.assign([], transformDefaults.sca, state[input.id].sca)
+    updatedScale[input.axis] *= -1 // mirroring is just inverting scale on the given axis
 
-    let sca = state[id].sca.map(d => d) // DO NOT REMOVE ! a lot of code relies on diffing, and if you mutate the original scale, it breaks !
-    sca[input.axis] *= -1
-
-    let orig = state[id] || transformDefaults
-
-    state = mergeData({}, state)
-    // FIXME big hack, use mutability
-    state[id] = mergeData({}, orig, {sca})
-
-    return state
+    return assocPath([input.id, 'sca'], updatedScale, state) // return updated state
   }, state)
 }
 
+// reset scaling to default
 export function resetScaling (transformDefaults, state, inputs) {
   return inputs.reduce(function (state, input) {
-    let {id} = input
-
-    let sca = state[id].sca.map(d => d) // DO NOT REMOVE ! a lot of code relies on diffing, and if you mutate the original scale, it breaks !
-    sca = transformDefaults.sca
-
-    let orig = state[id] || transformDefaults
-
-    state = mergeData({}, state)
-    // FIXME big hack, use mutability
-    state[id] = mergeData({}, orig, {sca})
-
-    return state
+    const updatedScale = Object.assign([], transformDefaults.sca)
+    return assocPath([input.id, 'sca'], updatedScale, state) // return updated state
   }, state)
 }
 
-
+// update any transform component (pos, rot, scale) does NOT mutate the original state
 export function updateComponents (transformDefaults, state, inputs) {
   const currentStateFlat = inputs.map((input) => state[input.id])
 
-  const transform = head(inputs)['trans']
-  const currentAvg = pluck(transform)(currentStateFlat)
+  const transform = head(inputs)['trans'] // what transform do we want to update?
+  const currentAvg = pluck(transform)(currentStateFlat) // we compute the current average (multi selection)
     .reduce(function (acc, cur) {
       if (!acc) return cur
       return [acc[0] + cur[0], acc[1] + cur[1], acc[2] + cur[2]].map(x => x * 0.5)
@@ -108,16 +87,20 @@ export function updateComponents (transformDefaults, state, inputs) {
 
   return inputs.reduce(function (state, input) {
     state = mergeData({}, state)
-    let {id} = input
+    let {id, value, trans, settings} = input
 
-    const diff = [input.value[0] - currentAvg[0], input.value[1] - currentAvg[1], input.value[2] - currentAvg[2]]
+    // compute the diff between new average and old average
+    const diff = [value[0] - currentAvg[0], value[1] - currentAvg[1], value[2] - currentAvg[2]]
 
+    // generate actual transformation
     const transformation = diff.map(function (value, index) {
-      return state[id][input.trans][index] + value
-    }) || transformDefaults
+        return state[id][trans][index] + value
+      }) || transformDefaults
 
-    const updateTransformation = applySnapAndUniformScaling(transformDefaults, input.trans, transformation, input.settings)
-    return assocPath([id, input.trans], updateTransformation, state)
+    // apply any limits, snapping etc
+    const updatedTransformation = applySnapAndUniformScaling(transformDefaults, trans, transformation, settings)
+    // return updated state
+    return assocPath([id, trans], updatedTransformation, state)
   }, state)
 }
 
@@ -130,57 +113,15 @@ export function makeTransformsSystem (actions) {
     sca: [ 1, 1, 1 ]
   }
 
-  function updatePosition (state, input) {
-    console.log('updatePosition')
-    let id = input.id
-    let pos = input.value || [0, 0, Math.random()]
-    let orig = state[id] || transformDefaults
-
-    state = mergeData({}, state)
-    // FIXME big hack, use mutability
-    state[id] = mergeData({}, orig, {pos})
-    return state
-  }
-
-  function updateRotation (state, input) {
-    console.log('updateRotation')
-    let {id} = input
-    let rot = input.value || [0, 0, Math.random()]
-    let orig = state[id] || transformDefaults
-
-    state = mergeData({}, state)
-    // FIXME big hack, use mutability
-    state[id] = mergeData({}, orig, {rot})
-    return state
-  }
-
-  function updateScale (state, input) {
-    console.log('updateScale')
-    let {id} = input
-    let sca = input.value || [1, 1, Math.random()]
-    let orig = state[id] || transformDefaults
-
-    state = mergeData({}, state)
-    // FIXME big hack, use mutability
-    state[id] = mergeData({}, orig, {sca})
-    return state
-  }
-
-  let updateFns = {
-    updateRotation,
-    updatePosition,
-    updateScale,
+  const updateFns = {
     resetScaling: resetScaling.bind(null, transformDefaults),
     mirrorComponents: mirrorComponents.bind(null, transformDefaults),
     updateComponents: updateComponents.bind(null, transformDefaults),
     createComponents: createComponents.bind(null, transformDefaults),
     duplicateComponents,
-    removeComponents
-  }
+  removeComponents}
 
-  if (!actions) {
-    actions = makeActionsFromApiFns(updateFns)
-  }
+  actions = actions || makeActionsFromApiFns(updateFns)
 
   let transforms$ = makeModel(defaults, updateFns, actions)
 
