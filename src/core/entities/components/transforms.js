@@ -24,7 +24,7 @@ function applySnapping (transformValues, stepSize, mapValue = undefined) {
 */
 function applyUniformScaling (transformDefaults, transformValues) {
   let sortedValues = JSON.parse(JSON.stringify(transformValues)) // deepcopy
-  if (sortedValues.length === 0 || !sortedValues[0] || sortedValues[0].isNaN) {
+  if (sortedValues.length === 0 || sortedValues[0] === null || sortedValues[0] === undefined || sortedValues[0].isNaN) {
     transformValues = sortedValues = transformDefaults.sca // safety catch
   }
   sortedValues = sortedValues.map(Math.abs).slice().sort()
