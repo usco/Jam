@@ -68,6 +68,11 @@ function view (state$) {
             <li>
               Click/tap outside of any object in the 3d view to clear all selections
             </li>
+            <li className='startUpTourLink'>
+              <a className='textLink'>
+                Click here to take the startup tour.
+              </a>
+            </li>
           </ul>
         </span>
         <span className='appVersion'>Jam version {appVersion}</span>

@@ -34,3 +34,7 @@
   display: block;
   line-height: 1;
 }
+
+.startUpTourLink .textLink{
+  font-size: 1em;
+}
