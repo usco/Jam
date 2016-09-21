@@ -7,6 +7,8 @@ export default function intent (events, params) {
   const selectEntities$ = events.select('gl').events('selectedMeshes$')
     .map(extractEntities)
     .map(toArray)
+    .merge(events.select('base').events('selectEntities').delay(200))//delay is needed as 3d view might not be setup yet
+    .tap(e=>console.log('selectEntities',e))
     .shareReplay(1)
 
   const selectBomEntries$ = events.select('bom').events('entryTapped$')

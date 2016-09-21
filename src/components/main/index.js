@@ -6,6 +6,7 @@ import Settings from '../../components/Settings'
 import FullScreenToggler from '../../components/widgets/FullScreenToggler/index'
 import Help from '../../components/widgets/Help'
 
+import {extractChanges} from '../../utils/diffPatchUtils'
 import { EntityInfosWrapper, BOMWrapper, GLWrapper, CommentsWrapper, progressBarWrapper } from '../../components/main/wrappers'
 
 import intent from './intent'
@@ -23,6 +24,27 @@ export default function main (sources) {
   const actions = intent(sources)
   const state$ = model(undefined, actions, sources)
 
+  //things based on state
+  const selectEntitiesByAddedEntities$ = state$.pluck('meta')
+    .distinctUntilChanged()
+    .map(x => Object.keys(x))
+    .scan(function (acc, x) {
+      let cur = x
+      let prev = acc.cur
+      return {cur, prev}
+    }, {prev: undefined, cur: undefined})
+    .map(function (typeData) {
+      let {cur, prev} = typeData
+      return extractChanges(prev, cur)
+    })
+    .pluck('added')
+    .filter(e => e.length > 0)
+
+  const baseEvents = {
+    selectEntities: selectEntitiesByAddedEntities$
+  }
+
+
   // create visual elements
   const entityInfos = EntityInfosWrapper(state$, DOM)
   const comments = CommentsWrapper(state$, DOM)
@@ -35,11 +57,15 @@ export default function main (sources) {
   // outputs
   const vtree$ = view(state$, settingsC.DOM, fsToggler.DOM, bom.DOM, gl.DOM
     , entityInfos.DOM, comments.DOM, help.DOM)
+
+  //TODO : unify the events, so they are not keyed by origin
   const events$ = just({
     gl: gl.events,
     entityInfos: entityInfos.events,
     bom: bom.events,
-    comments: comments.events})
+    comments: comments.events,
+    base: baseEvents
+  })
 
   // to postMessage
   const postMsg$ = api(actions, state$).postMsg$

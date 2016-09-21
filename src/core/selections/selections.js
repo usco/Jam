@@ -54,7 +54,7 @@ function selectedTypesFromInstances (state, input, types) {
   return multiSelectionHelper(state, 'bomIds', {ids: flatten(selectedInstancesByTypes), override: true})
 }
 
-function multiSelectionHelper2(state, input){
+function multiSelectionHelper2 (state, input) {
   let newInstancesBaseStates
   let newTypesBaseStates
   if(input.type === 'instances')
