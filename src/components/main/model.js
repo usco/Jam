@@ -3,6 +3,8 @@ import Rx from 'rx'
 import { combineLatestObj, replicateStream } from '../../utils/obsUtils'
 import { toArray } from '../../utils/utils'
 
+import {extractChanges} from '../../utils/diffPatchUtils'
+
 // entity components
 import { makeMetaSystem } from '../../core/entities/components/meta'
 import { makeTransformsSystem } from '../../core/entities/components/transforms'
@@ -68,6 +70,20 @@ export default function model (props$, actions, sources) {
     types$,
     bounds$
   })
+
+  const entityAdded$ = meta$.distinctUntilChanged()
+    .map(x=>Object.keys(x))
+    .scan(function (acc, x) {
+      let cur = x
+      let prev = acc.cur
+      return {cur, prev}
+    }, {prev: undefined, cur: undefined})
+    .map(function (typeData) {
+      let {cur, prev} = typeData
+      return extractChanges(prev, cur)
+    })
+    .pluck('added')
+    .forEach(e=>console.log('changes to meta',e))
 
   // selections => only for real time view
   const typesInstancesRegistry$ = makeTypeInstanceMapping(meta$, types$)
