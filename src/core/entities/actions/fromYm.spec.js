@@ -21,6 +21,7 @@ test('actionsFromYm (entities): should return the correct hash of actions', t =>
     'createMetaComponents$',
     'createTransformComponents$',
     'createMeshComponents$',
+    'createBoundsComponents$',
     'requests$',
     'setActiveAssembly$'
   ]
