@@ -141,7 +141,34 @@ export default function intent ({ym, resources}, params) {
 
   const createMeshComponents$ = combineAndWaitUntil(meshComponentMeshes$, meshComponentAssemblyData$)
     .map(toArray)
-    .tap(e => console.log('createMeshComponents', e))
+    .shareReplay(1)
+
+
+  const createBoundsComponents$ = createMeshComponents$
+    .map(function (datas) {
+      return datas.map(function (entry) {
+        const id = entry.id
+
+        //FIXME: horribly redudant with ../entitiesExtras
+        let mesh = entry.value.mesh
+        let bbox = mesh.boundingBox
+        let zOffset = bbox.max.clone().sub(bbox.min)
+        zOffset = zOffset.z / 2
+        bbox = { min: bbox.min.toArray(), max: bbox.max.toArray() }
+
+        const min = [ bbox.min[0], bbox.min[1], bbox.min[2] ]
+        const max = [ bbox.max[0], bbox.max[1], bbox.max[2] ]
+        const size = [bbox.max[0] - bbox.min[0], bbox.max[1] - bbox.min[1], bbox.max[2] - bbox.min[2]]
+        const value = {min, max, size}
+
+        return {
+          id,
+          value
+        }
+      })
+    })
+    .tap(e => console.log('createBoundsComponents', e))
+
 
   // TODO : this would need to be filtered based on pre-existing type data ?
   const addTypes$ = partsData$
@@ -189,6 +216,7 @@ export default function intent ({ym, resources}, params) {
     createMetaComponents$,
     createTransformComponents$,
     createMeshComponents$,
+    createBoundsComponents$,
 
     requests$: meshRequests$,
     setActiveAssembly$
