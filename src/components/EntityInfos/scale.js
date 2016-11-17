@@ -38,16 +38,12 @@ export function renderScaleUi (state) {
   let { transforms, bounds } = data
   if (transforms.length > 0) transforms = transforms[0]
 
-  //TODO: compute things based
-  if (bounds.length >= 0) {
-    if(bounds.length > 0) {
-      bounds = bounds[0]
-    }
+  if(bounds.length > 0) {
+    bounds = bounds[0]
   }
 
   const valuePercents = (transforms.sca || [0, 0, 0]).map(x => x * 100)
-  const values = (bounds.size || [0, 0, 0]).map((x, index) => x * valuePercents[index] / 100)
-
+  const values = bounds ? (bounds.size || [0, 0, 0]).map((x, index) => x * valuePercents[index] / 100) : [0, 0, 0]
 //
   const subTools = <span className='scalingSubTools twoColumns'>
     <div className='transformsGroup'>

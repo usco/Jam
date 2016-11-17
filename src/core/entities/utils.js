@@ -112,7 +112,7 @@ export function remapTransformActions (entityActions, componentBase$, settings$,
     .filter(c => c.length > 0)
     .map(function (datas) {
       return datas.map(function ({instUid, zOffset}) {
-        return { id: instUid, value: {pos: [0, 0, zOffset]} }
+        return { id: instUid, value: {pos: [0, 0, 0]}}//zOffset]} }
       })
     })
     .merge(entityActions.createTransformComponents$)
@@ -154,6 +154,7 @@ export function remapBoundsActions (entityActions, componentBase$, settings$) {
         return { id: instUid, value: {min, max,size} }
       })
     })
+    .merge(entityActions.createBoundsComponents$)
 
   //FIXME : duplicate of the 'transforms' one
   entityActions.changeBounds$.forEach(e=>e)
