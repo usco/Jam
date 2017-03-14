@@ -27,6 +27,17 @@ export function toArray (data) {
   return data
 }
 
+export function without (removeValues, array) {
+  for (let j = 0; j < removeValues.length; j++) {
+    for (let i = array.length - 1; i >= 0; i--) {
+      if (array[i] === removeValues[j]) {
+        array.splice(i, 1)
+      }
+    }
+  }
+  return array
+}
+
 /* JSON parse that always returns an object*/
 export function safeJSONParse (str) {
   try {

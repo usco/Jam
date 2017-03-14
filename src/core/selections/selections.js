@@ -1,7 +1,7 @@
-import { toArray, exists } from '../../utils/utils'
+import { toArray, exists, without } from '../../utils/utils'
 import { makeModel, mergeData } from '../../utils/modelUtils'
 
-import { without, pluck, flatten } from 'ramda'
+import { pluck, flatten } from 'ramda'
 
 
 /*rules:
