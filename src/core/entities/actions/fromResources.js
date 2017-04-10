@@ -4,7 +4,7 @@ import { mergeData } from '../../../utils/modelUtils'
 import { head } from 'ramda'
 
 // helper function to extract certain & infer data
-export default function intentsFromResources (rawParsedData$) {
+export function intentsFromResources (rawParsedData$) {
   const data$ = rawParsedData$
     .share()
 

@@ -1,7 +1,7 @@
 import { generateUUID } from './utils'
 import { postProcessMesh, geometryFromBuffers, unIndexGeometryData } from './meshUtils'
 import { meshTools } from 'glView-helpers'
-const {centerMesh} = meshTools
+const {centerMesh, computeBoundingSphere} = meshTools
 
 export function postProcessParsedData (data) {
   // TODO: unify parsers' returned data/api ?
@@ -35,7 +35,8 @@ export function postProcessParsedData (data) {
       // console.log('mesh data', item)
       mesh = geometryFromBuffers(item)
       mesh = postProcessMesh(mesh)
-      mesh = centerMesh(mesh)
+      computeBoundingSphere(mesh) // FIXME : EEEK ! mutating and adding fields !
+      //mesh = centerMesh(mesh)
       typesMeshes.push({typeUid, mesh})
     }
 
@@ -63,7 +64,8 @@ export function postProcessParsedData (data) {
     // mesh = unIndexGeometryData(mesh)
     mesh = geometryFromBuffers(mesh)
     mesh = postProcessMesh(mesh)
-    mesh = centerMesh(mesh)
+    computeBoundingSphere(mesh) // FIXME : EEEK ! mutating and adding fields !
+    //mesh = centerMesh(mesh)
 
     let typesMeshes = [{typeUid: undefined, mesh}]
 
